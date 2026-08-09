@@ -1,0 +1,563 @@
+"""注册流程分类器引擎 — 嫁接自 MyAutomaticPolicy 的 signup_flow 模块。
+
+提供 SignupFlowClassifierEngine 类：
+  - classify(signup_url, entry_kind)  → 安全探索多步注册流程并返回分类结果
+  - try_switch_to_password_view()     → 类型 E 补救：尝试 tab 切换
+  - get_current_password_field_xpath() → 获取当前页面密码字段 XPath
+
+安全边界：只点击明确安全的 next/tab/entry 按钮，不填写字段或提交表单。
+"""
+
+import time
+from typing import Optional, Dict
+from urllib.parse import urlparse
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
+
+from signup_flow_classifier.flow_types import FlowResult, FlowType, StopReason
+from signup_flow_classifier.page_detector import (
+    _detect_page_semantics,
+    configure_performance_optimizations,
+    detect_blockers,
+    detect_fields_all_frames,
+    detect_page_state,
+    detect_tabs_all_frames,
+)
+from signup_flow_classifier.navigator import (
+    MAX_ENTRY_CLICKS,
+    MAX_STEPS,
+    detect_entry_button,
+    safe_advance,
+    safe_click_entry,
+    safe_click_tab,
+    safe_click_auth_mode_switch,
+)
+from signup_flow_classifier.classifier import classify, primary_method
+from signup_flow_classifier.evidence import finalize, record_evidence, record_step
+from signup_flow_classifier.browser_failures import (
+    classify_exception,
+    detect_access_block,
+    detect_server_error_page,
+)
+
+# 这些类型 → 继续执行密码政策测量
+PROCEED_FLOW_TYPES = {
+    FlowType.DIRECT_PASSWORD.value,
+    FlowType.IDENTIFIER_THEN_PASSWORD.value,
+    FlowType.MULTIPLE_METHODS.value,  # 将尝试切换到密码视图后再决定
+}
+
+
+class SignupFlowClassifierEngine:
+    """注册流程分类器引擎。
+
+    在发现注册页面后调用 classify()，安全探索多步注册流程，
+    返回分类结果 + 是否应继续密码政策测量。
+
+    用法:
+        engine = SignupFlowClassifierEngine(driver)
+        result = engine.classify("https://example.com/register")
+        if result["should_proceed"]:
+            ...  # 继续 inline/full 密码政策测量
+        else:
+            ...  # 直接输出 result["flow_type"] 和 result["policy"]
+    """
+
+    def __init__(self, driver: WebDriver):
+        self.driver = driver
+        configure_performance_optimizations(True)
+
+    # ------------------------------------------------------------------
+    # 公开 API
+    # ------------------------------------------------------------------
+
+    def classify(self, signup_url: str, entry_kind: str = "signup",
+                 max_steps: int = MAX_STEPS) -> Dict:
+        """分类注册流程。
+
+        导航到注册页 → 安全探索多步流程 → 分类 → 返回结构化结果。
+
+        Args:
+            signup_url: 注册页 URL（已由 LoginLinkDiscovery 发现）
+            entry_kind: "signup"（注册）或 "login"（登录）
+            max_steps: 最大探索步数
+
+        Returns:
+            dict 包含以下关键字段：
+            - flow_type:      A-I 分类字符串（如 "direct_password"）
+            - confidence:     "high" / "medium" / "low"
+            - stop_reason:    停止原因
+            - primary_method: "password" / "sms" / "email_only" / "sso" / "unknown"
+            - ui_type:        页面样式（modal / standalone_page / ...）
+            - should_proceed: bool, 是否应继续密码政策测量
+            - password_reached: bool, 是否已到达密码字段页面
+            - policy:         标准化政策摘要（v1.0 schema）
+            - states:         页面状态序列（调试用）
+            - error:          错误信息（如有）
+        """
+        parsed_url = urlparse(signup_url)
+        site = parsed_url.hostname or signup_url
+
+        result = FlowResult(
+            site=site,
+            start_url=signup_url,
+            final_url="",
+            entry_kind=entry_kind,
+        )
+
+        # ---- 1) 导航到注册页 ----
+        try:
+            self.driver.get(signup_url)
+        except Exception as e:
+            reason = classify_exception(e)
+            if reason == StopReason.BROWSER_CRASHED.value:
+                raise
+            return self._done(
+                result, "unknown", "low", reason,
+                error="load_failed:{}:{}".format(type(e).__name__, str(e)[:100]),
+            )
+
+        # ---- 2) 检测访问阻断 / 服务器故障 ----
+        access_marker = detect_access_block(self.driver)
+        if access_marker:
+            record_evidence(result, "access_blocked:{}".format(access_marker))
+            try:
+                result.final_url = self.driver.current_url
+            except Exception:
+                pass
+            return self._done(result, "unknown", "high", StopReason.ACCESS_BLOCKED.value)
+
+        server_error = detect_server_error_page(self.driver)
+        if server_error:
+            record_evidence(result, "server_error:{}".format(server_error))
+            try:
+                result.final_url = self.driver.current_url
+            except Exception:
+                pass
+            return self._done(result, "unknown", "high", StopReason.INFRASTRUCTURE_ERROR.value)
+
+        # ---- 3) 逐步安全探索 ----
+        effective_max_steps = max(1, max_steps)
+        entry_clicks_left = MAX_ENTRY_CLICKS
+        tab_clicks_left = 2
+        auth_mode_clicks_left = 2 if entry_kind == "login" else 0
+        signup_mode_switches_left = 1 if entry_kind == "signup" else 0
+        step_limit = effective_max_steps
+        auth_entry_clicked = False
+        signup_entry_clicked = False
+        signup_reveal_pending = False
+
+        for step in range(1, effective_max_steps + 3):
+            if step > step_limit:
+                break
+
+            # 页面稳定等待（本地 fixture 短，真实网站长）
+            time.sleep(0.2 if parsed_url.scheme == "file" else 1.0)
+
+            # 页面状态采样
+            try:
+                state = detect_page_state(self.driver, step)
+            except Exception as e:
+                reason = classify_exception(e)
+                if reason == StopReason.BROWSER_CRASHED.value:
+                    raise
+                ft, conf, _ = classify(result.states)
+                return self._done(
+                    result, ft, conf, reason,
+                    error="detect_failed:{}:{}".format(type(e).__name__, str(e)[:80]),
+                )
+
+            # 每轮重新检查访问阻断（风控 iframe 可能延迟挂载）
+            access_marker = detect_access_block(self.driver)
+            if access_marker:
+                record_evidence(result, "access_blocked:{}".format(access_marker))
+                result.final_url = state.url
+                return self._done(result, "unknown", "high", StopReason.ACCESS_BLOCKED.value)
+
+            # 记录本步状态
+            record_step(result, state)
+            result.final_url = state.url
+            record_evidence(
+                result,
+                "step={};fields={};blockers={};methods={};actions={}".format(
+                    step,
+                    ",".join(state.fields) or "-",
+                    ",".join(state.blockers) or "-",
+                    ",".join(state.methods) or "-",
+                    ",".join(state.available_actions) or "-",
+                ),
+            )
+
+            signup_entry_failed = False
+
+            # ---- 计算登录页守卫标记 ----
+            login_page_during_signup = (
+                entry_kind == "signup"
+                and self._url_is_requested_entry(state.url, "login")
+            )
+
+            # ---- 注册入口点击（优先于其他操作） ----
+            # 注册测量优先寻找"真正的注册入口"，且严格禁止回退到登录按钮。
+            # 这一步必须早于 password tab：否则首页先弹出的登录口令框会被误当成
+            # "注册时直接设口令"。
+            if (entry_kind == "signup" and entry_clicks_left > 0
+                    and not self._url_is_requested_entry(state.url, "signup")
+                    and not ("password" in state.fields
+                             and signup_entry_clicked
+                             and not signup_reveal_pending)
+                    and not ({"scan", "captcha", "slide", "app_confirm"}
+                             & set(state.blockers))
+                    and detect_entry_button(
+                        self.driver, "register", allow_fallback=False,
+                        prefer_frames=signup_reveal_pending
+                    ) is not None):
+                before_handles = self.driver.window_handles
+                entry_outcome = safe_click_entry(
+                    self.driver, "register", allow_fallback=False,
+                    prefer_frames=signup_reveal_pending,
+                )
+                entry_clicks_left -= 1
+                state.note = entry_outcome.reason
+                state.actions.append("entry_click" if entry_outcome.clicked else "none")
+                record_evidence(result, "step={};entry={}".format(step, entry_outcome.reason))
+                if entry_outcome.clicked:
+                    auth_entry_clicked = True
+                    signup_entry_clicked = True
+                    signup_reveal_pending = False
+                    if self._maybe_switch_to_new_window(self.driver, before_handles):
+                        record_evidence(result, "switched_to_new_window")
+                    if (self._wait_for_form_fields(self.driver, timeout=8)
+                            or entry_outcome.changed):
+                        continue
+                else:
+                    signup_entry_failed = True
+
+            # ---- Tab 切换优先于阻断检查 ----
+            # 弹窗可能默认短信/扫码视图，有"密码登录"tab 时先切换再看。
+            desired_password_tab = (
+                "password_signup_tab" if entry_kind == "signup" else "password_tab"
+            )
+            if (not login_page_during_signup and not signup_entry_failed
+                    and "password" not in state.fields and tab_clicks_left > 0
+                    and desired_password_tab in state.tabs):
+                tab_outcome = safe_click_tab(self.driver, desired_password_tab)
+                tab_clicks_left -= 1
+                state.note = tab_outcome.reason
+                state.actions.append("tab_click" if tab_outcome.clicked else "none")
+                record_evidence(result, "step={};tab={}".format(step, tab_outcome.reason))
+                if tab_outcome.clicked:
+                    # 轮询等待密码框出现（tab 切换可能有渲染延迟）
+                    if self._wait_for_field(self.driver, "password", timeout=6):
+                        continue
+                    if tab_outcome.changed:
+                        continue
+                    break  # 点了、没变化、也没密码框 → 停止
+
+            # ---- signup 通过"其他方式"展开后，必须再次确认明确注册入口 ----
+            # 若只暴露出登录口令框，禁止把它当成注册口令证据。
+            if (entry_kind == "signup" and signup_reveal_pending
+                    and "password" in state.fields):
+                result.primary_method = primary_method(result.states)
+                return self._done(
+                    result, "unknown", "high", StopReason.NO_SIGNUP_ENTRY.value
+                )
+
+            # ---- 出现口令字段 → 优先分类并停止 ----
+            # 注意：放在阻断检查之前。弹窗里的"扫码登录"等只是可选替代入口，
+            # 密码框可见即视为可到达（阻断信息仍保留在 state.blockers 证据里）
+            if "password" in state.fields and not login_page_during_signup:
+                ft, conf, reason = classify(result.states)
+                result.primary_method = primary_method(result.states)
+                return self._done(result, ft, conf, reason)
+
+            # ---- 被人工阻断 → 停止（含 tab 补偿） ----
+            hard_blockers = {"captcha", "slide", "scan", "app_confirm", "tos"}
+            auth_url = (
+                self._url_is_requested_entry(state.url, "login")
+                or self._url_is_requested_entry(state.url, "signup")
+            )
+            auth_context = bool(
+                auth_entry_clicked or state.fields or state.tabs or auth_url
+                or state.ui_type in {"modal", "drawer", "sso_iframe", "standalone_page"}
+            )
+            if hard_blockers & set(state.blockers) and auth_context:
+                # 先试 tab 补偿：弹窗刚出现时密码 tab 可能还没渲染完
+                if (tab_clicks_left > 0 and "password" not in state.fields
+                        and "password_tab" not in state.tabs
+                        and not login_page_during_signup):
+                    tab_outcome = safe_click_tab(self.driver, desired_password_tab)
+                    tab_clicks_left -= 1
+                    state.note = tab_outcome.reason
+                    state.actions.append("tab_click" if tab_outcome.clicked else "none")
+                    record_evidence(result, "step={};tab_retry={}".format(step, tab_outcome.reason))
+                    if tab_outcome.clicked and self._wait_for_field(
+                        self.driver, "password", timeout=6
+                    ):
+                        continue
+
+                # 登录界面可能没有文字 tab，要先从二维码切到手机，再切到账号。
+                if (entry_kind == "login" and auth_mode_clicks_left > 0
+                        and "password" not in state.fields):
+                    mode_outcome = safe_click_auth_mode_switch(self.driver)
+                    if mode_outcome.clicked:
+                        auth_mode_clicks_left -= 1
+                        step_limit += 1
+                        state.note = mode_outcome.reason
+                        state.actions.append("auth_mode_click")
+                        record_evidence(
+                            result, "step={};auth_mode={}".format(step, mode_outcome.reason)
+                        )
+                        continue
+
+                # 点击过"注册"后，二维码弹窗可能把"其他方式"藏在无文字折角中
+                if (entry_kind == "signup" and signup_entry_clicked
+                        and signup_mode_switches_left > 0
+                        and "scan" in state.blockers):
+                    mode_outcome = safe_click_auth_mode_switch(
+                        self.driver, structural_only=True
+                    )
+                    if mode_outcome.clicked:
+                        signup_mode_switches_left -= 1
+                        step_limit += 1
+                        signup_reveal_pending = True
+                        state.note = mode_outcome.reason
+                        state.actions.append("signup_mode_reveal")
+                        record_evidence(
+                            result,
+                            "step={};signup_mode={}".format(step, mode_outcome.reason),
+                        )
+                        continue
+
+                ft, conf, reason = classify(result.states)
+                result.primary_method = primary_method(result.states)
+                return self._done(result, ft, conf, reason)
+
+            # ---- 请求注册流程却只到达明确的登录页 ----
+            # 且没有可见注册入口：如实记为 no_signup_entry
+            if login_page_during_signup and "password" in state.fields:
+                result.primary_method = primary_method(result.states)
+                return self._done(
+                    result, "unknown", "low", StopReason.NO_SIGNUP_ENTRY.value
+                )
+
+            # ---- 安全前进（点击"下一步/继续"） ----
+            outcome = safe_advance(self.driver, allow_local_test_values=False)
+            state.actions.append("next" if outcome.clicked else "none")
+            record_evidence(result, "step={};navigation={}".format(step, outcome.reason))
+            if not outcome.changed:
+                break
+
+        # ---- 4) 最终分类 ----
+        ft, conf, reason = classify(result.states)
+        result.primary_method = primary_method(result.states)
+        return self._done(result, ft, conf, reason)
+
+    def try_switch_to_password_view(self) -> bool:
+        """类型 E 补救：尝试从多方式页面切换到邮箱+密码注册视图。
+
+        使用 safe_click_tab 查找"密码注册"tab，再用
+        safe_click_auth_mode_switch 尝试展开"其他方式"控件。
+
+        Returns:
+            True  = 切换成功，密码字段现在可见
+            False = 未能切换到密码视图，应输出类型 E 并跳过测量
+        """
+        for _attempt in range(2):
+            # 尝试密码注册 tab
+            tab_outcome = safe_click_tab(self.driver, "password_signup_tab")
+            if tab_outcome.clicked:
+                time.sleep(1.5)
+                fields = detect_fields_all_frames(self.driver)
+                if "password" in fields:
+                    return True
+
+            # 尝试密码登录 tab（备选）
+            tab_outcome = safe_click_tab(self.driver, "password_tab")
+            if tab_outcome.clicked:
+                time.sleep(1.5)
+                fields = detect_fields_all_frames(self.driver)
+                if "password" in fields:
+                    return True
+
+            # 尝试"其他方式"结构控件展开
+            mode_outcome = safe_click_auth_mode_switch(
+                self.driver, structural_only=True
+            )
+            if mode_outcome.clicked:
+                time.sleep(1.5)
+                fields = detect_fields_all_frames(self.driver)
+                if "password" in fields:
+                    return True
+
+            # 第一次失败后等一下再试
+            if _attempt == 0:
+                time.sleep(1.0)
+
+        return False
+
+    def get_current_password_field_xpath(self) -> Optional[str]:
+        """获取当前页面第一个可见密码字段的 XPath。
+
+        分类器已导航到密码页面后，可用此方法获取 XPath 给 form filler 使用。
+        """
+        try:
+            pwds = self.driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
+            for el in pwds:
+                if el.is_displayed() and el.is_enabled():
+                    return self._make_xpath(el)
+        except Exception:
+            pass
+        return None
+
+    # ------------------------------------------------------------------
+    # 内部方法
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _url_is_requested_entry(url: str, entry_kind: str) -> bool:
+        """URL 是否已经明确位于请求的登录/注册入口。
+
+        避免把首页的登录按钮当成注册入口，也避免把测试文件名中的
+        "register" 误导为注册页。
+        """
+        parsed = urlparse(url)
+        path = parsed.path.lower()
+        if parsed.scheme == "file":
+            path = path.rsplit("/", 1)[-1]
+        signup_hints = ("signup", "sign-up", "sign_up", "register", "regphone")
+        login_hints = ("login", "sign-in", "sign_in", "signin")
+        # 同一路径偶尔同时带有两类词（测试页名、redirect 语义等），当前实际登录
+        # 语义优先，不能因为文件名中也出现 register 就跳过注册入口。
+        if entry_kind == "signup" and any(hint in path for hint in login_hints):
+            return False
+        if entry_kind == "login" and any(hint in path for hint in signup_hints):
+            return False
+        hints = signup_hints if entry_kind == "signup" else login_hints
+        return any(hint in path for hint in hints)
+
+    @staticmethod
+    def _wait_for_field(driver: WebDriver, field_type: str,
+                        timeout: float = 5.0) -> bool:
+        """轮询等待指定类型的输入框出现（如 password），含 iframe 内字段。"""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                if field_type in detect_fields_all_frames(driver):
+                    return True
+            except Exception:
+                pass
+            time.sleep(0.3)
+        return False
+
+    @staticmethod
+    def _wait_for_form_fields(driver: WebDriver, timeout: float = 6.0) -> bool:
+        """点击入口后等待字段、认证 tab 或人工阻断任一出现。"""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                fields = detect_fields_all_frames(driver)
+                semantics = _detect_page_semantics(driver, fields)
+                if fields or semantics.get("blockers") or semantics.get("tabs"):
+                    return True
+            except Exception:
+                pass
+            time.sleep(0.3)
+        return False
+
+    @staticmethod
+    def _maybe_switch_to_new_window(driver: WebDriver, before_handles,
+                                     timeout: float = 4.0) -> bool:
+        """等待并切入具有认证证据的新窗口。
+
+        新标签刚创建时常是 about:blank 或只有认证 URL，表单由
+        后续 JS 渲染。在有界等待内轮询，避免因单次瞬时采样造成时序波动；
+        同时要求 URL 之外还有标题/正文/字段，不把空白失败页当成成功。
+        """
+        original = None
+        try:
+            original = driver.current_window_handle
+            deadline = time.time() + timeout
+            first_checked = time.time()
+            saw_new_window = False
+            while time.time() < deadline:
+                handles = driver.window_handles
+                new_handles = [h for h in handles if h not in before_handles]
+                if new_handles:
+                    saw_new_window = True
+                elif not saw_new_window and time.time() - first_checked >= 0.5:
+                    # 站内 modal 是绝大多数，没有新 handle 时快速返回
+                    return False
+                for h in new_handles:
+                    driver.switch_to.window(h)
+                    payload = driver.execute_script(
+                        "const vis=e=>{const r=e.getBoundingClientRect(),"
+                        "s=getComputedStyle(e);return r.width>0&&r.height>0"
+                        "&&s.display!=='none'&&s.visibility!=='hidden'};"
+                        "return {url:location.href,title:document.title||'',"
+                        "text:(document.body?.innerText||'').slice(0,1200),"
+                        "inputs:[...document.querySelectorAll('input')].filter(vis)"
+                        ".map(e=>[e.type,e.name,e.placeholder,e.id])};"
+                    ) or {}
+                    semantic = (
+                        "{} {} {}".format(
+                            payload.get("url", ""),
+                            payload.get("title", ""),
+                            payload.get("text", ""),
+                        )
+                    ).lower()
+                    auth_url = any(
+                        hint in str(payload.get("url", "")).lower()
+                        for hint in (
+                            "login", "signin", "sign-in", "register", "signup",
+                            "passport", "account", "oauth", "auth",
+                        )
+                    )
+                    auth_text = any(
+                        hint in semantic[:1800]
+                        for hint in (
+                            "登录", "注册",
+                            "扫码登录", "手机号登录",
+                            "sign in", "log in", "create account",
+                        )
+                    )
+                    meaningful_page = bool(
+                        payload.get("title") or payload.get("text")
+                        or payload.get("inputs")
+                    )
+                    if payload.get("inputs") or auth_text or (
+                            auth_url and meaningful_page):
+                        return True
+                if original in driver.window_handles:
+                    driver.switch_to.window(original)
+                time.sleep(0.25)
+        except Exception:
+            try:
+                if original in driver.window_handles:
+                    driver.switch_to.window(original)
+            except Exception:
+                pass
+        return False
+
+    @staticmethod
+    def _make_xpath(el) -> str:
+        """为元素构造简单 XPath。"""
+        try:
+            for attr in ("id", "name"):
+                val = el.get_attribute(attr)
+                if val:
+                    return "//input[@{}='{}']".format(attr, val)
+        except Exception:
+            pass
+        return "//input[@type='password']"
+
+    def _done(self, result, flow_type, confidence, stop_reason, error=None):
+        """填充分类结论并返回 dict。"""
+        finalized = finalize(result, flow_type, confidence, stop_reason, error=error)
+        d = finalized.to_dict()
+        d["should_proceed"] = flow_type in PROCEED_FLOW_TYPES
+        d["password_reached"] = any(
+            "password" in (s.get("fields", []) if isinstance(s, dict) else getattr(s, "fields", []))
+            for s in result.states
+        )
+        return d

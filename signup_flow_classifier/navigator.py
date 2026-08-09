@@ -1,0 +1,729 @@
+"""受控导航：只执行明确、安全的下一步操作。"""
+import json
+import time
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
+from urllib.parse import urljoin, urlparse
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
+
+from signup_flow_classifier.page_detector import _element_text, classify_input_type, detect_blockers, detect_next_button
+
+
+MAX_STEPS = 3
+CHANGE_TIMEOUT = 5
+MAX_ENTRY_CLICKS = 2
+
+# 注册/登录入口的明确语义（避免误点）
+_ENTRY_REGISTER_TEXTS = ["立即注册", "免费注册", "马上注册", "注册", "sign up", "create account", "register"]
+_ENTRY_LOGIN_TEXTS = ["登录", "登陆", "sign in", "log in", "login"]
+
+
+@dataclass(frozen=True)
+class NavigationOutcome:
+    clicked: bool
+    changed: bool
+    reason: str
+
+
+@dataclass(frozen=True)
+class EntryTarget:
+    """可跨 Shadow DOM/iframe 重新定位的安全认证入口。"""
+    token: str
+    frame_path: Tuple[int, ...]
+    kind: str
+    source: str
+
+
+def _semantic_controls(driver: WebDriver) -> List[list]:
+    """提取可见表单控件和弹窗摘要，避免只依赖 URL 判断 SPA 变化。"""
+    controls: List[list] = []
+    selector = "input, button, a, select, textarea, [role='button'], [role='dialog'], [aria-modal='true']"
+    for el in driver.find_elements(By.CSS_SELECTOR, selector):
+        try:
+            if not el.is_displayed():
+                continue
+            attrs = [
+                el.tag_name,
+                el.get_attribute("type") or "",
+                el.get_attribute("name") or "",
+                el.get_attribute("id") or "",
+                el.get_attribute("placeholder") or "",
+                el.get_attribute("aria-label") or "",
+                el.get_attribute("role") or "",
+                (el.get_attribute("href") or "")[:160],
+                (el.text or "")[:160],
+            ]
+            controls.append(attrs)
+        except Exception:
+            continue
+    return controls
+
+
+def page_fingerprint(driver: WebDriver) -> str:
+    """轻量页面指纹：URL + 标题 + 可见输入框签名 + 按钮/弹窗数量。
+
+    用单条 JS 在浏览器内计算（之前遍历全部 DOM + Python 序列化单次约 1.6s，
+    是每步耗时十几秒的元凶；JS 版本毫秒级）。
+    输入框签名能区分 SPA 视图切换（短信视图=phone+code，密码视图=username+password）。
+    """
+    try:
+        return driver.execute_script(
+            "return JSON.stringify({"
+            "u: location.href,"
+            "t: document.title,"
+            "i: [...document.querySelectorAll('input')].filter(e=>e.offsetParent!==null)"
+            "   .map(e=>(e.type||'')+':'+(e.name||'')+':'+(e.placeholder||'')).sort(),"
+            "b: [...document.querySelectorAll('button,a,[role=button]')]"
+            "   .filter(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);"
+            "     return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'})"
+            "   .map(e=>(e.innerText||e.getAttribute('aria-label')||e.getAttribute('title')||'').trim())"
+            "   .sort(),"
+            "d: document.querySelectorAll('[role=dialog]').length,"
+            "f: [...document.querySelectorAll('iframe')].filter(e=>e.offsetParent!==null)"
+            "   .map(e=>(e.src||e.id||'').split('?')[0]).sort()"
+            "});"
+        ) or ""
+    except Exception:
+        return ""
+
+
+def wait_page_change(driver: WebDriver, old_fingerprint: str,
+                     timeout: float = CHANGE_TIMEOUT,
+                     old_window_handles=None) -> bool:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if page_fingerprint(driver) != old_fingerprint:
+            return True
+        if old_window_handles is not None:
+            try:
+                if set(driver.window_handles) != set(old_window_handles):
+                    return True
+            except Exception:
+                pass
+        time.sleep(0.25)
+    return False
+
+
+def _visible_inputs(driver: WebDriver):
+    for el in driver.find_elements(By.TAG_NAME, "input"):
+        try:
+            if el.is_displayed() and el.is_enabled():
+                yield el
+        except Exception:
+            continue
+
+
+def _fill_local_fixture_values(driver: WebDriver) -> None:
+    """只给 file:// 本地测试页填写固定假数据，永不用于真实网站。"""
+    if urlparse(driver.current_url).scheme != "file":
+        raise ValueError("local fixture values are restricted to file:// pages")
+    values = {
+        "email": "measurement@example.com",
+        "phone": "15500000000",
+        "identifier": "measurement_test",
+        "code": "123456",
+    }
+    for el in _visible_inputs(driver):
+        field_type = classify_input_type(el)
+        if field_type not in values:
+            continue
+        try:
+            if not (el.get_attribute("value") or ""):
+                el.send_keys(values[field_type])
+        except Exception:
+            continue
+
+
+def _has_empty_relevant_input(driver: WebDriver) -> bool:
+    for el in _visible_inputs(driver):
+        try:
+            if classify_input_type(el) in {"email", "phone", "identifier", "code"}:
+                if not (el.get_attribute("value") or ""):
+                    return True
+        except Exception:
+            continue
+    return False
+
+
+def safe_advance(driver: WebDriver, allow_local_test_values: bool = False) -> NavigationOutcome:
+    """尝试一次安全前进，并说明为什么前进或停止。
+
+    - 本地 fixture 可显式启用固定假数据。
+    - 真实网站默认不填写身份信息或验证码。
+    - 不使用 JavaScript 强制点击。
+    """
+    blockers = set(detect_blockers(driver))
+    if blockers & {"captcha", "slide", "scan", "app_confirm", "tos"}:
+        return NavigationOutcome(False, False, "human_blocked")
+    if blockers & {"sms_code", "email_code", "verification_code"} and not allow_local_test_values:
+        return NavigationOutcome(False, False, "verification_required")
+
+    if allow_local_test_values:
+        try:
+            _fill_local_fixture_values(driver)
+        except ValueError:
+            return NavigationOutcome(False, False, "test_values_refused_for_remote_page")
+    elif _has_empty_relevant_input(driver):
+        return NavigationOutcome(False, False, "input_required")
+
+    button = detect_next_button(driver)
+    if button is None:
+        return NavigationOutcome(False, False, "no_safe_button")
+
+    old_fingerprint = page_fingerprint(driver)
+    try:
+        button.click()
+    except Exception:
+        return NavigationOutcome(False, False, "native_click_failed")
+
+    changed = wait_page_change(driver, old_fingerprint)
+    if not changed:
+        return NavigationOutcome(True, False, "clicked_no_change")
+    return NavigationOutcome(True, True, "clicked_and_changed")
+
+
+def safe_click_next(driver: WebDriver, allow_local_test_values: bool = False) -> bool:
+    """兼容旧调用者；新代码应优先使用 safe_advance 获取停止原因。"""
+    return safe_advance(driver, allow_local_test_values).changed
+
+
+def _entry_text_match(text: str, hints: List[str]) -> bool:
+    """入口文本匹配：短语义（登录/sign in）精确匹配，长语义（立即注册）包含匹配。
+
+    精确匹配按空白分词后比较，避免 _element_text 返回"文本+id"拼接
+    以及正文里"登录后可见"这类文字被误匹配。
+    """
+    t = text.strip().lower()
+    tokens = t.split()
+    short_hints = ("登录", "登陆", "login", "sign in", "log in", "register")
+    for h in hints:
+        hl = h.lower()
+        if h in short_hints:
+            if t == hl or any(tok == hl for tok in tokens):
+                return True
+        else:
+            if hl in t:
+                return True
+    return False
+
+
+def _same_site(url_a: str, url_b: str) -> bool:
+    """判断两个 URL 是否同属一个注册域（eTLD+1）。
+
+    passport.hupu.com 与 www.hupu.com 同属 hupu.com → 站内；
+    登录弹窗/注册页常用子域名（passport/login/account），不能按主机名严格比较。
+    """
+    if not url_b or url_b.startswith(("#", "javascript:", "void(")):
+        return True
+    try:
+        import tldextract
+        ea = tldextract.extract(url_a)
+        eb = tldextract.extract(url_b)
+        if not ea.registered_domain and not eb.registered_domain:
+            return True  # 本地 file:// 等无域名场景视为站内
+        return bool(ea.registered_domain and ea.registered_domain == eb.registered_domain)
+    except Exception:
+        return False
+
+
+def _is_organizational_signup(url: str) -> bool:
+    """排除机构/企业/商家入驻，不把它们冒充普通用户注册路线。"""
+    try:
+        path = urlparse(url).path.lower().rstrip("/")
+    except Exception:
+        return False
+    blocked = (
+        "/org/signup", "/organization/signup", "/enterprise/register",
+        "/business/register", "/merchant/register", "/company/register",
+    )
+    return any(path.endswith(item) or item + "/" in path for item in blocked)
+
+
+def _switch_to_frame_path(driver: WebDriver, frame_path: Tuple[int, ...]) -> bool:
+    try:
+        driver.switch_to.default_content()
+        for index in frame_path:
+            frames = driver.find_elements(By.TAG_NAME, "iframe")
+            if index >= len(frames):
+                driver.switch_to.default_content()
+                return False
+            driver.switch_to.frame(frames[index])
+        return True
+    except Exception:
+        try:
+            driver.switch_to.default_content()
+        except Exception:
+            pass
+        return False
+
+
+def _frame_paths(driver: WebDriver, max_depth: int = 3) -> List[Tuple[int, ...]]:
+    """列出可见 iframe 路径；包含嵌套与延迟认证 iframe。"""
+    paths: List[Tuple[int, ...]] = [tuple()]
+
+    def walk(prefix: Tuple[int, ...], depth: int) -> None:
+        if depth >= max_depth or not _switch_to_frame_path(driver, prefix):
+            return
+        try:
+            frame_count = len(driver.find_elements(By.TAG_NAME, "iframe"))
+        except Exception:
+            return
+        for index in range(frame_count):
+            # 递归返回时浏览器仍位于子 iframe。每个兄弟节点都从父路径重新进入，
+            # 避免复用其他 browsing context 中已经失效的 WebElement。
+            if not _switch_to_frame_path(driver, prefix):
+                return
+            try:
+                frames = driver.find_elements(By.TAG_NAME, "iframe")
+                if index >= len(frames):
+                    continue
+                frame = frames[index]
+                if not frame.is_displayed():
+                    continue
+            except Exception:
+                continue
+            path = prefix + (index,)
+            paths.append(path)
+            walk(path, depth + 1)
+
+    walk(tuple(), 0)
+    try:
+        driver.switch_to.default_content()
+    except Exception:
+        pass
+    return paths
+
+
+def _mark_entry_in_current_context(driver: WebDriver, kind: str,
+                                   token: str) -> Optional[str]:
+    hints = _ENTRY_REGISTER_TEXTS if kind == "register" else _ENTRY_LOGIN_TEXTS
+    structural = (
+        ["register", "signup", "sign-up", "regist", "注册"]
+        if kind == "register"
+        else ["login", "signin", "sign-in", "account", "profile", "avatar",
+              "user", "member", "passport", "登录", "登陆", "账户", "账号",
+              "个人中心"]
+    )
+    payload = json.dumps({"hints": hints, "structural": structural,
+                          "kind": kind, "token": token}, ensure_ascii=False)
+    script = r"""
+const cfg = arguments[0];
+const visible = el => {
+  try {
+    const r = el.getBoundingClientRect(), s = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && s.display !== 'none'
+      && s.visibility !== 'hidden' && !el.disabled
+      && el.getAttribute('aria-disabled') !== 'true';
+  } catch (e) { return false; }
+};
+const clean = value => (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+const roots = [document];
+for (let i = 0; i < roots.length && i < 100; i++) {
+  for (const el of roots[i].querySelectorAll('*')) if (el.shadowRoot) roots.push(el.shadowRoot);
+}
+const all = [];
+for (const root of roots) {
+  for (const el of root.querySelectorAll(
+    "button,a,[role='button'],[role='link'],[role='tab'],input[type='button'],"
+    + "[class*='login' i],[class*='signin' i],[class*='register' i],[class*='regist' i],"
+    + "[class*='account' i],[class*='profile' i],[class*='avatar' i],"
+    + "[id*='login' i],[id*='register' i],[id*='account' i],[id*='user' i],"
+    + "div,span,img,svg"
+  )) all.push(el);
+}
+const rows = [];
+for (const el of all) {
+  if (!visible(el)) continue;
+  const type = clean(el.getAttribute('type'));
+  if (type === 'submit') continue;
+  if (el.closest('form') && el.tagName !== 'A' && el.getAttribute('role') !== 'tab'
+      && type !== 'button') continue;
+  const text = clean(el.innerText || el.textContent);
+  const aria = clean(el.getAttribute('aria-label'));
+  const title = clean(el.getAttribute('title'));
+  const alt = clean(el.getAttribute('alt'));
+  const descendantName = clean([
+    ...el.querySelectorAll('[aria-label],[title],img[alt],svg title')
+  ].slice(0, 8).map(node =>
+    node.getAttribute('aria-label') || node.getAttribute('title')
+      || node.getAttribute('alt') || node.textContent || ''
+  ).join(' '));
+  const cls = clean(typeof el.className === 'string' ? el.className : '');
+  const id = clean(el.id);
+  const href = clean(el.getAttribute('href'));
+  const semantic = [text, aria, title, alt, descendantName, cls, id, href].join(' ');
+  const combinedText = text.replace(/[|｜/·]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const explicit = cfg.hints.some(h => {
+    h = clean(h);
+    return text === h || aria === h || title === h || alt === h
+      || descendantName === h
+      || text.split(/\s+/).includes(h);
+  });
+  const combined = (combinedText.includes('登录') && combinedText.includes('注册'))
+    || (combinedText.includes('sign in') && combinedText.includes('sign up'));
+  const structural = cfg.structural.some(h => semantic.includes(clean(h)));
+  // 明确的认证结构应始终排在普通作者头像/用户卡之前。
+  // 旧打分会因为头像 img 有 alt 文本额外加分，导致正文头像
+  // 压过 class 中明确带 login 的顶栏按钮。
+  const strongStructural = [
+    'login', 'signin', 'sign-in', 'register', 'regist', 'signup',
+    'sign-up', 'passport', '登录', '登陆', '注册'
+  ].some(h => semantic.includes(h));
+  const mediumStructural = [
+    'account', 'member', '账户', '账号', '个人中心'
+  ].some(h => semantic.includes(h));
+  const nativeInteractive = ['BUTTON','A','INPUT'].includes(el.tagName)
+    || ['button','link','tab'].includes(clean(el.getAttribute('role')))
+    || el.hasAttribute('onclick') || el.hasAttribute('tabindex')
+    || getComputedStyle(el).cursor === 'pointer';
+  if (!explicit && !combined && !(structural && nativeInteractive)) continue;
+  // div/span 必须是叶子式、可交互且语义紧凑，避免点击包含整页文字的大容器。
+  if (['DIV','SPAN'].includes(el.tagName)) {
+    if (!nativeInteractive || text.length > 40) continue;
+    const childText = [...el.children].filter(visible).map(c => clean(c.innerText || c.textContent));
+    if (childText.some(t => t && t === text)) continue;
+  }
+  const score = (explicit ? 100 : 0) + (combined ? 70 : 0)
+    + (strongStructural ? 50 : (mediumStructural ? 25 : 5))
+    + (aria || title || alt || descendantName ? 5 : 0)
+    + (el.tagName === 'BUTTON' ? 10 : 0)
+    + (el.tagName === 'A' ? 8 : 0) - Math.min(text.length, 40);
+  // 容器扣分：若元素内含有同样命中的可点击子元素（a/button），
+  // 说明真正的点击目标是子元素（如 li>a 的"登录/注册"菜单），
+  // 点容器往往不触发弹窗（imooc 实测）。扣分让子元素胜出。
+  const clickableChild = [...el.querySelectorAll('a,button,[role="button"],[role="tab"]')]
+    .some(child => {
+      const ct = clean(child.innerText || child.textContent || child.getAttribute('aria-label'));
+      return ct === clean(cfg.hints.join(' ')) || cfg.hints.some(h => ct === clean(h)
+        || ct.split(/\s+/).includes(clean(h)));
+    });
+  const finalScore = score - (clickableChild ? 60 : 0);
+  rows.push({el, score: finalScore, source: explicit ? 'accessible_text' : (combined ? 'combined_text' : 'structural_semantics')});
+}
+rows.sort((a,b) => b.score - a.score);
+if (!rows.length) return null;
+rows[0].el.setAttribute('data-ap-entry-token', cfg.token);
+return rows[0].source;
+"""
+    try:
+        return driver.execute_script(script, json.loads(payload))
+    except Exception:
+        return None
+
+
+def _resolve_marked_entry(driver: WebDriver, token: str):
+    script = r"""
+const token = arguments[0], roots = [document];
+for (let i = 0; i < roots.length && i < 100; i++) {
+  const found = roots[i].querySelector(`[data-ap-entry-token="${token}"]`);
+  if (found) return found;
+  for (const el of roots[i].querySelectorAll('*')) if (el.shadowRoot) roots.push(el.shadowRoot);
+}
+return null;
+"""
+    try:
+        return driver.execute_script(script, token)
+    except Exception:
+        return None
+
+
+def detect_entry_button(
+    driver: WebDriver, prefer: str = "register", allow_fallback: bool = True,
+    prefer_frames: bool = False,
+):
+    """找到站内的"登录/注册"入口按钮或链接（如页头、登录页的"立即注册"）。
+
+    先按 prefer 的语义找（注册优先时找"注册"，找不到再回退找"登录"——
+    首页可能只有"登录"按钮，点进去的弹窗里才有注册入口，如 B站）。
+    用 JS 查找并返回**文本最短**的匹配元素（叶子优先，避免点到包含子标签的父容器）。
+    选择器覆盖 div 型按钮（B站的 header-login-entry 就是 div）。
+
+    安全边界：
+    - 只返回站内链接/按钮（同主机），不点外部链接
+    - 必须可见可交互
+    - 短语义精确匹配，避免误点正文文字
+    - 返回 WebElement 或 None
+    """
+    if allow_fallback:
+        order = ["register", "login"] if prefer == "register" else ["login", "register"]
+    else:
+        order = [prefer]
+    base_url = driver.current_url
+    for kind in order:
+        frame_paths = _frame_paths(driver)
+        if prefer_frames:
+            frame_paths.sort(key=lambda path: (not bool(path), len(path)))
+        for sequence, frame_path in enumerate(frame_paths):
+            if not _switch_to_frame_path(driver, frame_path):
+                continue
+            token = f"{int(time.time() * 1000)}-{kind}-{sequence}"
+            source = _mark_entry_in_current_context(driver, kind, token)
+            if not source:
+                continue
+            element = _resolve_marked_entry(driver, token)
+            href = element.get_attribute("href") if element is not None else ""
+            target_url = urljoin(base_url, href) if href else ""
+            if (href and not _same_site(base_url, target_url)) or (
+                    kind == "register" and target_url
+                    and _is_organizational_signup(target_url)):
+                try:
+                    driver.execute_script(
+                        "arguments[0].removeAttribute('data-ap-entry-token')", element
+                    )
+                except Exception:
+                    pass
+                continue
+            try:
+                driver.switch_to.default_content()
+            except Exception:
+                pass
+            return EntryTarget(token, frame_path, kind, source)
+    try:
+        driver.switch_to.default_content()
+    except Exception:
+        pass
+    return None
+
+
+def safe_click_entry(
+    driver: WebDriver, prefer: str = "register", allow_fallback: bool = True,
+    prefer_frames: bool = False,
+) -> NavigationOutcome:
+    """点击"登录/注册"入口并等待页面变化。返回 NavigationOutcome。"""
+    target = detect_entry_button(
+        driver, prefer, allow_fallback=allow_fallback,
+        prefer_frames=prefer_frames,
+    )
+    if target is None:
+        return NavigationOutcome(False, False, "no_entry_button")
+    old_fp = page_fingerprint(driver)
+    try:
+        old_window_handles = driver.window_handles
+    except Exception:
+        old_window_handles = None
+    try:
+        if not _switch_to_frame_path(driver, target.frame_path):
+            return NavigationOutcome(False, False, "entry_frame_missing")
+        btn = _resolve_marked_entry(driver, target.token)
+        if btn is None:
+            driver.switch_to.default_content()
+            return NavigationOutcome(False, False, "entry_target_missing")
+        btn.click()
+        # 保留 data-ap-entry-token 供调用方做"链接 href 兜底导航"读取，
+        # 读取方负责清理；这里不再移除。
+        driver.switch_to.default_content()
+    except Exception:
+        try:
+            driver.switch_to.default_content()
+        except Exception:
+            pass
+        return NavigationOutcome(False, False, "entry_native_click_failed")
+    changed = wait_page_change(
+        driver, old_fp, old_window_handles=old_window_handles
+    )
+    if not changed:
+        return NavigationOutcome(True, False, "entry_clicked_no_change")
+    return NavigationOutcome(
+        True, True, f"{target.kind}_{target.source}_clicked_and_changed"
+    )
+
+
+def safe_click_tab(driver: WebDriver, kind: str) -> NavigationOutcome:
+    """点击表单内的切换 tab（如 password_tab → "密码登录"）。
+
+    JS 查找精确文本匹配的可见元素，并向上找到真正可交互的 React/SPA tab
+    容器，再用 **Selenium 原生 click**（可信事件；部分网站如 163 只响应
+    可信事件，JS el.click() 无效）。先查主框架，找不到再进 iframe 找。
+    点击后用页面指纹确认视图是否真的切换，避免过去永远返回 changed=False。
+    """
+    from signup_flow_classifier.page_detector import _TAB_KINDS
+    hints = _TAB_KINDS.get(kind, [])
+    if not hints:
+        return NavigationOutcome(False, False, f"no_{kind}")
+    quoted = "[" + ",".join(json.dumps(h) for h in hints) + "]"
+    js = (
+        "const targets = " + quoted + ";" +
+        "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');"
+        "const els = [...document.querySelectorAll("
+        "\"div, span, li, a, button, [role='tab'], [class*='tab'], [class*='Tab']\")];"
+        "for (const t of targets) {"
+        "  const tn = norm(t);"
+        "  const matches = els.filter(e => e.offsetParent !== null && norm(e.textContent.trim()) === tn);"
+        "  if (matches.length) {"
+        "    const el = matches.sort((a,b) => a.children.length - b.children.length)[0];"
+        "    const target = el.closest(\"button, a, [role='tab'], [role='button'], li\") || el;"
+        "    target.scrollIntoView({block: 'center'});"
+        "    target.setAttribute('data-ap-tab-target', '1');"
+        "    return true;"
+        "  }"
+        "}"
+        "return false;"
+    )
+
+    def _trusted_click() -> NavigationOutcome:
+        try:
+            if not driver.execute_script(js):
+                return NavigationOutcome(False, False, f"no_{kind}")
+            from selenium.webdriver.common.by import By
+            el = driver.find_element(By.CSS_SELECTOR, "[data-ap-tab-target='1']")
+            old_fp = page_fingerprint(driver)
+            el.click()
+            driver.execute_script("document.querySelector('[data-ap-tab-target]')?.removeAttribute('data-ap-tab-target');")
+            changed = wait_page_change(driver, old_fp, timeout=2.0)
+            reason = f"{kind}_clicked_and_changed" if changed else f"{kind}_clicked_no_change"
+            return NavigationOutcome(True, changed, reason)
+        except Exception:
+            try:
+                driver.execute_script("document.querySelector('[data-ap-tab-target]')?.removeAttribute('data-ap-tab-target');")
+            except Exception:
+                pass
+            return NavigationOutcome(False, False, f"{kind}_native_click_failed")
+
+    outcome = _trusted_click()
+    if outcome.clicked:
+        return outcome
+    for frame in driver.find_elements(By.TAG_NAME, "iframe"):
+        try:
+            driver.switch_to.frame(frame)
+            outcome = _trusted_click()
+            if outcome.clicked:
+                driver.switch_to.default_content()
+                suffix = "_and_changed" if outcome.changed else "_no_change"
+                return NavigationOutcome(True, outcome.changed, f"{kind}_clicked_in_iframe{suffix}")
+            driver.switch_to.default_content()
+        except Exception:
+            try:
+                driver.switch_to.default_content()
+            except Exception:
+                pass
+    return NavigationOutcome(False, False, f"no_{kind}")
+
+
+def safe_click_auth_mode_switch(
+    driver: WebDriver, structural_only: bool = False
+) -> NavigationOutcome:
+    """在已经打开的登录界面中切换到另一种安全认证方式。
+
+    只识别两类窄语义控件：明确的“使用手机登录/账号”入口，以及常见的
+    二维码模式切换结构（如 ``qrcode-change``）。不填写字段，不点击发送
+    验证码、协议、注册或最终提交；带 href 的控件还必须留在同一站点。
+
+    调用方必须先确认当前确实处在认证上下文中，并限制调用次数。
+    ``structural_only=True`` 时只允许无文字的二维码“其他方式”结构控件，
+    供 signup 展开选项后再次寻找明确注册入口；不会点击“账号/手机登录”。
+    """
+    base_url = driver.current_url
+    marker = f"ap-auth-mode-{int(time.time() * 1000)}"
+    config = {
+        "marker": marker,
+        "labels": [] if structural_only else [
+            "使用手机登录", "手机登录", "账号", "账户",
+            "账号登录", "账户登录",
+        ],
+        "structural": [
+            "qrcode-change", "qr-code-change", "qrcode-switch",
+            "qr-switch", "login-mode-switch", "mode-switch",
+        ],
+        "forbidden": [
+            "发送验证码", "获取验证码", "重新发送", "登录", "立即登录",
+            "注册", "立即注册", "提交", "完成", "同意", "协议",
+            "send code", "get code", "submit", "register", "sign up",
+        ],
+    }
+    script = r"""
+const cfg=arguments[0];
+const clean=v=>(v||'').replace(/帐/g,'账').replace(/\s+/g,'').trim().toLowerCase();
+const visible=el=>{try{const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+ return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'
+  &&!el.disabled&&el.getAttribute('aria-disabled')!=='true';}catch(e){return false;}};
+const roots=[document], rows=[];
+for(let i=0;i<roots.length&&i<100;i++){
+ const root=roots[i];
+ for(const el of root.querySelectorAll('*'))if(el.shadowRoot)roots.push(el.shadowRoot);
+ for(const el of root.querySelectorAll("a,button,[role='button'],[role='tab'],div,span")){
+  if(!visible(el))continue;
+  const type=clean(el.getAttribute('type'));
+  if(type==='submit'||type==='image')continue;
+  const label=clean(el.innerText||el.textContent||el.getAttribute('aria-label')||el.title||'');
+  const href=el.getAttribute('href')||'';
+  const semantic=clean([typeof el.className==='string'?el.className:'',el.id,
+    el.getAttribute('data-type'),el.getAttribute('data-action')].join(' '));
+  if(cfg.forbidden.some(x=>label===clean(x)))continue;
+  const explicitIndex=cfg.labels.map(clean).indexOf(label);
+  const structural=cfg.structural.some(x=>semantic.includes(clean(x)));
+  if(explicitIndex<0&&!structural)continue;
+  // 有些站把“账号”方式的普通 <a> 放在登录 form 内。只放行精确语义
+  // 的站内链接、tab 或明确 type=button 的按钮；默认 submit 按钮和
+  // 无文字结构控件在 form 内仍一律拒绝。
+  if(el.closest('form')&&!(explicitIndex>=0&&(
+    el.tagName==='A'||clean(el.getAttribute('role'))==='tab'
+      ||(el.tagName==='BUTTON'&&type==='button')
+  )))continue;
+  const nativeInteractive=['A','BUTTON'].includes(el.tagName)
+    ||['button','tab'].includes(clean(el.getAttribute('role')))
+    ||el.hasAttribute('onclick')||el.hasAttribute('tabindex')
+    ||getComputedStyle(el).cursor==='pointer';
+  if(!nativeInteractive&&!structural)continue;
+  // 容器有符合条件的可点击后代时只保留后代，避免点大块弹窗容器。
+  if(['DIV','SPAN'].includes(el.tagName)&&!structural){
+    if(label.length>12)continue;
+    if([...el.querySelectorAll('a,button,[role="button"],[role="tab"]')]
+      .some(child=>visible(child)&&cfg.labels.map(clean).includes(clean(child.innerText||child.textContent))))continue;
+  }
+  const score=(explicitIndex>=0?120-explicitIndex*5:70)
+    +(el.tagName==='A'?10:0)+(el.tagName==='BUTTON'?8:0)-Math.min(label.length,20);
+  rows.push({el,score,href,reason:explicitIndex>=0?'text':'structural'});
+ }
+}
+rows.sort((a,b)=>b.score-a.score);
+if(!rows.length)return null;
+const row=rows[0];
+row.el.setAttribute('data-ap-auth-mode',cfg.marker);
+return {href:row.href,reason:row.reason};
+"""
+
+    for frame_path in _frame_paths(driver):
+        try:
+            if not _switch_to_frame_path(driver, frame_path):
+                continue
+            marked = driver.execute_script(script, config)
+            if not marked:
+                continue
+            element = driver.find_element(
+                By.CSS_SELECTOR, f"[data-ap-auth-mode='{marker}']"
+            )
+            href = marked.get("href") or ""
+            target_url = urljoin(base_url, href) if href else ""
+            if href and not _same_site(base_url, target_url):
+                driver.execute_script(
+                    "arguments[0].removeAttribute('data-ap-auth-mode')", element
+                )
+                continue
+            old_fp = page_fingerprint(driver)
+            element.click()
+            try:
+                driver.execute_script(
+                    "arguments[0].removeAttribute('data-ap-auth-mode')", element
+                )
+            except Exception:
+                pass
+            driver.switch_to.default_content()
+            changed = wait_page_change(driver, old_fp, timeout=3.0)
+            suffix = "and_changed" if changed else "no_change"
+            return NavigationOutcome(
+                True, changed,
+                f"auth_mode_{marked.get('reason', 'unknown')}_clicked_{suffix}",
+            )
+        except Exception:
+            try:
+                driver.switch_to.default_content()
+            except Exception:
+                pass
+    return NavigationOutcome(False, False, "no_safe_auth_mode_switch")
+
+
+def _match_any(text: str, hints: List[str]) -> bool:
+    t = text.lower()
+    return any(h.lower() in t for h in hints)

@@ -1,0 +1,142 @@
+﻿python.exe : 2026-08-08 10:12:04.415 | DEBUG    | utils.login_link_discovery:inject:71 - scripts.js registered via CDP
+At line:1 char:460
++ ... lyContinue; & "D:\Anaconda\anaconda\python.exe" main.py --method auto ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-08-08 10:1...istered via CDP:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-08-08 10:12:04.422 | DEBUG    | utils.login_link_discovery:inject:71 - form_detection_addons.js registered via CDP
+2026-08-08 10:12:04.422 | INFO     | utils.login_link_discovery:navigate_to_signup:185 - CDP 链接发现...
+2026-08-08 10:12:04.793 | DEBUG    | utils.login_link_discovery:inject:71 - scripts.js registered via CDP
+2026-08-08 10:12:04.801 | DEBUG    | utils.login_link_discovery:inject:71 - form_detection_addons.js registered via CDP
+2026-08-08 10:12:04.801 | INFO     | utils.login_link_discovery:navigate_to_signup:185 - CDP 链接发现...
+2026-08-08 10:12:21.060 | INFO     | utils.login_link_discovery:navigate_to_signup:206 - 发现 66 个链接
+2026-08-08 10:12:21.061 | INFO     | utils.login_link_discovery:navigate_to_signup:222 - 注册关键词匹配: 45/66
+2026-08-08 10:12:21.061 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [0] 跳过 (不可点击 <DIV>): 注册
+2026-08-08 10:12:21.061 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [1] 跳过 (不可点击 <SPAN>): 注册
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:278 - [2] URL 未变化: 注册
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [3] 跳过 (不可点击 <DIV>): 探索你喜欢的事物。
+ 登录 Facebook 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [4] 跳过 (不可点击 <DIV>): 探索你喜欢的事物。
+ 登录 Facebook 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [5] 跳过 (不可点击 <DIV>): 登录 Facebo
+ok 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [6] 跳过 (不可点击 <DIV>): 登录 Facebo
+ok 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [7] 跳过 (不可点击 <DIV>): 登录 Facebo
+ok 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [8] 跳过 (不可点击 <DIV>): 登录 Facebo
+ok 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [9] 跳过 (不可点击 <DIV>): 登录 Facebo
+ok 邮箱或手机号 密码 登录 忘记密码了？ 创建新账户
+2026-08-08 10:12:24.415 | INFO     | utils.login_link_discovery:navigate_to_signup:290 - 尝试 URL 模式回退...
+2026-08-08 10:12:29.445 | INFO     | utils.login_link_discovery:navigate_to_signup:206 - 发现 51 个链接
+2026-08-08 10:12:29.445 | INFO     | utils.login_link_discovery:navigate_to_signup:222 - 注册关键词匹配: 29/51
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:278 - [0] URL 未变化: Sign up
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [1] 跳过 (不可点击 <DIV>): Platform 
+Solutions Resources Open Source Enterprise Pricing 
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [2] 跳过 (不可点击 <DIV>): Platform 
+Solutions Resources Open Source Enterprise Pricing 
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [3] 跳过 (不可点击 <DIV>): Platform 
+Solutions Resources Open Source Enterprise Pricing 
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [4] 跳过 (不可点击 <DIV>): Type / to
+ search Sign in Sign up
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [5] 跳过 (不可点击 <DIV>): The futur
+e of building happens together  Tools and trends ev
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [6] 跳过 (不可点击 <DIV>): Enter you
+r email Sign up for GitHub Try GitHub Copilot
+2026-08-08 10:12:33.020 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [7] 跳过 (不可点击 <DIV>): Enter you
+r email Sign up for GitHub
+2026-08-08 10:12:34.269 | INFO     | utils.login_link_discovery:navigate_to_signup:309 - URL 模式命中: -> https://facebook.
+com/register
+2026-08-08 10:12:36.248 | DEBUG    | utils.login_link_discovery:navigate_to_signup:278 - [8] URL 未变化: Sign up for GitHu
+b
+2026-08-08 10:12:36.248 | DEBUG    | utils.login_link_discovery:navigate_to_signup:241 - [9] 跳过 (不可点击 <SPAN>): Sign up 
+for GitHub
+2026-08-08 10:12:36.248 | INFO     | utils.login_link_discovery:navigate_to_signup:290 - 尝试 URL 模式回退...
+2026-08-08 10:12:39.533 | DEBUG    | utils.login_link_discovery:_wait_for_spa_render:466 - SPA 渲染等待超时 (5s)
+2026-08-08 10:12:39.553 | INFO     | utils.login_link_discovery:_find_signup_fields_in_frames:416 - 跨 frame 搜索：1 个 fram
+e 中有字段
+2026-08-08 10:12:39.553 | INFO     | utils.login_link_discovery:_find_signup_fields_in_frames:435 - iframe 部分命中 (https:
+//www.facebook.com/register): pwd=//*[@id='_R_clap4jikacppb6amH1_']
+2026-08-08 10:12:50.235 | INFO     | utils.util_basic:get_logger:88 - Begin logging for testing facebook.com
+2026-08-08 10:12:50.236 | INFO     | full_form_tester.full_form_tester:find_admissible_password:254 - Begin finding adm
+issible password (full-form) for facebook.com.
+2026-08-08 10:12:50.253 | INFO     | full_form_tester.full_form_tester:find_admissible_password:261 - Using cached admi
+ssible: K57ljFru
+2026-08-08 10:12:50.378 | INFO     | utils.login_link_discovery:navigate_to_signup:309 - URL 模式命中: -> https://github.co
+m/join
+2026-08-08 10:12:55.604 | DEBUG    | utils.login_link_discovery:_wait_for_spa_render:466 - SPA 渲染等待超时 (5s)
+2026-08-08 10:12:55.650 | INFO     | utils.login_link_discovery:_find_signup_fields_in_frames:416 - 跨 frame 搜索：1 个 fram
+e 中有字段
+2026-08-08 10:12:55.651 | INFO     | utils.login_link_discovery:_find_signup_fields_in_frames:426 - iframe 命中 (https://
+github.com/signup): email=//*[@id='email'], pwd=//*[@id='password']
+2026-08-08 10:12:56.271 | INFO     | full_form_tester.full_form_tester:check_special_symbols:303 - Testing special symb
+ols: K57ljFru@
+2026-08-08 10:12:56.272 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: K57ljFr
+u@ -- test special symbol
+2026-08-08 10:12:56.272 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: K57ljFru@
+2026-08-08 10:12:59.061 | INFO     | full_form_tester.full_form_tester:_ensure_page_ready:141 - 全表单字段检测完成: 4 个字段
+2026-08-08 10:12:59.061 | INFO     | full_form_tester.full_form_tester:_ensure_page_ready:142 - 字段类型: ['UNKNOWN', 'UNKN
+OWN', 'EMAIL', 'PASSWORD']
+2026-08-08 10:13:06.766 | INFO     | utils.util_basic:get_logger:88 - Begin logging for testing github.com
+2026-08-08 10:13:07.025 | INFO     | full_form_tester.full_form_tester:find_admissible_password:254 - Begin finding adm
+issible password (full-form) for github.com.
+2026-08-08 10:13:07.121 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: CoChI6m
+d -- Find admissible
+2026-08-08 10:13:07.185 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: CoChI6md
+2026-08-08 10:13:09.298 | SUCCESS  | full_form_tester.full_form_tester:test_one_password:228 - The tested password K57l
+jFru@ is accepted.
+2026-08-08 10:13:10.885 | INFO     | full_form_tester.full_form_tester:_ensure_page_ready:141 - 全表单字段检测完成: 5 个字段
+2026-08-08 10:13:10.887 | INFO     | full_form_tester.full_form_tester:_ensure_page_ready:142 - 字段类型: ['EMAIL', 'PASSWO
+RD', 'USERNAME', 'CHECKBOX_TERMS', 'CHECKBOX_TERMS']
+2026-08-08 10:13:16.485 | INFO     | full_form_tester.full_form_tester:change_and_test_2_word_password:308 - Testing 2-
+word structure.
+2026-08-08 10:13:16.486 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: rlj75FK
+u -- test 2-word structure
+2026-08-08 10:13:16.486 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: rlj75FKu
+2026-08-08 10:13:29.476 | SUCCESS  | full_form_tester.full_form_tester:test_one_password:228 - The tested password CoCh
+I6md is accepted.
+2026-08-08 10:13:29.567 | INFO     | full_form_tester.full_form_tester:find_admissible_password:287 - Admissible passwo
+rd found and cached: CoChI6md
+2026-08-08 10:13:32.043 | SUCCESS  | full_form_tester.full_form_tester:test_one_password:228 - The tested password rlj7
+5FKu is accepted.
+2026-08-08 10:13:33.745 | INFO     | full_form_tester.full_form_tester:check_special_symbols:303 - Testing special symb
+ols: CoChI6md@
+2026-08-08 10:13:33.746 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: CoChI6m
+d@ -- test special symbol
+2026-08-08 10:13:33.747 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: CoChI6md@
+2026-08-08 10:13:39.436 | INFO     | full_form_tester.full_form_tester:change_and_test_letter_start_password:324 - Test
+ing letter-start requirement.
+2026-08-08 10:13:39.509 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: 157ljFr
+u -- test letter start
+2026-08-08 10:13:39.542 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: 157ljFru
+2026-08-08 10:13:40.852 | SUCCESS  | full_form_tester.full_form_tester:test_one_password:228 - The tested password CoCh
+I6md@ is accepted.
+2026-08-08 10:13:44.386 | INFO     | full_form_tester.full_form_tester:change_and_test_2_word_password:308 - Testing 2-
+word structure.
+2026-08-08 10:13:44.387 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: d6mCoIh
+C -- test 2-word structure
+2026-08-08 10:13:44.387 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: d6mCoIhC
+2026-08-08 10:13:48.927 | WARNING  | full_form_tester.full_form_tester:test_one_password:233 - Password d6mCoIhC reject
+ed: no specific error detected
+2026-08-08 10:14:02.661 | SUCCESS  | full_form_tester.full_form_tester:test_one_password:228 - The tested password 157l
+jFru is accepted.
+2026-08-08 10:14:08.955 | INFO     | full_form_tester.full_form_tester:change_and_test_letter_start_password:324 - Test
+ing letter-start requirement.
+2026-08-08 10:14:08.955 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: 1oChI6m
+d -- test letter start
+2026-08-08 10:14:08.955 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: 1oChI6md
+2026-08-08 10:14:10.114 | INFO     | full_form_tester.full_form_tester:change_and_test_digit_minimum:332 - Testing digi
+t minimum.
+2026-08-08 10:14:10.115 | INFO     | full_form_tester.full_form_tester:test_one_password:197 - Tested password: pjc8292
+1 -- test digit min=5
+2026-08-08 10:14:10.115 | DEBUG    | full_form_tester.full_form_tester:test_one_password:198 - Begin full-form test for
+ password: pjc82921
