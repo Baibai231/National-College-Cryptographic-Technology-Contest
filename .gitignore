@@ -35,6 +35,26 @@ undetected_chromedriver/
 # Windows artifacts
 nul
 
-# Temporary files
+# Personal URL lists (for batch testing)
+urls_*.txt
+
+# Temporary & debug files
 *.tmp
 *.log
+test_diag*.py
+test_inject*.py
+
+# Test coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Git merge artifacts
+*.orig
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
