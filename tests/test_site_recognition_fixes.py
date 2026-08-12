@@ -23,6 +23,9 @@ from signup_flow_classifier.navigator import (
     _is_organizational_signup, _entry_text_match, _ENTRY_REGISTER_TEXTS,
     _ENTRY_LOGIN_TEXTS, detect_hover_candidate, safe_hover_menu,
 )
+from signup_flow_classifier.browser_failures import (
+    _ACCESS_PAGE_MARKERS, _ACCESS_REDIRECT_HOSTS, detect_access_block,
+)
 
 
 class FakeElement:
@@ -141,6 +144,29 @@ class MultilingualCapabilityTests(unittest.TestCase):
         # hover 菜单能力随 navigator 一起移植，函数必须存在且可导入
         self.assertTrue(callable(detect_hover_candidate))
         self.assertTrue(callable(safe_hover_menu))
+
+
+class AccessBlockDetectionTests(unittest.TestCase):
+    """反爬重定向/整页验证识别（beian 跳转、百度安全验证、36kr 整页挑战）。"""
+
+    def test_beian_redirect_marker(self):
+        self.assertTrue(any("mps.gov.cn" in m for m in _ACCESS_PAGE_MARKERS))
+
+    def test_beian_redirect_host(self):
+        self.assertIn("beian.mps.gov.cn", _ACCESS_REDIRECT_HOSTS)
+
+    def test_baidu_security_verification_marker(self):
+        for m in ("百度安全验证", "请完成下方验证后继续操作", "请向右滑动完成拼图"):
+            self.assertIn(m, _ACCESS_PAGE_MARKERS, m)
+
+
+class UrlPatternBudgetTests(unittest.TestCase):
+    """URL 模式探测预算（避免 404 页逐个开浏览器浪费几分钟）。"""
+
+    def test_pattern_budget_constant(self):
+        from utils.login_link_discovery import LoginLinkDiscovery
+        self.assertTrue(hasattr(LoginLinkDiscovery, "_SIGNUP_URL_PATTERNS"))
+        self.assertGreater(len(LoginLinkDiscovery._SIGNUP_URL_PATTERNS), 0)
 
 
 class OrganizationalSignupExclusionTests(unittest.TestCase):

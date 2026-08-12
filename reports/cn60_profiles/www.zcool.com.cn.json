@@ -1,0 +1,342 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T07:24:57.730441+00:00",
+  "report_title": "www.zcool.com.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/cn60_classify_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.zcool.com.cn",
+      "name": "www.zcool.com.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.zcool.com.cn/",
+          "final_url": "https://passport.zcool.com.cn/loginApp.do?appId=1006&cback=https%3A%2F%2Fwww.zcool.com.cn%2F",
+          "observed_route": "短信验证码/一次性验证码/扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "短信验证码/一次性验证码/扫码",
+              "fields_observed": [
+                "code"
+              ],
+              "methods_observed": [
+                "sms",
+                "one_time_code",
+                "qr",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms",
+                "one_time_code",
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "安全测量停在短信验证码、一次性验证码、扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
+              ],
+              "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "identifier",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "identifier",
+            "sms",
+            "one_time_code",
+            "qr",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms",
+            "one_time_code",
+            "qr"
+          ],
+          "password_state": "multiple_observed_routes",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "安全测量停在短信验证码、一次性验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.zcool.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.zcool.com.cn/loginApp.do?appId=1006&cback=https%3A%2F%2Fwww.zcool.com.cn%2F",
+              "ui_type": "inline_widget",
+              "fields": [
+                "code"
+              ],
+              "methods": [
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "verification_code",
+                "scan",
+                "slide"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_in_iframe_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://passport.zcool.com.cn/loginApp.do?appId=1006&cback=https%3A%2F%2Fwww.zcool.com.cn%2F",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T07:12:22.735090+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "scan",
+                "slide",
+                "verification_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.zcool.com.cn/",
+          "final_url": "https://passport.zcool.com.cn/regPhone.do?appId=1006&cback=https%3A%2F%2Fwww.zcool.com.cn%2F",
+          "observed_route": "手机号",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号",
+              "fields_observed": [
+                "phone"
+              ],
+              "methods_observed": [
+                "phone"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已记录页面阻断因素，未继续交互"
+            }
+          ],
+          "fields_observed": [
+            "phone"
+          ],
+          "methods_observed": [
+            "phone"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.zcool.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.zcool.com.cn/regPhone.do?appId=1006&cback=https%3A%2F%2Fwww.zcool.com.cn%2F",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "slide",
+                "tos"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_password_signup_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T07:12:19.242474+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "slide",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

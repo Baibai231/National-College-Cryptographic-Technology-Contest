@@ -763,7 +763,7 @@ for(const root of roots){
   if(visible(el)){hasDialog=true;authTexts.push(clean(el.innerText||el.textContent||''));break;}
  for(const el of root.querySelectorAll("[class*='drawer'],[class*='Drawer'],[class*='slide-over']"))
   if(visible(el)){hasDrawer=true;break;}
- for(const el of root.querySelectorAll("button,a,input,[role='button'],[role='link'],[role='tab'],select,textarea,[class*='tab'],[class*='Tab']")){
+  for(const el of root.querySelectorAll("button,a,input,[role='button'],[role='link'],[role='tab'],select,textarea,[class*='tab'],[class*='Tab'],div,span,li")){
   if(!visible(el))continue;
   const label=clean(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'');
   const href=clean(el.getAttribute('href'));

@@ -1,0 +1,318 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:33:26.564593+00:00",
+  "report_title": "www.sina.com.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.sina.com.cn",
+      "name": "www.sina.com.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.sina.com.cn/",
+          "final_url": "https://passport.weibo.com/sso/signin?entry=homepage&source=sinafloatlaver&url=https://www.sina.com.cn/",
+          "observed_route": "邮箱 → 短信验证码/扫码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "email",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "sms",
+            "qr",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.sina.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.weibo.com/sso/signin?entry=homepage&source=sinafloatlaver&url=https://www.sina.com.cn/",
+              "ui_type": "standalone_page",
+              "fields": [
+                "email",
+                "password"
+              ],
+              "methods": [
+                "email",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:29:39.952578+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "scan"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.sina.com.cn/",
+          "final_url": "https://passport.weibo.com/sso/signin?entry=homepage&source=sinafloatlaver&url=https://www.sina.com.cn/",
+          "observed_route": "邮箱 → 短信验证码/扫码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "email",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "sms",
+            "qr",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.sina.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.weibo.com/sso/signin?entry=homepage&source=sinafloatlaver&url=https://www.sina.com.cn/",
+              "ui_type": "standalone_page",
+              "fields": [
+                "email",
+                "password"
+              ],
+              "methods": [
+                "email",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:29:17.081200+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "scan"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

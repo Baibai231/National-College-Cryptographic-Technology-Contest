@@ -1,0 +1,130 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:24:38.274612+00:00",
+  "report_title": "www.csdn.net 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60_round2_20260812.jsonl",
+    "/tmp/51cto_merge.jsonl",
+    "/tmp/zb_merge.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.csdn.net",
+      "name": "www.csdn.net",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.csdn.net/",
+          "final_url": "https://www.csdn.net/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "multiple_observed_routes",
+          "ui_types": [],
+          "safe_stop": "站点拒绝当前访问，未继续交互",
+          "limitations": [
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:08:49.424974+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "access_blocked"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "access_blocked",
+            "primary_method": ""
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "high",
+              "stop_reason": "access_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.csdn.net/",
+          "final_url": "https://www.csdn.net/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "multiple_observed_routes",
+          "ui_types": [],
+          "safe_stop": "站点拒绝当前访问，未继续交互",
+          "limitations": [
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:08:46.906778+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "access_blocked"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "access_blocked",
+            "primary_method": ""
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "high",
+              "stop_reason": "access_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -328,7 +328,11 @@ const visible = el => {
     const r = el.getBoundingClientRect(), s = getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.display !== 'none'
       && s.visibility !== 'hidden' && !el.disabled
-      && el.getAttribute('aria-disabled') !== 'true';
+      && el.getAttribute('aria-disabled') !== 'true'
+      // 视口相交：页脚备案链接（href 含 registerSystemInfo）、正文底部的
+      // "注册"相关链接即使可见也不能当入口——真正入口（顶栏/导航）必在视口内。
+      && r.bottom > 0 && r.right > 0
+      && r.top < innerHeight && r.left < innerWidth;
   } catch (e) { return false; }
 };
 const clean = value => (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -376,14 +380,18 @@ for (const el of all) {
   });
   const combined = (combinedText.includes('登录') && combinedText.includes('注册'))
     || (combinedText.includes('sign in') && combinedText.includes('sign up'));
-  const structural = cfg.structural.some(h => semantic.includes(clean(h)));
+  // 结构语义只看属性（class/id/href/aria/title/alt），不包含正文文本：
+  // 文章标题里的"注册"（如 36kr"公司刚注册…"）不能当认证入口结构，
+  // 文本匹配只走上面的 explicit（精确匹配）。这是弱结构词防御的前提。
+  const structuralText = [cls, id, href, aria, title, alt, descendantName].join(' ');
+  const structural = cfg.structural.some(h => structuralText.includes(clean(h)));
   // 明确的认证结构应始终排在普通作者头像/用户卡之前。
   // 旧打分会因为头像 img 有 alt 文本额外加分，导致正文头像
   // 压过 class 中明确带 login 的顶栏按钮。
   const strongStructural = [
     'login', 'signin', 'sign-in', 'register', 'regist', 'signup',
     'sign-up', 'passport', '登录', '登陆', '注册'
-  ].some(h => semantic.includes(h));
+  ].some(h => structuralText.includes(h));
   const mediumStructural = [
     'account', 'member', '账户', '账号', '个人中心'
   ].some(h => semantic.includes(h));
@@ -404,8 +412,15 @@ for (const el of all) {
   // div/span 必须是叶子式、可交互且语义紧凑，避免点击包含整页文字的大容器。
   if (['DIV','SPAN'].includes(el.tagName)) {
     if (!nativeInteractive || text.length > 40) continue;
-    const childText = [...el.children].filter(visible).map(c => clean(c.innerText || c.textContent));
-    if (childText.some(t => t && t === text)) continue;
+    // 只有子元素是真正可点击目标（A/BUTTON 等）且文本相同时，父才是容器；
+    // div>span 的"登录"按钮（36kr user-login 实测）子元素只是纯展示文本，
+    // 父元素 cursor:pointer 才是真实点击目标，不能跳过。
+    const clickableSameTextChild = [...el.children].filter(visible).some(c => {
+      if (!['A','BUTTON','INPUT','SELECT'].includes(c.tagName)
+          && clean(c.getAttribute('role')) !== 'button') return false;
+      return clean(c.innerText || c.textContent) === text;
+    });
+    if (clickableSameTextChild) continue;
   }
   const score = (explicit ? 100 : 0) + (combined ? 70 : 0)
     + (strongStructural ? 50 : (mediumStructural ? 25 : 5))

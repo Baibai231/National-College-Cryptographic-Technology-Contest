@@ -42,9 +42,11 @@ class LoginLinkDiscovery:
         })
         if 'exceptionDetails' in result:
             err = result['exceptionDetails']
+            exc_text = err.get('exception', {}).get('description', '')
             raise Exception(
                 f"JS error: {err.get('text', '')} "
-                f"at line {err.get('lineNumber', '?')}"
+                f"at line {err.get('lineNumber', '?')} "
+                f"{str(exc_text)[:200]}"
             )
         return result['result'].get('value')
 
@@ -97,11 +99,20 @@ class LoginLinkDiscovery:
     # ------------------------------------------------------------------
 
     def detect_email_inputs(self) -> List[Dict]:
-        """Fathom ML 检测邮箱字段"""
-        return self._cdp_eval(
-            "(typeof detectEmailInputs === 'function')"
-            " ? detectEmailInputs(document) : []"
-        )
+        """Fathom ML 检测邮箱字段
+
+        对 JS 异常容错：URL 模式探测经常落到 404 页，Fathom 在这些
+        页面上可能抛 Uncaught 异常（51cto 实测）；404 页没有邮箱字段
+        是正常情况，不应让 JS 错误中断整个注册页发现流程。
+        """
+        try:
+            return self._cdp_eval(
+                "(typeof detectEmailInputs === 'function')"
+                " ? detectEmailInputs(document) : []"
+            )
+        except Exception as exc:
+            logger.debug(f"detect_email_inputs JS 异常: {type(exc).__name__}: {exc}")
+            return []
 
     def find_password_fields(self) -> List[str]:
         """查找可见密码字段的 XPath（含 Shadow DOM 穿透搜索）
@@ -110,7 +121,8 @@ class LoginLinkDiscovery:
         而非仅 offsetHeight。后者无法过滤 visibility:hidden 或 opacity:0
         的元素，导致 SPA 模态框切换 tab 后仍返回隐藏的登录表单密码字段。
         """
-        return self._cdp_eval("""
+        try:
+            return self._cdp_eval("""
 (function() {
     var r = [];
     var seen = new WeakSet();
@@ -176,6 +188,11 @@ class LoginLinkDiscovery:
     return r;
 })();
         """)
+        except Exception as exc:
+            # 404/SPA 兜底页上 JS 可能抛 Uncaught（51cto 实测），
+            # 没有密码字段是正常情况，不应中断流程。
+            logger.debug(f"find_password_fields JS 异常: {type(exc).__name__}: {exc}")
+            return []
 
     # ------------------------------------------------------------------
     # 注册页面发现
@@ -347,8 +364,14 @@ class LoginLinkDiscovery:
             # 统计已尝试的点击次数，连续失败 3 次后提前退出
             click_attempts = 0
             consecutive_no_nav = 0
+            # 链接点击层总时间预算：tryClickAndDetect 每个链接最多轮询 5 秒，
+            # 10 个链接全不命中最坏 50 秒；限制总预算避免卡死（脉脉实测）。
+            click_budget_deadline = time.time() + 25
 
             for idx, link in enumerate(sorted_links[:10]):
+                if time.time() > click_budget_deadline:
+                    logger.debug("链接点击层达到时间预算，退出")
+                    break
                 xpath = link.get('xpath', '')
                 text = (link.get('innerText', '') or '')[:60].replace('\n', ' ')
                 score = link.get('score', 0) or 0
@@ -517,11 +540,18 @@ class LoginLinkDiscovery:
         urllib3.disable_warnings()
 
         tried_urls = set()
+        # 模式探测预算：只试前几个最常见模式（/signup、/register、/join）。
+        # 全部 14 个模式都开真实浏览器会浪费几分钟（贴吧/脉脉等不支持
+        # 常见模式的站点实测）；前缀顺序即按使用频率排列。
+        pattern_budget = 3
         for pattern in self._SIGNUP_URL_PATTERNS:
+            if pattern_budget <= 0:
+                break
             candidate = urljoin(base + '/', pattern)  # urljoin 自动处理路径
             if candidate in tried_urls:
                 continue
             tried_urls.add(candidate)
+            pattern_budget -= 1
 
             try:
                 self.driver.get(candidate)

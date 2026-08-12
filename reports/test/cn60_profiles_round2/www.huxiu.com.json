@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:24:38.277993+00:00",
+  "report_title": "www.huxiu.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60_round2_20260812.jsonl",
+    "/tmp/51cto_merge.jsonl",
+    "/tmp/zb_merge.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.huxiu.com",
+      "name": "www.huxiu.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.huxiu.com/",
+          "final_url": "https://www.huxiu.com/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.huxiu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-12T08:09:33.342080+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.huxiu.com/",
+          "final_url": "https://www.huxiu.com/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.huxiu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-12T08:09:32.027185+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:24:38.276743+00:00",
+  "report_title": "www.guancha.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60_round2_20260812.jsonl",
+    "/tmp/51cto_merge.jsonl",
+    "/tmp/zb_merge.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.guancha.cn",
+      "name": "www.guancha.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.guancha.cn/",
+          "final_url": "https://www.guancha.cn/",
+          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.guancha.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:15:20.852592+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "slide",
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.guancha.cn/",
+          "final_url": "https://www.guancha.cn/",
+          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.guancha.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:15:20.049611+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "slide",
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T07:24:57.715875+00:00",
+  "report_title": "www.dongchedi.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/cn60_classify_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.dongchedi.com",
+      "name": "www.dongchedi.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.dongchedi.com/",
+          "final_url": "https://www.dongchedi.com/",
+          "observed_route": "手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "multiple_observed_routes",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.dongchedi.com/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.dongchedi.com/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "password"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T07:16:02.446897+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.dongchedi.com/",
+          "final_url": "https://www.dongchedi.com/",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.dongchedi.com/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-12T07:15:53.746209+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
+          },
+          "raw_result": {
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

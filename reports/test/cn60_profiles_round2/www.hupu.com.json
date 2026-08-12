@@ -1,0 +1,319 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:24:38.277508+00:00",
+  "report_title": "www.hupu.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60_round2_20260812.jsonl",
+    "/tmp/51cto_merge.jsonl",
+    "/tmp/zb_merge.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.hupu.com",
+      "name": "www.hupu.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.hupu.com/",
+          "final_url": "https://passport.hupu.com/v2/login?pcPhone=1&jumpurl=https://www.hupu.com&from=https://www.hupu.com#/",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "手机号/账号/邮箱 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "identifier",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "identifier",
+                "sms",
+                "third_party",
+                "qq",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "identifier",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "identifier",
+            "sms",
+            "third_party",
+            "qq",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.hupu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.hupu.com/v2/login?pcPhone=1&jumpurl=https://www.hupu.com&from=https://www.hupu.com#/",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "identifier",
+                "code"
+              ],
+              "methods": [
+                "identifier",
+                "phone",
+                "qq",
+                "sso"
+              ],
+              "blockers": [
+                "sms_code",
+                "tos"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_password_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:10:43.482941+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "sms_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.hupu.com/",
+          "final_url": "https://passport.hupu.com/v2/login?pcRegister=1&jumpurl=https://www.hupu.com&from=https://www.hupu.com#/",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "手机号/账号/邮箱 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "identifier",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "identifier",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "identifier",
+            "sms",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.hupu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.hupu.com/v2/login?pcRegister=1&jumpurl=https://www.hupu.com&from=https://www.hupu.com#/",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "identifier",
+                "code"
+              ],
+              "methods": [
+                "identifier",
+                "phone",
+                "qq",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code",
+                "tos"
+              ],
+              "actions": [],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:10:37.981082+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "sms_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

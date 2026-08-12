@@ -11,6 +11,7 @@
 |---|---|---|---|---|
 | 2026-08-12 | cjx（Mac） | 修复慕课网手机号字段被误判为 email、知乎机构号注册入口误当普通注册 | signup_flow_classifier/page_detector.py、utils/login_link_discovery.py、utils/js/form_detection_addons.js、tests/test_site_recognition_fixes.py | 未推送 |
 | 2026-08-12 | cjx（Mac） | 从旧分支按能力挑选移植：多语言词表、弱结构词防御、容器硬规则、hover 菜单 | signup_flow_classifier/page_detector.py、signup_flow_classifier/navigator.py、signup_flow_classifier/classifier_engine.py、tests/ | 未推送 |
+| 2026-08-12 | cjx（Mac） | 批量识别问题修复（36kr 文章误点/视口检查/叶子检查/beian 阻断/百度安全验证/URL 模式预算/JS 容错）+ reports 目录结构调整 | signup_flow_classifier/navigator.py、classifier_engine.py、browser_failures.py、page_detector.py、utils/login_link_discovery.py、scripts/、reports/ | 未推送 |
 
 ---
 
@@ -91,3 +92,47 @@ signup 测量直接跳到机构注册页并给出 email+password+code 的误分�
 - 新增 `scripts/run_classify_diag.py`：只分类不测政策的诊断脚本
   （观察入口发现 → 流程分类 → 页面快照），用于复现与验收识别问题。
 - Chromedriver 缓存更新至 151.0.7922.138 并重新签名（macOS 26 签名校验问题）。
+
+### 5. 批量识别问题修复与目录结构调整（2026-08-12）
+
+背景：跑完 60 站后人工核对发现多类识别问题（36kr 跳文章、b站/qq/163/sina 异常、
+知乎跳备案查询页、贴吧找不到入口、脉脉卡死等）。逐类定位并修复：
+
+1. **36kr 跳转文章**（navigator.py）：文章标题"公司刚注册…"里的"注册"被
+   `strongStructural`（文本匹配）当成认证结构。修复：结构语义只基于属性
+   （class/id/href/aria/title/alt），文本匹配只走 explicit 精确匹配。
+2. **页脚备案链接误点**（navigator.py）：入口候选加**视口相交检查**，
+   页脚/正文底部的"注册"相关链接（href 含 registerSystemInfo）不再当入口。
+3. **div>span 按钮误过滤**（navigator.py）：叶子式检查只对"可点击子元素
+   （A/BUTTON）文本相同"才跳过；36kr `div.user-login > span(登录)` 不再被误删。
+4. **知乎跳 beian.mps.gov.cn**（browser_failures.py）：反爬重定向到公安备案
+   查询站识别为 `access_blocked`（URL 主机 + 页面文本双重检测）。
+5. **贴吧找不到入口**：百度安全验证整页滑块识别为访问阻断
+   （"百度安全验证/请完成下方验证后继续操作"标记）。
+6. **脉脉卡死 5 分钟**：URL 模式探测预算 14→3（/signup、/register、/join），
+   CDP 链接点击层 25 秒总预算，重试等待 6→3 秒、链接兜底 8→5 秒。
+   脉脉从 4:55 降到约 1:09。
+7. **b站弹窗被重复点击关闭**（classifier_engine.py）：已有认证状态
+   （tabs/blockers/modal）时不重复点入口；`entry_already_clicked` 时保留
+   一次兜底点击（弹窗可能已自动关闭）。b站 3 连跑稳定 direct_password。
+8. **qq 短信 tab**（page_detector.py）：`_detect_page_semantics` 的 tab 检测
+   选择器补 div/span/li；qq 弹窗识别出 sms_tab 并尝试切换（如实记录）。
+9. **51cto JS 异常**（login_link_discovery.py）：`detect_email_inputs`/
+   `find_password_fields` 对 404 页上的 Fathom JS 异常容错；
+   `_cdp_eval` 异常信息带上 JS 描述。
+10. **163/sina/qq/b站等**：修复后批量复测 163、sina 达 direct_password，
+   与人工一致；qq 默认扫码如实报 human_blocked。
+
+效果（修复前后 60 站对比）：
+
+- 注册 unknown：20 → 8（-60%）
+- 注册 direct_password：9 → 13
+- 登录 direct_password：29 → 31
+
+目录结构（用户要求）：
+
+- `reports/test/`：测试输出（批量 JSONL、汇总表、单站档案）
+- `reports/final/`：真实测量结果（61 站总表 + 单站档案 + 合并 JSONL）
+- 每测一个新网站 → 先在 test/ 生成，核对后并入 final/。
+
+验证：回归测试 24/24 通过；修复站 3 连跑稳定；61 站 final 档案已生成。

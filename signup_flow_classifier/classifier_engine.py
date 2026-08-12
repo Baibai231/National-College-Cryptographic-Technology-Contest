@@ -163,9 +163,11 @@ class SignupFlowClassifierEngine:
         except Exception:
             pass
         effective_max_steps = max(1, max_steps)
-        # 上游 navigate_to_signup 已点击入口 → 跳过分类器内部的入口点击
+        # 上游 navigate_to_signup 已点击入口 → 不再重复点击已打开的弹窗，
+        # 但保留一次兜底点击机会：SPA 弹窗可能在 classify 前自动关闭
+        # （bilibili 实测），此时页面为空壳，需要重新点入口。
         if entry_already_clicked and entry_kind == "signup":
-            entry_clicks_left = 0
+            entry_clicks_left = 1
             auth_entry_clicked = True
             signup_entry_clicked = True
         else:
@@ -327,6 +329,23 @@ class SignupFlowClassifierEngine:
                     ):
                         continue
 
+                # 短信 tab 补偿：扫码默认视图下若有"短信登录/手机号注册"tab
+                # （qq 首页弹窗实测 sms_tab），切过去可安全观察到手机号+验证码。
+                if (tab_clicks_left > 0 and "password" not in state.fields
+                        and "sms_tab" in state.tabs
+                        and "code" not in state.fields):
+                    tab_outcome = safe_click_tab(self.driver, "sms_tab")
+                    tab_clicks_left -= 1
+                    state.note = tab_outcome.reason
+                    state.actions.append(
+                        "tab_click" if tab_outcome.clicked else "none")
+                    record_evidence(
+                        result, "step={};sms_tab_retry={}".format(
+                            step, tab_outcome.reason))
+                    if (tab_outcome.clicked
+                            and self._wait_for_field(
+                                self.driver, "code", timeout=6)):
+                        continue
                 # 登录界面可能没有文字 tab，要先从二维码切到手机，再切到账号。
                 if (entry_kind == "login" and auth_mode_clicks_left > 0
                         and "password" not in state.fields):
@@ -403,7 +422,13 @@ class SignupFlowClassifierEngine:
 
             # ---- 入口点击（首页/空页尚无字段时） ----
             # 对应 MyAutomaticPolicy L578-667
-            need_entry_click = not state.fields
+            # 弹窗已打开（有 tabs/blockers/modal 形态）时不再点入口：
+            # 重复点击"登录"会把已展开的弹窗关闭（bilibili 实测，
+            # 弹窗与入口按钮同源，点入口等于点遮罩）。
+            need_entry_click = (
+                not state.fields and not state.tabs and not state.blockers
+                and state.ui_type not in {"modal", "drawer"}
+            )
             if need_entry_click and entry_clicks_left > 0:
                 prefer = "register" if entry_kind == "signup" else "login"
                 prefer_active_frames = bool(
@@ -512,7 +537,7 @@ class SignupFlowClassifierEngine:
                                     step, retry_outcome.reason))
                             if (retry_outcome.clicked
                                     and self._wait_for_any_auth_signal(
-                                        self.driver, timeout=6)):
+                                        self.driver, timeout=3)):
                                 continue
                         # 链接兜底：入口是站内 <a href> 且点击未出现认证状态时，
                         # 直接导航到 href（imooc 的 /user/newlogin 等）。
@@ -529,7 +554,7 @@ class SignupFlowClassifierEngine:
                                     "step={};entry_href_nav={}".format(
                                         step, target_url[:60]))
                                 if self._wait_for_any_auth_signal(
-                                        self.driver, timeout=8):
+                                        self.driver, timeout=5):
                                     continue
                     if entry_outcome.changed:
                         continue  # 页面变了但仍无表单，再走一轮

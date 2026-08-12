@@ -1,0 +1,250 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:24:38.287989+00:00",
+  "report_title": "www.taobao.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60_round2_20260812.jsonl",
+    "/tmp/51cto_merge.jsonl",
+    "/tmp/zb_merge.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.taobao.com",
+      "name": "www.taobao.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+          "final_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-12T08:06:11.422188+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
+          },
+          "raw_result": {
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+          "final_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-12T08:05:59.974371+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
+          },
+          "raw_result": {
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T07:24:57.712311+00:00",
+  "report_title": "www.51cto.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/cn60_classify_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.51cto.com",
+      "name": "www.51cto.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "error",
+          "observed_route": "本次测量异常",
+          "observed_routes": [],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_determined",
+          "ui_types": [],
+          "safe_stop": "错误: Exception:JS error: Uncaught at line 0",
+          "limitations": [
+            "测量异常，证据不完整"
+          ],
+          "steps": [],
+          "raw_result": {
+            "flow_type": null,
+            "stop_reason": null,
+            "error": "Exception:JS error: Uncaught at line 0"
+          },
+          "policy": {},
+          "error": "Exception:JS error: Uncaught at line 0"
+        },
+        "signup": {
+          "status": "error",
+          "observed_route": "本次测量异常",
+          "observed_routes": [],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_determined",
+          "ui_types": [],
+          "safe_stop": "错误: Exception:JS error: Uncaught at line 0",
+          "limitations": [
+            "测量异常，证据不完整"
+          ],
+          "steps": [],
+          "raw_result": {
+            "flow_type": null,
+            "stop_reason": null,
+            "error": "Exception:JS error: Uncaught at line 0"
+          },
+          "policy": {},
+          "error": "Exception:JS error: Uncaught at line 0"
+        }
+      }
+    }
+  ]
+}

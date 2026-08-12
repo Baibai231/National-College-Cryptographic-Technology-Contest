@@ -1,0 +1,259 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:33:26.568979+00:00",
+  "report_title": "www.zol.com.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.zol.com.cn",
+      "name": "www.zol.com.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.zol.com.cn/",
+          "final_url": "https://www.zol.com.cn/",
+          "observed_route": "第三方认证 → 微信 → 微博 → Apple；备选：第三方认证 → 微信 → 微博 → Apple",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "第三方认证 → 微信 → 微博 → Apple",
+              "fields_observed": [],
+              "methods_observed": [
+                "third_party",
+                "wechat",
+                "weibo",
+                "apple"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "第三方认证 → 微信 → 微博 → Apple",
+              "fields_observed": [],
+              "methods_observed": [
+                "third_party",
+                "wechat",
+                "weibo",
+                "apple"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "third_party",
+            "wechat",
+            "weibo",
+            "apple"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.zol.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "apple",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_signup_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.zol.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "apple",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_signup_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_no_change"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:16:04.316600+00:00",
+            "raw_flow_type": "sso_only",
+            "raw_stop_reason": "external_idp_detected"
+          },
+          "raw_result": {
+            "flow_type": "sso_only",
+            "stop_reason": "external_idp_detected",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "external_idp_detected",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "third_party"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.zol.com.cn/",
+          "final_url": "https://www.zol.com.cn/",
+          "observed_route": "第三方认证 → 微信 → 微博 → Apple",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "第三方认证 → 微信 → 微博 → Apple",
+              "fields_observed": [],
+              "methods_observed": [
+                "third_party",
+                "wechat",
+                "weibo",
+                "apple"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "third_party",
+            "wechat",
+            "weibo",
+            "apple"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.zol.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "apple",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_signup_tab",
+                "password_tab"
+              ],
+              "note": "password_signup_tab_clicked_no_change"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:16:01.883409+00:00",
+            "raw_flow_type": "sso_only",
+            "raw_stop_reason": "external_idp_detected"
+          },
+          "raw_result": {
+            "flow_type": "sso_only",
+            "stop_reason": "external_idp_detected",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "external_idp_detected",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "third_party"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

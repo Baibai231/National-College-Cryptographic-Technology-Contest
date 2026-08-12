@@ -1,0 +1,252 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T08:33:26.553079+00:00",
+  "report_title": "www.anjuke.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.anjuke.com",
+      "name": "www.anjuke.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://tianjin.anjuke.com/",
+          "final_url": "https://callback.58.com/antibot/verifycode?serialId=c70479050ad3ce8f2aacd93ccec2d082_949ff136a3194f14b6d7684caa116f7f&code=300&sign=64e456dce9d08b74725e99665921df4a&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly9sb2dpbi5hbmp1a2UuY29tL2xvZ2luL2Zvcm0%2FaGlzdG9yeT1hSFIwY0hNNkx5OTBhV0Z1YW1sdUxtRnVhblZyWlM1amIyMHY%3D%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_42765a736fd848e79b36521e143bd419%26callback%3Dshield%26from%3Dantispam",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://tianjin.anjuke.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://callback.58.com/antibot/verifycode?serialId=c70479050ad3ce8f2aacd93ccec2d082_949ff136a3194f14b6d7684caa116f7f&code=300&sign=64e456dce9d08b74725e99665921df4a&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly9sb2dpbi5hbmp1a2UuY29tL2xvZ2luL2Zvcm0%2FaGlzdG9yeT1hSFIwY0hNNkx5OTBhV0Z1YW1sdUxtRnVhblZyWlM1amIyMHY%3D%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_42765a736fd848e79b36521e143bd419%26callback%3Dshield%26from%3Dantispam",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-12T08:17:39.807721+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://tianjin.anjuke.com/",
+          "final_url": "https://login.anjuke.com/login/form",
+          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码/扫码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "qr"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms",
+            "qr"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://tianjin.anjuke.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://login.anjuke.com/login/form",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T08:17:38.668164+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "qr_or_scan",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "scan",
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}
