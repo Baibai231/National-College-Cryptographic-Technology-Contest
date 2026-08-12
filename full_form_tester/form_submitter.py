@@ -195,7 +195,7 @@ class FormSubmitter:
                 continue
 
             try:
-                el = self._find_element(xpath)
+                el = self._find_element(xpath, field)
                 if el is None:
                     continue
 
@@ -334,10 +334,37 @@ class FormSubmitter:
     # 字段填充
     # ================================================================
 
-    def _find_element(self, xpath: str):
-        """通过 XPath 查找元素"""
+    def _find_element(self, xpath: str, field_info: Dict = None):
+        """通过 XPath 查找元素，支持 iframe 内元素
+
+        如果字段来自 iframe（field_info 中有 frame_index >= 0），
+        先切换到对应 iframe 再查找，完成后切换回默认 context。
+        如果 `_ensure_page_ready()` 已将 iframe URL 直接导航到顶层，
+        frame_index 可能仍有值但 iframe 已不在 DOM 中，此时回退到直接查找。
+        """
         from selenium.webdriver.common.by import By
+        frame_index = -1
+        if field_info and isinstance(field_info, dict):
+            frame_index = field_info.get("frame_index", -1)
+
         try:
+            if frame_index >= 0:
+                # 尝试切换到 iframe
+                iframes = self._driver.find_elements(By.TAG_NAME, "iframe")
+                if frame_index < len(iframes):
+                    try:
+                        self._driver.switch_to.frame(iframes[frame_index])
+                        el = self._driver.find_element(By.XPATH, xpath)
+                        self._driver.switch_to.default_content()
+                        return el
+                    except Exception:
+                        # 如果切换 iframe 失败，回退到默认 context 后继续
+                        try:
+                            self._driver.switch_to.default_content()
+                        except Exception:
+                            pass
+
+            # 直接查找（主 frame 或 iframe 已通过 _ensure_page_ready 导航到顶层）
             return self._driver.find_element(By.XPATH, xpath)
         except Exception:
             return None
@@ -485,7 +512,11 @@ class FormSubmitter:
     # ================================================================
 
     def _capture_dom_errors(self, password_el) -> List[str]:
-        """捕获密码字段附近的 DOM 错误元素文本"""
+        """捕获密码字段附近的 DOM 错误元素文本
+
+        关键：搜索范围限定在密码字段的 ancestor chain 和最近 form 内，
+        而非整个页面。避免将姓名/邮箱/手机等其他字段的错误误判为密码错误。
+        """
         errors = []
         # 如果有关联的 aria-describedby，提取其文本
         if password_el:
@@ -503,7 +534,31 @@ class FormSubmitter:
             except Exception:
                 pass
 
-        # 搜索页面上的 error/invalid 类元素
+        # ── 构建 scoped 搜索根：password_el 的 ancestor chain + 最近 form ──
+        search_roots = []
+        if password_el:
+            try:
+                # 通过 JS 收集 ancestor 元素（向上 4 层 + form 容器）
+                # 这些将作为 CSS 选择器搜索的限定范围
+                search_roots.append(password_el)
+                parent = password_el
+                for _ in range(4):
+                    try:
+                        parent = parent.find_element("xpath", "..")
+                        search_roots.append(parent)
+                    except Exception:
+                        break
+                # 最近的 form
+                try:
+                    form = password_el.find_element("xpath", "./ancestor::form[1]")
+                    if form not in search_roots:
+                        search_roots.append(form)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        # 搜索 error/invalid 类元素（限定在 search_roots 范围内）
         error_selectors = [
             '[class*="error"]', '[class*="invalid"]', '[class*="warning"]',
             '[class*="danger"]', '[role="alert"]', '[aria-live="polite"]',
@@ -511,15 +566,22 @@ class FormSubmitter:
             '.help-block', '.help-inline',
         ]
         from selenium.webdriver.common.by import By
+
+        # 如果没有有效的 search_roots，回退到整个文档搜索
+        roots = search_roots if search_roots else [self._driver]
         for sel in error_selectors:
             try:
-                elements = self._driver.find_elements(By.CSS_SELECTOR, sel)
-                for el in elements[:5]:  # 限制数量
+                for root in roots:
                     try:
-                        if el.is_displayed():
-                            text = (el.text or "").strip()
-                            if text and len(text) > 2:
-                                errors.append(text)
+                        elements = root.find_elements(By.CSS_SELECTOR, sel)
+                        for el in elements[:5]:  # 限制数量
+                            try:
+                                if el.is_displayed():
+                                    text = (el.text or "").strip()
+                                    if text and len(text) > 2:
+                                        errors.append(text)
+                            except Exception:
+                                pass
                     except Exception:
                         pass
             except Exception:

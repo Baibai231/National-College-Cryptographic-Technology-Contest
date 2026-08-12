@@ -107,7 +107,14 @@ class SitePasswordPolicyTester:
             signup_url=self.signup_url,
             email_xpath=self.email_xpath,
             password_xpath=self.password_xpath,
+            driver=self.driver,
         )
+        # 传播页面就绪标志：main.py 中 Phase 3 (_detect_method) 已在注册页上
+        # 完成 inline 反馈检测，浏览器停留在注册表单页面。设置此标志防止
+        # test_one_password() 内部 driver.get(signup_url) 重新加载导致
+        # SPA 模态框关闭（signup_url 对 SPA 站为首页 URL，get() 会关闭弹窗）
+        if getattr(self, '_signup_page_ready', False):
+            self._tester._signup_page_ready = True
 
         password_policy = {
             "length": [0, 0],

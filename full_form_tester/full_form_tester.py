@@ -22,6 +22,7 @@ import traceback
 from typing import List, Dict, Optional
 
 from loguru import logger
+from selenium.common.exceptions import InvalidSessionIdException, NoSuchWindowException
 
 import utils.util_basic as uub
 import utils.util_str_generator as uusg
@@ -36,6 +37,7 @@ from .field_classifier import (
     FIELD_CHECKBOX_TERMS, FIELD_CAPTCHA,
 )
 from .form_submitter import FormSubmitter
+from signup_flow_classifier.browser_failures import detect_access_block
 
 
 def _admissible_cache_path(test_site: str) -> str:
@@ -90,6 +92,8 @@ class FullFormPolicyTester:
         self._fields_detected: bool = False
         self._page_ready: bool = False
         self._site_no_value: bool = False  # 多步表单超限 → 无研究价值
+        self._seen_specific_error: bool = False  # 是否见过明确错误消息（用于登录表单判断）
+        self._browser_dead: bool = False  # 浏览器会话已终止（崩溃/被关闭）
 
         # 日志
         self.my_logger = uub.get_logger(self.test_site)
@@ -118,16 +122,24 @@ class FullFormPolicyTester:
     # ================================================================
 
     def _ensure_page_ready(self) -> None:
-        """确保已导航到注册页并检测字段"""
+        """确保已导航到注册页并检测字段
+
+        如果关键字段（PASSWORD/EMAIL）位于 iframe 内，尝试直接导航到
+        iframe 的 src URL，使后续 Selenium 交互无需切换 frame 即可操作。
+        """
         if self._page_ready and self._fields_detected:
             return
 
         if not self.signup_url:
             raise RuntimeError("signup_url not set")
 
+        # 始终导航到注册页以触发注册流程（signup modal / redirect / 等）
+        # 部分网站的注册表单是由 JS 在页面加载时动态创建的
+        # （如 Stack Overflow 的 signup modal），需要新鲜页面加载才能触发。
+        # Phase 1 的导航可能已过时（页面状态变化、modal 关闭等）。
         try:
             self.driver.get(self.signup_url)
-            time.sleep(2)
+            time.sleep(3)  # 给 JS 渲染留足时间（2s → 3s）
         except Exception:
             pass
 
@@ -137,6 +149,150 @@ class FullFormPolicyTester:
         # 检测全表单字段
         classifier = FieldClassifier(self._cdp_eval)
         self._all_fields = classifier.detect_all_fields()
+
+        # ── 异步 iframe 重试：字段过少时等待更长时间后重试 ──
+        # 部分网站（如 Stack Overflow）通过 JS 在页面加载后动态创建
+        # signup modal iframe。2 秒可能不足以让 iframe 完成渲染。
+        # 当检测结果 ≤2 个字段且没有 iframe 标记时，等待后重试。
+        retry_count = 0
+        while len(self._all_fields) <= 2 and retry_count < 3:
+            has_iframe_marker = any(
+                f.get("cross_origin") or f.get("iframe")
+                for f in self._all_fields
+            )
+            if has_iframe_marker:
+                break  # 已检测到 iframe 标记，进入后续的 iframe 导航逻辑
+
+            retry_count += 1
+            wait_s = 2 * retry_count  # 2s → 4s → 6s
+            self.my_logger.info(
+                f"字段检测结果过少 ({len(self._all_fields)} 个)，"
+                f"等待 {wait_s}s 后重试 ({retry_count}/3)"
+            )
+            time.sleep(wait_s)
+            self._all_fields = classifier.detect_all_fields()
+
+        # ── iframe 字段检测：如果关键字段在 iframe 内，导航到 iframe URL ──
+        #
+        # 两种触发场景：
+        #   1. 密码字段在 iframe 内（同源 iframe，能够通过 contentDocument 检测到字段类型）
+        #   2. 跨域 iframe 占位符（cross_origin=true, frame_src 非空）
+        #      跨域 iframe 的 contentDocument 不可访问 → 无法分类字段 →
+        #      所有跨域字段被标记为 UNKNOWN。但已知许多网站的注册表单
+        #      就在 iframe 内（如 Stack Overflow），应直接导航到 iframe URL。
+        iframe_src = None
+        cross_origin = False
+        trigger_field = None  # 记录触发导航的字段（用于日志）
+
+        pw_field = next(
+            (f for f in self._all_fields
+             if f.get("field_type") == FIELD_PASSWORD), None
+        )
+        if pw_field and pw_field.get("frame_src"):
+            trigger_field = pw_field
+            iframe_src = pw_field["frame_src"]
+            cross_origin = pw_field.get("cross_origin", False)
+        elif not pw_field:
+            # 未检测到密码字段，但有跨域 iframe → 表单可能在跨域 iframe 内
+            cross_origin_placeholder = next(
+                (f for f in self._all_fields
+                 if f.get("cross_origin") and f.get("frame_src")), None
+            )
+            if cross_origin_placeholder:
+                trigger_field = cross_origin_placeholder
+                iframe_src = cross_origin_placeholder["frame_src"]
+                cross_origin = True
+
+        if iframe_src:
+            # ── 同站检查：跳过跨域 iframe（analytics、tracking、ad 等）──
+            # 跨域 iframe 通常是第三方统计/广告服务（如 web-stat.jpush.cn），
+            # 不是注册表单。导航到这些页面会丢失真正的注册页面。
+            from urllib.parse import urljoin, urlparse
+            try:
+                parsed_main = urlparse(self.driver.current_url)
+                parsed_frame = urlparse(urljoin(self.driver.current_url, iframe_src))
+                main_domain = ".".join((parsed_main.hostname or "").split(".")[-2:])
+                frame_domain = ".".join((parsed_frame.hostname or "").split(".")[-2:])
+                same_site = (main_domain == frame_domain)
+            except Exception:
+                same_site = True  # 解析失败不拦截
+
+            if not same_site:
+                self.my_logger.info(
+                    f"跳过跨域 iframe ({frame_domain} != {main_domain}), "
+                    f"src={iframe_src[:120]}"
+                )
+            else:
+                self.my_logger.info(
+                    f"检测到表单字段在 iframe 内 "
+                    f"(frame_index={trigger_field.get('frame_index')}, "
+                    f"src={iframe_src[:120]}, "
+                    f"cross_origin={cross_origin})"
+                )
+                # 将相对 URL 解析为绝对 URL
+                full_iframe_url = urljoin(self.driver.current_url, iframe_src)
+                self.my_logger.info(f"导航到 iframe URL: {full_iframe_url}")
+                try:
+                    self.driver.get(full_iframe_url)
+                    time.sleep(2)
+                    # 重新检测字段（现在表单直接在顶层文档中）
+                    self._all_fields = classifier.detect_all_fields()
+                except Exception as e:
+                    self.my_logger.warning(
+                        f"无法导航到 iframe URL: {e}，回退使用原始页面字段"
+                    )
+
+        # ── Phase 1 字段回退：detect_all_fields() 遗漏字段时补充 ──
+        # 部分网站的注册表单通过 JS 延迟加载（动态创建 DOM / Modal），
+        # FieldClassifier.detect_all_fields() 的 Runtime.evaluate 一次执行
+        # 可能捕获不到尚未渲染的元素。但 Phase 1 的 detectFieldsInAllFrames()
+        # 通过 CDP 预注入 + 更宽松的等待已成功发现字段。
+        # 此处将 Phase 1 已发现的字段补充到 _all_fields 中，确保后续的
+        # fill_and_submit() 有完整的字段列表可操作。
+        if len(self._all_fields) <= 2 and (self.password_xpath or self.email_xpath):
+            existing_xpaths = {f.get("xpath", "") for f in self._all_fields}
+            supplemental = []
+
+            if self.email_xpath and self.email_xpath not in existing_xpaths:
+                supplemental.append({
+                    "xpath": self.email_xpath,
+                    "tag": "input",
+                    "el_type": "email",
+                    "field_type": "TEXT",
+                    "name": "email",
+                    "id": "",
+                    "placeholder": "",
+                    "autocomplete": "email",
+                    "aria_label": "",
+                    "label_text": "email",
+                    "required": True,
+                    "class_name": "",
+                    "source": "phase1_fallback",
+                })
+
+            if self.password_xpath and self.password_xpath not in existing_xpaths:
+                supplemental.append({
+                    "xpath": self.password_xpath,
+                    "tag": "input",
+                    "el_type": "password",
+                    "field_type": FIELD_PASSWORD,
+                    "name": "password",
+                    "id": "",
+                    "placeholder": "",
+                    "autocomplete": "new-password",
+                    "aria_label": "",
+                    "label_text": "password",
+                    "required": True,
+                    "class_name": "",
+                    "source": "phase1_fallback",
+                })
+
+            if supplemental:
+                self._all_fields.extend(supplemental)
+                self.my_logger.info(
+                    f"Phase 1 字段回退: 补充了 {len(supplemental)} 个字段 "
+                    f"(email={bool(self.email_xpath)}, pwd={bool(self.password_xpath)})"
+                )
 
         field_types = [f.get("field_type") for f in self._all_fields]
         self.my_logger.info(f"全表单字段检测完成: {len(self._all_fields)} 个字段")
@@ -240,11 +396,20 @@ class FullFormPolicyTester:
                     return True
                 else:
                     reason = error_text or "no specific error detected"
+                    if error_text:
+                        self._seen_specific_error = True
                     self.my_logger.warning(f"Password {test_password} rejected: {reason}")
                     self._reset_page()
                     self.rate_ctrl.delay_between_tests()
                     return False
 
+            except (InvalidSessionIdException, NoSuchWindowException) as e:
+                # 浏览器会话已终止 — 无法继续任何测试
+                self._browser_dead = True
+                self.my_logger.error(
+                    f"浏览器会话终止: {type(e).__name__}，标记为 browser_dead"
+                )
+                return False
             except Exception as e:
                 self.my_logger.error(f"Test failed: {str(e)[:200]}")
                 self.my_logger.error(f"Traceback: {traceback.format_exc()}")
@@ -258,6 +423,25 @@ class FullFormPolicyTester:
     # ================================================================
     # 寻找合法密码（与 TestPassword.find_admissible_password 兼容）
     # ================================================================
+
+    def _quick_login_form_check(self) -> bool:
+        """快速登录表单检测：尝试空密码和极短密码
+
+        注册表单几乎不可能接受空字符串作为密码。
+        如果空密码被接受，极大概率是登录表单。
+        """
+        try:
+            if self.test_one_password("", "login form check (empty)"):
+                self.my_logger.warning("Empty password accepted — likely login form!")
+                return True
+            self._reset_page()
+            self.rate_ctrl.delay_between_tests()
+            if self.test_one_password("a", "login form check (single char)"):
+                self.my_logger.warning("Single-char password accepted — likely login form!")
+                return True
+        except Exception:
+            pass
+        return False
 
     def find_admissible_password(self) -> str:
         """在注册表单上寻找一个可被接受的密码"""
@@ -284,7 +468,10 @@ class FullFormPolicyTester:
             "10": [uusg.gen_random_str_no_symbol(10), uusg.gen_random_str_no_symbol(10)],
         }
 
-        for length in range(8, 33):
+        # 限制最大搜索长度（超过此长度仍未找到 → 极可能是登录表单）
+        MAX_SEARCH_LENGTH = 12
+
+        for length in range(8, min(33, MAX_SEARCH_LENGTH + 1)):
             if length <= 10:
                 candidates = admissible_list[str(length)]
             else:
@@ -534,8 +721,66 @@ class FullFormPolicyTester:
         }
 
         try:
+            # ── 机器人拦截检测：在登录表单预检前先检查是否被拦截 ──
+            # 被拦截时页面无真实表单，空密码可能被"接受"（无拒绝逻辑），
+            # 导致被误判为登录表单。必须先排除拦截，避免错误分类。
+            access_marker = detect_access_block(self.driver)
+            if access_marker:
+                self.my_logger.warning(
+                    f"检测到访问阻断: {access_marker}，跳过密码政策测量"
+                )
+                policy["_note"] = f"访问被阻断: {access_marker}，无法测量密码政策"
+                policy["_access_blocked"] = True
+                return policy
+
+            # ── 登录表单预检：在 admissible 搜索前快速检测 ──
+            # 注册表单几乎不可能接受空密码。如果空密码/极短密码被接受，
+            # 极大概率是登录表单（POST 到登录接口返回"凭据不匹配"时，
+            # 无字段级错误反馈，被误判为"密码通过"）。
+            if self._quick_login_form_check():
+                self.my_logger.warning(
+                    "预检发现疑似登录表单（空/短密码被接受），跳过密码政策测量"
+                )
+                policy["_suspicious_login_form"] = True
+                policy["_note"] = (
+                    "空密码或极短密码被接受，当前页面大概率是登录表单"
+                    "而非注册表单。密码政策测量结果不可信。"
+                )
+                return policy
+
             admissible = self.find_admissible_password()
+            # ── 浏览器已终止检查：admissible 搜索过程中浏览器崩溃 ──
+            # 此时所有后续测试都无法进行，且 _seen_specific_error 可能为 False
+            # （崩溃发生在检查错误消息之前）。必须先检查此标志，避免误判为登录表单。
+            if self._browser_dead:
+                self.my_logger.warning(
+                    "浏览器会话在 admissible 搜索期间终止，无法完成测试"
+                )
+                policy["_note"] = "浏览器会话终止，密码政策测量未完成"
+                policy["_browser_dead"] = True
+                return policy
+
             if not admissible:
+                # ── 登录表单后检：admissible 搜索失败 + 默认策略全为零 ──
+                # 重要：只有从未见过明确错误消息（如 "密码长度不得低于8个字符"）
+                # 时才触发登录表单检测。如果见过错误消息，说明是真实注册表单，
+                # 只是我们暂时无法通过其验证（如 checkbox、CAPTCHA 等）。
+                if self._seen_specific_error:
+                    self.my_logger.warning(
+                        "admissible 搜索失败，但见过明确错误消息 → 真实注册表单，非登录表单"
+                    )
+                elif self._is_likely_login_form(policy):
+                    self.my_logger.warning(
+                        "admissible 搜索失败且默认策略全为零，疑似登录表单"
+                    )
+                    policy["_suspicious_login_form"] = True
+                    policy["_note"] = (
+                        "无法找到合法密码且默认策略全为零，"
+                        "且未检测到任何明确密码错误消息。"
+                        "当前页面可能是登录表单而非注册表单。"
+                        "密码政策测量结果不可信。"
+                    )
+                    return policy
                 self.my_logger.warning("Cannot find admissible password, returning empty policy.")
                 return policy
 
@@ -581,6 +826,18 @@ class FullFormPolicyTester:
             policy["permissive"]["breached_password"] = \
                 self.identify_breached_passwords(rp, policy["length"])
 
+            # ── 登录表单检测 ──
+            if self._is_likely_login_form(policy):
+                self.my_logger.warning(
+                    "检测到疑似登录表单（所有密码均被接受），标记结果"
+                )
+                policy["_suspicious_login_form"] = True
+                policy["_note"] = (
+                    "所有测试密码（包括空字符串和弱密码）均被接受。"
+                    "当前页面可能是登录表单而非注册表单，"
+                    "密码政策测量结果不可信。"
+                )
+
         except Exception as e:
             self.my_logger.error(f"Full-form test error: {e}")
             import traceback
@@ -589,3 +846,50 @@ class FullFormPolicyTester:
             self.my_logger.info(f"Policy of {self.test_site}: {policy}")
 
         return policy
+
+    def _is_likely_login_form(self, policy: dict) -> bool:
+        """检测表单是否疑似登录表单（非注册）
+
+        判断依据：
+        1. 空字符串密码被接受（min_length == 0）
+        2. 所有 restrictive 维度都没有任何限制
+        3. 常见弱密码全部被接受
+
+        注册表单几乎不可能接受空字符串作为密码。
+        """
+        length = policy.get("length", [None, None])
+        restrictive = policy.get("restrictive", {})
+
+        # 空密码被接受 → 高度可疑
+        min_len = length[0] if length else None
+        if min_len is not None and min_len <= 0:
+            # 检查是否所有限制都为 0 / False
+            all_zeros = True
+            for k, v in restrictive.items():
+                if isinstance(v, bool) and v is True:
+                    all_zeros = False
+                    break
+                if isinstance(v, (int, float)) and v > 0:
+                    all_zeros = False
+                    break
+
+            if all_zeros:
+                # 检查 permissive 字符是否大部分都被允许
+                permissive = policy.get("permissive", {})
+                permitted_chars = permissive.get("permitted_characters", {})
+                if permitted_chars:
+                    true_count = sum(
+                        1 for v in permitted_chars.values() if v is True
+                    )
+                    # 如果有 >= 3 个字符类型都被允许，且没有任何限制
+                    if true_count >= 3:
+                        return True
+
+                # 另一种情况：permissive 为空（{}），但 min_len=0 且所有限制为 0
+                # 这说明根本没有任何密码规则 → 极可能是登录表单
+                if not permitted_chars or len(permitted_chars) == 0:
+                    sequences = permissive.get("permitted_sequences", {})
+                    if not sequences or len(sequences) == 0:
+                        return True
+
+        return False

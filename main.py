@@ -45,32 +45,73 @@ from loguru import logger
 
 
 # ================================================================
+# 流程类型 → 字母映射（与 MyAutomaticPolicy 分类体系对齐）
+# ================================================================
+FLOW_TYPE_TO_LETTER = {
+    "direct_password": "A",
+    "identifier_then_password": "B",
+    "verification_then_password": "C",
+    "otp_only": "D",
+    "email_only": "D",
+    "multiple_methods": "E",
+    "sso_only": "F",
+    "human_blocked": "G",
+    "no_web_signup": "H",
+    "unknown": "I",
+}
+
+
+# ================================================================
 # 方法探测 (auto 模式)
 # ================================================================
 
-def _detect_method(driver, site_url):
+def _detect_method(driver, site_url, signup_url,
+                   email_xpath=None, password_xpath=None):
     """探测网站是内联验证型还是需提交型
+
+    Args:
+        driver: Selenium WebDriver（已在注册页上）
+        site_url: 网站首页 URL（仅用于日志）
+        signup_url: Phase 1 已发现的注册页 URL（当前浏览器所在页面）
+        email_xpath: 邮箱字段 XPath（可选，Phase 1 提供）
+        password_xpath: 密码字段 XPath（可选，Phase 1 提供）
 
     返回: (method, signup_url, email_xpath, password_xpath)
 
-    注意: navigate_to_signup() 已把浏览器带到注册页，不要再次 driver.get() 以免
-    页面重载导致 React/Vue 重渲染改变 DOM 结构。
+    重要：此函数不再创建 LoginLinkDiscovery 或调用 navigate_to_signup()。
+    Phase 1 已经将浏览器导航到注册页，此函数只做 inline 反馈检测。
+    这避免了重复导航可能导致的不一致（不同导航路径到达不同的页面变体）。
     """
     import utils.util_basic as uub
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.common.action_chains import ActionChains
 
-    discovery = LoginLinkDiscovery(driver)
-    signup_url = discovery.navigate_to_signup(site_url)
     if not signup_url:
         return "inline", None, None, None
 
-    email_xpath, password_xpath = discovery.find_signup_fields()
+    # ── 如果 Phase 1 未提供密码字段 XPath，在当前页面查找 ──
+    # 注意：只检查 password_xpath；email 是可选字段，不影响 inline 检测。
+    # 原先的 OR 条件（not password_xpath or not email_xpath）在 gitee 等
+    # 只检测到密码但无邮箱的站点会触发不必要的 LoginLinkDiscovery 创建和
+    # CDP 调用。并发场景下 CDP 会话压力大，冗余调用可能导致超时或失败。
     if not password_xpath:
+        discovery = LoginLinkDiscovery(driver)
+        found_email, found_pwd = discovery.find_signup_fields()
+        email_xpath = email_xpath or found_email
+        password_xpath = password_xpath or found_pwd
+
+    if not password_xpath:
+        logger.info("未找到密码字段，默认使用 inline 方法")
         return "inline", signup_url, email_xpath, password_xpath
 
-    # navigate_to_signup 已经通过点击链接到达注册页，无需二次加载
+    # ── 注意：不要用 Selenium switch_to.frame() 切换 iframe ──
+    # CDP 注入的 JS 函数（watchPasswordFeedback 等）仅在主 frame 上下文存在。
+    # 切换到 iframe 后这些函数不可用，会导致内联反馈检测失败。
+    # 密码反馈（如错误消息、强度指示器）通常渲染在主文档中，即使密码字段
+    # 本身在 iframe 内。MutationObserver 在主文档上监听即可捕获这些反馈。
+
     uub.random_sleep([1, 2])
 
     js_set = """
@@ -87,11 +128,22 @@ def _detect_method(driver, site_url):
         test_email = f"test{attempt}@example.com"
         test_pwd = "k4m2x9a7" if attempt == 0 else "n3p8r5t2"
         try:
-            # 先填邮箱（很多网站需要邮箱填完后才触发密码校验）
+            # 先找到密码框
+            pwd_el = WebDriverWait(driver, 5).until(
+                EC.visibility_of_element_located((By.XPATH, password_xpath))
+            )
+
+            # ── 启动 MutationObserver（必须先于 DOM 变更启动）──
+            observer_ok = driver.execute_script(
+                "return watchPasswordFeedback(arguments[0])",
+                password_xpath,
+            )
+
+            # 填邮箱（如果存在）
             if email_xpath:
                 try:
                     email_el = WebDriverWait(driver, 5).until(
-                        EC.presence_of_element_located((By.XPATH, email_xpath))
+                        EC.visibility_of_element_located((By.XPATH, email_xpath))
                     )
                     driver.execute_script(js_set, email_el, test_email)
                     time.sleep(0.3)
@@ -99,49 +151,95 @@ def _detect_method(driver, site_url):
                     pass
 
             # 填密码
-            pwd_el = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.XPATH, password_xpath))
-            )
             driver.execute_script(js_set, pwd_el, test_pwd)
 
-            # 点击密码框触发 focus/blur 事件（部分网站依赖此事件触发校验）
+            # ── focus → blur 触发校验 ──
+            # gitee、stackoverflow 等网站在密码框失去焦点（blur）时才显示
+            # 内联合规反馈（如"密码长度不得低于8个字符"）。
+            # 必须先 click 聚焦、再用 ActionChains 真实鼠标点击密码框右侧
+            # 空白区域失焦。不能使用 document.body.click() —— SPA 模态框
+            # 站点（xuetangx 等）可能将 body click 误判为"点击遮罩关闭弹窗"。
             try:
-                pwd_el.click()
+                pwd_el.click()  # 聚焦
+                time.sleep(0.2)
+                # 真实鼠标移动到密码框右侧 30px 处点击（模拟"填写后点别处"）
+                ActionChains(driver).move_to_element(
+                    pwd_el
+                ).move_by_offset(
+                    pwd_el.size['width'] + 30, 5
+                ).click().perform()
             except Exception:
                 pass
 
-            wait_time = 3 if attempt == 0 else 5
+            wait_time = 5
             deadline = time.time() + wait_time
             feedback = None
             while time.time() < deadline:
+                time.sleep(0.3)
                 try:
-                    fb = driver.execute_script(
-                        "return detectPasswordFeedback(arguments[0])",
-                        password_xpath,
+                    results = driver.execute_script(
+                        "return getWatchedFeedback()"
                     )
+                    if results and len(results) > 0:
+                        # 找第一个被拒绝的反馈
+                        for r in results:
+                            if r.get("rejected"):
+                                feedback = r.get("type", "observer-detected")
+                                break
+                        if feedback:
+                            break
+                        # 如果有反馈但都未标记为 rejected（如强度指示器）
+                        if not feedback:
+                            feedback = "observer-detected"
+                            break
                 except Exception:
-                    # JS 未注入或页面上下文丢失，回退到 aria-invalid
-                    try:
-                        v = pwd_el.get_attribute("aria-invalid")
-                    except Exception:
-                        v = None
-                    fb = {
-                        "hasFeedback": v is not None and v != "",
-                        "rejected": v == "true",
-                    }
-                if fb and isinstance(fb, dict) and fb.get("hasFeedback"):
-                    feedback = fb.get("type", "detected")
-                    break
-                time.sleep(0.5)
+                    pass
+
+            # 停止 observer
+            try:
+                driver.execute_script("stopWatchingFeedback()")
+            except Exception:
+                pass
 
             if feedback is not None:
-                fb_type = (fb or {}).get("type", "?") if isinstance(fb, dict) else "?"
-                logger.info(f"内联反馈检测成功 ({fb_type})，使用 inline 方法")
+                logger.info(f"内联反馈检测成功 ({feedback})，使用 inline 方法")
                 return "inline", signup_url, email_xpath, password_xpath
-        except Exception:
-            pass
 
+            # ── 静态快照兜底（MutationObserver 未捕获反馈时） ──
+            try:
+                fb = driver.execute_script(
+                    "return detectPasswordFeedback(arguments[0])",
+                    password_xpath,
+                )
+                if fb and isinstance(fb, dict) and fb.get("hasFeedback"):
+                    fb_type = fb.get("type", "static-fallback")
+                    logger.info(f"内联反馈检测成功 ({fb_type}, 静态兜底)，使用 inline 方法")
+                    return "inline", signup_url, email_xpath, password_xpath
+            except Exception:
+                pass
+
+        except Exception:
+            try:
+                driver.execute_script("stopWatchingFeedback()")
+            except Exception:
+                pass
+
+    logger.info("内联反馈检测未成功（2次尝试均无反馈），回退到 full-form 方法")
     return "full", signup_url, email_xpath, password_xpath
+
+
+# ================================================================
+# 分类结果辅助
+# ================================================================
+
+def _apply_classification_to_result(result: dict, classification: dict) -> None:
+    """将分类结果写入 result dict，统一设置 class_letter 等信息。"""
+    flow_type = classification.get("flow_type", "unknown")
+    result["flow_type"] = flow_type
+    result["class_letter"] = FLOW_TYPE_TO_LETTER.get(flow_type, "?")
+    result["confidence"] = classification.get("confidence", "low")
+    result["stop_reason"] = classification.get("stop_reason", "")
+    result["primary_method"] = classification.get("primary_method", "")
 
 
 # ================================================================
@@ -183,43 +281,57 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             try:
                 engine = SignupFlowClassifierEngine(driver)
                 classification = engine.classify(fallback_url, entry_kind="signup")
-                result["flow_type"] = classification["flow_type"]
+                _apply_classification_to_result(result, classification)
                 if (classification["confidence"] != "low"
                         and classification["flow_type"] != "unknown"):
                     # 分类器有把握 → 使用该结果
                     if classification["should_proceed"]:
                         signup_url = fallback_url
                         logger.info(
-                            "回退分类成功: {} (confidence={}), 继续测量".format(
+                            "回退分类成功: {} (类型{} confidence={}), 继续测量".format(
                                 classification["flow_type"],
+                                result.get("class_letter", "?"),
                                 classification["confidence"]))
                         # fall through 到 Phase 3（跳过 Phase 2 重复分类）
                     else:
                         result["policy"] = classification.get("policy", {})
                         result["method_used"] = "classified_only"
+                        logger.info(
+                            "回退分类: {} (类型{}), 无需密码测量".format(
+                                classification["flow_type"],
+                                result.get("class_letter", "?")))
                         return result
                 else:
                     # 分类器也无把握 → 维持原逻辑
                     result["error"] = "未发现注册页面"
                     result["flow_type"] = "no_web_signup"
+                    result["class_letter"] = "H"
                     return result
             except Exception as e:
                 logger.warning("回退分类失败: {}".format(e))
                 result["error"] = "未发现注册页面"
                 result["flow_type"] = "no_web_signup"
+                result["class_letter"] = "H"
                 return result
 
         # ================================================================
-        # Phase 2: 分类注册流程（NEW — 嫁接自 MyAutomaticPolicy）
+        # Phase 2: 分类注册流程（对齐 MyAutomaticPolicy measure_flow）
         # ================================================================
         if classification is None:
             engine = SignupFlowClassifierEngine(driver)
-            classification = engine.classify(signup_url, entry_kind="signup")
-            result["flow_type"] = classification["flow_type"]
+            # 如果 navigate_to_signup 已点击过入口链接（Layer 1/2），
+            # 告知 classify() 跳过入口点击阶段，避免重复点击干扰已打开的模态框
+            _already_clicked = getattr(discovery, '_entry_clicked', False)
+            classification = engine.classify(
+                signup_url, entry_kind="signup",
+                entry_already_clicked=_already_clicked)
 
-        # 不需要继续测量的类型（C/D/F/G/H/I）→ 通常直接返回分类结果
+        # 统一将分类信息写入 result
+        _apply_classification_to_result(result, classification)
+
+        # 不需要继续测量的类型（C/D/F/G/H/I）→ 输出分类结果
         if not classification["should_proceed"]:
-            # 例外：分类器 low-confidence（不确定）→ 放行，尝试测量
+            # 例外：分类器 low-confidence unknown → 放行，尝试测量
             is_uncertain = (
                 classification["confidence"] == "low"
                 and classification["flow_type"] == "unknown"
@@ -232,31 +344,57 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                 )
             else:
                 logger.info(
-                    "注册流程分类: {} (confidence={}), 跳过密码政策测量".format(
-                        classification["flow_type"], classification["confidence"]
+                    "注册流程分类: {} (类型{} confidence={} stop_reason={}), 跳过密码政策测量".format(
+                        classification["flow_type"],
+                        result.get("class_letter", "?"),
+                        classification["confidence"],
+                        classification.get("stop_reason", ""),
                     )
                 )
                 result["policy"] = classification.get("policy", {})
                 result["method_used"] = "classified_only"
                 return result
 
+        # ── A/B/E 类：应尝试密码政策测量 ──
+        logger.info(
+            "流程类型 {}/{} ({}), 继续密码政策测量".format(
+                result.get("class_letter", "?"),
+                classification["flow_type"],
+                classification.get("primary_method", ""),
+            )
+        )
+
         # 类型 E 补救：尝试 tab 切换到密码视图
         if classification["flow_type"] == "multiple_methods":
             logger.info("类型 E 检测，尝试切换到密码注册视图...")
             if not engine.try_switch_to_password_view():
-                logger.info("无法切换到密码视图，跳过测量")
+                logger.info(
+                    "E类网站，无法切换到密码视图，输出分类结果（类型E/multiple_methods）"
+                )
                 result["policy"] = classification.get("policy", {})
                 result["method_used"] = "classified_only"
+                result["note"] = (
+                    "E类（multiple_methods）— 同时提供多种注册方式，"
+                    "当前无法切换至密码注册视图，密码政策未能测量"
+                )
                 return result
             logger.info("成功切换到密码视图，继续测量")
 
         # ================================================================
         # Phase 3: 确定 inline/full 方法
         # ================================================================
+        # 对于 SPA 模态框站点，Phase 2 分类可能耗时较长导致模态框关闭。
+        # 在检测字段前尝试重新打开模态框，确保注册表单可见。
+        if not discovery.ensure_form_visible():
+            logger.debug("无法恢复模态框，使用当前页面状态继续")
+
         if method == "auto":
-            # auto 模式：内联反馈探测决定 inline vs full
+            # auto 模式：先尝试 inline（填密码→点空白→读反馈），
+            # 2 轮无反馈则自动切换到 full 方法（完整表单提交）
+            phase1_email_xpath, phase1_password_xpath = discovery.find_signup_fields()
             method_used, _, email_xpath, password_xpath = \
-                _detect_method(driver, site_url)
+                _detect_method(driver, site_url, signup_url,
+                               phase1_email_xpath, phase1_password_xpath)
         else:
             method_used = method
             email_xpath, password_xpath = discovery.find_signup_fields()
@@ -266,8 +404,27 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         # 重新检测字段（分类器可能已导航到新页面，XPath 可能失效）
         if not email_xpath or not password_xpath:
             email_xpath, password_xpath = discovery.find_signup_fields()
-        if classification.get("password_reached") and not password_xpath:
+        # 若字段仍缺失，尝试从分类器引擎获取当前密码字段
+        if not password_xpath and engine is not None:
             password_xpath = engine.get_current_password_field_xpath()
+
+        # 所有方法均未找到密码字段 → 无法执行后续密码政策测量
+        # 如果有已完成的有效分类（A/B/E/I 类），输出分类结果而不标记为失败
+        if not password_xpath:
+            class_letter = result.get("class_letter", "?")
+            flow_type = result.get("flow_type", "unknown")
+            logger.info(
+                "未发现密码字段，分类结果: 类型{} ({}), 输出分类".format(
+                    class_letter, flow_type
+                )
+            )
+            result["method_used"] = "classified_only"
+            result["policy"] = classification.get("policy", {}) if classification else {}
+            result["note"] = (
+                "已分类（类型{}/{}），但注册表单未发现密码输入字段，"
+                "密码政策未能测量。".format(class_letter, flow_type)
+            )
+            return result
 
         # ================================================================
         # Phase 4: 执行密码政策测量
@@ -280,6 +437,16 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             if not tester.discover_form_fields():
                 result["error"] = "无法检测表单字段"
                 return result
+            # 若当前已在注册页面，标记页面就绪，防止 test_one_password
+            # 内部重新 driver.get(signup_url) 导致 SPA 模态框关闭
+            try:
+                cur = driver.current_url.rstrip("/")
+                tgt = signup_url.rstrip("/")
+                if cur == tgt:
+                    tester._signup_page_ready = True
+                    logger.debug("已在注册页面（URL 匹配），跳过页面重载")
+            except Exception:
+                pass
             result["policy"] = tester.run_password_policy_test()
         else:
             parsed = urlparse(site_url)
@@ -292,6 +459,52 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                 test_site=hostname,
             )
             result["policy"] = tester.run_full_test()
+
+        # ── 后处理：检测异常情况 ──
+        # 注意：对于 A/B/E 类网站，即使检测到疑似登录表单，
+        # 也保留分类器的原始分类结果，仅标注密码数据不可信。
+        if (
+            isinstance(result.get("policy"), dict)
+            and result["policy"].get("_suspicious_login_form")
+            and not result["policy"].get("_access_blocked")
+            and not result["policy"].get("_browser_dead")
+        ):
+            logger.warning(
+                "{} 疑似登录表单（非注册页面），密码测量结果不可信，"
+                "保留原始分类（类型{}/{}）".format(
+                    site_url,
+                    result.get("class_letter", "?"),
+                    result.get("flow_type", "unknown"),
+                )
+            )
+            # 不覆盖 flow_type！保留分类器的原始分类
+            result["suspicious_login_form"] = True
+            if not result.get("note"):
+                result["note"] = (
+                    "密码测量疑似在登录表单（而非注册表单）上执行，"
+                    "密码政策数据不可信。原始分类（类型{}/{}）保持不变。".format(
+                        result.get("class_letter", "?"),
+                        result.get("flow_type", "unknown"),
+                    )
+                )
+        elif isinstance(result.get("policy"), dict) and result["policy"].get(
+            "_access_blocked"
+        ):
+            logger.warning(
+                "{} 访问被阻断（机器人拦截），标记结果".format(site_url)
+            )
+            result["method_used"] = "access_blocked"
+            result["flow_type"] = "access_blocked"
+            result["class_letter"] = "G"  # 等同于 human_blocked
+        elif isinstance(result.get("policy"), dict) and result["policy"].get(
+            "_browser_dead"
+        ):
+            logger.warning(
+                "{} 浏览器会话终止，标记结果".format(site_url)
+            )
+            result["method_used"] = "browser_dead"
+            result["flow_type"] = "browser_crashed"
+            result["class_letter"] = "?"
 
     except Exception as e:
         result["error"] = str(e)

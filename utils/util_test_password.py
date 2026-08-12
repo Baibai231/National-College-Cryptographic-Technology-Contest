@@ -21,13 +21,18 @@ import utils.util_str_generator as uusg
 from config.config import Config
 
 
-def _admissible_cache_path(test_site: str) -> str:
+def _admissible_cache_path(test_site: str, strength: str = None) -> str:
     """admissible password 缓存文件路径（logs/{site}/admissible_{site}.txt），
-    中断重跑时直接复用，避免从头开始找可接受密码。"""
+    中断重跑时直接复用，避免从头开始找可接受密码。
+
+    strength: 可选 "strong" | "medium" | "weak"，有值时生成
+              logs/{site}/admissible_{site}_{strength}.txt 按强度分类。
+    """
     import os
     site_dir = Config.PROJECT_ROOT / "logs" / test_site
     os.makedirs(str(site_dir), exist_ok=True)
-    return str(site_dir / f"admissible_{test_site}.txt")
+    suffix = f"_{strength}" if strength else ""
+    return str(site_dir / f"admissible_{test_site}{suffix}.txt")
 
 
 class CR(Enum):
@@ -354,7 +359,8 @@ def _get_new_driver():
 
 class TestPassword(object):
     def __init__(self, my_logger, test_site, admissible_password="",
-                 signup_url="", email_xpath="", password_xpath=""):
+                 signup_url="", email_xpath="", password_xpath="",
+                 driver=None):
         self.fake = faker.Faker()
         # 2026-08 更新：GitHub 新政策为"至少15位，或至少8位+数字+小写"，
         # 且拒绝泄露密码与连续序列。旧密码池（2023年，6-10位）已全部失效。
@@ -378,10 +384,16 @@ class TestPassword(object):
         # 同页面复用标志：页面已加载并填好邮箱时为 True，
         # 后续测试只重填密码字段，避免每个密码都重新加载页面（减少请求量，缓解限速）
         self._signup_page_ready = False
+        # 最近一次 test_one_password 成功时检测到的密码强度等级
+        # 可能值: "strong" | "medium" | "weak" | None（无强度计）
+        self._last_strength_level = None
         # ===== 参数化：支持任意网站的注册表单 =====
         self.signup_url = signup_url
         self.email_xpath = email_xpath
         self.password_xpath = password_xpath
+        # 使用调用方传入的 driver，而非全局单例 _SHARED_DRIVER
+        # 确保与分类器/链接发现使用同一浏览器实例（SPA 弹窗不丢失）
+        self._driver = driver
 
     @logger.catch
     def find_admissible_password(self):
@@ -422,10 +434,49 @@ class TestPassword(object):
         if not flag:
             self.my_logger.warning("There is no admissible password available.")
         else:
+            # ── 按密码强度等级分类保存 ──
+            # 有强度计时按强/中/弱分类，无强度计时统一保存
+            strength = getattr(self, '_last_strength_level', None)
+            if strength:
+                cache_path = _admissible_cache_path(self.test_site, strength)
             with open(cache_path, "w", encoding="utf-8") as f:
                 f.write(self.admissible_password)
             self.my_logger.info(f"已缓存 admissible password 到 {cache_path}")
+            # 同时保存一份无分类的主缓存（向后兼容）
+            main_cache = _admissible_cache_path(self.test_site)
+            if strength and cache_path != main_cache:
+                with open(main_cache, "w", encoding="utf-8") as f:
+                    f.write(self.admissible_password)
         return self.admissible_password
+
+    def _parse_strength_level(self, strength_text: str) -> None:
+        """从强度计文本解析密码强度等级，存到 self._last_strength_level。
+
+        仅作为备注和日志输出，不参与密码接受/拒绝的决策。
+        决策唯一依据是密码输入框是否变红（field-state 检查）。
+        """
+        if not strength_text:
+            self._last_strength_level = None
+            return
+        _msg_lower = strength_text.lower()
+        # 优先英文匹配
+        if any(w in _msg_lower for w in ['very strong', 'excellent']):
+            self._last_strength_level = 'strong'
+        elif any(w in _msg_lower for w in ['strong', 'high', 'good', 'great']):
+            self._last_strength_level = 'strong'
+        elif any(w in _msg_lower for w in ['medium', 'moderate', 'fair', 'normal']):
+            self._last_strength_level = 'medium'
+        elif any(w in _msg_lower for w in ['weak', 'low', 'poor', 'bad']):
+            self._last_strength_level = 'weak'
+        # 中文匹配
+        elif '强' in strength_text and '弱' not in strength_text:
+            self._last_strength_level = 'strong'
+        elif '中' in strength_text:
+            self._last_strength_level = 'medium'
+        elif '弱' in strength_text:
+            self._last_strength_level = 'weak'
+        else:
+            self._last_strength_level = None
 
     @logger.catch
     def test_one_password(self, test_password, info_name="Default Name for the process."):
@@ -439,9 +490,9 @@ class TestPassword(object):
         self.my_logger.debug(f"Begin to simulate testing the password {test_password} for signing up an account.")
         retries = 1
         while retries <= 5:
-            # 使用共享单 driver，不再每个密码新建 Chrome 实例
-            # (避免频繁新建/销毁 browser 触发 DataDome CAPTCHA)
-            driver = _get_shared_driver()
+            # 使用调用方传入的 driver（而非全局单例），
+            # 确保与分类器/链接发现共享同一浏览器实例
+            driver = self._driver or _get_shared_driver()
             try:
                 self.my_logger.debug(f"Begin the {retries}-(st/nd/rd/th) attempt(s).")
                 # 同页面复用：页面已就绪时只重填密码字段，不重新加载页面
@@ -452,20 +503,19 @@ class TestPassword(object):
                     driver.get(self.signup_url)
                     self.my_logger.debug(f"Access the signup page: {self.signup_url}")
                     uub.random_sleep([1, 2])
-                    # find the email input field and fill it
-                    if not self.email_xpath:
-                        self.my_logger.warning("email_xpath is not set; cannot find email field.")
-                        return False
-                    try:
-                        email_elem = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.XPATH, self.email_xpath))
-                        )
-                    except Exception:
-                        self.my_logger.warning("Email input not found via xpath, page may be blocked.")
-                        return False
-                    email_elem.send_keys(self.username)
-                    self.my_logger.debug(f"Fill the email field with {self.username}.")
-                    uub.random_sleep([1, 2])
+                    # find the email input field and fill it (if available)
+                    if self.email_xpath:
+                        try:
+                            email_elem = WebDriverWait(driver, 10).until(
+                                EC.presence_of_element_located((By.XPATH, self.email_xpath))
+                            )
+                            email_elem.send_keys(self.username)
+                            self.my_logger.debug(f"Fill the email field with {self.username}.")
+                            uub.random_sleep([1, 2])
+                        except Exception:
+                            self.my_logger.warning("Email input not found via xpath, continuing without email.")
+                    else:
+                        self.my_logger.debug("email_xpath is not set; skipping email field fill.")
                     self._signup_page_ready = True
                 if not self.password_xpath:
                     self.my_logger.warning("password_xpath is not set; cannot find password field.")
@@ -489,49 +539,155 @@ class TestPassword(object):
                     elm.dispatchEvent(new Event('input', {bubbles: true}));
                     elm.dispatchEvent(new Event('change', {bubbles: true}));
                 """
+                # ── 先退出上一轮密码框状态（两次测量之间必须失焦）──
+                # 用 Selenium ActionChains 真实移动鼠标到密码框右侧空白处点击，
+                # 而非 JS 事件模拟。真实鼠标事件才能触发浏览器原生焦点转移。
+                if self._signup_page_ready:
+                    try:
+                        ActionChains(driver).move_to_element(
+                            password_elem
+                        ).move_by_offset(
+                            password_elem.size['width'] + 30, 5
+                        ).click().perform()
+                        time.sleep(0.2)
+                    except Exception:
+                        pass
+
+                # ── 启动 MutationObserver（必须先于 DOM 变更启动）──
+                # 用 MutationObserver 而非静态 detectPasswordFeedback()，
+                # 避免检测到表单中已存在的其他字段的错误（如"姓名为必填项"）。
+                driver.execute_script(
+                    "return watchPasswordFeedback(arguments[0])",
+                    self.password_xpath,
+                )
+
                 driver.execute_script(JS_RESET_PASSWORD, password_elem)
                 time.sleep(0.3)
                 driver.execute_script(JS_ADD_TEXT_TO_INPUT, password_elem, test_password)
-                actions = ActionChains(driver)
-                actions.send_keys(Keys.TAB).perform()
-                time.sleep(0.1)
-                actions.move_to_element(password_elem).click().perform()
+                # ── focus → blur 触发内联校验 ──
+                # 用 Selenium ActionChains 真实鼠标移动：先点密码框聚焦，
+                # 再移动到密码框右侧空白区域点击，模拟用户"填写后点别处"。
+                try:
+                    password_elem.click()  # 聚焦
+                    time.sleep(0.2)
+                    # 移动到密码框右侧 30px 处点击空白区域
+                    ActionChains(driver).move_to_element(
+                        password_elem
+                    ).move_by_offset(
+                        password_elem.size['width'] + 30, 5
+                    ).click().perform()
+                except Exception:
+                    pass
                 self.my_logger.debug(f"Fill the password field with {test_password}.")
                 # 确认字段值已写入（防止 setter 失败）
                 if password_elem.get_attribute("value") != test_password:
                     self.my_logger.warning(f"Password field value mismatch, treat as rejected: {test_password}")
+                    try:
+                        driver.execute_script("stopWatchingFeedback()")
+                    except Exception:
+                        pass
                     return False
 
-                # 多维度密码反馈检测（替代仅检测 aria-invalid）
-                # 轮询 detectPasswordFeedback()，涵盖:
-                #   aria-invalid / HTML5 validity API / :invalid 伪类 /
-                #   error 元素文本 / aria-describedby / 密码强度指示器
+                # ── 双重检测：字段自身状态决定接受/拒绝 ──
+                # 核心原则：密码输入框变红（error class / :invalid / aria-invalid）
+                # 是唯一的拒绝信号。密码强度计（强/中/弱）只是信息性展示，
+                # 不作为接受/拒绝的判定依据，仅记录在终端和日志中。
                 fb_result = None
-                deadline = time.time() + 12
+                _strength_note = None  # 强度计文本（仅备注，不参与决策）
+                deadline = time.time() + 8
                 while time.time() < deadline:
                     try:
-                        fb = driver.execute_script(
-                            "return detectPasswordFeedback(arguments[0])",
-                            self.password_xpath,
-                        )
+                        # 第一层：密码字段自身状态（aria-invalid / validity / :invalid / error class）
+                        # 这是唯一的"密码被拒绝"信号 —— 输入框变红 = 密码不合规
+                        field_state = driver.execute_script("""
+                            var el = arguments[0];
+                            var state = {rejected: false, reason: null};
+                            if (el.getAttribute('aria-invalid') === 'true')
+                                { state.rejected = true; state.reason = 'aria-invalid=true'; }
+                            if (!state.rejected && el.validity && !el.validity.valid)
+                                { state.rejected = true; state.reason = 'html5-invalid: ' + (el.validationMessage || '').substring(0, 100); }
+                            if (!state.rejected && el.matches && el.matches(':invalid'))
+                                { state.rejected = true; state.reason = 'css-invalid'; }
+                            if (!state.rejected) {
+                                var cls = el.className || '';
+                                if (/(?:^|\\s)(error|invalid|danger)(?:\\s|$)/i.test(cls))
+                                    { state.rejected = true; state.reason = 'class: ' + cls.substring(0, 50); }
+                            }
+                            if (!state.rejected && el.getAttribute('aria-invalid') === 'false')
+                                { state.reason = 'aria-invalid=false'; }
+                            return state;
+                        """, password_elem)
+                        if field_state and field_state.get("rejected"):
+                            fb_result = {"rejected": True, "type": "field-state",
+                                         "message": field_state.get("reason", "")}
+                            break
+                        if field_state and field_state.get("reason") == "aria-invalid=false":
+                            fb_result = {"rejected": False, "type": "field-state",
+                                         "message": "aria-invalid=false"}
+                            break
+
+                        # 第二层：Observer/静态扫描反馈
+                        # 只关注真正的错误消息（error-element / observer-added-el），
+                        # 排除强度指示器（strength-indicator）—— 它不表示拒绝。
+                        results = driver.execute_script("return getWatchedFeedback()")
+                        if results and len(results) > 0:
+                            _non_pwd_patterns = [
+                                '姓名为必填', '姓名不能为空', '请填写姓名',
+                                '邮箱为必填', '邮箱不能为空', '请填写邮箱',
+                                '手机号为必填', '手机不能为空', '请填写手机',
+                                '用户名为必填', '验证码',
+                            ]
+                            for r in results:
+                                rtype = r.get("type", "")
+                                msg = (r.get("message") or "").lower()
+                                # 跳过非密码字段错误
+                                if any(p in msg for p in _non_pwd_patterns):
+                                    continue
+                                # 强度指示器 → 仅记录备注，不参与 accept/reject 决策
+                                if rtype == 'strength-indicator':
+                                    if not _strength_note:
+                                        _strength_note = r.get("message", "")
+                                    continue
+                                # 真正的错误消息（error-element / observer-added-el）
+                                if r.get("rejected"):
+                                    fb_result = r
+                                    break
+                            if fb_result:
+                                break
                     except Exception:
-                        # 函数未注入或页面上下文丢失，回退到 aria-invalid
-                        v = password_elem.get_attribute("aria-invalid")
-                        fb = {
-                            "hasFeedback": v is not None and v != "",
-                            "rejected": v == "true",
-                            "type": "aria-invalid(fallback)",
-                            "message": str(v) if v else None,
-                        }
-                    if fb and fb.get("hasFeedback"):
-                        fb_result = fb
-                        break
+                        pass
                     time.sleep(0.5)
 
+                # 停止 observer
+                try:
+                    driver.execute_script("stopWatchingFeedback()")
+                except Exception:
+                    pass
+
                 if fb_result is None:
-                    self.my_logger.warning(
-                        f"Password validation did not complete in time for {test_password}, treat as rejected.")
-                    return False
+                    # 既无字段级错误信号（输入框未变红），也无真正的错误消息
+                    # → 密码被接受。强度计文本仅作为备注记录。
+                    _strength_info = ""
+                    if _strength_note:
+                        _strength_info = f", strength_meter=\"{_strength_note[:80]}\""
+                        self._parse_strength_level(_strength_note)
+                    else:
+                        self._last_strength_level = None
+                    self.my_logger.success(
+                        f"The tested password {test_password} appears accepted"
+                        f" (no rejection signal detected{_strength_info})")
+                    # 退出密码框
+                    try:
+                        ActionChains(driver).move_to_element(
+                            password_elem
+                        ).move_by_offset(
+                            password_elem.size['width'] + 30, 5
+                        ).click().perform()
+                        time.sleep(0.2)
+                    except Exception:
+                        pass
+                    uub.random_sleep([0.5, 1])
+                    return True
 
                 fb_type = fb_result.get("type", "unknown")
                 fb_msg = fb_result.get("message", "")
@@ -541,8 +697,26 @@ class TestPassword(object):
                         f"The tested password {test_password} is rejected ({fb_type}: {fb_msg})")
                 else:
                     flag = True
+                    # 强度计文本（如有）仅作为备注，不参与决策
+                    _strength_info = ""
+                    if _strength_note:
+                        _strength_info = f", strength_meter=\"{_strength_note[:80]}\""
+                        self._parse_strength_level(_strength_note)
+                    else:
+                        self._last_strength_level = None
                     self.my_logger.success(
-                        f"The tested password {test_password} is accepted ({fb_type})")
+                        f"The tested password {test_password} is accepted ({fb_type}{_strength_info})")
+                # ── 退出密码框（为下一次测量做准备）──
+                # 两次测量之间必须失焦，否则下一轮 focus→blur 不会触发新反馈
+                try:
+                    ActionChains(driver).move_to_element(
+                        password_elem
+                    ).move_by_offset(
+                        password_elem.size['width'] + 30, 5
+                    ).click().perform()
+                    time.sleep(0.2)
+                except Exception:
+                    pass
                 uub.random_sleep([0.5, 1])
                 return flag
             except Exception as e:
@@ -1053,30 +1227,67 @@ class TestPassword(object):
         return ret_list
 
     def identify_combination_requirements_3_sum(self, com_r):
+        """识别 3 类字符组合要求（upper, lower, digit 均已确认存在）
+
+        当 r_no_a_sps=True（不允许特殊符号）时，实际只有 3 个可用类别，
+        此时只应设置 r_cmb23 或 r_cmb33，不应设置 r_cmb34 / r_cmb44。
+        否则 length_limit_initial_password() 会为满足「4 类」要求而插入 @ 等
+        特殊符号，导致所有长度测试密码被拒绝，二分搜索发散到边界值。
+        """
         ret_list = [False, False, False, False, False, False, False]
         modified_password_dl = ""
         modified_password_sl = ""
-        # u l d
-        if com_r[CR.SYMBOL_R.value] == 0:
-            modified_password_dl = uusg.transfer_symbol_into_digit(self.admissible_password)
-            # no symbol in the password
-        elif com_r[CR.DIGIT_R.value] == 0:
-            modified_password_dl = uusg.transfer_digit_into_symbol(self.admissible_password)
+        no_symbols = (com_r[CR.SYMBOL_R.value] == 0)
 
-        if modified_password_dl != "" and self.test_one_password(modified_password_dl):
-            ret_list[RMB.R34.value] = ret_list[RMB.R23.value] = True
-        else:
-            ret_list[RMB.R44.value] = ret_list[RMB.R33.value] = True
+        # ── DL section: digit/symbol 互换测试 ──
+        # 仅当符号确实存在/允许时此测试才有意义。
+        # 若符号计数为 0，transfer_symbol_into_digit 是空操作，
+        # 返回未改动的密码→测试成功→错误推断 r_cmb34=True。
+        if not no_symbols:
+            if com_r[CR.DIGIT_R.value] == 0:
+                modified_password_dl = uusg.transfer_digit_into_symbol(
+                    self.admissible_password)
+            else:
+                # 符号存在 → 尝试将其转为数字
+                modified_password_dl = uusg.transfer_symbol_into_digit(
+                    self.admissible_password)
 
+            if modified_password_dl != "" and self.test_one_password(modified_password_dl):
+                ret_list[RMB.R34.value] = ret_list[RMB.R23.value] = True
+            else:
+                ret_list[RMB.R44.value] = ret_list[RMB.R33.value] = True
+
+        # ── SL section: upper/lower 互换测试 ──
         if com_r[CR.UPPER_R.value] == 0:
             modified_password_sl = uusg.transfer_upper_into_lower(self.admissible_password)
         elif com_r[CR.LOWER_R.value] == 0:
             modified_password_sl = uusg.transfer_lower_into_upper(self.admissible_password)
-
-        if modified_password_sl != "" and self.test_one_password(modified_password_dl):
-            ret_list[RMB.R33.value] = ret_list[RMB.R34.value] = True
         else:
-            ret_list[RMB.R44.value] = True
+            # 大小写都存在 → 尝试去掉大写（全转小写）
+            modified_password_sl = uusg.transfer_upper_into_lower(self.admissible_password)
+
+        if modified_password_sl != "" and self.test_one_password(modified_password_sl):
+            # 去掉一种大小写后仍可接受 → 只需 2 类（有符号时对应3-of-4）
+            ret_list[RMB.R33.value] = ret_list[RMB.R34.value] = True
+        elif com_r[CR.UPPER_R.value] > 0 and com_r[CR.LOWER_R.value] > 0:
+            # 大小写均存在 → 尝试另一种方向（去掉小写保留大写）
+            modified_password_sl2 = uusg.transfer_lower_into_upper(self.admissible_password)
+            if modified_password_sl2 and self.test_one_password(modified_password_sl2):
+                ret_list[RMB.R33.value] = ret_list[RMB.R34.value] = True
+            else:
+                # 两种方向均失败 → 大小写都必需
+                if no_symbols:
+                    # 无符号 → 3 类全必需 → r_cmb33
+                    ret_list[RMB.R33.value] = True
+                else:
+                    # 有符号 → 可能需全部 4 类 → r_cmb44
+                    ret_list[RMB.R44.value] = True
+        else:
+            # 仅有一种大小写（或都没有），去除后失败
+            if no_symbols:
+                ret_list[RMB.R33.value] = True
+            else:
+                ret_list[RMB.R44.value] = True
         return ret_list
 
     def identify_combination_requirements_2_sum(self, com_r):
@@ -1307,6 +1518,14 @@ class TestPassword(object):
         else:
             char_dict["r_com_4"] = 0
 
+        # ── 安全网：r_no_a_sps=True 时绝不应引入特殊符号 ──
+        # 组合检测可能错误设置 r_cmb34/r_cmb44（当特殊符号不可用时），
+        # 导致后续 missing-class 逻辑误判需要添加特殊字符。
+        # 此处强制清零四类要求，确保长度二分搜索不受污染。
+        if restrictive_p.get("r_no_a_sps", False):
+            char_dict["r_com_4"] = 0
+            char_dict["r_sps_min"] = 0
+
         flag = False
         # letter start
         if restrictive_p["r_l_start"]:
@@ -1413,43 +1632,150 @@ class TestPassword(object):
             initial_password += uusg.gen_random_upper_character(add_len)
             char_dict["r_upp_min"] = 0 if char_dict["r_upp_min"] - add_len < 0 else char_dict["r_upp_min"] - add_len
         elif "s" in missing_three_class and "s" in missing_four_class:
-            add_len = 1 if char_dict["r_sps_min"] <= 1 else char_dict["r_sps_min"]
-            initial_password += ''.join(self.fake.random_choices(elements=('-', '@'), length=add_len))
-            char_dict["r_sps_min"] = 0 if char_dict["r_sps_min"] - add_len < 0 else char_dict["r_sps_min"] - add_len
+            # r_no_a_sps=True 时绝不应引入特殊符号。
+            # char_dict["r_sps_min"] 可能已被安全网清零，
+            # 但 add_len = 1 if 0 <= 1 else 0 → 1，仍会添加 '@'。
+            # 此处显式跳过特殊字符补充。
+            if restrictive_p.get("r_no_a_sps", False):
+                pass
+            else:
+                add_len = 1 if char_dict["r_sps_min"] <= 1 else char_dict["r_sps_min"]
+                initial_password += ''.join(self.fake.random_choices(elements=('-', '@'), length=add_len))
+                char_dict["r_sps_min"] = 0 if char_dict["r_sps_min"] - add_len < 0 else char_dict["r_sps_min"] - add_len
         else:
             pass
 
         return initial_password
 
     def binary_search_min(self, initial_password, min_interval):
-        lo = len(initial_password)
+        """二分搜索最小密码长度。
+
+        从 min_interval[0]（而非 len(initial_password)）开始搜索，
+        避免初始中点已超过网站最大长度而导致所有测试密码被拒绝。
+
+        对于 mi < len(initial_password) 的情况，生成包含 initial_password
+        中所有字符类别的极简密码（而非截断），避免截断丢失末尾的必需字符类型。
+        对于 mi >= len(initial_password) 的情况，用随机字符扩展。
+
+        每次测试失败时做一次验证性重试（不同的随机扩展），
+        排除"随机扩展引入意外模式"导致的误判。
+        """
+        lo = min_interval[0]
         hi = min_interval[1]
+        initial_len = len(initial_password)
+
+        # 分析 initial_password 中的字符类别
+        has_lower = any(c.islower() for c in initial_password)
+        has_upper = any(c.isupper() for c in initial_password)
+        has_digit = any(c.isdigit() for c in initial_password)
+
+        self.my_logger.debug(
+            f"binary_search_min: initial_password='{initial_password}' (len={initial_len}), "
+            f"classes: lower={has_lower} upper={has_upper} digit={has_digit}, "
+            f"search range=[{lo}, {hi}]"
+        )
         while lo < hi:
             mi = (lo + hi) // 2
-            modified_password = initial_password + uusg.gen_random_str_no_symbol(mi - len(initial_password))
+            if mi >= initial_len:
+                modified_password = initial_password + uusg.gen_random_str_no_symbol(mi - initial_len)
+            else:
+                # 生成极简短密码，确保包含 initial_password 中的所有字符类别
+                # （截断可能丢失末尾的必需字符类型，如大写字母在密码末尾）
+                parts = []
+                if has_lower:
+                    parts.append(uusg.gen_random_lower_character(1))
+                if has_upper:
+                    parts.append(uusg.gen_random_upper_character(1))
+                if has_digit:
+                    parts.append(uusg.gen_random_digit(1))
+                if mi > len(parts):
+                    parts.append(uusg.gen_random_str_no_symbol(mi - len(parts)))
+                modified_password = ''.join(parts[:mi]) if mi <= len(''.join(parts)) else ''.join(parts)
+                # 确保长度正确
+                if len(modified_password) < mi:
+                    modified_password += uusg.gen_random_str_no_symbol(mi - len(modified_password))
+                elif len(modified_password) > mi:
+                    modified_password = modified_password[:mi]
+
+            self.my_logger.debug(
+                f"binary_search_min: lo={lo}, hi={hi}, mi={mi}, "
+                f"testing '{modified_password}' (len={len(modified_password)})"
+            )
             if self.test_one_password(modified_password):
                 hi = mi
             else:
+                # 验证性重试：用不同的随机扩展再测一次，
+                # 排除"随机字符组合触发了非长度规则"的误判
+                retry_password = self._make_test_password(
+                    initial_password, mi, has_lower, has_upper, has_digit
+                )
+                if retry_password != modified_password:
+                    self.my_logger.debug(
+                        f"binary_search_min: retry at mi={mi} with different random chars"
+                    )
+                    if self.test_one_password(retry_password):
+                        hi = mi
+                        continue
                 lo = mi + 1
+        self.my_logger.debug(f"binary_search_min: result = {lo}")
         return lo
 
+    def _make_test_password(self, seed, target_len, has_lower, has_upper, has_digit):
+        """生成 target_len 长度的测试密码，包含 seed 中的所有字符类别。"""
+        if target_len >= len(seed):
+            return seed + uusg.gen_random_str_no_symbol(target_len - len(seed))
+        parts = []
+        if has_lower:
+            parts.append(uusg.gen_random_lower_character(1))
+        if has_upper:
+            parts.append(uusg.gen_random_upper_character(1))
+        if has_digit:
+            parts.append(uusg.gen_random_digit(1))
+        if target_len > len(parts):
+            parts.append(uusg.gen_random_str_no_symbol(target_len - len(parts)))
+        result = ''.join(parts)
+        if len(result) < target_len:
+            result += uusg.gen_random_str_no_symbol(target_len - len(result))
+        return result[:target_len]
+
     def binary_search_max(self, initial_password, max_interval):
+        """二分搜索最大密码长度。
+
+        从 initial_len 和 max_interval[0] 的较大值开始，
+        用随机字符扩展初始密码来测试各长度。
+        每次测试失败时做一次验证性重试。
+        """
         initial_len = len(initial_password)
         if initial_len > max_interval[0]:
             lo = initial_len
         else:
             lo = max_interval[0]
         hi = max_interval[1]
+        self.my_logger.debug(
+            f"binary_search_max: initial_password='{initial_password}' (len={initial_len}), "
+            f"search range=[{lo}, {hi}]"
+        )
         while lo < hi:
             mi = (lo + hi + 1) // 2
-
             modified_password = initial_password + uusg.gen_random_str_no_symbol(mi - initial_len)
+            self.my_logger.debug(
+                f"binary_search_max: lo={lo}, hi={hi}, mi={mi}, "
+                f"testing '{modified_password}' (len={len(modified_password)})"
+            )
             if self.test_one_password(modified_password):
                 lo = mi
-                # print("True and low: %d and high : %d" % (lo, hi))
             else:
+                # 验证性重试
+                retry_password = initial_password + uusg.gen_random_str_no_symbol(mi - initial_len)
+                if retry_password != modified_password:
+                    self.my_logger.debug(
+                        f"binary_search_max: retry at mi={mi} with different random extension"
+                    )
+                    if self.test_one_password(retry_password):
+                        lo = mi
+                        continue
                 hi = mi - 1
-                # print("False and low: %d and high : %d" % (lo, hi))
+        self.my_logger.debug(f"binary_search_max: result = {lo}")
         return lo
 
     def identify_min_and_max_length_limitations(self, restrictive_parameters, min_interval, max_interval):
@@ -1461,9 +1787,23 @@ class TestPassword(object):
         """
         ret_min = 0
         ret_max = 0
-        # TODO: 1 -> generate the initial password with restrictive parameters
-        initial_password = self.length_limit_initial_password(restrictive_parameters)
-        # print(initial_password)
+        # 优先使用 admissible_password（已知通过所有规则的密码）作为二分搜索种子。
+        # admissible_password 是通过测试确认可被接受的密码，其字符结构已被网站验证通过。
+        # length_limit_initial_password 生成的密码虽然满足参数约束，
+        # 但其块状字符结构（如 3 小写+1 数字+3 大写）在随机扩展后可能产生
+        # 网站实际拒绝的模式（非长度原因），污染二分搜索结果。
+        if self.admissible_password and len(self.admissible_password) >= 6:
+            initial_password = self.admissible_password
+            self.my_logger.debug(
+                f"identify_min_and_max_length_limitations: using admissible_password "
+                f"'{initial_password}' (len={len(initial_password)})"
+            )
+        else:
+            initial_password = self.length_limit_initial_password(restrictive_parameters)
+            self.my_logger.debug(
+                f"identify_min_and_max_length_limitations: using generated initial_password "
+                f"'{initial_password}' (len={len(initial_password)})"
+            )
         # TODO: 2 -> padding the password to tested length
         initial_min_length = len(initial_password)
         if initial_min_length > 32:
@@ -1471,6 +1811,9 @@ class TestPassword(object):
         ret_min = self.binary_search_min(initial_password, min_interval)
         ret_max = self.binary_search_max(initial_password, max_interval)
         # TODO: 3 -> test the password
+        self.my_logger.info(
+            f"Length limitation results: min={ret_min}, max={ret_max}"
+        )
         return ret_min, ret_max
 
     def identify_permissive_characters(self, password_length):

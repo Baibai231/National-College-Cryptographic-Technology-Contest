@@ -38,6 +38,7 @@ from signup_flow_classifier.evidence import finalize, record_evidence, record_st
 from signup_flow_classifier.browser_failures import (
     classify_exception,
     detect_access_block,
+    detect_blank_auth_page,
     detect_server_error_page,
 )
 
@@ -73,7 +74,8 @@ class SignupFlowClassifierEngine:
     # ------------------------------------------------------------------
 
     def classify(self, signup_url: str, entry_kind: str = "signup",
-                 max_steps: int = MAX_STEPS) -> Dict:
+                 max_steps: int = MAX_STEPS,
+                 entry_already_clicked: bool = False) -> Dict:
         """分类注册流程。
 
         导航到注册页 → 安全探索多步流程 → 分类 → 返回结构化结果。
@@ -82,6 +84,8 @@ class SignupFlowClassifierEngine:
             signup_url: 注册页 URL（已由 LoginLinkDiscovery 发现）
             entry_kind: "signup"（注册）或 "login"（登录）
             max_steps: 最大探索步数
+            entry_already_clicked: 上游（navigate_to_signup）已经点击过入口链接并打开了弹窗，
+                                   分类器跳过首轮入口点击阶段，直接从当前页面状态分类
 
         Returns:
             dict 包含以下关键字段：
@@ -107,16 +111,30 @@ class SignupFlowClassifierEngine:
         )
 
         # ---- 1) 导航到注册页 ----
+        # 如果当前已在目标 URL（SPA 弹窗已打开，navigate_to_signup 只改变了页面状态
+        # 但 URL 未变），则跳过导航以保留弹窗状态。
         try:
-            self.driver.get(signup_url)
-        except Exception as e:
-            reason = classify_exception(e)
-            if reason == StopReason.BROWSER_CRASHED.value:
-                raise
-            return self._done(
-                result, "unknown", "low", reason,
-                error="load_failed:{}:{}".format(type(e).__name__, str(e)[:100]),
-            )
+            current_url = self.driver.current_url.rstrip("/")
+            target_url = signup_url.rstrip("/")
+        except Exception:
+            current_url = ""
+            target_url = signup_url
+
+        if current_url and current_url == target_url:
+            # 已在目标页面，模态框/弹窗可能已打开，跳过导航
+            pass
+        else:
+            try:
+                self.driver.get(signup_url)
+            except Exception as e:
+                reason = classify_exception(e)
+                if reason == StopReason.BROWSER_CRASHED.value:
+                    raise
+                return self._done(
+                    result, "unknown", "low", reason,
+                    error="load_failed:{}:{}".format(
+                        type(e).__name__, str(e)[:100]),
+                )
 
         # ---- 2) 检测访问阻断 / 服务器故障 ----
         access_marker = detect_access_block(self.driver)
@@ -138,14 +156,27 @@ class SignupFlowClassifierEngine:
             return self._done(result, "unknown", "high", StopReason.INFRASTRUCTURE_ERROR.value)
 
         # ---- 3) 逐步安全探索 ----
+        # 确保页面在顶部：某些站点（如 douban.com）在 CDP 链接点击或
+        # CMP 检测后页面会滚动到底部，导致顶部的注册/登录表单被遮挡。
+        try:
+            self.driver.execute_script("window.scrollTo(0, 0);")
+        except Exception:
+            pass
         effective_max_steps = max(1, max_steps)
-        entry_clicks_left = MAX_ENTRY_CLICKS
+        # 上游 navigate_to_signup 已点击入口 → 跳过分类器内部的入口点击
+        if entry_already_clicked and entry_kind == "signup":
+            entry_clicks_left = 0
+            auth_entry_clicked = True
+            signup_entry_clicked = True
+        else:
+            entry_clicks_left = MAX_ENTRY_CLICKS
+            auth_entry_clicked = False
+            signup_entry_clicked = False
         tab_clicks_left = 2
         auth_mode_clicks_left = 2 if entry_kind == "login" else 0
         signup_mode_switches_left = 1 if entry_kind == "signup" else 0
         step_limit = effective_max_steps
-        auth_entry_clicked = False
-        signup_entry_clicked = False
+        stopped_after_changed_last_step = False
         signup_reveal_pending = False
 
         for step in range(1, effective_max_steps + 3):
@@ -341,15 +372,154 @@ class SignupFlowClassifierEngine:
                     result, "unknown", "low", StopReason.NO_SIGNUP_ENTRY.value
                 )
 
+            # ---- 短信验证码视图（仅 login 测量时尝试切换） ----
+            # 对应 MyAutomaticPolicy L546-561
+            if (entry_kind == "login" and auth_context
+                    and "sms_code" in state.blockers
+                    and "password" not in state.fields
+                    and auth_mode_clicks_left > 0):
+                mode_outcome = safe_click_auth_mode_switch(self.driver)
+                if mode_outcome.clicked:
+                    auth_mode_clicks_left -= 1
+                    step_limit += 1
+                    state.note = mode_outcome.reason
+                    state.actions.append("auth_mode_click")
+                    record_evidence(
+                        result,
+                        "step={};auth_mode={}".format(step, mode_outcome.reason),
+                    )
+                    continue
+
+            # ---- 慢渲染等待 ----
+            # 页面无字段、无阻断、且没有可点的入口按钮时，
+            # 可能是 React 慢渲染（如 discord 约 15 秒才出表单），轮询等待信号出现。
+            # 对应 MyAutomaticPolicy L563-576
+            if not state.fields and not state.blockers:
+                prefer0 = "register" if entry_kind == "signup" else "login"
+                if detect_entry_button(self.driver, prefer0) is None:
+                    wait_timeout = 2 if parsed_url.scheme == "file" else 15
+                    if self._wait_for_any_signal(self.driver, timeout=wait_timeout):
+                        continue
+
+            # ---- 入口点击（首页/空页尚无字段时） ----
+            # 对应 MyAutomaticPolicy L578-667
+            need_entry_click = not state.fields
+            if need_entry_click and entry_clicks_left > 0:
+                prefer = "register" if entry_kind == "signup" else "login"
+                prefer_active_frames = bool(
+                    entry_kind == "signup" and signup_reveal_pending
+                )
+                allow_entry_fallback = not prefer_active_frames
+                # 预读入口链接 href（供点击失败时"直接导航到登录页"兜底，imooc 等）
+                entry_href = ""
+                try:
+                    detect_entry_button(
+                        self.driver, prefer,
+                        allow_fallback=allow_entry_fallback,
+                        prefer_frames=prefer_active_frames,
+                    )
+                    entry_href = self.driver.execute_script(
+                        "const el = document.querySelector('[data-ap-entry-token]');"
+                        "const h = el ? (el.getAttribute('href') || '') : '';"
+                        "if (el) el.removeAttribute('data-ap-entry-token');"
+                        "return h;"
+                    ) or ""
+                except Exception:
+                    pass
+                before_handles = self.driver.window_handles
+                entry_outcome = safe_click_entry(
+                    self.driver, prefer,
+                    allow_fallback=allow_entry_fallback,
+                    prefer_frames=prefer_active_frames,
+                )
+                entry_clicks_left -= 1
+                state.note = entry_outcome.reason
+                state.actions.append(
+                    "entry_click" if entry_outcome.clicked else "none")
+                record_evidence(
+                    result, "step={};entry={}".format(step, entry_outcome.reason))
+                if entry_outcome.clicked:
+                    auth_entry_clicked = True
+                    if (entry_kind == "signup"
+                            and (entry_outcome.reason.startswith("register_")
+                                 or prefer_active_frames)):
+                        signup_entry_clicked = True
+                        signup_reveal_pending = False
+                    # 登录弹窗可能开在新窗口/新标签（微博），切换过去
+                    if self._maybe_switch_to_new_window(
+                            self.driver, before_handles):
+                        record_evidence(result, "switched_to_new_window")
+                    # 点击成功：轮询等待表单/弹窗渲染
+                    if self._wait_for_form_fields(self.driver, timeout=8):
+                        continue
+                    # 慢渲染/点击抖动恢复（仅真实网站）：
+                    # oschina 登录页需约 18 秒才渲染；
+                    # imooc 的登录链接偶尔点击未落地。延长等待并重试一次入口点击。
+                    if parsed_url.scheme != "file":
+                        if self._wait_for_any_auth_signal(
+                                self.driver, timeout=10):
+                            continue
+                        if entry_clicks_left > 0:
+                            retry_outcome = safe_click_entry(
+                                self.driver, prefer)
+                            entry_clicks_left -= 1
+                            record_evidence(
+                                result,
+                                "step={};entry_retry={}".format(
+                                    step, retry_outcome.reason))
+                            if (retry_outcome.clicked
+                                    and self._wait_for_any_auth_signal(
+                                        self.driver, timeout=6)):
+                                continue
+                        # 链接兜底：入口是站内 <a href> 且点击未出现认证状态时，
+                        # 直接导航到 href（imooc 的 /user/newlogin 等）。
+                        if entry_href:
+                            from urllib.parse import urljoin
+                            from signup_flow_classifier.navigator import \
+                                _same_site
+                            target_url = urljoin(
+                                self.driver.current_url, entry_href)
+                            if _same_site(self.driver.current_url, target_url):
+                                self.driver.get(target_url)
+                                record_evidence(
+                                    result,
+                                    "step={};entry_href_nav={}".format(
+                                        step, target_url[:60]))
+                                if self._wait_for_any_auth_signal(
+                                        self.driver, timeout=8):
+                                    continue
+                    if entry_outcome.changed:
+                        continue  # 页面变了但仍无表单，再走一轮
+                    break  # 点过、页面没变、也没表单 → 停止
+
             # ---- 安全前进（点击"下一步/继续"） ----
             outcome = safe_advance(self.driver, allow_local_test_values=False)
             state.actions.append("next" if outcome.clicked else "none")
-            record_evidence(result, "step={};navigation={}".format(step, outcome.reason))
+            record_evidence(
+                result, "step={};navigation={}".format(step, outcome.reason))
             if not outcome.changed:
                 break
+            if step == effective_max_steps:
+                stopped_after_changed_last_step = True
 
-        # ---- 4) 最终分类 ----
+        # ---- 4) 最终分类 + 后处理检查 ----
         ft, conf, reason = classify(result.states)
+        # 对应 MyAutomaticPolicy L683-699
+        if ft == "unknown":
+            blank_marker = detect_blank_auth_page(self.driver)
+            if blank_marker:
+                record_evidence(
+                    result, "rendering_failed:{}".format(blank_marker))
+                result.primary_method = primary_method(result.states)
+                return self._done(
+                    result, "unknown", "high",
+                    StopReason.INFRASTRUCTURE_ERROR.value)
+        if stopped_after_changed_last_step and ft == "unknown":
+            reason = StopReason.MAX_STEPS_REACHED.value
+        elif (ft == "unknown"
+              and any("entry_click" in getattr(s, "actions", [])
+                      for s in result.states)):
+            reason = StopReason.AUTH_ENTRY_NO_AUTH_STATE.value
         result.primary_method = primary_method(result.states)
         return self._done(result, ft, conf, reason)
 
@@ -415,6 +585,61 @@ class SignupFlowClassifierEngine:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _stable_for(driver: WebDriver, tracker: dict, seconds: float) -> bool:
+        """页面 ready 且轻量指纹持续不变；用于替代无条件固定等待。"""
+        from signup_flow_classifier.navigator import page_fingerprint
+        try:
+            if driver.execute_script("return document.readyState") != "complete":
+                tracker.clear()
+                return False
+            fingerprint = page_fingerprint(driver)
+        except Exception:
+            tracker.clear()
+            return False
+        now = time.monotonic()
+        if tracker.get("fingerprint") != fingerprint:
+            tracker["fingerprint"] = fingerprint
+            tracker["since"] = now
+            return False
+        return now - tracker.get("since", now) >= seconds
+
+    @staticmethod
+    def _wait_for_any_signal(driver: WebDriver, timeout: float = 15.0) -> bool:
+        """慢渲染等待：轮询是否出现输入字段（含 iframe）或可点击入口。"""
+        deadline = time.time() + timeout
+        stable = {}
+        while time.time() < deadline:
+            try:
+                if detect_fields_all_frames(driver):
+                    return True
+                if (detect_entry_button(driver, "register") is not None
+                        or detect_entry_button(driver, "login") is not None):
+                    return True
+            except Exception:
+                pass
+            if SignupFlowClassifierEngine._stable_for(driver, stable, seconds=4.0):
+                return False
+            time.sleep(0.5)
+        return False
+
+    @staticmethod
+    def _wait_for_any_auth_signal(driver: WebDriver, timeout: float = 10.0) -> bool:
+        """轮询等待认证信号出现（字段/tab/阻断），覆盖慢渲染站点（oschina 约 18s）。"""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                if detect_fields_all_frames(driver):
+                    return True
+                if detect_tabs_all_frames(driver):
+                    return True
+                if detect_blockers(driver):
+                    return True
+            except Exception:
+                pass
+            time.sleep(0.5)
+        return False
+
+    @staticmethod
     def _url_is_requested_entry(url: str, entry_kind: str) -> bool:
         """URL 是否已经明确位于请求的登录/注册入口。
 
@@ -441,12 +666,15 @@ class SignupFlowClassifierEngine:
                         timeout: float = 5.0) -> bool:
         """轮询等待指定类型的输入框出现（如 password），含 iframe 内字段。"""
         deadline = time.time() + timeout
+        stable = {}
         while time.time() < deadline:
             try:
                 if field_type in detect_fields_all_frames(driver):
                     return True
             except Exception:
                 pass
+            if SignupFlowClassifierEngine._stable_for(driver, stable, seconds=2.0):
+                return False
             time.sleep(0.3)
         return False
 
@@ -454,6 +682,7 @@ class SignupFlowClassifierEngine:
     def _wait_for_form_fields(driver: WebDriver, timeout: float = 6.0) -> bool:
         """点击入口后等待字段、认证 tab 或人工阻断任一出现。"""
         deadline = time.time() + timeout
+        stable = {}
         while time.time() < deadline:
             try:
                 fields = detect_fields_all_frames(driver)
@@ -462,7 +691,9 @@ class SignupFlowClassifierEngine:
                     return True
             except Exception:
                 pass
-            time.sleep(0.3)
+            if SignupFlowClassifierEngine._stable_for(driver, stable, seconds=6.0):
+                return False
+            time.sleep(0.4)
         return False
 
     @staticmethod

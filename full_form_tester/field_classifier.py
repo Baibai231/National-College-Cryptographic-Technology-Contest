@@ -249,18 +249,25 @@ class FieldClassifier:
     }
 
     // 也收集 iframe 中的字段（如果注入到顶层 frame）
+    // 记录 frame_index / frame_src / frame_url 以便 Python 端
+    // 决定是否需要导航到 iframe URL 或切换 frame 上下文查找元素。
     try {
         var iframes = document.querySelectorAll('iframe');
         for (var f = 0; f < iframes.length; f++) {
+            var frameSrc = iframes[f].src || '';
+            var frameUrl = '';
             try {
                 var doc = iframes[f].contentDocument || iframes[f].contentWindow.document;
                 if (!doc) continue;
+                try { frameUrl = doc.location.href; } catch(e2) { frameUrl = frameSrc; }
                 var subCandidates = doc.querySelectorAll('input, textarea, select');
                 for (var j = 0; j < subCandidates.length; j++) {
                     var sel = subCandidates[j];
                     var sx = _xpath(sel);
-                    if (seen[sx]) continue;
-                    seen[sx] = true;
+                    // XPath 是相对于 iframe 文档的，用 frame URL + XPath 做唯一 key 避免跨 frame 冲突
+                    var key = frameUrl + '|' + sx;
+                    if (seen[key]) continue;
+                    seen[key] = true;
                     fields.push({
                         xpath: sx,
                         tag: (sel.tagName || '').toLowerCase(),
@@ -273,10 +280,41 @@ class FieldClassifier:
                         label_text: _label(sel),
                         required: sel.required === true || sel.getAttribute('required') !== null,
                         class_name: sel.className || '',
-                        iframe: true
+                        iframe: true,
+                        frame_index: f,
+                        frame_src: frameSrc,
+                        frame_url: frameUrl
                     });
                 }
-            } catch(e) {}
+            } catch(e) {
+                // 跨域 iframe: contentDocument 不可访问，但记录 src 信息
+                // 供 Python 端决定是否直接导航到 iframe URL
+                if (frameSrc) {
+                    var crossKey = 'cross-origin-iframe-' + f + '|' + frameSrc;
+                    if (!seen[crossKey]) {
+                        seen[crossKey] = true;
+                        fields.push({
+                            xpath: '',
+                            tag: 'iframe',
+                            el_type: '',
+                            name: '',
+                            id: iframes[f].id || '',
+                            placeholder: '',
+                            autocomplete: '',
+                            aria_label: '',
+                            label_text: '',
+                            required: false,
+                            class_name: '',
+                            iframe: true,
+                            frame_index: f,
+                            frame_src: frameSrc,
+                            frame_url: frameSrc,
+                            cross_origin: true,
+                            note: 'cross-origin iframe - content not accessible via contentDocument'
+                        });
+                    }
+                }
+            }
         }
     } catch(e) {}
 

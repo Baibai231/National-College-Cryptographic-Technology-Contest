@@ -23,6 +23,8 @@ class PasswordErrorParser:
     # ================================================================
 
     # 英文密码错误
+    # 注意：已从拒绝关键词中移除 "strength" 和 "weak" ——
+    # 密码强度指示器（strong/medium/weak）仅描述密码质量，不代表密码不合规。
     _PASSWORD_ERROR_EN: str = (
         r"(password|passwd|pwd)"
         r".{0,30}"
@@ -32,7 +34,7 @@ class PasswordErrorParser:
         r"contain|include|"
         r"special|digit|number|letter|uppercase|lowercase|"
         r"character|symbol|"
-        r"8\s*characters|strength|weak)"
+        r"8\s*characters)"
     )
 
     # 中文密码错误
@@ -54,10 +56,69 @@ class PasswordErrorParser:
         r"错误|不正确|无效|失败|不符合)\b"
     )
 
+    # ── 非密码字段错误术语 ──
+    # 这些文本明确指向姓名/邮箱/手机/用户名/验证码等字段，而非密码字段。
+    # 命中任一条目 → 该错误文本不是密码错误，应被过滤。
+    _NON_PASSWORD_TERMS: list = [
+        # 中文
+        "姓名为必填", "姓名不能为空", "请填写姓名", "请填写名字",
+        "姓名长度", "姓名格式", "名字不能为空", "请输入姓名",
+        "邮箱为必填", "邮箱不能为空", "请填写邮箱", "邮箱格式",
+        "邮箱已注册", "邮箱已被注册", "邮箱已存在",
+        "手机号为必填", "手机不能为空", "请填写手机", "手机号码",
+        "手机号格式", "手机格式", "手机验证",
+        "用户名为必填", "用户名不能为空", "请填写用户名",
+        "昵称为必填", "昵称不能为空",
+        "验证码", "图形验证码", "短信验证码", "请输入验证码",
+        "手机验证码", "邮箱验证码",
+        "请输入手机号", "请输入邮箱", "请输入用户名",
+        "请填写手机号", "请填写手机号码",
+        "手机号已被", "用户名已被", "用户名已存在",
+        "手机号已注册",
+        # 英文
+        "name is required", "name required", "full name",
+        "please enter your name", "please enter name",
+        "email is required", "email required",
+        "please enter your email", "please enter email",
+        "phone is required", "phone required",
+        "please enter your phone", "please enter phone",
+        "username is required", "username required",
+        "nickname is required", "nickname required",
+        "captcha", "verification code",
+        "please enter your username",
+        "email already", "phone already", "username already",
+        "name cannot be empty",
+    ]
+
     # 编译复用
     _RE_PASSWORD_ERROR_EN: re.Pattern = re.compile(_PASSWORD_ERROR_EN, re.IGNORECASE)
     _RE_PASSWORD_ERROR_CN: re.Pattern = re.compile(_PASSWORD_ERROR_CN, re.IGNORECASE)
     _RE_GENERIC_ERROR: re.Pattern = re.compile(_GENERIC_ERROR_KEYWORDS, re.IGNORECASE)
+
+    # 纯强度指示器关键词（不含实际错误语义，仅描述密码质量等级）
+    _STRENGTH_ONLY_PATTERNS: list = [
+        re.compile(p, re.IGNORECASE) for p in [
+            r"^.*\b(?:strength|strong|medium|weak|very\s*weak|very\s*strong)\b.*$",
+            r"^.*\b(?:密码强度|强度[：:]\s*(?:强|弱|中|高|低))\b.*$",
+        ]
+    ]
+
+    # 真正的密码错误关键词（不包含强度描述词）
+    _REAL_ERROR_KEYWORDS: list = [
+        re.compile(p, re.IGNORECASE) for p in [
+            r"\b(?:incorrect|invalid|wrong|error|fail)\b",
+            r"\b(?:too\s*short|too\s*long|too\s*weak|too\s*common)\b",
+            r"\b(?:doesn'?t\s*match|not\s*match|mismatch)\b",
+            r"\b(?:must|require|need|should)\b",
+            r"\b(?:at\s*least|at\s*most|minimum|maximum)\b",
+            r"\b(?:contain|include)\b",
+            r"(?:错误|不正确|无效|不对|不匹配)",
+            r"(?:太短|太長|太长|过长|过短)",
+            r"(?:必须|需要|必需)",
+            r"(?:至少|最少|最多|最长|最短)",
+            r"(?:包含|包括|含有)",
+        ]
+    ]
 
     # 正向反馈关键词（说明注册成功 / 密码被接受）
     _SUCCESS_KEYWORDS: str = (
@@ -186,9 +247,24 @@ class PasswordErrorParser:
     # ================================================================
 
     def _check_password_error(self, text: str) -> Optional[str]:
-        """检测文本是否包含密码相关错误，返回匹配到的错误片段"""
+        """检测文本是否包含密码相关错误，返回匹配到的错误片段
+
+        过滤规则（按优先级）：
+          1. 命中 _NON_PASSWORD_TERMS → 非密码字段错误，返回 None
+          2. 仅含强度指示器（strong/weak/密码强度）不含实际错误关键词 → 强度提示，返回 None
+          3. 正常匹配密码错误正则
+        """
         if not text:
             return None
+
+        # 过滤 1：非密码字段错误
+        if self._is_non_password_error(text):
+            return None
+
+        # 过滤 2：纯强度指示器（不含实际错误语义）
+        if self._is_strength_only(text):
+            return None
+
         m = self._RE_PASSWORD_ERROR_EN.search(text)
         if m:
             return m.group(0)
@@ -196,6 +272,33 @@ class PasswordErrorParser:
         if m:
             return m.group(0)
         return None
+
+    def _is_non_password_error(self, text: str) -> bool:
+        """检查文本是否明确指向非密码字段（姓名/邮箱/手机/验证码等）"""
+        text_lower = text.lower()
+        for term in self._NON_PASSWORD_TERMS:
+            if term in text_lower:
+                return True
+        return False
+
+    def _is_strength_only(self, text: str) -> bool:
+        """检查文本是否仅描述密码强度等级，不含实际错误语义
+
+        例如 "Password strength: Weak" 或 "密码强度：弱" 仅是质量描述，
+        不代表密码不合规。但如果同时包含 "too short" / "至少8位" 等
+        真正的错误关键词，则仍视为密码错误。
+        """
+        # 先检查是否包含真正的错误关键词
+        for pat in self._REAL_ERROR_KEYWORDS:
+            if pat.search(text):
+                return False  # 有实际错误 → 不是纯强度
+
+        # 再检查是否匹配强度模式
+        for pat in self._STRENGTH_ONLY_PATTERNS:
+            if pat.search(text):
+                return True  # 仅有强度描述，无实际错误
+
+        return False
 
     def _is_success_url(self, url: str) -> bool:
         """判断 URL 是否暗示注册成功"""

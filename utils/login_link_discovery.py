@@ -24,6 +24,7 @@ class LoginLinkDiscovery:
         self.driver = driver
         self._injected = False
         self._cached_fields = {}  # 缓存检测结果
+        self._entry_clicked = False  # navigate_to_signup 是否点击了入口链接
 
     # ------------------------------------------------------------------
     # CDP 工具方法
@@ -103,17 +104,78 @@ class LoginLinkDiscovery:
         )
 
     def find_password_fields(self) -> List[str]:
-        """查找可见密码字段的 XPath"""
-        return self._cdp_eval(
-            "var pwds = document.querySelectorAll('input[type=password]');"
-            "var r = [];"
-            "for (var i = 0; i < pwds.length; i++) {"
-            "  if (pwds[i].offsetHeight > 0 && !pwds[i].disabled) {"
-            "    r.push(typeof getXPath === 'function' ? getXPath(pwds[i]) : gPt(pwds[i]));"
-            "  }"
-            "}"
-            "r"
-        )
+        """查找可见密码字段的 XPath（含 Shadow DOM 穿透搜索）
+
+        使用完整的可见性检查（getBoundingClientRect + getComputedStyle），
+        而非仅 offsetHeight。后者无法过滤 visibility:hidden 或 opacity:0
+        的元素，导致 SPA 模态框切换 tab 后仍返回隐藏的登录表单密码字段。
+        """
+        return self._cdp_eval("""
+(function() {
+    var r = [];
+    var seen = new WeakSet();
+    var SELECTORS = [
+        'input[type=password]',
+        'input[autocomplete=new-password]',
+        'input[autocomplete=current-password]',
+        'input[name*=password i]',
+        'input[name*=passwd i]',
+        'input[name*=pwd i]'
+    ];
+
+    function _isTrulyVisible(el) {
+        if (!el || el.disabled) return false;
+        var rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return false;
+        var style = getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (parseFloat(style.opacity) === 0) return false;
+        // 检查祖先可见性
+        var ancestor = el.parentElement;
+        while (ancestor) {
+            try {
+                var as = getComputedStyle(ancestor);
+                if (as.display === 'none' || as.visibility === 'hidden') return false;
+            } catch(e) { break; }
+            ancestor = ancestor.parentElement;
+        }
+        return true;
+    }
+
+    function searchRoot(root) {
+        if (!root || !root.querySelectorAll) return;
+        for (var s = 0; s < SELECTORS.length; s++) {
+            try {
+                var nodes = root.querySelectorAll(SELECTORS[s]);
+                for (var i = 0; i < nodes.length; i++) {
+                    var el = nodes[i];
+                    if (seen.has(el)) continue;
+                    seen.add(el);
+                    if (_isTrulyVisible(el)) {
+                        r.push(typeof getXPath === 'function' ? getXPath(el) : (typeof gPt === 'function' ? gPt(el) : ''));
+                    }
+                }
+            } catch(e) {}
+        }
+    }
+
+    // 收集所有 Shadow DOM roots
+    var roots = [document];
+    for (var ri = 0; ri < roots.length && ri < 200; ri++) {
+        searchRoot(roots[ri]);
+        try {
+            var all = roots[ri].querySelectorAll('*');
+            for (var j = 0; j < all.length; j++) {
+                if (all[j].shadowRoot && roots.indexOf(all[j].shadowRoot) === -1) {
+                    roots.push(all[j].shadowRoot);
+                }
+            }
+        } catch(e) {}
+    }
+
+    return r;
+})();
+        """)
 
     # ------------------------------------------------------------------
     # 注册页面发现
@@ -180,6 +242,55 @@ class LoginLinkDiscovery:
         from selenium.webdriver.support import expected_conditions as EC
 
         # ================================================================
+        # 第 0 层：Selenium 可信点击入口检测（对齐 MyAutomaticPolicy）
+        # ================================================================
+        # Chinese SPA 站点（juejin.cn 等）的 React 事件处理器只响应
+        # 浏览器原生信任的点击事件，CDP dispatchEvent 合成事件无效。
+        # 先用 detect_entry_button + safe_click_entry 尝试可信点击，
+        # 失败再回退到 CDP 链接发现。
+        try:
+            from signup_flow_classifier.navigator import (
+                detect_entry_button, safe_click_entry, page_fingerprint,
+            )
+
+            entry_target = detect_entry_button(
+                self.driver, "register", allow_fallback=False)
+            if entry_target is not None:
+                logger.info("第 0 层（Selenium 可信点击）检测到注册入口")
+                old_fp = page_fingerprint(self.driver)
+                entry_outcome = safe_click_entry(
+                    self.driver, "register", allow_fallback=False)
+                if entry_outcome.clicked:
+                    self._wait_for_spa_render(timeout=3)
+                    # 检查是否到达密码字段
+                    pwds = self.find_password_fields()
+                    if pwds:
+                        self._entry_clicked = True
+                        logger.info(
+                            "第 0 层成功：Selenium 可信点击到达密码字段")
+                        self._try_switch_to_signup_tab()
+                        return self.driver.current_url
+                    # 检查是否有 URL 导航
+                    new_url = self.driver.current_url.rstrip("/")
+                    if new_url != base:
+                        self._entry_clicked = True
+                        logger.info(f"第 0 层成功：导航到 {new_url}")
+                        return new_url
+                    # 页面指纹变化 → SPA 弹窗（可能不含密码字段，
+                    # 如 douban.com 的手机验证码注册弹窗）
+                    # 不设 _entry_clicked：让分类器自行重新点击入口并分类
+                    if page_fingerprint(self.driver) != old_fp:
+                        logger.info("第 0 层：页面指纹变化（弹窗），让分类器自行判断")
+                        self._try_switch_to_signup_tab()
+                        return self.driver.current_url
+                    logger.debug("第 0 层：点击成功但无密码字段/导航")
+                else:
+                    logger.debug(
+                        f"第 0 层：未点击 ({entry_outcome.reason})")
+        except Exception as e:
+            logger.debug(f"第 0 层异常 (回退到 CDP): {type(e).__name__}: {e}")
+
+        # ================================================================
         # 第 1 层：CDP 链接发现 + 点击导航
         # ================================================================
         logger.info("CDP 链接发现...")
@@ -189,6 +300,12 @@ class LoginLinkDiscovery:
             except Exception:
                 pass
             self._wait_for_page_ready(timeout=15)
+            # 确保页面在顶部：部分站点页面加载后会自行滚动，
+            # 导致顶部注册/登录入口被遮挡
+            try:
+                self.driver.execute_script("window.scrollTo(0, 0);")
+            except Exception:
+                pass
             if self.check_injected():
                 break
             logger.info(f"JS 未注入，尝试重新加载 ({load_attempt + 1}/2)")
@@ -216,8 +333,14 @@ class LoginLinkDiscovery:
                 combined = t + ' ' + h + ' ' + aid + ' ' + tid
                 return any(kw in combined for kw in signup_kw)
 
-            sorted_links = [l for l in links if is_signup(l)] + \
-                           [l for l in links if not is_signup(l)]
+            # 按 JS 引擎 score 降序排列（signup 关键词额外加分确保最前）
+            def link_priority(l):
+                score = l.get('score', 0) or 0
+                if is_signup(l):
+                    score += 200
+                return score
+
+            sorted_links = sorted(links, key=link_priority, reverse=True)
 
             logger.info(f"注册关键词匹配: {len([l for l in links if is_signup(l)])}/{len(links)}")
 
@@ -228,61 +351,144 @@ class LoginLinkDiscovery:
             for idx, link in enumerate(sorted_links[:10]):
                 xpath = link.get('xpath', '')
                 text = (link.get('innerText', '') or '')[:60].replace('\n', ' ')
-                href_val = (link.get('href', '') or '')
-                tag_name = (link.get('tagName', '') or '').upper()
+                score = link.get('score', 0) or 0
 
                 if not xpath:
                     logger.debug(f"[{idx}] 跳过 (无 xpath): {text}")
                     continue
 
-                # 过滤不可点击元素：只点击有 href 的链接、<button>、和 <a> 标签
-                is_clickable = bool(href_val) or tag_name in ('A', 'BUTTON')
-                if not is_clickable:
-                    logger.debug(f"[{idx}] 跳过 (不可点击 <{tag_name}>): {text}")
+                # ── CDP 原生点击 + 异步轮询 ──
+                # tryClickAndDetect() 完全在 JS 上下文中执行：
+                #   1. document.evaluate(xpath) 查找元素
+                #   2. 完整鼠标事件序列 (mouseover→mousedown→mouseup→click)
+                #      全部 bubbles:true，穿透 React 合成事件委托
+                #   3. setTimeout 轮询（不阻塞事件循环）检测：
+                #      a) URL 是否变化（Selenium 导航）
+                #      b) 密码字段是否出现（SPA 模态框）
+                # 返回 Promise，CDP awaitPromise:true 等待完成。
+                old_fp = self._page_fingerprint()
+                try:
+                    xpath_escaped = xpath.replace('\\', '\\\\').replace("'", "\\'")
+                    cdp_result = self.driver.execute_cdp_cmd('Runtime.evaluate', {
+                        'expression': (
+                            "typeof tryClickAndDetect === 'function'"
+                            " ? tryClickAndDetect('" + xpath_escaped + "', 5000)"
+                            " : Promise.resolve({clicked:false, navigated:false,"
+                            "   newUrl:'', hasPassword:false, passwordXpath:''})"
+                        ),
+                        'returnByValue': True,
+                        'awaitPromise': True,
+                    })
+                    click_result = (cdp_result.get('result') or {}).get('value') or {}
+                except Exception as e:
+                    logger.debug(f"[{idx}] CDP click 异常: {type(e).__name__}: {e}")
+                    consecutive_no_nav += 1
+                    if consecutive_no_nav >= 3:
+                        logger.debug("连续 3 个链接均未导航，提前退出")
+                        break
                     continue
 
-                try:
-                    el = self.driver.find_element(By.XPATH, xpath)
-                    if not el.is_displayed():
-                        logger.debug(f"[{idx}] 跳过 (不可见): {text}")
-                        continue
-                    old = self.driver.current_url
+                if not click_result.get('clicked'):
+                    logger.debug(f"[{idx}] 未找到或不可见: {text}")
+                    continue
 
-                    # 点击：优先 Selenium，失败回退到 JS click
-                    try:
-                        el.click()
-                    except Exception:
-                        try:
-                            self.driver.execute_script("arguments[0].click();", el)
-                        except Exception:
-                            logger.debug(f"[{idx}] click 失败: {text}")
+                click_attempts += 1
+
+                # ── 结果处理 ──
+                if click_result.get('navigated'):
+                    new = click_result.get('newUrl', '')
+                    if new and new != homepage_url:
+                        if not self._is_same_site(homepage_url, new):
+                            logger.debug(f"[{idx}] 跨站链接，跳过: -> {new}")
+                            self.driver.get(homepage_url)
+                            consecutive_no_nav += 1
                             continue
-
-                    click_attempts += 1
-
-                    # 等待 URL 变化（动态等待，最长 3 秒）
-                    try:
-                        WebDriverWait(self.driver, 3).until(
-                            lambda d: d.current_url != old
-                        )
-                        new = self.driver.current_url
-                    except Exception:
-                        new = old
-
-                    if new != old and new != homepage_url:
                         logger.info(f"导航: -> {new}")
+                        self._entry_clicked = True
                         self._wait_for_spa_render()
                         return new
-                    else:
-                        consecutive_no_nav += 1
-                        logger.debug(f"[{idx}] URL 未变化: {text}")
-                        # 连续 3 个可点击元素都未导航 → 提前退出
-                        if consecutive_no_nav >= 3:
-                            logger.debug("连续 3 个链接均未导航，提前退出")
-                            break
-                except Exception as e:
-                    logger.debug(f"[{idx}] 异常: {type(e).__name__}: {e}")
-                    continue
+
+                if click_result.get('hasPassword'):
+                    logger.info(
+                        f"[{idx}] SPA 模态框检测到密码字段 (CDP): "
+                        f"{click_result.get('passwordXpath', '')}")
+                    # 检测是否为登录 tab，尝试切换到注册 tab
+                    self._entry_clicked = True
+                    self._try_switch_to_signup_tab()
+                    return self.driver.current_url
+
+                # ── 指纹变化检测 (page_fingerprint) ──
+                # tryClickAndDetect 的 setTimeout 轮询只检测 URL 变化和密码字段，
+                # 无法感知「弹窗打开了但默认是 SMS/QR 视图」的情况。
+                # 用轻量指纹（可见 input + button + dialog 等）补充判断。
+                if old_fp and self._page_fingerprint() != old_fp:
+                    logger.info(
+                        f"[{idx}] 页面指纹变化 (CDP 未检测到密码字段但页面已变): "
+                        f"\"{text}\"")
+                    self._entry_clicked = True
+                    return self.driver.current_url
+
+                # ── CDP 合成事件无效 → 多层点击回退 ──
+                # CDP dispatchEvent(MouseEvent) 对部分非 React 站点（如 juejin.cn）
+                # 不触发实际的事件处理器。依次尝试：
+                #   1. Selenium el.click() — 真实的浏览器点击
+                #   2. JS execute_script click — 绕过覆盖层拦截
+                old_fp = self._page_fingerprint()  # 也可能因 CDP 尝试已变化
+                try:
+                    el = self.driver.find_element(By.XPATH, xpath)
+                    if el:
+                        logger.debug(f"[{idx}] CDP 无效，尝试多层回退: {text}")
+                        clicked = False
+                        # 第 1 级：Selenium 原生点击
+                        try:
+                            el.click()
+                            clicked = True
+                        except Exception:
+                            # 第 2 级：JS click 绕过覆盖层
+                            try:
+                                self.driver.execute_script(
+                                    "arguments[0].click()", el)
+                                clicked = True
+                            except Exception:
+                                pass
+                        if clicked:
+                            time.sleep(1.5)
+                            new_url = self.driver.current_url
+                            home_norm = homepage_url.rstrip('/')
+                            new_norm = new_url.rstrip('/')
+                            if new_norm != home_norm:
+                                # 真正的 URL 变化（路径不同，不仅 trailing slash）
+                                if not self._is_same_site(homepage_url, new_url):
+                                    logger.debug(f"[{idx}] 回退点击跨站: -> {new_url}")
+                                    self.driver.get(homepage_url)
+                                else:
+                                    logger.info(f"回退点击导航: -> {new_url}")
+                                    self._entry_clicked = True
+                                    self._wait_for_spa_render()
+                                    return new_url
+                            else:
+                                # 同 URL — SPA 模态框可能已打开
+                                pwds = self.find_password_fields()
+                                if pwds:
+                                    logger.info("回退点击检测到密码字段")
+                                    self._entry_clicked = True
+                                    self._try_switch_to_signup_tab()
+                                    return self.driver.current_url
+                                # 指纹变化检测（无密码字段但页面已变）
+                                if old_fp and self._page_fingerprint() != old_fp:
+                                    logger.info(
+                                        f"[{idx}] 回退点击后指纹变化: \"{text}\"")
+                                    self._entry_clicked = True
+                                    return self.driver.current_url
+                except Exception as _se:
+                    logger.debug(f"多层回退失败: {type(_se).__name__}")
+
+                # 既无导航也无密码字段
+                consecutive_no_nav += 1
+                logger.debug(f"[{idx}] 未触发: score={score} \"{text}\"")
+                if consecutive_no_nav >= 3:
+                    logger.debug("连续 3 个链接均未触发，提前退出")
+                    break
 
         # ================================================================
         # 第 2 层：尝试常见注册 URL 模式
@@ -349,6 +555,272 @@ class LoginLinkDiscovery:
         # ================================================================
         logger.warning("所有注册页面发现策略均失败")
         return None
+
+    def _try_switch_to_signup_tab(self) -> bool:
+        """在已打开的 SPA 模态框中寻找并点击"注册"tab。
+
+        部分站点（icourse163.org、xuetangx.com）的登录/注册模态框默认展示
+        登录 tab。用户需要点击"去注册"/"立即注册"等标签才能切换到注册表单。
+        此方法用 CDP 在页面中查找注册 tab 并点击切换。
+
+        Returns:
+            True  = 找到并点击了注册 tab，密码字段仍然可见
+            False = 未找到注册 tab 或切换后密码字段消失
+        """
+        import time
+        try:
+            result = self.driver.execute_cdp_cmd('Runtime.evaluate', {
+                'expression': '''
+(function() {
+    var KEYWORDS = [
+        '注册', '去注册', '立即注册', '免费注册', '新用户注册',
+        '註冊', '手机注册', '邮箱注册', '注册账号', '注册帐号',
+        'sign up', 'signup', 'register', 'create account',
+        'new account', 'create new account', 'get started'
+    ];
+    // 排除包含这些词的元素（即使命中关键词也是协议/政策文本）
+    var EXCLUDE = [
+        '同意', '协议', '政策', '隐私', '条款', '即表示', '视为',
+        'agree', 'terms', 'policy', 'privacy', 'by clicking',
+        'by registering', 'you agree', 'i agree', 'i have read'
+    ];
+    var TAGS = ['a', 'button', 'span', 'div', 'li', 'label'];
+
+    function getVisibleText(el) {
+        return (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    }
+
+    function isVisible(el) {
+        var rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return false;
+        var style = getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (parseFloat(style.opacity) === 0) return false;
+        return true;
+    }
+
+    // 收集候选元素，按「更可能是注册 tab」偏好排序：
+    //   - 文本精确匹配  >  文本包含且短  >  文本包含且长
+    //   - 元素越小越优先（tab 通常是小标签）
+    //   - 越靠近页面顶部越优先
+    var candidates = [];
+
+    function walk(node) {
+        if (!node || !node.tagName) return;
+        var tag = node.tagName.toLowerCase();
+        if (TAGS.indexOf(tag) === -1) {
+            if (node.children) {
+                for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+            }
+            return;
+        }
+        if (!isVisible(node)) {
+            if (node.children) {
+                for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+            }
+            return;
+        }
+        // ── 先深入子元素（深度优先），再检查当前节点 ──
+        // 确保叶子 tab（如 <span>去注册</span>）先于容器
+        //（如 <div>手机登录 邮箱登录 去注册...</div>）被收集。
+        // 短文本 + 高分叶子元素会自然排在容器前面。
+        if (node.children && node.children.length > 0) {
+            for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+        }
+        var text = getVisibleText(node).toLowerCase();
+        if (text.length > 80) {
+            // 文本过长（容器级），跳过（子元素已递归遍历）
+            return;
+        }
+        // 排除协议/政策文本
+        var excluded = false;
+        for (var e = 0; e < EXCLUDE.length; e++) {
+            if (text.indexOf(EXCLUDE[e].toLowerCase()) !== -1) {
+                excluded = true; break;
+            }
+        }
+        if (excluded) return;  // 子元素已递归遍历
+        for (var k = 0; k < KEYWORDS.length; k++) {
+            var kw = KEYWORDS[k].toLowerCase();
+            if (text === kw || text.indexOf(kw) !== -1) {
+                var rect = node.getBoundingClientRect();
+                var area = rect.width * rect.height;
+                // matchQuality: exact=2, partial=1（exact 得分更高）
+                var matchQuality = (text === kw) ? 2 : 1;
+                // 短文本奖励：tab 标签短小（"注册" 2字 > "注册即表示..." 长句）
+                var shortBonus = (30 - Math.min(text.length, 30)) * 200;
+                candidates.push({
+                    el: node,
+                    score: matchQuality * 500000 + shortBonus - area - rect.top,
+                    text: getVisibleText(node).substring(0, 50)
+                });
+                // 不 return — 子元素已递归遍历，继续检查其他关键词
+                break;
+            }
+        }
+    }
+
+    // 优先在模态框/弹窗内搜索
+    var modalSelectors = [
+        '[class*=modal i]', '[class*=dialog i]', '[class*=popup i]',
+        '[class*=overlay i]', '[class*=panel i]', '[role=dialog]',
+        '[role=alertdialog]', '[aria-modal=true]'
+    ];
+    var searchRoots = [];
+    for (var s = 0; s < modalSelectors.length; s++) {
+        try {
+            var modals = document.querySelectorAll(modalSelectors[s]);
+            for (var m = 0; m < modals.length; m++) {
+                if (isVisible(modals[m])) searchRoots.push(modals[m]);
+            }
+        } catch(e) {}
+    }
+    if (searchRoots.length === 0) searchRoots.push(document.body);
+
+    for (var r = 0; r < searchRoots.length; r++) walk(searchRoots[r]);
+
+    if (candidates.length === 0) return {found: false};
+
+    // 按 score 降序排列
+    candidates.sort(function(a, b) { return b.score - a.score; });
+
+    var best = candidates[0];
+    // 标记元素供 Selenium 可信点击使用（不再用 CDP 合成事件，
+    // Chinese SPA 站点的 React 事件处理器只响应可信点击）
+    best.el.setAttribute('data-ap-signup-tab', '1');
+    return {found: true, text: best.text};
+})();
+                ''',
+                'returnByValue': True,
+                'awaitPromise': True,
+            })
+            value = (result.get('result') or {}).get('value') or {}
+            if value.get('found'):
+                logger.info(f"切换到注册 tab: \"{value.get('text', '')}\"")
+
+                # ── Selenium 可信点击（非 CDP 合成事件）──
+                # Chinese SPA 站点（163、xuetangx）的 React 事件处理器
+                # 只响应浏览器原生信任的点击事件
+                try:
+                    from selenium.webdriver.common.by import By
+                    el = self.driver.find_element(
+                        By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
+                    el.click()
+                except Exception:
+                    pass
+
+                time.sleep(1.5)
+                pwds = self.find_password_fields()
+                if pwds:
+                    logger.info("注册 tab 切换成功，密码字段可见")
+                    return True
+                else:
+                    logger.debug("注册 tab 已点击但密码字段消失")
+                    return False
+            return False
+        except Exception as e:
+            logger.debug(f"切换注册 tab 异常: {type(e).__name__}: {e}")
+            return False
+
+    def ensure_form_visible(self, max_attempts: int = 5) -> bool:
+        """轻量级重新打开注册模态框/弹窗。
+
+        Phase 2 分类可能耗时较长导致模态框自动关闭。
+        此方法依次尝试：
+          1. CDP tryClickAndDetect() 合成事件（兼容传统站点）
+          2. Selenium el.click() 可信点击（兼容 React SPA 站点）
+
+        Returns:
+            True 如果检测到密码字段（模态框已恢复）
+        """
+        from selenium.webdriver.common.by import By
+
+        # 先检查是否已有可见密码字段
+        try:
+            pwds = self.find_password_fields()
+            if pwds:
+                logger.debug("密码字段已可见，无需重开模态框")
+                return True
+        except Exception:
+            pass
+
+        links = self._cdp_eval("getLoginLinkAttrs()") if self.check_injected() else []
+        if not links:
+            return False
+
+        # 按 score 降序，取前 N 个
+        sorted_links = sorted(
+            links,
+            key=lambda l: (l.get('score', 0) or 0),
+            reverse=True
+        )
+
+        for idx, link in enumerate(sorted_links[:max_attempts]):
+            xpath = link.get('xpath', '')
+            if not xpath:
+                continue
+            text = (link.get('innerText', '') or '')[:50]
+
+            # ── 策略 1：CDP tryClickAndDetect 合成事件 ──
+            try:
+                xpath_escaped = xpath.replace('\\', '\\\\').replace("'", "\\'")
+                cdp_result = self.driver.execute_cdp_cmd('Runtime.evaluate', {
+                    'expression': (
+                        "typeof tryClickAndDetect === 'function'"
+                        " ? tryClickAndDetect('" + xpath_escaped + "', 3000)"
+                        " : Promise.resolve({hasPassword:false})"
+                    ),
+                    'returnByValue': True,
+                    'awaitPromise': True,
+                })
+                click_result = (cdp_result.get('result') or {}).get('value') or {}
+                if click_result.get('hasPassword'):
+                    logger.info(
+                        f"模态框已重开 (CDP link {idx}): \"{text}\" "
+                        f"-> {click_result.get('passwordXpath', '')}")
+                    self._try_switch_to_signup_tab()
+                    return True
+                if click_result.get('navigated'):
+                    logger.info(f"模态框重开触发了导航: {click_result.get('newUrl', '')}")
+                    try:
+                        self._wait_for_spa_render(timeout=2)
+                        pwds = self.find_password_fields()
+                        if pwds:
+                            return True
+                    except Exception:
+                        pass
+                    return False
+            except Exception as e:
+                logger.debug(f"重开模态框 CDP link {idx} 失败: {type(e).__name__}")
+
+            # ── 策略 2：Selenium 可信点击（React SPA 站点需要）──
+            # CDP dispatchEvent(MouseEvent) 对 React 事件处理器无效。
+            # 用 Selenium find_element + click() 产生浏览器原生信任事件。
+            try:
+                el = self.driver.find_element(By.XPATH, xpath)
+                if el and el.is_displayed():
+                    old_url = self.driver.current_url
+                    el.click()
+                    time.sleep(1.5)
+                    pwds = self.find_password_fields()
+                    if pwds:
+                        logger.info(
+                            f"模态框已重开 (Selenium link {idx}): \"{text}\"")
+                        self._try_switch_to_signup_tab()
+                        return True
+                    # 检查 URL 变化（如跳转到独立注册页）
+                    if self.driver.current_url.rstrip("/") != old_url.rstrip("/"):
+                        try:
+                            self._wait_for_spa_render(timeout=2)
+                            pwds = self.find_password_fields()
+                            if pwds:
+                                return True
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        return False
 
     def find_signup_fields(self) -> Tuple[Optional[str], Optional[str]]:
         """在当前页面（含所有 iframe）用 Fathom 检测邮箱和密码字段
@@ -437,6 +909,33 @@ class LoginLinkDiscovery:
 
         return None, None
 
+    @staticmethod
+    def _is_same_site(url_a: str, url_b: str) -> bool:
+        """判断两个 URL 是否属于同一注册域。
+
+        passport.example.com 与 www.example.com 视为同站。
+        javascript: / void(0) / # / mailto: 等非导航链接视为站内。
+        跨域 iframe 链接（blob:, data:, about:）也视为站内。
+        """
+        if not url_b or url_b.startswith(("#", "javascript:", "void(", "mailto:",
+                                          "blob:", "data:", "about:")):
+            return True
+        try:
+            from urllib.parse import urlparse
+            pa = urlparse(url_a)
+            pb = urlparse(url_b)
+
+            def registered_domain(parsed):
+                host = parsed.hostname or ""
+                parts = host.split(".")
+                if len(parts) >= 2:
+                    return ".".join(parts[-2:])
+                return host
+
+            return registered_domain(pa) == registered_domain(pb)
+        except Exception:
+            return True  # 解析失败不拦截
+
     def _wait_for_spa_render(self, timeout: float = 5) -> None:
         """等待 SPA (React/Vue) 页面完成客户端渲染
 
@@ -464,6 +963,34 @@ class LoginLinkDiscovery:
                 pass
             time.sleep(0.3)
         logger.debug(f"SPA 渲染等待超时 ({timeout}s)")
+
+    def _page_fingerprint(self) -> str:
+        """轻量页面指纹，用于检测 SPA 模态框/视图切换。
+
+        复制自 MyAutomaticPolicy page_fingerprint()：
+        用单条 JS 在浏览器内计算 URL + 标题 + 可见输入框签名 +
+        按钮/弹窗数量，毫秒级。能区分"无弹窗→弹窗打开"和
+        "短信视图→密码视图"等变化。
+        """
+        try:
+            return self._cdp_eval("""
+JSON.stringify({
+    u: location.href,
+    t: document.title,
+    i: [...document.querySelectorAll('input')].filter(e=>e.offsetParent!==null)
+       .map(e=>(e.type||'')+':'+(e.name||'')+':'+(e.placeholder||'')).sort(),
+    b: [...document.querySelectorAll('button,a,[role=button]')]
+       .filter(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);
+         return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'})
+       .map(e=>(e.innerText||e.getAttribute('aria-label')||e.getAttribute('title')||'').trim())
+       .sort(),
+    d: document.querySelectorAll('[role=dialog]').length,
+    f: [...document.querySelectorAll('iframe')].filter(e=>e.offsetParent!==null)
+       .map(e=>(e.src||e.id||'').split('?')[0]).sort()
+});
+            """) or ""
+        except Exception:
+            return ""
 
     def ensure_scripts(self) -> None:
         """兼容旧接口"""
