@@ -114,8 +114,12 @@ def _control_label(el) -> str:
     return next((value.strip() for value in values if value and value.strip()), "")
 
 
-def _classify_combined(combined: str, t: str) -> str:
-    """根据 type/name/placeholder/id 组合分类输入框类型（与 classify_input_type 一致）。"""
+def _classify_combined(combined: str, t: str, visible: str = "") -> str:
+    """根据 type/name/placeholder/id 组合分类输入框类型（与 classify_input_type 一致）。
+
+    visible 传用户可见语义（placeholder/aria-label），用于纠正 name/id
+    与界面文案不一致的站点（如 imooc 注册手机号框 name="email"）。
+    """
     if t == "password" or _match_any(combined, _PASSWORD_HINTS):
         return "password"
     if t == "email":
@@ -124,6 +128,15 @@ def _classify_combined(combined: str, t: str) -> str:
         return "phone"
     if _match_any(combined, _CODE_HINTS):
         return "code"
+    # 用户可见语义优先：placeholder/aria-label 明确说是手机号/邮箱时，
+    # 不受 name/id 里过时字段名误导（imooc 注册手机号框 name="email" 实测）。
+    if visible:
+        v_phone = _match_any(visible, _PHONE_HINTS)
+        v_email = _match_any(visible, _EMAIL_HINTS)
+        if v_phone and not v_email:
+            return "phone"
+        if v_email and not v_phone:
+            return "email"
     # name/id 明确写 account/username 时，它可能同时接受手机和邮箱
     if _match_any(combined, _IDENTIFIER_HINTS):
         return "identifier"
@@ -153,6 +166,16 @@ def classify_input_type(el) -> str:
     # code 必须先于普通文本 phone 判断；"6 digits" 不是手机号语义。
     if _match_any(combined, _CODE_HINTS):
         return "code"
+    # 用户可见语义优先：placeholder/aria-label 明确说是手机号/邮箱时，
+    # 不受 name/id 里过时字段名误导（imooc 注册手机号框 name="email" 实测）。
+    visible = f"{placeholder} {aria_label}".strip()
+    if visible:
+        v_phone = _match_any(visible, _PHONE_HINTS)
+        v_email = _match_any(visible, _EMAIL_HINTS)
+        if v_phone and not v_email:
+            return "phone"
+        if v_email and not v_phone:
+            return "email"
     # name/id 明确写 account/username 时，它可能同时接受手机和邮箱。
     if _match_any(semantic_name, _IDENTIFIER_HINTS):
         return "identifier"
@@ -525,7 +548,10 @@ def detect_fields_all_frames(driver: WebDriver) -> List[str]:
                 continue
             if (t or "").lower() in {"", "text"}:
                 fathom_candidate_seen = True
-            ft = _classify_combined(f"{t} {name} {ph} {el_id} {aria}", t)
+            ft = _classify_combined(
+                f"{t} {name} {ph} {el_id} {aria}", t,
+                visible=f"{ph} {aria}",
+            )
             if ft != "other" and ft not in fields:
                 fields.append(ft)
         if fields:

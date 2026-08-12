@@ -135,9 +135,20 @@ function detectEmailInputs(domRoot) {
     // 第二步：Fathom ML 检测（阈值 > 0.5）
     var detectedInputs = email_detector_ruleset.against(domRoot).get("email");
     for (var j = 0; j < detectedInputs.length; j++) {
+        var el = detectedInputs[j].element;
+        // 用户可见语义守卫：placeholder/aria-label 明确是手机号时，
+        // 排除 Fathom 对 name="email" 的误报（imooc 注册手机号框实测）。
+        // 手机号+邮箱并存（如"请输入登录手机号/邮箱"）时不做排除，保留结构判定。
+        var visibleText = ((el.getAttribute && (el.getAttribute('placeholder') || ''))
+            + ' ' + (el.getAttribute && (el.getAttribute('aria-label') || ''))).toLowerCase();
+        var hasPhoneHint = /手机号|手机号码|手机|phone|mobile|telephone|^\s*tel\b/i.test(visibleText);
+        var hasEmailHint = /邮箱|电子邮件|e-?mail|correo/i.test(visibleText);
+        if (hasPhoneHint && !hasEmailHint) {
+            continue;
+        }
         if (detectedInputs[j].scoreFor("email") > 0.5) {
             results.push({
-                xpath: (typeof getXPath === 'function') ? getXPath(detectedInputs[j].element) : gPt(detectedInputs[j].element),
+                xpath: (typeof getXPath === 'function') ? getXPath(el) : gPt(el),
                 score: detectedInputs[j].scoreFor("email")
             });
         }

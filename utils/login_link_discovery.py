@@ -357,6 +357,24 @@ class LoginLinkDiscovery:
                     logger.debug(f"[{idx}] 跳过 (无 xpath): {text}")
                     continue
 
+                # ── 排除机构/企业/商家注册路线 ──
+                # 与 navigator.detect_entry_button 的 _is_organizational_signup 一致；
+                # 避免把"注册机构号"（zhihu /org/signup 等）当成普通用户注册入口。
+                try:
+                    from urllib.parse import urljoin
+                    from signup_flow_classifier.navigator import (
+                        _is_organizational_signup,
+                    )
+                    link_href = link.get('href', '') or ''
+                    target_url = urljoin(
+                        self.driver.current_url, link_href) if link_href else ""
+                    if target_url and _is_organizational_signup(target_url):
+                        logger.debug(
+                            f"[{idx}] 跳过机构/企业注册链接: {text} -> {target_url[:60]}")
+                        continue
+                except Exception:
+                    pass
+
                 # ── CDP 原生点击 + 异步轮询 ──
                 # tryClickAndDetect() 完全在 JS 上下文中执行：
                 #   1. document.evaluate(xpath) 查找元素
@@ -760,6 +778,22 @@ class LoginLinkDiscovery:
             if not xpath:
                 continue
             text = (link.get('innerText', '') or '')[:50]
+
+            # 排除机构/企业/商家注册路线（与 navigate_to_signup 一致）
+            try:
+                from urllib.parse import urljoin
+                from signup_flow_classifier.navigator import (
+                    _is_organizational_signup,
+                )
+                link_href = link.get('href', '') or ''
+                target_url = urljoin(
+                    self.driver.current_url, link_href) if link_href else ""
+                if target_url and _is_organizational_signup(target_url):
+                    logger.debug(
+                        f"[{idx}] 跳过机构/企业注册链接: {text} -> {target_url[:60]}")
+                    continue
+            except Exception:
+                pass
 
             # ── 策略 1：CDP tryClickAndDetect 合成事件 ──
             try:
