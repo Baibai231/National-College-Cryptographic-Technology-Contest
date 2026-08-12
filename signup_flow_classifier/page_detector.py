@@ -12,14 +12,29 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from signup_flow_classifier.flow_types import PageState
 
 
-_EMAIL_HINTS = ["email", "e-mail", "mail", "邮箱", "电子邮件"]
-_PHONE_HINTS = ["phone", "tel", "mobile", "手机号", "手机号码"]
-_PASSWORD_HINTS = ["password", "passwd", "口令", "密码"]
+_EMAIL_HINTS = [
+    "email", "e-mail", "mail", "邮箱", "电子邮件", "correo electrónico",
+    "adresse e-mail", "メールアドレス", "이메일", "электронная почта",
+]
+_PHONE_HINTS = [
+    "phone", "tel", "mobile", "手机号", "手机号码", "teléfono", "téléphone",
+    "telefonnummer", "電話番号", "휴대전화", "전화번호", "номер телефона",
+]
+_PASSWORD_HINTS = [
+    "password", "passwd", "口令", "密码", "contraseña", "passwort",
+    "mot de passe", "パスワード", "비밀번호", "пароль",
+]
 _CODE_HINTS = [
     "verification code", "verify code", "confirmation code", "确认码",
     "短信码", "验证码", "sms", "otp", "动态码",
+    "código de verificación", "code de vérification", "bestätigungscode",
+    "認証コード", "確認コード", "인증 코드", "код подтверждения",
 ]
-_IDENTIFIER_HINTS = ["username", "user name", "账号", "账户", "login", "account", "用户名"]
+_IDENTIFIER_HINTS = [
+    "username", "user name", "账号", "账户", "login", "account", "用户名",
+    "nombre de usuario", "nom d'utilisateur", "benutzername", "ユーザー名",
+    "사용자 이름", "имя пользователя",
+]
 
 _SSO_PROVIDERS = {
     "google": ["google", "accounts.google.com", "servicelogin"],
@@ -32,10 +47,18 @@ _SSO_PROVIDERS = {
 _SSO_ACTION_HINTS = [
     "sign in", "log in", "login", "continue with", "sign up with",
     "登录", "注册", "授权", "使用", "oauth", "servicelogin",
+    "se connecter", "s'inscrire", "iniciar sesión", "registrarse",
+    "anmelden", "einloggen", "registrieren", "ログイン", "新規登録",
+    "로그인", "회원가입", "войти", "зарегистрироваться",
 ]
 
 _BLOCKER_HINTS = {
-    "captcha": ["captcha", "验证码图片", "geetest", "极验", "recaptcha", "人机验证"],
+    "captcha": [
+        "captcha", "验证码图片", "geetest", "极验", "recaptcha", "人机验证",
+        "verify you're a human", "verify you are human", "human verification",
+        "i'm not a robot", "je ne suis pas un robot", "ich bin kein roboter",
+        "no soy un robot", "人間であることを確認", "로봇이 아닙니다", "я не робот",
+    ],
     "slide": ["滑块", "slide", "拖动", "拖动滑块"],
     # scan 只用"认证语境"短语，避免正文文章里的"扫码直达"等误判（力扣首页实测教训）
     "scan": ["扫码登录", "扫一扫登录", "微信扫一扫", "扫码方式", "扫码下载", "扫二维码",
@@ -43,11 +66,21 @@ _BLOCKER_HINTS = {
     "app_confirm": ["app 确认", "手机 app", "在app中", "扫一扫确认"],
 }
 
-_NEXT_TEXTS = {"下一步", "继续", "next", "continue"}
-_SEND_CODE_HINTS = ["发送验证码", "获取验证码", "send code", "get code", "重新发送", "resend"]
+_NEXT_TEXTS = {
+    "下一步", "继续", "next", "continue", "suivant", "continuer", "weiter",
+    "continuar", "次へ", "계속", "далее", "продолжить",
+}
+_SEND_CODE_HINTS = [
+    "发送验证码", "获取验证码", "send code", "get code", "重新发送", "resend",
+    "envoyer le code", "código", "code senden", "コードを送信", "인증번호 전송",
+    "отправить код",
+]
 _SUBMIT_HINTS = [
     "注册", "提交", "完成", "创建账号", "创建账户", "sign up", "register",
-    "create account", "submit", "finish",
+    "create account", "submit", "finish", "s'inscrire", "créer un compte",
+    "registrarse", "crear cuenta", "registrieren", "konto erstellen",
+    "新規登録", "会員登録", "アカウント作成", "회원가입", "계정 만들기",
+    "зарегистрироваться", "создать аккаунт",
 ]
 
 _PERFORMANCE_OPTIMIZATIONS = True
@@ -620,7 +653,11 @@ _TAB_KINDS = {
     "sms_tab": ["短信登录", "验证码登录", "手机号登录", "短信验证码登录", "手机验证码登录",
                 "网易手机账号登录"],
     "email_tab": ["邮箱登录", "邮箱注册", "网易邮箱账号登录", "邮箱账号登录"],
-    "register_tab": ["立即注册", "免费注册", "注册账号"],
+    "register_tab": [
+        "立即注册", "免费注册", "注册账号", "sign up", "register",
+        "s'inscrire", "registrarse", "registrieren", "新規登録", "会員登録",
+        "회원가입", "зарегистрироваться",
+    ],
 }
 
 

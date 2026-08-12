@@ -10,6 +10,7 @@
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
 | 2026-08-12 | cjx（Mac） | 修复慕课网手机号字段被误判为 email、知乎机构号注册入口误当普通注册 | signup_flow_classifier/page_detector.py、utils/login_link_discovery.py、utils/js/form_detection_addons.js、tests/test_site_recognition_fixes.py | 未推送 |
+| 2026-08-12 | cjx（Mac） | 从旧分支按能力挑选移植：多语言词表、弱结构词防御、容器硬规则、hover 菜单 | signup_flow_classifier/page_detector.py、signup_flow_classifier/navigator.py、signup_flow_classifier/classifier_engine.py、tests/ | 未推送 |
 
 ---
 
@@ -53,6 +54,37 @@ signup 测量直接跳到机构注册页并给出 email+password+code 的误分�
   aria-label、type=tel/email）与机构注册排除（zhihu /org/signup、
   带 query、enterprise/register、正常 signup 不被误杀）。
 - `PYTHONPATH=. .venv/bin/python -m unittest tests.test_site_recognition_fixes -q` 全通过。
+
+### 4. 从旧分支按能力挑选移植（2026-08-12）
+
+背景：组员的新仓库基于已推送旧代码重构（`utils/signup_flow/` → `signup_flow_classifier/`），
+8/8–8/9 的多个修复未包含在内。两个分支历史完全无关，整体 `git merge` 会
+产生 13 个 add/add 冲突并造成两套分类器并存，因此改为按能力挑选移植：
+
+1. **多语言词表**（page_detector.py）：`_EMAIL/_PHONE/_PASSWORD/_CODE/_IDENTIFIER_HINTS`
+   扩展西/法/德/日/韩/俄；captcha 阻断词（"Verify you're a human" 等 8 种语言）；
+   `_NEXT_TEXTS`、`_SEND_CODE_HINTS`、`_SUBMIT_HINTS`、`register_tab` 词表同步扩展。
+2. **入口多语言词表**（navigator.py）：`_ENTRY_REGISTER_TEXTS`、`_ENTRY_LOGIN_TEXTS`
+   扩展 8 语言；`_entry_text_match` 的 short_hints 同步。
+3. **弱结构词防御**（navigator.js 入口打分）：非"登录/注册"文本、仅靠
+   user/avatar 等弱结构词命中且位于正文内容区（article/main/card 或视口下半部）
+   的元素判为内容卡片不点击（虎嗅作者卡片反例修复）。
+4. **容器硬规则**（navigator.js 入口打分）：LI/DIV/SPAN 无 href 容器不能压过
+   显式 A/BUTTON（博客园"我的博客" hover 菜单修复）。
+5. **hover 菜单能力**（navigator.py + classifier_engine.py）：新增
+   `detect_hover_candidate()` + `safe_hover_menu()`；classifier 入口点击前，
+   检测到入口是无 href 容器或缺失时先尝试 hover 头部用户/账号菜单展开登录链接。
+
+验证：
+
+- 新增 6 个多语言/入口/hover 回归用例（合计 20/20 通过）。
+- 日文入口 fixture `multilingual_japanese_entry.html` 端到端：
+  "新規登録" → `direct_password`，密码框可达。
+- 真实站复测无回归：imooc `human_blocked / sms`（与移植前一致）；
+  zhihu `human_blocked / sso`、停在 `/signin`（与移植前一致）。
+
+注意：本次未移植 `utils/signup_flow/` 整棵旧目录、旧 `testcases/run_*.py` 入口
+与 Fathom 兜底差异；若组员需要旧测量入口，再单独评估。
 
 ## 其他
 

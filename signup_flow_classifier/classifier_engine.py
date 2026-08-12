@@ -412,6 +412,7 @@ class SignupFlowClassifierEngine:
                 allow_entry_fallback = not prefer_active_frames
                 # 预读入口链接 href（供点击失败时"直接导航到登录页"兜底，imooc 等）
                 entry_href = ""
+                entry_tag = ""
                 try:
                     detect_entry_button(
                         self.driver, prefer,
@@ -426,6 +427,48 @@ class SignupFlowClassifierEngine:
                     ) or ""
                 except Exception:
                     pass
+                # hover 菜单兜底：页面没有明确的登录/注册文本入口，或检测到的入口
+                # 是无 href 的容器元素（LI/DIV，如博客园 id=navbar_login_status 的
+                # hover 菜单）时，尝试 hover 头部"用户/账号"菜单展开登录链接。
+                if (not entry_href and entry_clicks_left > 0
+                        and not prefer_active_frames):
+                    from signup_flow_classifier.navigator import (
+                        detect_entry_button as _deb, safe_hover_menu,
+                    )
+                    hover_outcome = None
+                    try:
+                        _deb(self.driver, prefer, allow_fallback=False)
+                        entry_info = self.driver.execute_script(
+                            "const el = document.querySelector('[data-ap-entry-token]');"
+                            "const h = el ? el.getAttribute('href') : '';"
+                            "const t = el ? el.tagName : '';"
+                            "if (el) el.removeAttribute('data-ap-entry-token');"
+                            "return JSON.stringify({tag: t, href: h});"
+                        ) or '{}'
+                    except Exception:
+                        entry_info = '{}'
+                    import json as _json
+                    info = _json.loads(entry_info or '{}')
+                    container_entry = (
+                        info.get('tag') in ('LI', 'DIV', 'SPAN')
+                        and not info.get('href')
+                    )
+                    if (not info.get('tag') or container_entry):
+                        hover_outcome = safe_hover_menu(
+                            self.driver, prefer)
+                        if hover_outcome and hover_outcome.changed:
+                            record_evidence(
+                                result,
+                                "step={};hover={}".format(
+                                    step, hover_outcome.reason))
+                            state.note = hover_outcome.reason
+                            state.actions.append("hover_click")
+                            if self._wait_for_form_fields(
+                                    self.driver, timeout=8):
+                                continue
+                            if hover_outcome.changed:
+                                continue
+                            break
                 before_handles = self.driver.window_handles
                 entry_outcome = safe_click_entry(
                     self.driver, prefer,

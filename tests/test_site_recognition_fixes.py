@@ -15,8 +15,14 @@ _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from signup_flow_classifier.page_detector import _classify_combined, classify_input_type
-from signup_flow_classifier.navigator import _is_organizational_signup
+from signup_flow_classifier.page_detector import (
+    _classify_combined, classify_input_type, _BLOCKER_HINTS, _EMAIL_HINTS,
+    _PHONE_HINTS, _PASSWORD_HINTS, _CODE_HINTS, _IDENTIFIER_HINTS,
+)
+from signup_flow_classifier.navigator import (
+    _is_organizational_signup, _entry_text_match, _ENTRY_REGISTER_TEXTS,
+    _ENTRY_LOGIN_TEXTS, detect_hover_candidate, safe_hover_menu,
+)
 
 
 class FakeElement:
@@ -81,6 +87,60 @@ class FieldSemanticPriorityTests(unittest.TestCase):
         el = FakeElement(input_type="email", name="email",
                          placeholder="user@example.com")
         self.assertEqual(classify_input_type(el), "email")
+
+
+class MultilingualCapabilityTests(unittest.TestCase):
+    """从旧分支移植的多语言词表（8/8-8/9 工作），合入新仓库后保持一致。"""
+
+    def test_field_hints_cover_major_language_groups(self):
+        cases = [
+            ("correo electrónico", "email", _EMAIL_HINTS),
+            ("mot de passe", "password", _PASSWORD_HINTS),
+            ("電話番号", "phone", _PHONE_HINTS),
+            ("인증 코드", "code", _CODE_HINTS),
+            ("имя пользователя", "identifier", _IDENTIFIER_HINTS),
+        ]
+        for keyword, expected, hints in cases:
+            self.assertIn(keyword, hints, f"{keyword} 应存在于 {expected} hints")
+
+    def test_multilingual_field_classification(self):
+        cases = [
+            ("请输入注册手机号", "phone"),
+            ("correo electrónico", "email"),
+            ("mot de passe", "password"),
+            ("電話番号", "phone"),
+            ("인증 코드", "code"),
+            ("имя пользователя", "identifier"),
+        ]
+        for keyword, expected in cases:
+            el = FakeElement(input_type="text", placeholder=keyword)
+            self.assertEqual(classify_input_type(el), expected, keyword)
+
+    def test_captcha_blocker_multilingual(self):
+        # 词表本身存储小写开头；_match_any 匹配时大小写不敏感
+        for keyword in ["verify you're a human", "je ne suis pas un robot",
+                        "no soy un robot", "я не робот"]:
+            self.assertIn(keyword, _BLOCKER_HINTS["captcha"], keyword)
+
+    def test_entry_texts_cover_major_language_groups(self):
+        for keyword in ["新規登録", "会員登録", "회원가입", "зарегистрироваться",
+                        "s'inscrire", "registrarse", "konto erstellen"]:
+            self.assertIn(keyword, _ENTRY_REGISTER_TEXTS, keyword)
+        for keyword in ["se connecter", "anmelden", "ログイン", "로그인", "войти"]:
+            self.assertIn(keyword, _ENTRY_LOGIN_TEXTS, keyword)
+
+    def test_multilingual_entry_text_match(self):
+        for keyword in ["新規登録", "회원가입", "s'inscrire"]:
+            self.assertTrue(
+                _entry_text_match(keyword, _ENTRY_REGISTER_TEXTS), keyword)
+        for keyword in ["anmelden", "ログイン", "connexion"]:
+            self.assertTrue(
+                _entry_text_match(keyword, _ENTRY_LOGIN_TEXTS), keyword)
+
+    def test_hover_functions_present(self):
+        # hover 菜单能力随 navigator 一起移植，函数必须存在且可导入
+        self.assertTrue(callable(detect_hover_candidate))
+        self.assertTrue(callable(safe_hover_menu))
 
 
 class OrganizationalSignupExclusionTests(unittest.TestCase):

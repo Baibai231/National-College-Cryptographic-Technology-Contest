@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>多言語登録テスト</title></head>
+<body>
+  <button id="signup-entry" type="button">新規登録</button>
+  <form id="signup-form" hidden>
+    <label>メールアドレス <input name="メールアドレス" placeholder="メールアドレス"></label>
+    <label>パスワード <input name="パスワード" placeholder="パスワード"></label>
+    <button type="submit">アカウント作成</button>
+  </form>
+  <script>
+    window.entryClicks = 0;
+    document.getElementById('signup-entry').addEventListener('click', () => {
+      window.entryClicks += 1;
+      document.getElementById('signup-entry').hidden = true;
+      document.getElementById('signup-form').hidden = false;
+    });
+  </script>
+</body>
+</html>

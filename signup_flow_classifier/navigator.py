@@ -16,8 +16,16 @@ CHANGE_TIMEOUT = 5
 MAX_ENTRY_CLICKS = 2
 
 # 注册/登录入口的明确语义（避免误点）
-_ENTRY_REGISTER_TEXTS = ["立即注册", "免费注册", "马上注册", "注册", "sign up", "create account", "register"]
-_ENTRY_LOGIN_TEXTS = ["登录", "登陆", "sign in", "log in", "login"]
+_ENTRY_REGISTER_TEXTS = [
+    "立即注册", "免费注册", "马上注册", "注册", "sign up", "create account", "register",
+    "s'inscrire", "créer un compte", "registrarse", "crear cuenta", "registrieren",
+    "konto erstellen", "新規登録", "会員登録", "アカウント作成", "회원가입",
+    "계정 만들기", "зарегистрироваться", "создать аккаунт",
+]
+_ENTRY_LOGIN_TEXTS = [
+    "登录", "登陆", "sign in", "log in", "login", "se connecter", "connexion",
+    "iniciar sesión", "anmelden", "einloggen", "ログイン", "로그인", "войти", "вход",
+]
 
 
 @dataclass(frozen=True)
@@ -197,7 +205,12 @@ def _entry_text_match(text: str, hints: List[str]) -> bool:
     """
     t = text.strip().lower()
     tokens = t.split()
-    short_hints = ("登录", "登陆", "login", "sign in", "log in", "register")
+    short_hints = (
+        "登录", "登陆", "login", "sign in", "log in", "register", "connexion",
+        "anmelden", "einloggen", "ログイン", "로그인", "войти", "вход", "新規登録",
+        "会員登録", "회원가입", "registrieren", "registrarse", "se connecter",
+        "s'inscrire", "зарегистрироваться",
+    )
     for h in hints:
         hl = h.lower()
         if h in short_hints:
@@ -379,6 +392,15 @@ for (const el of all) {
     || el.hasAttribute('onclick') || el.hasAttribute('tabindex')
     || getComputedStyle(el).cursor === 'pointer';
   if (!explicit && !combined && !(structural && nativeInteractive)) continue;
+  // 弱结构词防御：非"登录/注册"文本、仅靠 user/avatar/profile 等弱结构词命中的元素，
+  // 若位于正文内容区（article 内或视口下半部），判定为内容卡片而非认证入口
+  // （虎嗅作者卡片 class=...user 在正文区，实测反例；顶栏头像菜单在头部，保留）。
+  if (!explicit && !combined && !strongStructural) {
+    const r = el.getBoundingClientRect();
+    const inContentArea = r.top > (innerHeight * 0.6)
+      || !!el.closest('article, main, [class*="article"], [class*="content"], [class*="card"]');
+    if (inContentArea) continue;
+  }
   // div/span 必须是叶子式、可交互且语义紧凑，避免点击包含整页文字的大容器。
   if (['DIV','SPAN'].includes(el.tagName)) {
     if (!nativeInteractive || text.length > 40) continue;
@@ -403,6 +425,24 @@ for (const el of all) {
   rows.push({el, score: finalScore, source: explicit ? 'accessible_text' : (combined ? 'combined_text' : 'structural_semantics')});
 }
 rows.sort((a,b) => b.score - a.score);
+// 硬规则：容器（LI/DIV/SPAN 且无 href）不能压过显式的 A/BUTTON 点击目标。
+// 博客园"我的博客"是 hover 菜单触发器（菜单是兄弟元素），点击容器无效，
+// 而展开后的"登录"链接（A，156 分）才是真正入口——若容器比紧邻的
+// 显式 A/BUTTON 高不超过 30 分，优先选 A/BUTTON。
+if (rows.length > 1) {
+  const top = rows[0];
+  const topIsContainer = ['LI','DIV','SPAN'].includes(top.el.tagName)
+    && !top.el.getAttribute('href');
+  if (topIsContainer) {
+    const altIndex = rows.slice(1).findIndex(r => ['A','BUTTON','INPUT'].includes(r.el.tagName)
+      && (r.el.getAttribute('href') || r.el.getAttribute('onclick')));
+    const alt = altIndex >= 0 ? rows[altIndex + 1] : null;
+    if (alt && (top.score - alt.score) <= 30) {
+      rows[altIndex + 1] = top;
+      rows[0] = alt;
+    }
+  }
+}
 if (!rows.length) return null;
 rows[0].el.setAttribute('data-ap-entry-token', cfg.token);
 return rows[0].source;
@@ -528,6 +568,86 @@ def safe_click_entry(
     return NavigationOutcome(
         True, True, f"{target.kind}_{target.source}_clicked_and_changed"
     )
+
+
+def detect_hover_candidate(driver: WebDriver) -> Optional[object]:
+    """在头部区域找"用户/账号类"可悬停元素（hover 菜单型登录入口，如博客园"我的博客"）。
+
+    安全边界：只返回头部区域（视口上半部）、可见、class/id 含 user/avatar/member/
+    account/login/navbar 等语义的可交互元素；返回 WebElement 或 None。
+    """
+    hints = ["user", "avatar", "member", "account", "login", "navbar", "profile",
+             "用户", "账号", "头像", "我的"]
+    try:
+        for el in driver.find_elements(By.CSS_SELECTOR,
+                                       "header *, nav *, [class*='nav' i], [class*='header' i], li, div, a"):
+            try:
+                if not el.is_displayed():
+                    continue
+                r = el.rect
+                if r['y'] < 0 or r['y'] > (driver.get_window_size()['height'] * 0.5):
+                    continue
+                semantic = " ".join([
+                    el.get_attribute("class") or "",
+                    el.get_attribute("id") or "",
+                    el.get_attribute("aria-label") or "",
+                    el.text or "",
+                ]).lower()
+                if not any(h in semantic for h in hints):
+                    continue
+                # 元素本身可交互（有子链接/按钮 或 cursor:pointer 或有 onclick）
+                interactive = el.get_attribute("onclick") is not None \
+                    or el.get_attribute("tabindex") is not None \
+                    or el.find_elements(By.CSS_SELECTOR, "a, button").__len__() > 0
+                if interactive:
+                    return el
+            except Exception:
+                continue
+    except Exception:
+        return None
+    return None
+
+
+def safe_hover_menu(driver: WebDriver, prefer: str = "login") -> NavigationOutcome:
+    """hover 用户/账号菜单，展开后找登录/注册入口并点击。
+
+    返回 NavigationOutcome。安全边界：只 hover + 点击明确的登录/注册链接。
+    """
+    from selenium.webdriver import ActionChains
+    candidate = detect_hover_candidate(driver)
+    if candidate is None:
+        return NavigationOutcome(False, False, "no_hover_candidate")
+    try:
+        ActionChains(driver).move_to_element(candidate).perform()
+    except Exception:
+        return NavigationOutcome(False, False, "hover_failed")
+    try:
+        wait_page_change(driver, page_fingerprint(driver), timeout=3)
+    except Exception:
+        pass
+    target = detect_entry_button(driver, prefer)
+    if target is None:
+        return NavigationOutcome(False, False, "hover_no_entry")
+    old_fp = page_fingerprint(driver)
+    try:
+        if not _switch_to_frame_path(driver, target.frame_path):
+            return NavigationOutcome(False, False, "hover_frame_missing")
+        btn = _resolve_marked_entry(driver, target.token)
+        if btn is None:
+            driver.switch_to.default_content()
+            return NavigationOutcome(False, False, "hover_target_missing")
+        btn.click()
+        driver.switch_to.default_content()
+    except Exception:
+        try:
+            driver.switch_to.default_content()
+        except Exception:
+            pass
+        return NavigationOutcome(False, False, "hover_click_failed")
+    changed = wait_page_change(driver, old_fp)
+    if not changed:
+        return NavigationOutcome(True, False, "hover_clicked_no_change")
+    return NavigationOutcome(True, True, f"hover_{target.kind}_clicked_and_changed")
 
 
 def safe_click_tab(driver: WebDriver, kind: str) -> NavigationOutcome:
