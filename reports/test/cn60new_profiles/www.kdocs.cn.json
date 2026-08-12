@@ -1,0 +1,204 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:03.122775+00:00",
+  "report_title": "www.kdocs.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60new_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.kdocs.cn",
+      "name": "www.kdocs.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=ZeAvK3dweAZVtCVxKDq4WAWYlSpbNpkQ5faCAjb38E4&singlesignhost=account.kdocs.cn",
+          "final_url": "https://www.kdocs.cn/",
+          "observed_route": "第三方认证 → 微信",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "第三方认证 → 微信",
+              "fields_observed": [],
+              "methods_observed": [
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.kdocs.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:44:00.986344+00:00",
+            "raw_flow_type": "sso_only",
+            "raw_stop_reason": "external_idp_detected"
+          },
+          "raw_result": {
+            "flow_type": "sso_only",
+            "stop_reason": "external_idp_detected",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "external_idp_detected",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "third_party"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=-E0EmMJy4LWidKXzOZpZEb8dZjMJanDnlyTLkP4gqpY&singlesignhost=account.kdocs.cn",
+          "final_url": "https://www.kdocs.cn/",
+          "observed_route": "第三方认证 → 微信",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "第三方认证 → 微信",
+              "fields_observed": [],
+              "methods_observed": [
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.kdocs.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:43:57.574575+00:00",
+            "raw_flow_type": "sso_only",
+            "raw_stop_reason": "external_idp_detected"
+          },
+          "raw_result": {
+            "flow_type": "sso_only",
+            "stop_reason": "external_idp_detected",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "external_idp_detected",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "third_party"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -358,6 +358,11 @@ for (const el of all) {
   if (el.closest('form') && el.tagName !== 'A' && el.getAttribute('role') !== 'tab'
       && type !== 'button') continue;
   const text = clean(el.innerText || el.textContent);
+  // 页脚备案/版权链接排除：京公网安备/ICP 备案不是认证入口
+  // （douyin 首页实测误点导航到视频页）。
+  if (/备案|公网安备|beian|mps\.gov\.cn|copyright/i.test(text)
+      || /备案|beian|mps\.gov\.cn|beian\.gov\.cn/i.test(clean(el.getAttribute('href'))))
+    continue;
   const aria = clean(el.getAttribute('aria-label'));
   const title = clean(el.getAttribute('title'));
   const alt = clean(el.getAttribute('alt'));

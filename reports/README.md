@@ -25,6 +25,9 @@
 
 ## 当前内容（2026-08-12）
 
-- `final/cn60_final_20260812.jsonl`：61 个国内网站 login+signup 共 122 条记录
-- `final/cn60_summary.md`：61 站总表（分类、路线、字段、验证方式、口令位置、政策摘要、安全到达处）
+- `final/cn60_final_20260812.jsonl`：**121 个**国内网站（老 60 + 新 60 + 慕课）
+  login+signup 共 244 条记录
+- `final/cn60_summary.md`：121 站总表（分类、路线、字段、验证方式、口令位置、政策摘要、安全到达处）
 - `final/cn60_profiles/`：每站详细档案（自动观察路线 + 步骤证据）
+- `test/cn60new_20260812.jsonl` + `test/cn60new_profiles/` + `test/cn60new_summary.md`：
+  新 60 站（百度/抖音/快手/小红书/携程/阿里云/12306 等）测试输出

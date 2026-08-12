@@ -1,0 +1,253 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:03.115664+00:00",
+  "report_title": "www.chinanews.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60new_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.chinanews.com",
+      "name": "www.chinanews.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.chinanews.com/",
+          "final_url": "https://www.chinanews.com/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2,
+                3
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "multi_step_wizard"
+              ],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "multi_step_wizard"
+          ],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "next"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            },
+            {
+              "step": 2,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "next"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            },
+            {
+              "step": 3,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-12T09:37:38.493217+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "max_steps_reached"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "max_steps_reached",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "max_steps_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.chinanews.com/",
+          "final_url": "https://www.chinanews.com/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2,
+                3
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "multi_step_wizard"
+              ],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "multi_step_wizard"
+          ],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "next"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            },
+            {
+              "step": 2,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            },
+            {
+              "step": 3,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-12T09:37:35.126988+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "max_steps_reached"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "max_steps_reached",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "max_steps_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

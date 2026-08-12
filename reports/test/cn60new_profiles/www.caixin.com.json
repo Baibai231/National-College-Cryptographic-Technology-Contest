@@ -1,0 +1,270 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:03.115036+00:00",
+  "report_title": "www.caixin.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60new_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.caixin.com",
+      "name": "www.caixin.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://u.caixinglobal.com/user/register.html",
+          "final_url": "https://u.caixinglobal.com/user/register.html",
+          "observed_route": "邮箱 → 邮箱验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "邮箱 → 邮箱验证码 → 口令",
+              "fields_observed": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "email_otp",
+                "third_party",
+                "google"
+              ],
+              "verification_observed": [
+                "email_otp"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "email_otp",
+            "third_party",
+            "google"
+          ],
+          "verification_observed": [
+            "email_otp"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://u.caixinglobal.com/user/register.html",
+              "ui_type": "inline_widget",
+              "fields": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "email",
+                "google",
+                "sso"
+              ],
+              "blockers": [
+                "email_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:39:00.880862+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "email_otp",
+                "third_party",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "email_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://u.caixinglobal.com/user/register.html",
+          "final_url": "https://u.caixinglobal.com/user/register.html",
+          "observed_route": "邮箱 → 邮箱验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "邮箱 → 邮箱验证码 → 口令",
+              "fields_observed": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "email_otp",
+                "third_party",
+                "google"
+              ],
+              "verification_observed": [
+                "email_otp"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "email_otp",
+            "third_party",
+            "google"
+          ],
+          "verification_observed": [
+            "email_otp"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://u.caixinglobal.com/user/register.html",
+              "ui_type": "inline_widget",
+              "fields": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "email",
+                "google",
+                "sso"
+              ],
+              "blockers": [
+                "email_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:38:47.937958+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "email_otp",
+                "third_party",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "email_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

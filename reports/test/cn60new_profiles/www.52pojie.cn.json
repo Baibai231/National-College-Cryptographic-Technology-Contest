@@ -1,0 +1,256 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:03.113312+00:00",
+  "report_title": "www.52pojie.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60new_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.52pojie.cn",
+      "name": "www.52pojie.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.52pojie.cn/member.php?mod=52register",
+          "final_url": "https://www.52pojie.cn/member.php?mod=52register",
+          "observed_route": "邮箱/账号/邮箱 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "邮箱/账号/邮箱 → 口令",
+              "fields_observed": [
+                "email",
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "identifier",
+                "third_party",
+                "wechat",
+                "qq"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "identifier",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "identifier",
+            "third_party",
+            "wechat",
+            "qq"
+          ],
+          "verification_observed": [],
+          "password_state": "observed_before_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.52pojie.cn/member.php?mod=52register",
+              "ui_type": "inline_widget",
+              "fields": [
+                "email",
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "email",
+                "identifier",
+                "qq",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:40:24.951634+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "third_party",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.52pojie.cn/member.php?mod=52register",
+          "final_url": "https://www.52pojie.cn/member.php?mod=52register",
+          "observed_route": "邮箱/账号/邮箱 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "邮箱/账号/邮箱 → 口令",
+              "fields_observed": [
+                "email",
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "identifier",
+                "third_party",
+                "wechat",
+                "qq"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "identifier",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "identifier",
+            "third_party",
+            "wechat",
+            "qq"
+          ],
+          "verification_observed": [],
+          "password_state": "observed_before_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.52pojie.cn/member.php?mod=52register",
+              "ui_type": "inline_widget",
+              "fields": [
+                "email",
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "email",
+                "identifier",
+                "qq",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:40:22.256681+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "third_party",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:19.276624+00:00",
+  "report_title": "www.aliyun.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.aliyun.com",
+      "name": "www.aliyun.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.aliyun.com/",
+          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aGMBsA0&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "observed_route": "账号/邮箱 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "identifier",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "identifier",
+            "sms",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.aliyun.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aGMBsA0&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:44:35.603367+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "third_party"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.aliyun.com/",
+          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154asMKvF2&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1,
+                2
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms",
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.aliyun.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154asMKvF2&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "tos"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": "no_password_signup_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:44:29.780657+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

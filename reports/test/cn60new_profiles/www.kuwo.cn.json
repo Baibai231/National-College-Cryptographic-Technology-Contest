@@ -1,0 +1,276 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:03.123649+00:00",
+  "report_title": "www.kuwo.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn60new_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.kuwo.cn",
+      "name": "www.kuwo.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.kuwo.cn/",
+          "final_url": "https://www.kuwo.cn/",
+          "observed_route": "账号/邮箱 → 一次性验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "账号/邮箱 → 一次性验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "one_time_code",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "one_time_code"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "identifier",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "identifier",
+            "one_time_code",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "one_time_code"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.kuwo.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "identifier",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "verification_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "password_tab",
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:35:22.346669+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "one_time_code",
+                "third_party"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "verification_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.kuwo.cn/",
+          "final_url": "https://www.kuwo.cn/",
+          "observed_route": "账号/邮箱 → 一次性验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "账号/邮箱 → 一次性验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "one_time_code",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "one_time_code"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "identifier",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "identifier",
+            "one_time_code",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "one_time_code"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.kuwo.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "identifier",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "verification_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "password_tab",
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:35:10.224553+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "one_time_code",
+                "third_party"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "verification_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

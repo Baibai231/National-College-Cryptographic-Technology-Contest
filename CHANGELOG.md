@@ -136,3 +136,22 @@ signup 测量直接跳到机构注册页并给出 email+password+code 的误分�
 - 每测一个新网站 → 先在 test/ 生成，核对后并入 final/。
 
 验证：回归测试 24/24 通过；修复站 3 连跑稳定；61 站 final 档案已生成。
+
+### 6. 新 60 站清单 + 页脚备案链接误点修复（2026-08-12）
+
+- 新增 `misc/cn_sites_new60.txt`：60 个未测过的国内网站，覆盖搜索/门户
+  （百度、人民网、新华网、央视网）、视频/音乐（抖音、快手、小红书、AcFun、
+  网易云、QQ音乐、酷狗）、社区（V2EX、酷安、吾爱破解、即刻、看雪）、
+  财经（东方财富、同花顺）、生活（大众点评、饿了么、携程、同程、飞猪、
+  12306、高德）、电商（得物、闲鱼、转转、网易严选）、办公云（钉钉、飞书、
+  企业微信、阿里云、腾讯云、华为云、百度网盘）、游戏（TapTap、游民星空）、
+  招聘（猎聘）、医疗（丁香园）等。与老 60 站去重校验通过。
+- 修复抖音首页误点页脚备案链接（CDP 链接发现把"京公网安备"当注册入口，
+  导航到 /jingxuan 视频页）：`navigate_to_signup` CDP 点击层与
+  `navigator._mark_entry_in_current_context` JS 都排除备案/版权链接
+  （文本含"备案/公网安备"或 href 含 beian/mps.gov.cn/beian.gov.cn）。
+  修复后抖音登录弹窗识别完整（signup=human_blocked 手机号+验证码，
+  login=direct_password）。
+- 结果：新 60 站 120 条记录（登录 direct_password 24、注册 direct_password 12、
+  注册 verification_then_password 1）；music.163.com 偶发渲染超时已单独复测。
+- 合并后 `reports/final/` 共 121 站（老 60 + 新 60 + 慕课）244 条记录。

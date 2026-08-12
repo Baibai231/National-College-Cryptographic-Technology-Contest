@@ -380,6 +380,21 @@ class LoginLinkDiscovery:
                     logger.debug(f"[{idx}] 跳过 (无 xpath): {text}")
                     continue
 
+                # ── 排除页脚备案/版权链接 ──
+                # 京公网安备/ICP 备案链接文本或 href 含备案关键词（douyin
+                # 首页实测被 CDP 链接发现误点，导航到 /jingxuan 视频页）。
+                # 备案链接不是认证入口，必须在关键词匹配之前排除。
+                _record_text = (text or "").lower()
+                _record_href = (link.get('href', '') or '').lower()
+                if ("备案" in _record_text or "公网安备" in _record_text
+                        or "copyright" in _record_text
+                        or "beian" in _record_href
+                        or "mps.gov.cn" in _record_href
+                        or "beian.gov.cn" in _record_href
+                        or "police" in _record_href and "register" in _record_href):
+                    logger.debug(f"[{idx}] 跳过备案/版权链接: {text}")
+                    continue
+
                 # ── 排除机构/企业/商家注册路线 ──
                 # 与 navigator.detect_entry_button 的 _is_organizational_signup 一致；
                 # 避免把"注册机构号"（zhihu /org/signup 等）当成普通用户注册入口。

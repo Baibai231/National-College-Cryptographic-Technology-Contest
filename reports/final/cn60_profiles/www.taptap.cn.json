@@ -1,0 +1,199 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:19.302221+00:00",
+  "report_title": "www.taptap.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.taptap.cn",
+      "name": "www.taptap.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.taptap.cn/",
+          "final_url": "https://www.taptap.cn/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已记录页面阻断因素，未继续交互"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.taptap.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "app_confirm"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:45:07.509006+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "app_confirm"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.taptap.cn/",
+          "final_url": "https://www.taptap.cn/",
+          "observed_route": "第三方认证 → Google",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "第三方认证 → Google",
+              "fields_observed": [],
+              "methods_observed": [
+                "third_party",
+                "google"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已记录页面阻断因素，未继续交互"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "third_party",
+            "google"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.taptap.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "google",
+                "sso"
+              ],
+              "blockers": [
+                "app_confirm"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_password_signup_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:45:01.805644+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "third_party"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "app_confirm"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

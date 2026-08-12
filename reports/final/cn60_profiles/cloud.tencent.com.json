@@ -1,0 +1,288 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-12T10:04:19.267922+00:00",
+  "report_title": "cloud.tencent.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260812.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "cloud.tencent.com",
+      "name": "cloud.tencent.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+          "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+          "observed_route": "手机号 → 短信验证码/扫码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms",
+            "qr",
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code",
+                "scan",
+                "tos"
+              ],
+              "actions": [],
+              "tabs": [
+                "email_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:44:44.697227+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "scan",
+                "sms_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+          "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+          "observed_route": "手机号 → 短信验证码/扫码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms",
+            "qr",
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code",
+                "scan",
+                "tos"
+              ],
+              "actions": [],
+              "tabs": [
+                "email_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-12T09:44:43.805822+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "scan",
+                "sms_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}
