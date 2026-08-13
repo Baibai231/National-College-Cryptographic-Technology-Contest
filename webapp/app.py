@@ -144,6 +144,85 @@ def site_history(host: str):
     ]}
 
 
+class AddSiteRequest(BaseModel):
+    """现场分类结果 → 写入数据库。"""
+    hostname: str
+    url: str = ""
+    version: str = "v3"
+    login: dict = {}
+    signup: dict = {}
+    admin_token: str = ""
+
+
+@app.post("/api/sites")
+def add_site(req: AddSiteRequest):
+    """管理员把现场分类结果写入数据库（新增或更新站点）。
+
+    需要 SITES_ADMIN_TOKEN 匹配。只写入程序结果，人工核验仍走待审核流程。
+    """
+    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
+    if not expected:
+        raise HTTPException(403, "服务器未设置 SITES_ADMIN_TOKEN，无法写入")
+    if req.admin_token != expected:
+        raise HTTPException(403, "管理员口令错误")
+    host = req.hostname.strip()
+    if not host:
+        raise HTTPException(400, "hostname 不能为空")
+
+    login = req.login or {}
+    signup = req.signup or {}
+    now = datetime.now(timezone.utc).isoformat()
+    keywords = json.dumps([host], ensure_ascii=False)
+    details = json.dumps({
+        "login_steps": login.get("steps", []),
+        "signup_steps": signup.get("steps", []),
+        "login_policy": login.get("policy", {}),
+        "signup_policy": signup.get("policy", {}),
+    }, ensure_ascii=False)
+
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT hostname FROM sites WHERE hostname = ?", (host,))
+        exists = cur.fetchone() is not None
+        if exists:
+            cur.execute("""
+                UPDATE sites SET version = ?, login_flow = ?, login_flow_zh = ?,
+                    login_route = ?, login_final_url = ?, login_measured_at = ?,
+                    signup_flow = ?, signup_flow_zh = ?, signup_route = ?,
+                    signup_final_url = ?, signup_measured_at = ?, details_json = ?
+                WHERE hostname = ?
+            """, (
+                req.version, login.get("flow_type"), login.get("flow_zh"),
+                login.get("route"), login.get("final_url"), now,
+                signup.get("flow_type"), signup.get("flow_zh"),
+                signup.get("route"), signup.get("final_url"), now,
+                details, host,
+            ))
+        else:
+            cur.execute("""
+                INSERT INTO sites (hostname, url, keywords, version,
+                    login_flow, login_flow_zh, login_route, login_final_url,
+                    login_measured_at, signup_flow, signup_flow_zh,
+                    signup_route, signup_final_url, signup_measured_at,
+                    manual_login, manual_signup, manual_note,
+                    manual_verified, match_status, details_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                host, req.url or "https://" + host, keywords, req.version,
+                login.get("flow_type"), login.get("flow_zh"),
+                login.get("route"), login.get("final_url"), now,
+                signup.get("flow_type"), signup.get("flow_zh"),
+                signup.get("route"), signup.get("final_url"), now,
+                "", "", "", 0, "pending_manual", details,
+            ))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True,
+            "message": ("更新" if exists else "新增") + f" {host} ({req.version})"}
+
+
 @app.get("/api/stats")
 def stats():
     conn = _conn()

@@ -440,6 +440,7 @@ document.getElementById('review-submit-btn').addEventListener('click', async () 
 });
 
 // 现场分类
+let lastClassify = null;  // 最近一次现场分类结果（供入库）
 document.getElementById('classify-btn').addEventListener('click', async () => {
   const url = document.getElementById('classify-url').value.trim();
   const kind = document.getElementById('classify-kind').value;
@@ -461,6 +462,7 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
     const srcTag = d.from_database
       ? '<span class="badge text-bg-success">数据库已有该站结果</span>'
       : '<span class="badge text-bg-secondary">现场分类</span>';
+    lastClassify = d;
     box.innerHTML = `
       <div class="alert alert-info py-2 mb-2">
         <div><b>${d.url}</b>（${d.entry_kind === 'signup' ? '注册' : '登录'}） ${srcTag}</div>
@@ -470,7 +472,14 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
         ${d.final_url ? `<div class="small text-muted">最终页：${d.final_url}</div>` : ''}
         ${d.manual && d.manual.verified ? `<div class="small mt-1">人工复核：${d.manual.signup || d.manual.login || ''}</div>` : ''}
       </div>
-      <div class="small text-muted">${ev}</div>`;
+      <div class="small text-muted">${ev}</div>
+      ${d.from_database ? '' : `
+        <div class="mt-2 d-flex gap-2 align-items-center">
+          <input id="addsite-token" class="form-control form-control-sm" type="password" placeholder="管理员口令" style="max-width:160px">
+          <button class="btn btn-sm btn-primary" onclick="addSiteToDb()">加入数据库</button>
+          <span class="text-muted small">（只存当前${d.entry_kind === 'signup' ? '注册' : '登录'}结果，另一侧为空）</span>
+        </div>`}
+    `;
   } catch (err) {
     box.innerHTML = `<div class="alert alert-danger py-2">请求失败: ${err}</div>`;
   } finally {
@@ -478,6 +487,34 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
     btn.textContent = '开始分类';
   }
 });
+
+async function addSiteToDb() {
+  if (!lastClassify) return;
+  const d = lastClassify;
+  const token = document.getElementById('addsite-token').value;
+  const host = (d.url || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  const entry = {
+    flow_type: d.flow_type, flow_zh: d.flow_zh,
+    route: d.route || '', final_url: d.final_url || '',
+    steps: d.states || [], policy: {}
+  };
+  const payload = {
+    hostname: host, url: d.url, version: 'v3',
+    login: d.entry_kind === 'login' ? entry : {},
+    signup: d.entry_kind === 'signup' ? entry : {},
+    admin_token: token
+  };
+  const r = await fetch('/api/sites', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const res = await r.json();
+  if (!r.ok) { alert(res.detail || '写入失败'); return; }
+  alert(res.message || '已写入数据库');
+  loadStats();
+  search('');
+}
 
 loadStats();
 search('');
