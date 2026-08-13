@@ -323,6 +323,20 @@ function switchStepTab(show) {
   document.getElementById('t-login').style.display = show === 'login' ? 'block' : 'none';
   document.getElementById('t-signup').style.display = show === 'signup' ? 'block' : 'none';
 }
+async function showHistory(host) {
+  const box = document.getElementById('history-box');
+  box.innerHTML = '<div class="text-muted small">加载中…</div>';
+  const r = await fetch('/api/sites/' + encodeURIComponent(host) + '/history');
+  const d = await r.json();
+  if (!d.total) { box.innerHTML = '<div class="text-muted small">暂无历史版本（当前是最新测量）</div>'; return; }
+  const rows = d.history.map(h => `
+    <div class="step-row">
+      <b>${h.version}</b>（${h.entry_kind === 'signup' ? '注册' : '登录'}）
+      ${badge(h.flow_type)} <span class="text-muted">${h.route || ''}</span>
+      <div class="text-muted small">测量于 ${fmtTime(h.measured_at)}</div>
+    </div>`).join('');
+  box.innerHTML = `<b>历史程序结果：</b><div class="mt-1">${rows}</div>`;
+}
 async function showDetail(host) {
   const r = await fetch('/api/sites/' + encodeURIComponent(host));
   if (!r.ok) { alert('未找到站点'); return; }
@@ -339,6 +353,7 @@ async function showDetail(host) {
         <tr><td>阻断</td><td>${s.login.blockers}</td><td>${s.signup.blockers}</td></tr>
         <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
         <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
+        <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
       </tbody>
     </table>
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
@@ -348,6 +363,8 @@ async function showDetail(host) {
       <div>注册：${s.manual.signup || '—'}</div>
       ${s.manual.note ? `<div class="text-muted small">备注：${s.manual.note}</div>` : ''}
     </div>
+    <button class="btn btn-sm btn-outline-secondary" onclick="showHistory('${s.hostname}')">查看历史程序结果</button>
+    <div id="history-box" class="mt-2"></div>
     <div class="step-tabs mt-3">
       <button class="step-tab-btn active" data-pane="login" onclick="switchStepTab('login')">登录步骤</button>
       <button class="step-tab-btn" data-pane="signup" onclick="switchStepTab('signup')">注册步骤</button>

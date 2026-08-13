@@ -54,14 +54,15 @@ def _conn():
 
 
 def _row_to_site(row):
-    (hostname, url, keywords, lf, lfzh, lr, lfields, lblockers, lfinal, lma,
-     sf, sfzh, sr, sfields, sblockers, sfinal, sma,
+    (hostname, url, keywords, version, lf, lfzh, lr, lfields, lblockers,
+     lfinal, lma, sf, sfzh, sr, sfields, sblockers, sfinal, sma,
      mlogin, msignup, mnote, mverified, match, details_json) = row
     details = json.loads(details_json or "{}")
     return {
         "hostname": hostname,
         "url": url,
         "keywords": json.loads(keywords or "[]"),
+        "version": version or "?",
         "login": {
             "flow_type": lf, "flow_zh": lfzh or "未确认",
             "route": lr, "fields": lfields, "blockers": lblockers,
@@ -118,6 +119,29 @@ def site_detail(host: str):
     if not row:
         raise HTTPException(404, f"未找到站点: {host}")
     return _row_to_site(row)
+
+
+@app.get("/api/sites/{host}/history")
+def site_history(host: str):
+    """该站各程序版本的历史测量结果（不含当前最新，当前在 sites 表）。"""
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT entry_kind, version, flow_type, stop_reason, "
+            "primary_method, route, measured_at, details_json "
+            "FROM site_history WHERE hostname = ? "
+            "ORDER BY version DESC, measured_at DESC", (host,))
+        rows = cur.fetchall()
+    finally:
+        conn.close()
+    return {"total": len(rows), "history": [
+        {"entry_kind": r[0], "version": r[1], "flow_type": r[2],
+         "stop_reason": r[3], "primary_method": r[4], "route": r[5],
+         "measured_at": r[6],
+         "details": json.loads(r[7] or "{}")}
+        for r in rows
+    ]}
 
 
 @app.get("/api/stats")

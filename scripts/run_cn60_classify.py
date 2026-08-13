@@ -25,6 +25,12 @@ from utils.util_test_password import _get_new_driver
 from utils.login_link_discovery import LoginLinkDiscovery
 from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
 
+_CURRENT_VERSION = "unknown"
+_version_path = os.path.join(_PROJECT_ROOT, "misc", "measure_version.txt")
+if os.path.isfile(_version_path):
+    with open(_version_path, encoding="utf-8") as _fh:
+        _CURRENT_VERSION = _fh.read().strip() or "unknown"
+
 
 def classify_one(site: str, kind: str) -> dict:
     driver = None
@@ -33,6 +39,7 @@ def classify_one(site: str, kind: str) -> dict:
         "hostname": urlparse(site).hostname or site,
         "entry_kind": kind,
         "measured_at": datetime.now(timezone.utc).isoformat(),
+        "version": _CURRENT_VERSION,
         "flow_type": None, "confidence": None, "stop_reason": None,
         "primary_method": None, "ui_type": None, "final_url": None,
         "states": [], "policy": {}, "evidence": [], "error": None,

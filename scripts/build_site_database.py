@@ -76,30 +76,57 @@ def _summary(states):
     return steps
 
 
-def load_records(jsonl_path):
-    records = {}
-    with open(jsonl_path, encoding="utf-8") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            r = json.loads(line)
-            key = (r.get("hostname"), r.get("entry_kind"))
-            records[key] = r
-    return records
+def load_records(jsonl_paths):
+    """加载多个 JSONL（不同版本的测量），按 (hostname, entry_kind, version) 分组。
+
+    返回: {hostname: {"login": [...版本列表], "signup": [...]}}，
+    每个版本列表按出现顺序（后出现者更新）。
+    """
+    groups = defaultdict(lambda: defaultdict(list))
+    for path in jsonl_paths:
+        if not os.path.isfile(path):
+            print(f"  [warn] 结果文件不存在: {path}")
+            continue
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                host = r.get("hostname")
+                kind = r.get("entry_kind")
+                if not host or not kind:
+                    continue
+                groups[host][kind].append(r)
+    return groups
 
 
-def build_sites(records):
-    by_host = defaultdict(dict)
-    for (host, kind), r in records.items():
-        by_host[host][kind] = r
+def _pick_latest(records):
+    """从同站同入口的多个版本记录里选最新（version 最大，其次 measured_at 最新）。"""
+    if not records:
+        return None
+    if len(records) == 1:
+        return records[0]
 
+    def ver_key(r):
+        v = r.get("version") or ""
+        # v3 → (3, 0); v10 → (10, 0); 纯数字 → (n, 0)
+        m = __import__("re").match(r"^v?(\d+)", v)
+        num = int(m.group(1)) if m else 0
+        return (num, r.get("measured_at") or "")
+
+    return max(records, key=ver_key)
+
+
+def build_sites(groups):
     sites = []
-    for host in sorted(h for h in by_host if h):
-        login = by_host[host].get("login")
-        signup = by_host[host].get("signup")
+    for host in sorted(h for h in groups if h):
+        kinds = groups[host]
+        login = _pick_latest(kinds.get("login"))
+        signup = _pick_latest(kinds.get("signup"))
         site = {
             "hostname": host,
             "url": (login or signup or {}).get("site", "https://" + host),
+            "version": (signup or login or {}).get("version", ""),
             "login": {
                 "flow_type": (login or {}).get("flow_type"),
                 "flow_zh": FLOW_ZH.get((login or {}).get("flow_type"), "未确认"),
@@ -172,7 +199,38 @@ def _match_status(site):
     return "manual_verified"
 
 
-def create_db(sites, db_path):
+def build_history(groups, sites):
+    """提取历史版本记录（非当前最新），用于 site_history 表。"""
+    latest = {}
+    for s in sites:
+        latest[s["hostname"]] = s.get("version", "")
+    history = []
+    for host, kinds in groups.items():
+        for kind, recs in kinds.items():
+            cur_ver = latest.get(host, "")
+            for r in recs:
+                v = r.get("version", "")
+                # 跳过与当前版本相同的（sites 表已有）
+                if v == cur_ver:
+                    continue
+                history.append({
+                    "hostname": host,
+                    "entry_kind": kind,
+                    "version": v or "?",
+                    "flow_type": r.get("flow_type"),
+                    "stop_reason": r.get("stop_reason"),
+                    "primary_method": r.get("primary_method"),
+                    "route": _route(r.get("states", []), kind),
+                    "measured_at": r.get("measured_at", ""),
+                    "details_json": json.dumps({
+                        "steps": _summary(r.get("states", [])),
+                        "policy": r.get("policy", {}),
+                    }, ensure_ascii=False),
+                })
+    return history
+
+
+def create_db(sites, db_path, history=None):
     if os.path.exists(db_path):
         os.remove(db_path)
     conn = sqlite3.connect(db_path)
@@ -182,6 +240,7 @@ def create_db(sites, db_path):
             hostname TEXT PRIMARY KEY,
             url TEXT,
             keywords TEXT,
+            version TEXT,
             login_flow TEXT, login_flow_zh TEXT, login_route TEXT,
             login_fields TEXT, login_blockers TEXT, login_final_url TEXT,
             login_measured_at TEXT,
@@ -190,6 +249,18 @@ def create_db(sites, db_path):
             signup_measured_at TEXT,
             manual_login TEXT, manual_signup TEXT, manual_note TEXT,
             manual_verified INTEGER, match_status TEXT,
+            details_json TEXT
+        )
+    """)
+    # 程序各版本历史结果（同站同入口可多条，按 version 区分）
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS site_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hostname TEXT NOT NULL,
+            entry_kind TEXT NOT NULL,
+            version TEXT,
+            flow_type TEXT, stop_reason TEXT, primary_method TEXT,
+            route TEXT, measured_at TEXT,
             details_json TEXT
         )
     """)
@@ -214,10 +285,11 @@ def create_db(sites, db_path):
         }
         cur.execute("""
             INSERT INTO sites VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )
         """, (
             s["hostname"], s["url"], json.dumps(s["keywords"], ensure_ascii=False),
+            s.get("version", ""),
             s["login"]["flow_type"], s["login"]["flow_zh"], s["login"]["route"],
             s["login"]["fields"], s["login"]["blockers"], s["login"]["final_url"],
             s["login"]["measured_at"],
@@ -231,25 +303,39 @@ def create_db(sites, db_path):
     cur.execute(
         "CREATE INDEX idx_hostname ON sites(hostname);"
     )
+    if history:
+        cur.executemany(
+            "INSERT INTO site_history (hostname, entry_kind, version, flow_type, "
+            "stop_reason, primary_method, route, measured_at, details_json) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            [(h["hostname"], h["entry_kind"], h["version"], h["flow_type"],
+              h["stop_reason"], h["primary_method"], h["route"],
+              h["measured_at"], h["details_json"])
+             for h in history],
+        )
     conn.commit()
     conn.close()
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--input", default="reports/final/cn60_final_20260813.jsonl")
+    ap.add_argument("--input", action="append", default=[],
+                    help="JSONL 结果文件（可多个：后传入的视为更新版本）")
     ap.add_argument("--manual", default="misc/manual_review.json")
     ap.add_argument("--keywords", default="misc/site_keywords.json")
     ap.add_argument("--output", default="webapp/sites.db")
     args = ap.parse_args()
 
-    records = load_records(args.input)
-    print(f"加载 {len(records)} 条测量记录")
-    sites = attach_manual(build_sites(records), args.manual, args.keywords)
+    inputs = args.input or ["reports/final/cn60_final_20260813.jsonl"]
+    groups = load_records(inputs)
+    print(f"加载 {sum(len(k) for h in groups for k in groups[h].values())} 条测量记录（{len(inputs)} 个文件）")
+    sites = attach_manual(build_sites(groups), args.manual, args.keywords)
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    create_db(sites, args.output)
+    history = build_history(groups, sites)
+    create_db(sites, args.output, history=history)
     verified = sum(1 for s in sites if s["match_status"] == "manual_verified")
-    print(f"已写入 {args.output}: {len(sites)} 站，人工已核验 {verified} 站")
+    print(f"已写入 {args.output}: {len(sites)} 站，人工已核验 {verified} 站，"
+          f"历史版本 {len(history)} 条")
 
 
 if __name__ == "__main__":
