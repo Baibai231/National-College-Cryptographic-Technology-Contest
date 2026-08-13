@@ -2,7 +2,7 @@
 
 用法:
   .venv/bin/python scripts/build_site_database.py \
-      --input reports/final/cn60_final_20260813.jsonl \
+      --input reports/sites/sites_latest.jsonl \
       --manual misc/manual_review.json \
       --output webapp/sites.db
 """
@@ -326,7 +326,7 @@ def main():
     ap.add_argument("--output", default="webapp/sites.db")
     args = ap.parse_args()
 
-    inputs = args.input or ["reports/final/cn60_final_20260813.jsonl"]
+    inputs = args.input or ["reports/sites/sites_latest.jsonl"]
     groups = load_records(inputs)
     print(f"加载 {sum(len(k) for h in groups for k in groups[h].values())} 条测量记录（{len(inputs)} 个文件）")
     sites = attach_manual(build_sites(groups), args.manual, args.keywords)

@@ -2,32 +2,17 @@
 
 ## 目录结构
 
-| 目录 | 用途 |
+| 目录/文件 | 用途 |
 |---|---|
-| `test/` | **测试输出**：批量跑网站的原生结果（JSONL）、自动生成的汇总表和单站档案。任何一次批量测量先放这里。 |
-| `final/` | **真实测量结果**：经过修复验证和人工核对后的最终网站档案。每测一个新网站，把它的单站表格加入 `final/cn60_profiles/`，并刷新 `final/cn60_summary.md` 总表。 |
+| `sites/sites_latest.jsonl` | **最新测量记录**（所有站一次全量测量的结果，网站数据库的数据源） |
+| `sites/sites_summary.md` | 站点汇总表（每站一行：分类、路线、字段、口令位置） |
+| `sites/profiles/` | 每站详细档案（自动观察路线 + 步骤证据） |
+| `archive/`（原 test/） | 历史测量批次（保留备查，不参与网站） |
 
 ## 使用流程
 
-1. 新网站/批量测试 → 结果 JSONL 放 `test/`，用
-   `scripts/generate_cn60_profiles.py` 生成 `test/` 下的汇总表和单站档案。
-2. 核对无误后 → 将记录并入 `final/cn60_final_<日期>.jsonl`（后者覆盖前者），
-   重新生成 `final/cn60_summary.md` 和 `final/cn60_profiles/`。
-3. 人工复核：用普通浏览器对照 `final/cn60_summary.md`，发现不一致的站
-   反馈回来修分类器，再重跑该站更新记录。
+1. **测量**：`scripts/run_cn60_classify.py --input <站点清单> --output reports/sites/sites_latest.jsonl`
+2. **生成档案**：`scripts/generate_cn60_profiles.py --results reports/sites/sites_latest.jsonl --profiles-dir reports/sites/profiles --summary reports/sites/sites_summary.md`
+3. **更新网站数据库**：`scripts/build_site_database.py`（默认读 sites_latest.jsonl + misc/manual_review.json + misc/site_keywords.json）
 
-## 安全边界
-
-- 只观察和分类：不填身份信息、不发送验证码、不扫码、不提交登录/注册、
-  不创建账号。
-- “验证前未观察到口令”不等于“该网站不使用口令”；验证后页面未访问就写未确认。
-- 单次安全路线不声称穷尽所有备选登录方式。
-
-## 当前内容（2026-08-12）
-
-- `final/cn60_final_20260812.jsonl`：**121 个**国内网站（老 60 + 新 60 + 慕课）
-  login+signup 共 244 条记录
-- `final/cn60_summary.md`：121 站总表（分类、路线、字段、验证方式、口令位置、政策摘要、安全到达处）
-- `final/cn60_profiles/`：每站详细档案（自动观察路线 + 步骤证据）
-- `test/cn60new_20260812.jsonl` + `test/cn60new_profiles/` + `test/cn60new_summary.md`：
-  新 60 站（百度/抖音/快手/小红书/携程/阿里云/12306 等）测试输出
+每次新测量都写入 `sites_latest.jsonl`（覆盖），旧批次在 `archive/` 里保留。

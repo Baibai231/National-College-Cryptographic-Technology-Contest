@@ -569,8 +569,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="生成国内网站逐站认证档案")
     parser.add_argument("--results", action="append", required=True,
                         help="JSONL 结果文件，可多个（后者覆盖前者）")
-    parser.add_argument("--profiles-dir", default="reports/cn60_profiles")
-    parser.add_argument("--summary", default="reports/cn60_summary.md")
+    parser.add_argument("--profiles-dir", default="reports/sites/profiles")
+    parser.add_argument("--summary", default="reports/sites/sites_summary.md")
     args = parser.parse_args()
 
     records = load_records([Path(p) for p in args.results])
