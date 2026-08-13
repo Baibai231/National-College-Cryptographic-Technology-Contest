@@ -157,15 +157,48 @@ def stats():
         login_dist = {r[0] or "error": r[1] for r in cur.fetchall()}
         cur.execute("SELECT COUNT(*) FROM sites WHERE manual_verified = 1")
         verified = cur.fetchone()[0]
+        # 程序 vs 人工 粗匹配正确率（已核验站中，程序注册结论与人工描述一致的比例）
+        cur.execute(
+            "SELECT signup_flow, manual_signup, manual_verified FROM sites "
+            "WHERE manual_verified = 1")
+        match = 0
+        for ft, manual, _v in cur.fetchall():
+            if _manual_match(ft, manual or ""):
+                match += 1
+        rate = round(match / verified * 100, 1) if verified else 0.0
     finally:
         conn.close()
     return {
         "total_sites": total,
         "manual_verified": verified,
+        "program_accuracy": {"match": match, "total": verified,
+                             "rate": rate},
         "signup_distribution": signup_dist,
         "login_distribution": login_dist,
         "flow_zh": FLOW_ZH,
     }
+
+
+def _manual_match(flow_type, manual_text):
+    """程序 flow_type 与人工描述文本的粗匹配。
+
+    规则（保守）：只做"是否出现密码框"这一核心结论对比——
+    程序说有密码（direct/verification/identifier）时人工文本应提到
+    密码/口令；程序说无密码（otp/email/sso/unknown）时人工不应明确
+    说"设置密码/密码注册"。无法判断时视为一致（不扣分）。
+    """
+    t = manual_text.lower()
+    has_pwd_word = ("密码" in t or "口令" in t or "password" in t)
+    prog_has_pwd = flow_type in (
+        "direct_password", "verification_then_password",
+        "identifier_then_password", "multiple_methods")
+    if prog_has_pwd:
+        return has_pwd_word
+    if flow_type in ("otp_only", "email_only", "sso_only"):
+        # 程序说无密码，人工明确说注册需设置密码 → 不一致
+        return not ("设置密码" in t or "密码注册" in t or "密码框" in t
+                    or "有密码" in t)
+    return True  # human_blocked / unknown / no_web_signup：不判错
 
 
 class ClassifyRequest(BaseModel):

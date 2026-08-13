@@ -61,7 +61,7 @@
     <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showAdminModal()">待审核管理</button>
   </h3>
   <p class="text-muted small mb-3">
-    共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站
+    共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站，程序正确率 <span id="stat-accuracy">-</span>
   </p>
 
   <div class="search-bar mb-4">
@@ -222,6 +222,9 @@ async function loadStats() {
   const d = await r.json();
   document.getElementById('stat-total').textContent = d.total_sites;
   document.getElementById('stat-verified').textContent = d.manual_verified;
+  if (d.program_accuracy)
+    document.getElementById('stat-accuracy').textContent =
+      d.program_accuracy.rate + '%（' + d.program_accuracy.match + '/' + d.program_accuracy.total + '）';
 }
 async function search(q) {
   const r = await fetch('/api/sites?q=' + encodeURIComponent(q) + '&limit=1000');
