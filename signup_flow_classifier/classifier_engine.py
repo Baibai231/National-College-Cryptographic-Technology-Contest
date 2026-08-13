@@ -756,6 +756,12 @@ class SignupFlowClassifierEngine:
         # 对应 MyAutomaticPolicy L683-699
         if ft == "unknown":
             blank_marker = detect_blank_auth_page(self.driver)
+            # SPA 渲染慢的站（deeix.gaoxiaobei.top 实测）在页面加载中途
+            # 可能短暂空白，被误判为渲染故障。先等页面稳定再重查一次，
+            # 仍空白才确认是故障。
+            if blank_marker and parsed_url.scheme != "file":
+                self._wait_for_page_stable(timeout=4)
+                blank_marker = detect_blank_auth_page(self.driver)
             if blank_marker:
                 record_evidence(
                     result, "rendering_failed:{}".format(blank_marker))
