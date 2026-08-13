@@ -334,7 +334,17 @@ def _get_new_driver():
         options.add_argument("--window-size=1440,900")
         options.add_argument("--disable-gpu")
 
-    if _CHROMEDRIVER_BIN:
+    # 服务器自定义 Chrome 二进制：SITES_CHROME_BIN 指向 chrome 可执行文件
+    # （部署时从 Mac 下载 linux 版 Chrome 传到服务器后设置）
+    chrome_bin = os.environ.get("SITES_CHROME_BIN")
+    if chrome_bin and os.path.isfile(chrome_bin):
+        options.binary_location = chrome_bin
+
+    # 服务器自定义 chromedriver：SITES_CHROMEDRIVER 指向驱动路径
+    chromedriver_bin = os.environ.get("SITES_CHROMEDRIVER")
+    if chromedriver_bin and os.path.isfile(chromedriver_bin):
+        driver = uc.Chrome(options=options, driver_executable_path=chromedriver_bin)
+    elif _CHROMEDRIVER_BIN:
         driver = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN)
     else:
         driver = uc.Chrome(options=options)

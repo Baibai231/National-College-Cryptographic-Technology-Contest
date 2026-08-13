@@ -58,3 +58,4 @@ htmlcov/
 *.BASE.*
 *.LOCAL.*
 *.REMOTE.*
+webapp/browser-linux/
