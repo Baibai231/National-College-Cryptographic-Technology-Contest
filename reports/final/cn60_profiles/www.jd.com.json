@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.291696+00:00",
+  "generated_at": "2026-08-13T09:54:09.844234+00:00",
   "report_title": "www.jd.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -19,6 +19,121 @@
       "category": "待补充",
       "automatic": {
         "login": {
+          "status": "observed",
+          "start_url": "https://www.jd.com/",
+          "final_url": "https://www.jd.com/",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "drawer"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "drawer"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.jd.com/",
+              "ui_type": "drawer",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-13T06:50:29.128147+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
+          },
+          "raw_result": {
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
           "status": "observed",
           "start_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
           "final_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
@@ -57,12 +172,28 @@
           ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
+            "程序置信度为 low"
           ],
           "steps": [
             {
               "step": 1,
+              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
               "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -81,22 +212,22 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-12T08:06:25.816275+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "no_safe_action"
+            "measured_at": "2026-08-13T07:41:06.519442+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "no_safe_action",
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
-            "scope": "login",
+            "scope": "signup",
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "no_safe_action",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -110,137 +241,6 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": []
-            },
-            "security": {
-              "status": "not_observed_by_flow_classifier",
-              "note": "use login_policy_observer for passive transport and input checks"
-            }
-          },
-          "error": null
-        },
-        "signup": {
-          "status": "observed",
-          "start_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
-          "final_url": "https://breg.jd.com/regaccount/?tgid=S-qtktaHl2k&regUrl=https%3A%2F%2Freg.jd.com%2Freg%2Fperson%3FReturnUrl%3Dhttps%253A%252F%252Fwww.jd.com%252F",
-          "observed_route": "手机号 → 短信验证码",
-          "observed_routes": [
-            {
-              "route_id": "automatic_route_1",
-              "step_numbers": [
-                1,
-                2
-              ],
-              "summary": "手机号 → 短信验证码",
-              "fields_observed": [
-                "phone",
-                "code"
-              ],
-              "methods_observed": [
-                "phone",
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
-            }
-          ],
-          "fields_observed": [
-            "phone",
-            "code"
-          ],
-          "methods_observed": [
-            "phone",
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
-          "password_state": "not_observed_before_verification",
-          "ui_types": [
-            "inline_widget"
-          ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
-          "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
-          ],
-          "steps": [
-            {
-              "step": 1,
-              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "register_structural_semantics_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://breg.jd.com/regaccount/?tgid=S-qtktaHl2k&regUrl=https%3A%2F%2Freg.jd.com%2Freg%2Fperson%3FReturnUrl%3Dhttps%253A%252F%252Fwww.jd.com%252F",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [
-                "sms_code"
-              ],
-              "actions": [
-                "none"
-              ],
-              "tabs": [],
-              "note": ""
-            }
-          ],
-          "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-12T08:06:17.532344+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
-          },
-          "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
-            "primary_method": "sms"
-          },
-          "policy": {
-            "schema_version": "1.0",
-            "scope": "signup",
-            "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
-              "evidence_boundary": "pre_verification_only"
-            },
-            "authentication": {
-              "observed_methods": [
-                "sms_or_otp",
-                "phone"
-              ],
-              "password_status": "no_password_in_safely_reachable_flow",
-              "password_observed": false,
-              "verification_observed": true,
-              "phone_observed": true,
-              "identifier_observed": false,
-              "blocking_factors": [
-                "sms_code"
-              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

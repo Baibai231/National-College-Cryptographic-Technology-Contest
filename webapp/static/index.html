@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注册流程测量平台</title>
+<link href="/static/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background: #f5f6fa; }
+  .flow-badge { font-size: 0.75rem; padding: 0.25em 0.6em; border-radius: 10px; white-space: nowrap; }
+  .b-direct_password { background: #d1e7dd; color: #0f5132; }
+  .b-verification_then_password { background: #cff4fc; color: #055160; }
+  .b-otp_only { background: #fff3cd; color: #664d03; }
+  .b-email_only { background: #e2d9f3; color: #4a2a8a; }
+  .b-sso_only { background: #f8d7da; color: #842029; }
+  .b-multiple_methods { background: #d1d5f9; color: #3b2f8a; }
+  .b-human_blocked { background: #fde2e2; color: #842029; }
+  .b-unknown, .b-error { background: #e9ecef; color: #495057; }
+  .b-no_web_signup { background: #e2e3e5; color: #383d41; }
+  .match-badge { font-size: 0.7rem; }
+  .verified { background: #d1e7dd; color: #0f5132; }
+  .pending { background: #fff3cd; color: #664d03; }
+  .card { border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .step-row { border-left: 3px solid #dee2e6; padding-left: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+  .step-tab-btn {
+    padding: 6px 16px; margin-right: 6px; border: 1px solid #dee2e6;
+    border-radius: 6px; background: #fff; color: #495057; cursor: pointer; font-size: 0.9rem;
+  }
+  .step-tab-btn.active { background: #0d6efd; color: #fff; border-color: #0d6efd; }
+  .step-tab-btn:not(.active):hover { background: #e9ecef; }
+  .my-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; z-index: 1050;
+  }
+  .my-modal-box {
+    background: #fff; border-radius: 12px; width: 90%; max-width: 720px;
+    max-height: 85vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  }
+  .my-modal-lg { max-width: 900px; }
+  .my-modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px; border-bottom: 1px solid #dee2e6;
+  }
+  .my-modal-body { padding: 16px 18px; overflow-y: auto; }
+  .my-modal-foot {
+    padding: 12px 18px; border-top: 1px solid #dee2e6; text-align: right;
+  }
+  .my-modal-close {
+    border: none; background: none; font-size: 22px; line-height: 1;
+    cursor: pointer; color: #6c757d;
+  }
+  .search-bar { max-width: 720px; }
+  .site-title { font-size: 0.95rem; }
+  .route-text { font-size: 0.8rem; color: #6c757d; }
+</style>
+</head>
+<body>
+<div class="container py-4">
+  <h3 class="mb-1">注册流程测量平台</h3>
+  <p class="text-muted small mb-3">
+    站点数据库：程序自动测量结果 + 组员人工复核对照。共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站
+  </p>
+
+  <div class="search-bar mb-4">
+    <div class="input-group">
+      <input id="search-input" class="form-control" placeholder="搜索站点（如 知乎、慕课、baidu…）">
+      <button id="search-btn" class="btn btn-primary">搜索</button>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong>输入网站主页，现场分类</strong>
+    </div>
+    <div class="input-group">
+      <input id="classify-url" class="form-control" placeholder="https://example.com">
+      <select id="classify-kind" class="form-select" style="max-width:130px">
+        <option value="signup">注册</option>
+        <option value="login">登录</option>
+      </select>
+      <button id="classify-btn" class="btn btn-success">开始分类</button>
+    </div>
+    <div id="classify-result" class="mt-3"></div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <strong>站点列表（<span id="list-count">-</span>）</strong>
+    <div class="btn-group btn-group-sm" role="group">
+      <button class="btn btn-outline-secondary filter-btn active" data-f="all">全部</button>
+      <button class="btn btn-outline-secondary filter-btn" data-f="verified">已核验</button>
+      <button class="btn btn-outline-secondary filter-btn" data-f="pending">待核验</button>
+    </div>
+  </div>
+  <div id="site-list" class="row g-3"></div>
+</div>
+
+<div id="detailModal" class="my-modal" style="display:none">
+  <div class="my-modal-box my-modal-lg">
+    <div class="my-modal-head">
+      <b id="modal-title"></b>
+      <button type="button" class="my-modal-close" onclick="hideDetail()">×</button>
+    </div>
+    <div class="my-modal-body" id="modal-body"></div>
+    <div class="my-modal-foot">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="hideDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="reviewModal" class="my-modal" style="display:none">
+  <div class="my-modal-box">
+    <div class="my-modal-head">
+      <b>提交人工观察</b>
+      <button type="button" class="my-modal-close" onclick="hideReview()">×</button>
+    </div>
+    <div class="my-modal-body">
+      <div class="mb-2"><b id="review-host"></b></div>
+      <div class="mb-2">
+        <label class="form-label">登录方式（人工看到的）</label>
+        <textarea id="review-login" class="form-control" rows="2" placeholder="如：手机号+验证码，可切密码登录"></textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">注册方式（人工看到的）</label>
+        <textarea id="review-signup" class="form-control" rows="2" placeholder="如：手机号+验证码注册，无密码"></textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">备注（可选）</label>
+        <input id="review-note" class="form-control" placeholder="如：注册按钮藏在登录弹窗里">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">你的名字</label>
+        <input id="review-submitter" class="form-control" placeholder="姓名或昵称">
+      </div>
+      <div class="text-muted small">提交后进入待审核列表，管理员核验后合并进正式数据。</div>
+    </div>
+    <div class="my-modal-foot">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="hideReview()">取消</button>
+      <button type="button" class="btn btn-primary btn-sm" id="review-submit-btn">提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FLOW_ZH = {
+  direct_password: "直接口令", identifier_then_password: "先标识后口令",
+  verification_then_password: "先验证后口令", otp_only: "仅一次性验证码",
+  email_only: "仅邮箱验证码", multiple_methods: "多方式并存",
+  sso_only: "仅第三方登录", human_blocked: "人工阻断",
+  no_web_signup: "无网页注册", unknown: "未确认", error: "异常"
+};
+let allSites = [];
+let currentFilter = 'all';
+
+function badge(flow) {
+  return `<span class="flow-badge b-${flow || 'unknown'}">${FLOW_ZH[flow] || '未确认'}</span>`;
+}
+function matchBadge(status) {
+  return status === "manual_verified"
+    ? '<span class="match-badge badge verified">已人工核验</span>'
+    : '<span class="match-badge badge pending">待人工复核</span>';
+}
+function siteCard(s) {
+  const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
+  return `
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <a href="#" class="text-decoration-none fw-bold site-link site-title" data-host="${s.hostname}">${s.hostname}</a>
+        ${matchBadge(s.match_status)}
+      </div>
+      <div class="small text-muted">${kw}</div>
+      <div class="mt-2 small">
+        <div>登录 ${badge(s.login.flow_type)} <span class="route-text">${s.login.route || '—'}</span></div>
+        <div class="mt-1">注册 ${badge(s.signup.flow_type)} <span class="route-text">${s.signup.route || '—'}</span></div>
+      </div>
+      <div class="mt-2">
+        <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${s.hostname}">详情</button>
+        <button class="btn btn-sm btn-outline-primary review-btn" data-host="${s.hostname}">提交人工观察</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderSites() {
+  let list = allSites;
+  if (currentFilter === 'verified') list = allSites.filter(s => s.match_status === 'manual_verified');
+  if (currentFilter === 'pending') list = allSites.filter(s => s.match_status !== 'manual_verified');
+  document.getElementById('list-count').textContent = list.length;
+  const el = document.getElementById('site-list');
+  el.innerHTML = list.length
+    ? list.map(siteCard).join('')
+    : '<div class="text-muted">无匹配站点</div>';
+}
+async function loadStats() {
+  const r = await fetch('/api/stats');
+  const d = await r.json();
+  document.getElementById('stat-total').textContent = d.total_sites;
+  document.getElementById('stat-verified').textContent = d.manual_verified;
+}
+async function search(q) {
+  const r = await fetch('/api/sites?q=' + encodeURIComponent(q) + '&limit=1000');
+  const d = await r.json();
+  allSites = d.sites;
+  renderSites();
+}
+document.getElementById('search-btn').addEventListener('click', () =>
+  search(document.getElementById('search-input').value));
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') search(e.target.value);
+});
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.f;
+    renderSites();
+  });
+});
+
+function showDetailModal() { document.getElementById('detailModal').style.display = 'flex'; }
+function hideDetail() { document.getElementById('detailModal').style.display = 'none'; }
+function showReviewModal() { document.getElementById('reviewModal').style.display = 'flex'; }
+function hideReview() { document.getElementById('reviewModal').style.display = 'none'; }
+const BLOCKER_ZH = {
+  sms_code: "短信验证码", email_code: "邮箱验证码",
+  verification_code: "一次性验证码", scan: "扫码",
+  captcha: "图片/人机验证", slide: "滑块验证",
+  app_confirm: "App 确认", tos: "用户协议确认"
+};
+const STATUS_ZH = {
+  measured: "测量完成", blocked_or_partial: "测量被验证码/扫码中断",
+  unknown: "未测出结果", not_reachable: "无法到达",
+  classified: "仅完成分类", no_admissible: "无可接受口令"
+};
+const PWD_STATUS_ZH = {
+  not_determined: "密码框情况未确认",
+  password_observed: "有密码框",
+  no_password_in_safely_reachable_flow: "没看到密码框（验证码之后可能有，未越过验证）"
+};
+function policyText(policy) {
+  if (!policy || !Object.keys(policy).length) return '未测量';
+  const auth = policy.authentication || {};
+  const parts = [];
+  if (auth.password_observed) parts.push('有密码框');
+  else if (auth.password_status && PWD_STATUS_ZH[auth.password_status])
+    parts.push('密码框：' + PWD_STATUS_ZH[auth.password_status]);
+  if (auth.verification_observed) parts.push('存在验证环节');
+  if (auth.blocking_factors && auth.blocking_factors.length)
+    parts.push('被' + auth.blocking_factors.map(b => BLOCKER_ZH[b] || b).join('、') + '拦住');
+  const meas = policy.measurement || {};
+  if (meas.status) parts.push('测量情况：' + (STATUS_ZH[meas.status] || meas.status));
+  return parts.join('；') || '未测量';
+}
+const ACTION_ZH = {
+  entry_click: "点击了登录/注册入口", tab_click: "切换了页签", next: "点击了下一步",
+  none: "", auth_mode_click: "切换了登录方式", hover_click: "展开了菜单",
+  signup_mode_reveal: "展开了其他方式", agree_click: "点击同意协议", send_code: "出现发送验证码",
+  entry_retry: "重试点击入口", entry_href_nav: "跳转到入口链接", hover_clicked_and_changed: "悬停展开菜单"
+};
+const NOTE_ZH = {
+  no_sms_tab: "页面没有找到短信登录入口，程序在此停止",
+  no_password_tab: "页面没有找到密码登录入口，程序在此停止",
+  no_register_tab: "页面没有找到注册入口，程序在此停止",
+  no_entry_button: "页面没有找到登录/注册按钮，程序在此停止",
+  entry_clicked_no_change: "点击入口后页面没有变化",
+  no_signup_entry: "没有发现注册入口",
+  human_blocked: "遇到人工验证，程序在此停止",
+  verification_required: "需要验证码才能继续，程序在此停止",
+  no_safe_action: "没有可安全执行的操作",
+  unrecognized_page: "页面无法识别，程序在此停止",
+  no_safe_button: "没有可安全点击的按钮"
+};
+function stepsHtml(steps) {
+  if (!steps || !steps.length) return '<div class="text-muted small">没有记录</div>';
+  return steps.map((st, i) => {
+    const parts = [];
+    if (st.fields && st.fields !== '—') parts.push('看到【' + st.fields + '】输入框');
+    if (st.blockers && st.blockers !== '—') parts.push('遇到【' + st.blockers + '】验证/拦截');
+    const acts = (st.actions || [])
+      .map(a => ACTION_ZH.hasOwnProperty(a) ? ACTION_ZH[a] : '')
+      .filter(Boolean);
+    if (acts.length) parts.push('程序' + acts.join('、'));
+    const reason = NOTE_ZH[st.note];
+    if (reason && !parts.some(p => p.includes('停止'))) parts.push(reason);
+    if (!parts.length) parts.push('页面刚打开，还没有出现表单');
+    const urlShort = st.url ? st.url.replace(/^https?:\/\//, '').slice(0, 60) : '';
+    return `
+      <div class="step-row">
+        <b>第 ${i + 1} 步：</b>${parts.join('；')}
+        ${urlShort ? `<div class="text-muted mt-1" style="font-size:0.75rem">所在页面：${urlShort}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+function switchStepTab(show) {
+  document.querySelectorAll('.step-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.pane === show));
+  document.getElementById('t-login').style.display = show === 'login' ? 'block' : 'none';
+  document.getElementById('t-signup').style.display = show === 'signup' ? 'block' : 'none';
+}
+async function showDetail(host) {
+  const r = await fetch('/api/sites/' + encodeURIComponent(host));
+  if (!r.ok) { alert('未找到站点'); return; }
+  const s = await r.json();
+  document.getElementById('modal-title').innerHTML =
+    `${s.hostname} ${matchBadge(s.match_status)}`;
+  document.getElementById('modal-body').innerHTML = `
+    <table class="table table-sm table-bordered align-middle">
+      <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>${badge(s.login.flow_type)}</td><td>${badge(s.signup.flow_type)}</td></tr>
+        <tr><td>路线</td><td>${s.login.route}</td><td>${s.signup.route}</td></tr>
+        <tr><td>字段</td><td>${s.login.fields}</td><td>${s.signup.fields}</td></tr>
+        <tr><td>阻断</td><td>${s.login.blockers}</td><td>${s.signup.blockers}</td></tr>
+        <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
+      </tbody>
+    </table>
+    <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
+      <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
+      <div class="mt-1">登录：${s.manual.login || '—'}</div>
+      <div>注册：${s.manual.signup || '—'}</div>
+      ${s.manual.note ? `<div class="text-muted small">备注：${s.manual.note}</div>` : ''}
+    </div>
+    <div class="step-tabs mt-3">
+      <button class="step-tab-btn active" data-pane="login" onclick="switchStepTab('login')">登录步骤</button>
+      <button class="step-tab-btn" data-pane="signup" onclick="switchStepTab('signup')">注册步骤</button>
+    </div>
+    <div id="t-login" style="margin-top:10px">${stepsHtml(s.login.steps)}</div>
+    <div id="t-signup" style="margin-top:10px; display:none">${stepsHtml(s.signup.steps)}</div>`;
+  showDetailModal();
+}
+document.addEventListener('click', e => {
+  const link = e.target.closest('.site-link, .detail-btn');
+  if (link) { e.preventDefault(); showDetail(link.dataset.host); }
+});
+
+// 提交人工观察
+let reviewHost = '';
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.review-btn');
+  if (btn) {
+    reviewHost = btn.dataset.host;
+    document.getElementById('review-host').textContent = reviewHost;
+    document.getElementById('review-login').value = '';
+    document.getElementById('review-signup').value = '';
+    document.getElementById('review-note').value = '';
+    document.getElementById('review-submitter').value = '';
+    showReviewModal();
+  }
+});
+document.getElementById('review-submit-btn').addEventListener('click', async () => {
+  const payload = {
+    hostname: reviewHost,
+    login: document.getElementById('review-login').value,
+    signup: document.getElementById('review-signup').value,
+    note: document.getElementById('review-note').value,
+    submitter: document.getElementById('review-submitter').value
+  };
+  if (!payload.login && !payload.signup) { alert('请至少填写登录或注册观察'); return; }
+  const r = await fetch('/api/reviews', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  alert(d.message || '已提交');
+  hideReview();
+});
+
+// 现场分类
+document.getElementById('classify-btn').addEventListener('click', async () => {
+  const url = document.getElementById('classify-url').value.trim();
+  const kind = document.getElementById('classify-kind').value;
+  if (!url) { alert('请输入网站 URL'); return; }
+  const btn = document.getElementById('classify-btn');
+  btn.disabled = true;
+  btn.textContent = '分类中（约 1-3 分钟）…';
+  const box = document.getElementById('classify-result');
+  box.innerHTML = '<div class="spinner-border spinner-border-sm"></div> 正在访问并分类，请稍候…';
+  try {
+    const r = await fetch('/api/classify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, entry_kind: kind })
+    });
+    const d = await r.json();
+    if (!r.ok) { box.innerHTML = `<div class="alert alert-danger py-2">${d.detail || '分类失败'}</div>`; return; }
+    const ev = (d.evidence || []).slice(0, 5).map(e => `<div class="small text-muted">${e}</div>`).join('');
+    box.innerHTML = `
+      <div class="alert alert-info py-2 mb-2">
+        <b>${d.url}</b>（${d.entry_kind === 'signup' ? '注册' : '登录'}）
+        → ${badge(d.flow_type)} 置信度 ${d.confidence}
+        <div class="small mt-1">停止原因：${d.stop_reason} | 主方式：${d.primary_method}</div>
+        <div class="small text-muted">最终页：${d.final_url}</div>
+      </div>
+      <div class="small text-muted">${ev}</div>`;
+  } catch (err) {
+    box.innerHTML = `<div class="alert alert-danger py-2">请求失败: ${err}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '开始分类';
+  }
+});
+
+loadStats();
+search('');
+</script>
+</body>
+</html>

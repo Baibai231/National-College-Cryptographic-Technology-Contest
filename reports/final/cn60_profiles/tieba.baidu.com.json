@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.270951+00:00",
+  "generated_at": "2026-08-13T09:54:09.816091+00:00",
   "report_title": "tieba.baidu.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -76,7 +76,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:31:23.441142+00:00",
+            "measured_at": "2026-08-13T06:59:30.474765+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -162,6 +162,7 @@
                 "scan"
               ],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
@@ -172,7 +173,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:31:14.594807+00:00",
+            "measured_at": "2026-08-13T06:59:24.559993+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

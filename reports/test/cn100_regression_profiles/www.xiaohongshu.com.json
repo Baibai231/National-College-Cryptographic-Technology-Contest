@@ -1,0 +1,268 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T03:39:32.341675+00:00",
+  "report_title": "www.xiaohongshu.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn100_regression_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.xiaohongshu.com",
+      "name": "www.xiaohongshu.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.xiaohongshu.com/explore",
+          "final_url": "https://www.xiaohongshu.com/explore",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms",
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.xiaohongshu.com/explore",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-13T03:25:26.524735+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "verification_required"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "verification_required",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.xiaohongshu.com/explore",
+          "final_url": "https://www.xiaohongshu.com/explore",
+          "observed_route": "手机号 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms",
+            "third_party",
+            "wechat"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.xiaohongshu.com/explore",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-13T03:25:16.033010+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "verification_required"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "verification_required",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.293575+00:00",
+  "generated_at": "2026-08-13T09:54:09.846899+00:00",
   "report_title": "www.kuaishou.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -32,9 +32,7 @@
               "summary": "短信验证码",
               "fields_observed": [],
               "methods_observed": [
-                "sms",
-                "third_party",
-                "wechat"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -48,9 +46,7 @@
           ],
           "fields_observed": [],
           "methods_observed": [
-            "sms",
-            "third_party",
-            "wechat"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -60,53 +56,53 @@
             "modal"
           ],
           "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
-          "limitations": [],
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
               "url": "https://www.kuaishou.com/new-reco",
               "ui_type": "modal",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
                 "sms_tab"
               ],
-              "note": ""
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T09:31:09.869485+00:00",
-            "raw_flow_type": "sso_only",
-            "raw_stop_reason": "external_idp_detected"
+            "confidence": "low",
+            "measured_at": "2026-08-13T07:10:04.842506+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
-            "flow_type": "sso_only",
-            "stop_reason": "external_idp_detected",
-            "primary_method": "sso"
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "classified",
-              "confidence": "high",
-              "stop_reason": "external_idp_detected",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "sms_or_otp",
-                "third_party"
+                "sms_or_otp"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
@@ -134,9 +130,7 @@
               "summary": "短信验证码",
               "fields_observed": [],
               "methods_observed": [
-                "sms",
-                "third_party",
-                "wechat"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -150,9 +144,7 @@
           ],
           "fields_observed": [],
           "methods_observed": [
-            "sms",
-            "third_party",
-            "wechat"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -162,53 +154,53 @@
             "modal"
           ],
           "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
-          "limitations": [],
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
               "url": "https://www.kuaishou.com/new-reco",
               "ui_type": "modal",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
                 "sms_tab"
               ],
-              "note": ""
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T09:30:59.011756+00:00",
-            "raw_flow_type": "sso_only",
-            "raw_stop_reason": "external_idp_detected"
+            "confidence": "low",
+            "measured_at": "2026-08-13T07:10:04.045960+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
-            "flow_type": "sso_only",
-            "stop_reason": "external_idp_detected",
-            "primary_method": "sso"
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "classified",
-              "confidence": "high",
-              "stop_reason": "external_idp_detected",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "sms_or_otp",
-                "third_party"
+                "sms_or_otp"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,

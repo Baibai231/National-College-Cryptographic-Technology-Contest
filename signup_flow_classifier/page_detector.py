@@ -40,9 +40,14 @@ _SSO_PROVIDERS = {
     "google": ["google", "accounts.google.com", "servicelogin"],
     "apple": ["apple", "appleid.apple.com"],
     "wechat": ["微信", "wechat", "open.weixin.qq.com"],
-    "qq": ["qq登录", "使用qq", "graph.qq.com"],
+    "qq": ["qq登录", "使用qq", "graph.qq.com", "qq"],
     "weibo": ["微博", "weibo"],
     "github": ["github.com/login/oauth"],  # 只认外部 OAuth 路径，站内 "github" 字样不算
+    "gitee": ["gitee", "使用gitee登录"],
+    "alipay": ["支付宝", "alipay"],
+    "taobao": ["淘宝", "taobao"],
+    "xiaomi": ["小米", "xiaomi"],
+    "huawei": ["华为", "huawei"],
 }
 _SSO_ACTION_HINTS = [
     "sign in", "log in", "login", "continue with", "sign up with",
@@ -60,9 +65,10 @@ _BLOCKER_HINTS = {
         "no soy un robot", "人間であることを確認", "로봇이 아닙니다", "я не робот",
     ],
     "slide": ["滑块", "slide", "拖动", "拖动滑块"],
-    # scan 只用"认证语境"短语，避免正文文章里的"扫码直达"等误判（力扣首页实测教训）
-    "scan": ["扫码登录", "扫一扫登录", "微信扫一扫", "扫码方式", "扫码下载", "扫二维码",
-             "二维码登录", "qrcode"],
+    # scan 只用"认证语境"短语，避免正文文章里的"扫码直达"等误判（力扣首页实测教训）。
+    # 注意排除"扫码下载"：那是 App 下载引导，不是登录/注册认证（酷安/得物首页实测）。
+    "scan": ["扫码登录", "扫一扫登录", "微信扫一扫", "扫码方式", "扫二维码",
+             "二维码登录", "qrcode", "扫码注册"],
     "app_confirm": ["app 确认", "手机 app", "在app中", "扫一扫确认"],
 }
 
@@ -664,8 +670,9 @@ _TAB_KINDS = {
 def detect_tabs(driver: WebDriver) -> List[str]:
     """检测表单内的 tab 切换选项（如"密码登录/短信登录"）。
 
-    用单条 JS 扫描可见元素的**精确文本**匹配（避免 Python 逐个遍历）。
-    返回可用 tab 种类列表（password_tab/password_signup_tab/sms_tab/email_tab/register_tab）。
+    用单条 JS 扫描可见元素：先精确文本匹配，再对短文本（≤12 字）做
+    分词匹配（"短信登录 帐号登录"这种一个元素含多个 tab 名的站，
+    zol 实测）。返回 tab 种类列表。
     """
     import json as _json
     try:
@@ -673,19 +680,25 @@ def detect_tabs(driver: WebDriver) -> List[str]:
         found = driver.execute_script(
             "const kinds = " + payload + ";" +
             "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');"
-            "const roots=[document], els=[];"
+            "const roots=[document], els=[], shortTexts=[];"
             "for(let i=0;i<roots.length&&i<100;i++){"
             " for(const e of roots[i].querySelectorAll('*')) if(e.shadowRoot) roots.push(e.shadowRoot);"
             " for(const e of roots[i].querySelectorAll("
             "  \"div, span, li, a, button, [role='tab'], [class*='tab'], [class*='Tab']\")) {"
             "  const r=e.getBoundingClientRect(),s=getComputedStyle(e);"
-            "  if(r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden')"
-            "    els.push(norm((e.textContent||'').trim()));"
+            "  if(r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'){"
+            "    const t=norm((e.textContent||'').trim());"
+            "    els.push(t);"
+            "    if(t.length<=12) shortTexts.push(t);"
+            "  }"
             " }"
             "}"
             "const out = [];"
             "for (const kind in kinds) {"
-            "  if (kinds[kind].some(h => els.includes(norm(h)))) out.push(kind);"
+            "  const hs = kinds[kind];"
+            "  if (hs.some(h => els.includes(norm(h)))) { out.push(kind); continue; }"
+            "  // 分词匹配：一个元素含多个 tab 名（zol 短信登录+帐号登录合并文本实测）"
+            "  if (shortTexts.some(t => hs.some(h => t.includes(norm(h))))) out.push(kind);"
             "}"
             "return out;"
         )
@@ -763,7 +776,13 @@ for(const root of roots){
   if(visible(el)){hasDialog=true;authTexts.push(clean(el.innerText||el.textContent||''));break;}
  for(const el of root.querySelectorAll("[class*='drawer'],[class*='Drawer'],[class*='slide-over']"))
   if(visible(el)){hasDrawer=true;break;}
-  for(const el of root.querySelectorAll("button,a,input,[role='button'],[role='link'],[role='tab'],select,textarea,[class*='tab'],[class*='Tab'],div,span,li")){
+ // 认证上下文：有弹窗/抽屉、有输入字段、或 URL 在认证路径上。
+ // 首页普通内容里的"关注微博/微信"分享链接（外部 href）不是第三方登录
+ // （东方财富首页实测 sso 误判）；只有认证界面里出现才算。
+ const authUrlPath=/\/(login|signin|sign-in|register|signup|passport|oauth|auth|account)(\/|$)/i.test(location.pathname);
+ const inAuthContext=hasDialog||hasDrawer||presetFields.length>0||authUrlPath
+   || has(clean(document.title),['登录','登陆','注册','sign in','log in','sign up','register']);
+ for(const el of root.querySelectorAll("button,a,input,[role='button'],[role='link'],[role='tab'],select,textarea,[class*='tab'],[class*='Tab'],div,span,li")){
   if(!visible(el))continue;
   const label=clean(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'');
   const href=clean(el.getAttribute('href'));
@@ -774,18 +793,26 @@ for(const root of roots){
    add(blockers,presetFields.includes('phone')||label.includes('短信')||label.includes('sms')
      ?'sms_code':presetFields.includes('email')?'email_code':'verification_code');
   }
-  if(has(label,cfg.submit))add(actions,'submit');
-  if(cfg.next.map(clean).includes(label))add(actions,'next');
-  for(const [kind,hints] of Object.entries(cfg.tabs))
-    if(hints.map(clean).includes(label))add(tabs,kind);
-  if(has(semantic,cfg.sso_actions)){
-   let external=!href;
-   try{if(href){const target=new URL(href,location.href);external=!target.hostname||target.hostname!==location.hostname;}}
-   catch(e){}
-   if(external)for(const [provider,hints] of Object.entries(cfg.sso_providers)){
-    if(has(semantic,hints)){add(methods,'sso');add(methods,provider);add(actions,'external_sso');}
+   if(has(label,cfg.submit))add(actions,'submit');
+   if(cfg.next.map(clean).includes(label))add(actions,'next');
+   for(const [kind,hints] of Object.entries(cfg.tabs))
+     if(hints.map(clean).includes(label))add(tabs,kind);
+   // sso 只认真正的可点击元素：有外部 href 的链接，或明确 role=button/tab
+   // 的控件。纯展示性 div/span（无 href 无 onclick，如"下载和关注"区的
+   // 微信/微博社交关注二维码）不能算第三方登录（美团首页实测误判）。
+   // 且必须在认证上下文中（弹窗/字段/认证 URL/认证标题）——首页底部的
+   // "关注微博/微信"分享链接不算第三方登录（东方财富首页实测误判）。
+   const isRealClickable = el.tagName==='A' || el.tagName==='BUTTON'
+     || ['button','link','tab'].includes(clean(el.getAttribute('role')))
+     || el.hasAttribute('onclick') || el.hasAttribute('tabindex');
+   if(isRealClickable&&inAuthContext&&has(semantic,cfg.sso_actions)){
+    let external=!href;
+    try{if(href){const target=new URL(href,location.href);external=!target.hostname||target.hostname!==location.hostname;}}
+    catch(e){}
+    if(external)for(const [provider,hints] of Object.entries(cfg.sso_providers)){
+     if(has(semantic,hints)){add(methods,'sso');add(methods,provider);add(actions,'external_sso');}
+    }
    }
-  }
  }
  for(const box of root.querySelectorAll("input[type='checkbox']")){
   if(!visible(box)||box.checked)continue;

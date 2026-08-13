@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.291417+00:00",
+  "generated_at": "2026-08-13T09:54:09.843946+00:00",
   "report_title": "www.ixigua.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-12T09:33:42.668908+00:00",
+            "measured_at": "2026-08-13T07:11:54.263531+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-12T09:33:38.976960+00:00",
+            "measured_at": "2026-08-13T07:11:39.967543+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

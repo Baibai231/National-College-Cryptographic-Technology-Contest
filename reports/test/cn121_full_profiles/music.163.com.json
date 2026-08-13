@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T05:48:43.833222+00:00",
+  "report_title": "music.163.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn121_full_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "music.163.com",
+      "name": "music.163.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "error",
+          "observed_route": "本次测量异常",
+          "observed_routes": [],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_determined",
+          "ui_types": [],
+          "safe_stop": "错误: TimeoutException:Message: timeout: Timed out receiving message from renderer: 30.000\n  (Session info: chrome=151.0.7922.",
+          "limitations": [
+            "测量异常，证据不完整"
+          ],
+          "steps": [],
+          "raw_result": {
+            "flow_type": null,
+            "stop_reason": null,
+            "error": "TimeoutException:Message: timeout: Timed out receiving message from renderer: 30.000\n  (Session info: chrome=151.0.7922.137)\nStacktrace:\n0   chromedriver                        0x00000001043e8e84 chromedriver + 342797"
+          },
+          "policy": {},
+          "error": "TimeoutException:Message: timeout: Timed out receiving message from renderer: 30.000\n  (Session info: chrome=151.0.7922.137)\nStacktrace:\n0   chromedriver                        0x00000001043e8e84 chromedriver + 342797"
+        },
+        "signup": {
+          "status": "error",
+          "observed_route": "本次测量异常",
+          "observed_routes": [],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_determined",
+          "ui_types": [],
+          "safe_stop": "错误: TimeoutException:Message: timeout: Timed out receiving message from renderer: 30.000\n  (Session info: chrome=151.0.7922.",
+          "limitations": [
+            "测量异常，证据不完整"
+          ],
+          "steps": [],
+          "raw_result": {
+            "flow_type": null,
+            "stop_reason": null,
+            "error": "TimeoutException:Message: timeout: Timed out receiving message from renderer: 30.000\n  (Session info: chrome=151.0.7922.137)\nStacktrace:\n0   chromedriver                        0x0000000102824e84 chromedriver + 342797"
+          },
+          "policy": {},
+          "error": "TimeoutException:Message: timeout: Timed out receiving message from renderer: 30.000\n  (Session info: chrome=151.0.7922.137)\nStacktrace:\n0   chromedriver                        0x0000000102824e84 chromedriver + 342797"
+        }
+      }
+    }
+  ]
+}

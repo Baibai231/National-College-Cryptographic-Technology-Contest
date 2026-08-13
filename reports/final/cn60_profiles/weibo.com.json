@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.271993+00:00",
+  "generated_at": "2026-08-13T09:54:09.817204+00:00",
   "report_title": "weibo.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,51 +20,26 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://weibo.com/newlogin?url=https%3A%2F%2Fweibo.com%2F",
+          "start_url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
           "final_url": "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&disp=popup&url=https%3A%2F%2Fweibo.com%2Fnewlogin%3Ftabtype%3Dweibo%26gid%3D102803%26openLoginLayer%3D0%26url%3Dhttps%3A%2F%2Fweibo.com%2F&from=weibopro",
-          "observed_route": "手机号 → 短信验证码/扫码；备选：邮箱 → 短信验证码/扫码 → 口令",
+          "observed_route": "手机号/邮箱 → 短信验证码/扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                2,
+                3
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号/邮箱 → 短信验证码/扫码 → 口令",
               "fields_observed": [
                 "phone",
+                "email",
+                "password",
                 "code"
               ],
               "methods_observed": [
-                "phone",
-                "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "weibo"
-              ],
-              "verification_observed": [
-                "sms",
-                "qr"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "standalone_page"
-              ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "邮箱 → 短信验证码/扫码 → 口令",
-              "fields_observed": [
-                "email",
-                "password"
-              ],
-              "methods_observed": [
                 "password",
+                "phone",
                 "email",
                 "sms",
                 "qr",
@@ -76,7 +51,7 @@
                 "sms",
                 "qr"
               ],
-              "password_state": "observed_before_verification",
+              "password_state": "observed_after_verification_screen",
               "ui_types": [
                 "standalone_page"
               ],
@@ -103,24 +78,19 @@
             "sms",
             "qr"
           ],
-          "password_state": "multiple_observed_routes",
+          "password_state": "observed_after_verification_screen",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
-          "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
-          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
               "url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "weibo"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -147,13 +117,14 @@
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "auth_mode_click"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "password_tab_clicked_and_changed"
+              "note": "auth_mode_text_clicked_and_changed"
             },
             {
               "step": 3,
@@ -182,7 +153,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:09:15.920462+00:00",
+            "measured_at": "2026-08-13T06:53:38.462280+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -235,7 +206,6 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
               ],
               "summary": "手机号 → 短信验证码/扫码",
@@ -292,10 +262,7 @@
               "url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "weibo"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -331,7 +298,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:09:14.551939+00:00",
+            "measured_at": "2026-08-13T06:53:28.953295+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

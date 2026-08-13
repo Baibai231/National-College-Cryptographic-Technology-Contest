@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.304213+00:00",
+  "generated_at": "2026-08-13T09:54:09.859322+00:00",
   "report_title": "www.xiachufang.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -37,6 +37,7 @@
                 "phone",
                 "sms",
                 "third_party",
+                "qq",
                 "weibo"
               ],
               "verification_observed": [
@@ -56,6 +57,7 @@
             "phone",
             "sms",
             "third_party",
+            "qq",
             "weibo"
           ],
           "verification_observed": [
@@ -92,6 +94,7 @@
               ],
               "methods": [
                 "phone",
+                "qq",
                 "sso",
                 "weibo"
               ],
@@ -109,7 +112,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:45:51.828415+00:00",
+            "measured_at": "2026-08-13T07:26:17.347368+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -170,6 +173,7 @@
                 "phone",
                 "sms",
                 "third_party",
+                "qq",
                 "weibo"
               ],
               "verification_observed": [
@@ -189,6 +193,7 @@
             "phone",
             "sms",
             "third_party",
+            "qq",
             "weibo"
           ],
           "verification_observed": [
@@ -225,6 +230,7 @@
               ],
               "methods": [
                 "phone",
+                "qq",
                 "sso",
                 "weibo"
               ],
@@ -240,7 +246,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:45:34.197080+00:00",
+            "measured_at": "2026-08-13T07:26:16.936560+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -155,3 +155,212 @@ signup 测量直接跳到机构注册页并给出 email+password+code 的误分�
 - 结果：新 60 站 120 条记录（登录 direct_password 24、注册 direct_password 12、
   注册 verification_then_password 1）；music.163.com 偶发渲染超时已单独复测。
 - 合并后 `reports/final/` 共 121 站（老 60 + 新 60 + 慕课）244 条记录。
+
+### 7. 注册识别核心修复（2026-08-12，前 40 站人工复核反馈）
+
+组员人工复核前 40 站后反馈三类问题，全部定位并修复：
+
+1. **登录界面密码框被误当注册证据**（shimo/51cto/百度/B站/caixin/dongchedi
+   等"仅登录"站）：`classify()` 的 signup 流程从不点击登录弹窗里的
+   "立即注册"tab，且密码框出现时不检查是否真正进入注册视图。
+   - 修复：signup 模式检测到 `register_tab` 时优先点击（百度/pan.baidu/
+     贴吧等登录弹窗藏注册按钮的站实测）；
+   - 密码框判断加"注册上下文"守卫：signup 模式必须点过注册入口/注册 tab
+     或 URL 明确是注册页，密码框才算注册密码框；
+   - 最终分类加"仅登录界面"守卫：全程没确认注册上下文时即使有密码框
+     也报 `no_signup_entry`（shimo.im 实测：从误报 direct_password 改为
+     正确 no_signup_entry）。
+   - 修正 `entry_already_clicked` 语义：navigate_to_signup 点击的可能是
+     登录按钮（百度等只有登录的站），不再无条件把 signup_entry_clicked
+     置 True，由 classify 自行确认注册上下文。
+
+2. **登录界面藏注册按钮没找到**（pan.baidu/tieba/10jqka/acfun/cctv/china）：
+   登录弹窗里的"立即注册/注册账号"tab 存在但从没被点击。
+   - 修复同上（register_tab 优先点击）。实测 acfun→direct_password（注册
+     有密码）、10jqka→verification_then_password（先手机验证后密码）、
+     cctv→no_signup_entry（仅登录）均正确。
+
+3. **扫码下载被误当登录/注册**（coolapk/dewu）：scan 词表含"扫码下载"，
+   首页"手机扫码下载App"被当成扫码登录阻断。
+   - 修复：从 scan 词表移除"扫码下载"（下载引导不是认证），保留
+     "扫码登录/扫码注册"等认证语境词。
+
+4. 附：amap/dingtalk 的手机号+验证码方式检测确认正确（fields=phone+code，
+   sms_code 阻断），此前误报为扫码是旧记录，重跑后更新。
+
+验证：10 站回归（36kr/163/sina/bilibili/cnblogs/jianshu/gitee/douban/
+weibo/csdn）分类与修复前一致；回归测试 26/26 通过。
+
+### 8. 注册识别第三轮修复（2026-08-13，81-100 站人工复核 + 前 40 站复核补充）
+
+组员复核 81-100 站 + 前 40 站补充反馈，修复：
+
+1. **社交关注二维码误判第三方登录**（meituan）：sso 检测对纯展示性
+   div/span（无 href 无 onclick，"下载和关注"区的微信/微博二维码）
+   不再判定为第三方登录；只认可点击元素（A/BUTTON/role=button/onclick）。
+   实测 meituan：sso_only → unknown（无登录界面，与人工一致）。
+
+2. **登录页藏注册链接但点击不导航**（people/cctv）：注册 tab 是链接型
+   （<a href="/u/reg">）时，优先直接导航 href（register_href_nav 兜底），
+   不再依赖点击。实测 people：no_signup_entry → direct_password
+   （手机号+验证码+密码注册，人工确认正确）。
+
+3. **纯 div 登录按钮被过滤**（thepaper）：explicit 精确匹配的"登录"文本
+   div（cursor:auto 无 onclick，React 事件绑上层）不再要求 nativeInteractive。
+   实测 thepaper：登录弹窗可识别（手机号+密码+sms_code 阻断）。
+
+4. **第三方提供商词表扩展**：新增 gitee/支付宝/淘宝/小米/华为；
+   QQ 增加裸词匹配。实测 oschina 识别出 gitee 第三方登录。
+
+5. **扫码下载误判**（coolapk/dewu，承接上一轮）：确认从 scan 词表移除
+   "扫码下载"后两站均正确报 unknown（无登录注册表单）。
+
+81-100 站核验结果：meituan/mgtv/miguvideo/nbd/pinduoduo/qunar/taptap/
+thepaper 等"无表单/仅验证码/人机验证"站均如实分类；people/cctv 注册
+识别修复；oschina 补上 gitee 第三方。剩余差异主要是"第三方图标按钮无
+文字"类（部分站第三方只有图标），以及 qyer 等"密码框可见但验证码在
+前置步骤"的保守分类（不填字段的安全边界内）。
+
+回归：10 站无退化；回归测试 26/26 通过。
+
+### 9. 41-80 站复核 + 100 站回归（2026-08-13）
+
+组员复核 41-80 站（全部标注"正确"），程序输出与人工基本吻合。
+针对回归中发现的普世问题修复：
+
+1. **短信 tab 无条件优先点击**（kuaishou）：弹窗默认短信/手机号登录视图时，
+   无论是否有阻断都先点 sms_tab 打开字段（不限于阻断场景）。
+   实测快手：sso_only → otp_only（手机号+验证码，人工确认）。
+
+2. **注册入口点击无变化时不算进入注册上下文**（10jqka）：登录弹窗点
+   "注册"入口 changed=False 时不再置 signup_entry_clicked，否则 register_tab
+   会被跳过。实测同花顺恢复 verification_then_password（先手机验证后密码）。
+
+3. **sso 检测加认证上下文限制**（eastmoney/meituan）：首页无弹窗/字段/
+   认证 URL 时，"关注微博/微信"分享链接（外部 href）不再误判第三方登录。
+   实测东方财富：sso_only → unknown（首页无认证界面）；弹窗内的第三方
+   （oschina gitee 等）照常识别。
+
+4. **机构注册排除扩展**（zol）：主机含 dealer/merchant/business/enterprise
+   的注册页视为机构入驻（zol 的 dealer.zol.com.cn 经销商注册实测），
+   不再冒充普通用户注册。
+
+5. 前 100 站（老60+新60前40）完整回归：200 条记录零失败（含之前偶发
+   超时的 music.163）。分类变化逐条核验：10jqka 修复、eastmoney/meituan
+   sso 误判修复为正向；jianshu/36kr 的 human_blocked 波动为风控随机
+   （简书滑块反爬时有时无），非代码退化。
+
+验证：回归测试 26/26 通过；final 更新至 122 站档案；
+test/ 新增 cn100_regression_20260813.jsonl（100 站回归快照）。
+
+### 10. 101-121 站复核 + tab 分词 + 全量 121 站对比（2026-08-13）
+
+组员复核 101-121 站反馈，修复与验证：
+
+1. **tab 检测与点击分词匹配**（zol 等）：一个元素含多个 tab 名
+   （"短信登录 帐号登录"合并文本）的站，detect_tabs 与 safe_click_tab
+   都支持包含匹配（≤12 字短文本）。
+2. **safe_click_tab 可见性判定改为 getBoundingClientRect**（快手等）：
+   offsetParent 在部分 SPA 为 null 但元素可见可点（快手登录弹窗实测）。
+3. **sms_tab 点击失败时短等重试**：tab 元素刚渲染时 safe_click_tab
+   可能找不到，等一轮观察字段/tab 出现。
+
+121 站程序 vs 人工对比（注册侧，41 个人工复核站）：
+
+- 实质一致 36/41（meituan/nbd/qunar/zhuanzhuan/xinhuanet 无界面、
+  smzdm/taobao/sohu 仅验证码、xiachufang 仅扫码、v2ex 仅第三方、
+  thepaper 仅手机验证码等均一致）。
+- 表达差异 5 站（qyer/sina/pcauto/people/vip）：程序与人工都承认
+  密码框存在，差异在验证码位置的表述粒度；安全边界内（不填手机号）
+  无法进一步区分验证码前置。
+- 无程序把事实搞错的站。
+
+已确认的波动站（风控随机，非代码问题）：kuaishou（登录弹窗时开时
+不开）、jianshu/36kr（滑块反爬时有时无）、music.163（渲染超时偶发）。
+
+已知边界（不跨域安全设计）：y.qq/you.163 注册藏在跨域跳转
+（QQ登录/网易邮箱）里，工具不跟随跨域，如实报阻断/仅验证码。
+
+验证：回归测试 26/26；10 站回归无退化；121 站完整跑通（music.163
+偶发超时除外）。
+
+### 11. 波动站攻坚 + 协议处理 + 空壳注册页回退 + 30 新站 + 4 轮全量回归（2026-08-13）
+
+**波动站攻坚**（各跑 3 次验证）：
+- kuaishou：登录弹窗对自动化风控（3 次全 unknown，new-reco 页面无弹窗）
+- jianshu：稳定（3 次 direct_password）
+- 36kr：弹窗时开时不开（otp_only/unknown 交替）→ 人工修正为 otp_only
+- music.163：渲染超时偶发（human_blocked/error 交替）→ 取 human_blocked
+
+**安全边界站结论**（y.qq/you.163）：注册藏在跨域 OAuth/账号中心（QQ 登录
+授权页、网易邮箱注册）中，工具不跟随跨域 = 安全设计，如实报阻断/仅验证码。
+
+**结构难点站**：
+- mgtv：新增**协议弹窗处理**（安全点击"我同意"进入主界面，普世能力），
+  实测 mgtv 协议点击成功进入主界面（登录入口是 icon-only 后续难点）
+- zol：tab 合并文本分词匹配已实现；点击仍不稳定（单元素含多 tab 名），
+  如实 unknown
+- 协议处理只在页面无认证状态时触发，且要求协议上下文（class/相邻文本），
+  避免误点普通页面文字；回归验证无退化。
+
+**ActionChains 入口点击**（juejin/leetcode 等 React hover 弹窗）：原生
+click 后弹窗不保持，改用真实鼠标事件点击（无退化，稳定站回归正常）。
+
+**空壳注册页回退**（ximalaya/chinaacc）：navigate 到的 signup URL 页面
+无任何认证内容时，回退站首页重新找真实入口。实测喜马拉雅从 unknown
+→ human_blocked（扫码登录弹窗）。
+
+**30 个新中文站**（misc/cn_sites_new30.txt）：360/3dmgame/51/7k7k/
+58pic/cctalk/chinaacc/cyzone/guazi/hujiang/jiguang/mingdao/ximalaya 等，
+60 条记录零失败。自测核验：360/3dmgame/51/7k7k direct_password（有密码
+注册）✓，jiguang email_only ✓，cyzone verification_then_password ✓，
+58pic 有手机号+第三方（sso_only 不完整但方向对），ximalaya/chinaacc
+空壳已修复。
+
+**4 轮全量回归**（120 站，共 4 轮 960 条）：232/240 四轮稳定（97%），
+8 条波动集中在 5 个风控站（36kr/52pojie/dianping/eastmoney/jd/zhipin）。
+多数投票 + 人工修正取最终结果。
+
+验证：回归测试 26/26；final 更新至 152 站档案（153 站点）。
+
+### 12. 注册流程测量平台 Web 前端（2026-08-13）
+
+新增 webapp/ 前端平台，供团队访问已测网站的注册流程：
+
+- **数据层**：`scripts/build_site_database.py` 把 final JSONL + 人工复核
+  （misc/manual_review.json，81 站已录入）合并为 SQLite（152 站）。
+- **后端**：`webapp/app.py`（FastAPI）
+  - GET /api/sites?q= 搜索；GET /api/sites/{host} 详情；
+  - GET /api/stats 统计；POST /api/classify 实时分类（复用测量工具）。
+- **前端**：`webapp/static/index.html`（Bootstrap 单页）
+  - 搜索框 + 站点卡片列表（程序分类 + 人工核验徽标）；
+  - 详情弹窗（登录/注册类型、路线、字段、阻断、步骤证据、人工对照）；
+  - URL 分类输入框（输入网站主页 → 现场分类，安全只读）。
+- **部署**：`webapp/run_server.sh` 一键启动（默认 8000 端口，0.0.0.0
+  监听，服务器部署后组员经 http://IP:8000 访问）。
+- 本地全链路验证通过：页面、搜索、详情、实时分类（知乎→人工阻断）。
+
+### 13. 平台功能升级：关键词搜索 + 人工提交 + 口令政策预留 + 部署方案（2026-08-13）
+
+按用户反馈升级 Web 平台：
+
+1. **中文关键词搜索**（`misc/site_keywords.json`）：120+ 域名 → 中文名/
+   别名映射（慕课→imooc、知乎、京东等），搜索"慕课"能命中 www.imooc.com。
+2. **详情弹窗修复**：补 bootstrap bundle JS，【登录步骤】【注册步骤】tab
+   正常切换显示。
+3. **首页显示全部站点**：limit 50 → 1000，加"全部/已核验/待核验"筛选。
+4. **去 emoji/AI 味**：标题、按钮文案改为朴素表述。
+5. **组员提交人工观察**：
+   - 前端"提交人工观察"按钮（登录/注册/备注/姓名）
+   - POST /api/reviews 写入待审核表；GET /api/reviews/pending 查看；
+     DELETE /api/reviews/{id} 核验后删除
+   - `scripts/merge_reviews.py`：核验后合并进 manual_review.json → 重建
+     数据库 → 重启服务，形成完整协作闭环。
+6. **口令政策预留**：数据库 details_json 存 login_policy/signup_policy，
+   详情页新增"口令政策"行（后续 TestPassword 测量结果直接展示）。
+7. **服务器部署**（`webapp/DEPLOY.md`）：云服务器方案（Ubuntu + Chrome
+   + systemd 自启 + 可选 Nginx）；`SITES_HEADLESS=1` 环境变量启用无头
+   Chrome（服务器无显示器环境）。
+
+验证：搜索（慕课/知乎/京东）、详情（policy）、提交/查看/删除审核、
+首页渲染全部通过；回归测试 26/26。

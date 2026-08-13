@@ -162,14 +162,45 @@ class SignupFlowClassifierEngine:
             self.driver.execute_script("window.scrollTo(0, 0);")
         except Exception:
             pass
+        # 空壳注册页回退：navigate 到的 signup URL 页面无任何认证内容
+        # （喜马拉雅 /signup、中华会计网校 register.html 实测是空壳页），
+        # 回退到站首页重新找真实入口（首页可能有登录弹窗）。
+        if (entry_kind == "signup"
+                and self._url_is_requested_entry(signup_url, "signup")):
+            try:
+                from signup_flow_classifier.page_detector import (
+                    detect_fields_all_frames, detect_tabs_all_frames,
+                    detect_blockers,
+                )
+                shell = not (
+                    detect_fields_all_frames(self.driver)
+                    or detect_tabs_all_frames(self.driver)
+                    or detect_blockers(self.driver)
+                )
+                if shell:
+                    home = "{}://{}/".format(
+                        urlparse(signup_url).scheme,
+                        urlparse(signup_url).netloc,
+                    )
+                    self.driver.get(home)
+                    record_evidence(
+                        result,
+                        "empty_signup_url_fallback_to_home:{}".format(home))
+                    self._wait_for_page_stable(timeout=6)
+                    signup_url = home
+            except Exception:
+                pass
         effective_max_steps = max(1, max_steps)
         # 上游 navigate_to_signup 已点击入口 → 不再重复点击已打开的弹窗，
         # 但保留一次兜底点击机会：SPA 弹窗可能在 classify 前自动关闭
         # （bilibili 实测），此时页面为空壳，需要重新点入口。
+        # 注意：signup_entry_clicked 不在这里置位——navigate 点击的可能是
+        # 登录入口（百度等只有登录按钮的站），登录弹窗里的密码框不是注册
+        # 证据，必须由本流程自己确认注册上下文（注册入口/注册 tab/注册 URL）。
         if entry_already_clicked and entry_kind == "signup":
             entry_clicks_left = 1
             auth_entry_clicked = True
-            signup_entry_clicked = True
+            signup_entry_clicked = False
         else:
             entry_clicks_left = MAX_ENTRY_CLICKS
             auth_entry_clicked = False
@@ -218,11 +249,28 @@ class SignupFlowClassifierEngine:
                     ",".join(state.fields) or "-",
                     ",".join(state.blockers) or "-",
                     ",".join(state.methods) or "-",
-                    ",".join(state.available_actions) or "-",
-                ),
+                    ",".join(state.available_actions) or "-",                ),
             )
 
             signup_entry_failed = False
+
+            # ---- 整页协议弹窗处理 ----
+            # 部分站（芒果TV/咪咕实测）进主界面前必须先点"我同意"协议按钮；
+            # 这是安全导航（不填身份信息、不提交注册），点击后继续流程。
+            # 只在页面无任何认证状态（无字段/无 tab）时处理，避免误点
+            # 注册表单内的协议；不依赖 tos blocker（按钮式协议不被
+            # checkbox 检测识别，mgtv 实测）。
+            if (not state.fields and not state.tabs
+                    and state.ui_type not in {"modal", "drawer"}):
+                agree = self._try_click_agreement()
+                if agree:
+                    record_evidence(result, "step={};agreement={}".format(
+                        step, agree))
+                    state.note = agree
+                    state.actions.append("agree_click")
+                    if self._wait_for_any_auth_signal(
+                            self.driver, timeout=6):
+                        continue
 
             # ---- 计算登录页守卫标记 ----
             login_page_during_signup = (
@@ -256,12 +304,18 @@ class SignupFlowClassifierEngine:
                 record_evidence(result, "step={};entry={}".format(step, entry_outcome.reason))
                 if entry_outcome.clicked:
                     auth_entry_clicked = True
-                    signup_entry_clicked = True
                     signup_reveal_pending = False
                     if self._maybe_switch_to_new_window(self.driver, before_handles):
                         record_evidence(result, "switched_to_new_window")
-                    if (self._wait_for_form_fields(self.driver, timeout=8)
-                            or entry_outcome.changed):
+                    form_fields = self._wait_for_form_fields(
+                        self.driver, timeout=8)
+                    # 只有点击确实改变了页面/出现表单时才算进入注册上下文；
+                    # 点击了但页面没变化（10jqka 登录弹窗"注册"入口点击无效果
+                    # 实测）不能置 signup_entry_clicked，否则 register_tab
+                    # 会被跳过、注册视图永远进不去。
+                    if entry_outcome.changed or form_fields:
+                        signup_entry_clicked = True
+                    if form_fields or entry_outcome.changed:
                         continue
                 else:
                     signup_entry_failed = True
@@ -271,6 +325,66 @@ class SignupFlowClassifierEngine:
             desired_password_tab = (
                 "password_signup_tab" if entry_kind == "signup" else "password_tab"
             )
+            # signup 优先点击"注册"tab：登录弹窗/登录页里常藏
+            # "立即注册/注册账号"（百度/pan.baidu/贴吧/人民网实测），
+            # 不点开就拿不到注册视图，登录密码框会被误当成注册密码框。
+            # 注意：登录页可能默认就有密码框（人民网 sso 登录页实测），
+            # 此时不能因"已有密码框"跳过注册 tab——那密码框是登录的。
+            if (entry_kind == "signup" and tab_clicks_left > 0
+                    and "register_tab" in state.tabs
+                    and not signup_entry_clicked):
+                # 链接型注册 tab 优先直接导航（人民网"立即注册"是
+                # <a href="/u/reg">；点击在页面刚渲染时可能不触发导航）。
+                reg_href = ""
+                try:
+                    from urllib.parse import urljoin
+                    from signup_flow_classifier.navigator import (
+                        _same_site, _is_organizational_signup,
+                    )
+                    reg_href = self.driver.execute_script(
+                        "const t=[...document.querySelectorAll("
+                        "'a,button,[role=tab],[class*=tab]')]"
+                        ".find(e=>/立即注册|免费注册|注册账号|sign up|register/i"
+                        ".test((e.innerText||'').trim())"
+                        "&&(e.getAttribute('href')||e.getAttribute('data-href')||''));"
+                        "return t?(t.getAttribute('href')||t.getAttribute('data-href')||''):'';"
+                    ) or ""
+                    if reg_href:
+                        target_url = urljoin(
+                            self.driver.current_url, reg_href)
+                        if (_same_site(self.driver.current_url, target_url)
+                                and not _is_organizational_signup(target_url)):
+                            self.driver.get(target_url)
+                            record_evidence(
+                                result,
+                                "step={};register_href_nav={}".format(
+                                    step, target_url[:50]))
+                            signup_entry_clicked = True
+                            signup_reveal_pending = False
+                            if self._wait_for_form_fields(
+                                    self.driver, timeout=8):
+                                continue
+                except Exception:
+                    pass
+                tab_outcome = safe_click_tab(self.driver, "register_tab")
+                tab_clicks_left -= 1
+                state.note = tab_outcome.reason
+                state.actions.append(
+                    "tab_click" if tab_outcome.clicked else "none")
+                record_evidence(
+                    result, "step={};register_tab={}".format(
+                        step, tab_outcome.reason))
+                if tab_outcome.clicked:
+                    signup_entry_clicked = True
+                    signup_reveal_pending = False
+                    if (self._wait_for_form_fields(self.driver, timeout=8)
+                            or tab_outcome.changed):
+                        continue
+                    # 点击没变化（页面刚渲染）时再等一轮观察：
+                    # 链接型注册 tab（人民网 /u/reg）点击后可能延迟导航。
+                    if self._wait_for_any_auth_signal(
+                            self.driver, timeout=6):
+                        continue
             if (not login_page_during_signup and not signup_entry_failed
                     and "password" not in state.fields and tab_clicks_left > 0
                     and desired_password_tab in state.tabs):
@@ -287,6 +401,32 @@ class SignupFlowClassifierEngine:
                         continue
                     break  # 点了、没变化、也没密码框 → 停止
 
+            # 短信 tab 优先点击：弹窗默认可能是"短信登录/手机号登录"视图
+            # （快手/酷狗等实测），无字段时点开才能看到手机号+验证码；
+            # 不限于阻断场景，只要 tab 存在且当前无字段就尝试。
+            if (tab_clicks_left > 0 and "sms_tab" in state.tabs
+                    and not state.fields
+                    and "code" not in state.fields):
+                tab_outcome = safe_click_tab(self.driver, "sms_tab")
+                tab_clicks_left -= 1
+                state.note = tab_outcome.reason
+                state.actions.append(
+                    "tab_click" if tab_outcome.clicked else "none")
+                record_evidence(
+                    result, "step={};sms_tab_open={}".format(
+                        step, tab_outcome.reason))
+                if (tab_outcome.clicked
+                        and (self._wait_for_field(
+                                self.driver, "code", timeout=6)
+                             or tab_outcome.changed)):
+                    continue
+                # 点击失败（tab 元素刚渲染，safe_click_tab 找不到）：等一轮
+                # 观察字段/tab 是否出现（快手登录弹窗渲染慢实测）。
+                if (not tab_outcome.clicked
+                        and self._wait_for_any_auth_signal(
+                            self.driver, timeout=5)):
+                    continue
+
             # ---- signup 通过"其他方式"展开后，必须再次确认明确注册入口 ----
             # 若只暴露出登录口令框，禁止把它当成注册口令证据。
             if (entry_kind == "signup" and signup_reveal_pending
@@ -298,8 +438,36 @@ class SignupFlowClassifierEngine:
 
             # ---- 出现口令字段 → 优先分类并停止 ----
             # 注意：放在阻断检查之前。弹窗里的"扫码登录"等只是可选替代入口，
-            # 密码框可见即视为可到达（阻断信息仍保留在 state.blockers 证据里）
-            if "password" in state.fields and not login_page_during_signup:
+            # 密码框可见即视为可到达（阻断信息仍保留在 state.blockers 证据里）。
+            # signup 模式守卫：登录弹窗里的密码框不是注册证据（shimo/百度/
+            # B站等仅有登录界面、注册藏在 tab 里的站实测），必须点过注册
+            # 入口/注册 tab 或 URL 明确是注册页，密码框才算注册密码框。
+            signup_context_confirmed = (
+                entry_kind == "login"
+                or signup_entry_clicked
+                or self._url_is_requested_entry(state.url, "signup")
+            )
+            # signup 且有"注册"tab 但还没点过：弹窗默认可能是登录视图，
+            # 先切到注册 tab 再判断密码框，避免登录密码框冒充注册证据。
+            if (entry_kind == "signup" and not signup_entry_clicked
+                    and "register_tab" in state.tabs
+                    and tab_clicks_left > 0
+                    and "password" in state.fields):
+                tab_outcome = safe_click_tab(self.driver, "register_tab")
+                tab_clicks_left -= 1
+                state.note = tab_outcome.reason
+                state.actions.append(
+                    "tab_click" if tab_outcome.clicked else "none")
+                record_evidence(
+                    result, "step={};register_tab_after_pwd={}".format(
+                        step, tab_outcome.reason))
+                if tab_outcome.clicked:
+                    signup_entry_clicked = True
+                    signup_reveal_pending = False
+                    if self._wait_for_form_fields(self.driver, timeout=6):
+                        continue
+            if ("password" in state.fields and not login_page_during_signup
+                    and signup_context_confirmed):
                 ft, conf, reason = classify(result.states)
                 result.primary_method = primary_method(result.states)
                 return self._done(result, ft, conf, reason)
@@ -572,6 +740,19 @@ class SignupFlowClassifierEngine:
 
         # ---- 4) 最终分类 + 后处理检查 ----
         ft, conf, reason = classify(result.states)
+        # signup 模式"仅登录界面"守卫：全程没点过注册入口/注册 tab、
+        # URL 也不是注册页，但检测到了密码框——这是登录界面（shimo/
+        # 百度等仅登录站的实测），不能把登录密码框当注册证据。
+        if entry_kind == "signup" and not signup_entry_clicked:
+            login_only_url = any(
+                self._url_is_requested_entry(getattr(s, "url", ""), "login")
+                for s in result.states
+            )
+            if (("password" in state.fields or login_only_url)
+                    and ft != "unknown"):
+                return self._done(
+                    result, "unknown", "high",
+                    StopReason.NO_SIGNUP_ENTRY.value)
         # 对应 MyAutomaticPolicy L683-699
         if ft == "unknown":
             blank_marker = detect_blank_auth_page(self.driver)
@@ -670,6 +851,17 @@ class SignupFlowClassifierEngine:
             tracker["since"] = now
             return False
         return now - tracker.get("since", now) >= seconds
+
+    @staticmethod
+    def _wait_for_page_stable(driver: WebDriver, timeout: float = 6.0) -> None:
+        """等待页面 readyState complete 且指纹稳定（替代无条件 sleep）。"""
+        deadline = time.time() + timeout
+        stable = {}
+        while time.time() < deadline:
+            if SignupFlowClassifierEngine._stable_for(
+                    driver, stable, seconds=2.0):
+                return
+            time.sleep(0.4)
 
     @staticmethod
     def _wait_for_any_signal(driver: WebDriver, timeout: float = 15.0) -> bool:
@@ -849,6 +1041,56 @@ class SignupFlowClassifierEngine:
         except Exception:
             pass
         return "//input[@type='password']"
+
+    def _try_click_agreement(self) -> Optional[str]:
+        """安全点击整页协议弹窗的"我同意/同意并继续"按钮。
+
+        只处理站点的整页协议拦截（芒果TV/咪咕实测），不涉及注册表单内
+        的协议勾选。要求按钮处于协议弹窗上下文（class/id 含
+        agreement/protocol/confirm 等，或相邻文本含"协议/隐私"），
+        避免误点普通页面的"同意"文字。返回点击结果原因或 None。
+        """
+        from selenium.webdriver.common.by import By
+        hints = ["我同意", "同意并继续", "同意并进入", "同意并", "接受", "同意"]
+        try:
+            for el in self.driver.find_elements(
+                    By.CSS_SELECTOR, "button, a, span, div"):
+                try:
+                    if not el.is_displayed():
+                        continue
+                    text = (el.text or "").strip()
+                    if not text:
+                        continue
+                    if text.startswith("不同意"):
+                        continue
+                    if not any(text == h or text.startswith(h)
+                               for h in hints if len(h) > 2):
+                        continue
+                    # 协议上下文检查：按钮自身或祖先/相邻含协议语义
+                    try:
+                        context = self.driver.execute_script(
+                            "const el=arguments[0];"
+                            "const p=el.closest('[class*=agreement i],"
+                            "[class*=protocol i],[class*=confirm i],"
+                            "[class*=permission i],[class*=agree i],"
+                            "[class*=popup i],[class*=modal i],dialog,"
+                            "[aria-modal=true]');"
+                            "const near=(p||el.parentElement||document.body)"
+                            ".innerText||'';"
+                            "return /协议|隐私|条款|同意|服务协议|agree|"
+                            "privacy|term/i.test(near.slice(0,200));",
+                            el,
+                        )
+                    except Exception:
+                        context = True
+                    if context:
+                        el.click()
+                        return f"agreed_{text[:10]}"
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return None
 
     def _done(self, result, flow_type, confidence, stop_reason, error=None):
         """填充分类结论并返回 dict。"""

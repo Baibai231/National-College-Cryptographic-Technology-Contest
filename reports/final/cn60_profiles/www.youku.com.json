@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.305958+00:00",
+  "generated_at": "2026-08-13T09:54:09.861232+00:00",
   "report_title": "www.youku.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.youku.com/ku/webhome",
           "final_url": "https://www.youku.com/ku/webhome",
-          "observed_route": "短信验证码/扫码；备选：邮箱 → 短信验证码/扫码 → 口令",
+          "observed_route": "短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -36,6 +36,7 @@
                 "qr",
                 "third_party",
                 "wechat",
+                "qq",
                 "weibo"
               ],
               "verification_observed": [
@@ -43,63 +44,26 @@
                 "qr"
               ],
               "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "drawer"
-              ],
+              "ui_types": [],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                2
-              ],
-              "summary": "邮箱 → 短信验证码/扫码 → 口令",
-              "fields_observed": [
-                "email",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "email",
-                "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "weibo"
-              ],
-              "verification_observed": [
-                "sms",
-                "qr"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "drawer"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
-          "fields_observed": [
-            "email",
-            "password"
-          ],
+          "fields_observed": [],
           "methods_observed": [
-            "password",
-            "email",
             "sms",
             "qr",
             "third_party",
             "wechat",
+            "qq",
             "weibo"
           ],
           "verification_observed": [
             "sms",
             "qr"
           ],
-          "password_state": "multiple_observed_routes",
-          "ui_types": [
-            "drawer"
-          ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "password_state": "not_observed_before_verification",
+          "ui_types": [],
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -107,10 +71,13 @@
             {
               "step": 1,
               "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "drawer",
+              "ui_type": "unknown",
               "fields": [],
               "methods": [
+                "alipay",
+                "qq",
                 "sso",
+                "taobao",
                 "wechat",
                 "weibo"
               ],
@@ -119,25 +86,25 @@
                 "tos"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "password_tab_clicked_in_iframe_and_changed"
+              "note": "no_sms_tab"
             },
             {
               "step": 2,
               "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "drawer",
-              "fields": [
-                "email",
-                "password"
-              ],
+              "ui_type": "unknown",
+              "fields": [],
               "methods": [
-                "email",
+                "alipay",
+                "qq",
                 "sso",
+                "taobao",
                 "wechat",
                 "weibo"
               ],
@@ -155,14 +122,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:12:09.656008+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-13T06:58:30.718158+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -170,22 +137,20 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "password",
                 "sms_or_otp",
                 "qr_or_scan",
-                "third_party",
-                "email"
+                "third_party"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
+              "password_status": "not_determined",
+              "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
-              "identifier_observed": true,
+              "identifier_observed": false,
               "blocking_factors": [
                 "scan",
                 "tos"
@@ -202,7 +167,7 @@
           "status": "observed",
           "start_url": "https://www.youku.com/ku/webhome",
           "final_url": "https://www.youku.com/ku/webhome",
-          "observed_route": "短信验证码/扫码；备选：一次性验证码",
+          "observed_route": "短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -216,6 +181,7 @@
                 "qr",
                 "third_party",
                 "wechat",
+                "qq",
                 "weibo"
               ],
               "verification_observed": [
@@ -223,52 +189,30 @@
                 "qr"
               ],
               "password_state": "not_observed_before_verification",
-              "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "一次性验证码",
-              "fields_observed": [
-                "code"
-              ],
-              "methods_observed": [
-                "one_time_code"
-              ],
-              "verification_observed": [
-                "one_time_code"
-              ],
-              "password_state": "not_observed_before_verification",
               "ui_types": [
-                "inline_widget"
+                "drawer"
               ],
-              "safe_stop": "安全测量停在一次性验证码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
             }
           ],
-          "fields_observed": [
-            "code"
-          ],
+          "fields_observed": [],
           "methods_observed": [
             "sms",
-            "one_time_code",
             "qr",
             "third_party",
             "wechat",
+            "qq",
             "weibo"
           ],
           "verification_observed": [
             "sms",
-            "one_time_code",
             "qr"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "inline_widget"
+            "drawer"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；安全测量停在一次性验证码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -276,7 +220,7 @@
             {
               "step": 1,
               "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "unknown",
+              "ui_type": "drawer",
               "fields": [],
               "methods": [],
               "blockers": [],
@@ -289,10 +233,13 @@
             {
               "step": 2,
               "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "unknown",
+              "ui_type": "drawer",
               "fields": [],
               "methods": [
+                "alipay",
+                "qq",
                 "sso",
+                "taobao",
                 "wechat",
                 "weibo"
               ],
@@ -301,42 +248,51 @@
                 "tos"
               ],
               "actions": [
-                "tab_click"
+                "none"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "sms_tab_clicked_in_iframe_and_changed"
+              "note": "no_sms_tab"
             },
             {
               "step": 3,
               "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "inline_widget",
-              "fields": [
-                "code"
+              "ui_type": "drawer",
+              "fields": [],
+              "methods": [
+                "alipay",
+                "qq",
+                "sso",
+                "taobao",
+                "wechat",
+                "weibo"
               ],
-              "methods": [],
               "blockers": [
-                "verification_code"
+                "scan",
+                "tos"
               ],
               "actions": [
                 "none"
               ],
-              "tabs": [],
-              "note": ""
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:11:55.958196+00:00",
+            "measured_at": "2026-08-13T06:58:25.942529+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "email"
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -345,7 +301,7 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "human_blocked",
-              "evidence_boundary": "pre_verification_only"
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
@@ -355,13 +311,12 @@
               ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": true,
+              "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
                 "scan",
-                "tos",
-                "verification_code"
+                "tos"
               ]
             },
             "security": {

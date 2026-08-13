@@ -328,6 +328,12 @@ def _get_new_driver():
         logger.info(f"Chrome (new) 使用代理: {masked}")
         options.add_argument(f"--proxy-server={proxy_url}")
 
+    # 服务器无显示器环境：SITES_HEADLESS=1 启用无头模式
+    if os.environ.get("SITES_HEADLESS"):
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1440,900")
+        options.add_argument("--disable-gpu")
+
     if _CHROMEDRIVER_BIN:
         driver = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN)
     else:

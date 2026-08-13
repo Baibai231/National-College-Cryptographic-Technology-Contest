@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.270139+00:00",
+  "generated_at": "2026-08-13T09:54:09.815117+00:00",
   "report_title": "segmentfault.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://segmentfault.com/",
           "final_url": "https://segmentfault.com/",
-          "observed_route": "手机号 → 短信验证码；备选：邮箱 → 口令",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -38,7 +38,8 @@
                 "phone",
                 "sms",
                 "third_party",
-                "wechat"
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
                 "sms"
@@ -48,55 +49,30 @@
                 "modal"
               ],
               "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                2
-              ],
-              "summary": "邮箱 → 口令",
-              "fields_observed": [
-                "email",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "email",
-                "third_party",
-                "wechat"
-              ],
-              "verification_observed": [],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "modal"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
-            "email",
-            "password",
             "code"
           ],
           "methods_observed": [
-            "password",
             "phone",
-            "email",
             "sms",
             "third_party",
-            "wechat"
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
             "sms"
           ],
-          "password_state": "multiple_observed_routes",
+          "password_state": "not_observed_before_verification",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -109,6 +85,7 @@
               ],
               "methods": [
                 "phone",
+                "qq",
                 "sso",
                 "wechat"
               ],
@@ -116,67 +93,46 @@
                 "sms_code"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "password_tab_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://segmentfault.com/",
-              "ui_type": "modal",
-              "fields": [
-                "email",
-                "password"
-              ],
-              "methods": [
-                "email",
-                "sso",
-                "wechat"
-              ],
-              "blockers": [],
-              "actions": [],
-              "tabs": [
-                "password_tab"
-              ],
-              "note": ""
+              "note": "no_password_tab"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T08:11:35.840724+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "confidence": "medium",
+            "measured_at": "2026-08-13T06:57:30.794052+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "password",
                 "sms_or_otp",
                 "third_party",
-                "email",
                 "phone"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": true,
+              "identifier_observed": false,
               "blocking_factors": [
                 "sms_code"
               ]
@@ -208,7 +164,8 @@
                 "phone",
                 "sms",
                 "third_party",
-                "wechat"
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
                 "sms"
@@ -228,7 +185,8 @@
             "phone",
             "sms",
             "third_party",
-            "wechat"
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
             "sms"
@@ -253,6 +211,7 @@
               ],
               "methods": [
                 "phone",
+                "qq",
                 "sso",
                 "wechat"
               ],
@@ -271,7 +230,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T08:11:31.170933+00:00",
+            "measured_at": "2026-08-13T06:57:21.757823+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

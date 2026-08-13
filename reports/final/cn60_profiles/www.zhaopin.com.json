@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.306764+00:00",
+  "generated_at": "2026-08-13T09:54:09.861912+00:00",
   "report_title": "www.zhaopin.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,9 +36,7 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "third_party",
-                "wechat"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -56,9 +54,7 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "third_party",
-            "wechat"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -81,9 +77,7 @@
                 "code"
               ],
               "methods": [
-                "phone",
-                "sso",
-                "wechat"
+                "phone"
               ],
               "blockers": [
                 "sms_code",
@@ -98,7 +92,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:18:32.338877+00:00",
+            "measured_at": "2026-08-13T07:08:40.156956+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -119,7 +113,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "not_determined",
@@ -205,9 +198,7 @@
                 "code"
               ],
               "methods": [
-                "phone",
-                "sso",
-                "wechat"
+                "phone"
               ],
               "blockers": [
                 "sms_code",
@@ -245,7 +236,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:18:24.600085+00:00",
+            "measured_at": "2026-08-13T07:08:32.206626+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

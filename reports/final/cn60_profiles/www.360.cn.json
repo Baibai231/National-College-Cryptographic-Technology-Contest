@@ -1,0 +1,260 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T09:54:09.819894+00:00",
+  "report_title": "www.360.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.360.cn",
+      "name": "www.360.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://i.360.cn/reg/?src=pcw_home&destUrl=https://www.360.cn/",
+          "final_url": "https://i.360.cn/reg/?src=pcw_home&destUrl=https://www.360.cn/",
+          "observed_route": "邮箱 → 邮箱验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "邮箱 → 邮箱验证码 → 口令",
+              "fields_observed": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "email_otp"
+              ],
+              "verification_observed": [
+                "email_otp"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "email_otp"
+          ],
+          "verification_observed": [
+            "email_otp"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://i.360.cn/reg/?src=pcw_home&destUrl=https://www.360.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "email"
+              ],
+              "blockers": [
+                "email_code",
+                "tos"
+              ],
+              "actions": [],
+              "tabs": [
+                "email_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T08:57:07.819479+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "email_otp",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "email_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://i.360.cn/reg/?src=pcw_home&destUrl=https://www.360.cn/",
+          "final_url": "https://i.360.cn/reg/?src=pcw_home&destUrl=https://www.360.cn/",
+          "observed_route": "邮箱 → 邮箱验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "邮箱 → 邮箱验证码 → 口令",
+              "fields_observed": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "email_otp"
+              ],
+              "verification_observed": [
+                "email_otp"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "email",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "email",
+            "email_otp"
+          ],
+          "verification_observed": [
+            "email_otp"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://i.360.cn/reg/?src=pcw_home&destUrl=https://www.360.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "email",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "email"
+              ],
+              "blockers": [
+                "email_code",
+                "tos"
+              ],
+              "actions": [],
+              "tabs": [
+                "email_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T08:56:46.901047+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "email_otp",
+                "email"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "email_code",
+                "tos"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

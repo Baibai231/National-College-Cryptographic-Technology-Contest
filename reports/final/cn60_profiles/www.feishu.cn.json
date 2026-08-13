@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.285815+00:00",
+  "generated_at": "2026-08-13T09:54:09.836860+00:00",
   "report_title": "www.feishu.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,80 +22,113 @@
           "status": "observed",
           "start_url": "https://www.feishu.cn/",
           "final_url": "https://www.feishu.cn/",
-          "observed_route": "未确认具体方式",
+          "observed_route": "手机号 → 短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "multi_step_wizard"
+              "summary": "手机号 → 短信验证码/扫码",
+              "fields_observed": [
+                "phone"
               ],
-              "safe_stop": "已走完当前安全可达范围"
+              "methods_observed": [
+                "phone",
+                "sms",
+                "qr"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
             }
           ],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "multi_step_wizard"
+          "fields_observed": [
+            "phone"
           ],
-          "safe_stop": "已走完当前安全可达范围",
+          "methods_observed": [
+            "phone",
+            "sms",
+            "qr"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
               "step": 1,
               "url": "https://www.feishu.cn/",
-              "ui_type": "multi_step_wizard",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
+              "ui_type": "modal",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "scan"
+              ],
               "actions": [
                 "none",
                 "none"
               ],
-              "tabs": [],
-              "note": "entry_native_click_failed"
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-12T09:44:15.174513+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-13T07:24:16.604945+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
-              "evidence_boundary": "safely_reachable_ui"
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
-              "observed_methods": [],
+              "observed_methods": [
+                "sms_or_otp",
+                "qr_or_scan",
+                "phone"
+              ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "scan",
+                "sms_code"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -182,7 +215,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:44:11.697726+00:00",
+            "measured_at": "2026-08-13T07:24:08.447700+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.272945+00:00",
+  "generated_at": "2026-08-13T09:54:09.818510+00:00",
   "report_title": "www.10jqka.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
+          "start_url": "https://www.10jqka.com.cn/",
           "final_url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
-          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -50,46 +50,14 @@
                 "standalone_page"
               ],
               "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                2
-              ],
-              "summary": "账号/邮箱 → 短信验证码 → 口令",
-              "fields_observed": [
-                "identifier",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "identifier",
-                "sms",
-                "third_party",
-                "wechat",
-                "qq",
-                "weibo"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "standalone_page"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
-            "identifier",
-            "password",
             "code"
           ],
           "methods_observed": [
-            "password",
             "phone",
-            "identifier",
             "sms",
             "third_party",
             "wechat",
@@ -99,17 +67,31 @@
           "verification_observed": [
             "sms"
           ],
-          "password_state": "multiple_observed_routes",
+          "password_state": "not_observed_before_verification",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
               "step": 1,
+              "url": "https://www.10jqka.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -127,72 +109,48 @@
                 "sms_code"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab",
                 "register_tab"
               ],
-              "note": "password_tab_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
-              "ui_type": "standalone_page",
-              "fields": [
-                "identifier",
-                "password"
-              ],
-              "methods": [
-                "identifier",
-                "qq",
-                "sso",
-                "wechat",
-                "weibo"
-              ],
-              "blockers": [],
-              "actions": [],
-              "tabs": [
-                "sms_tab",
-                "password_tab",
-                "register_tab"
-              ],
-              "note": ""
+              "note": "no_password_tab"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T09:41:22.897544+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "confidence": "medium",
+            "measured_at": "2026-08-13T07:20:56.801784+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "password",
                 "sms_or_otp",
                 "third_party",
                 "phone"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": true,
+              "identifier_observed": false,
               "blocking_factors": [
                 "sms_code"
               ]
@@ -206,15 +164,15 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
+          "start_url": "https://www.10jqka.com.cn/",
           "final_url": "https://upass.10jqka.com.cn/register",
           "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                2,
+                3
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -267,6 +225,19 @@
           "steps": [
             {
               "step": 1,
+              "url": "https://www.10jqka.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -294,7 +265,7 @@
               "note": "register_structural_semantics_clicked_and_changed"
             },
             {
-              "step": 2,
+              "step": 3,
               "url": "https://upass.10jqka.com.cn/register",
               "ui_type": "standalone_page",
               "fields": [
@@ -315,7 +286,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:41:09.655376+00:00",
+            "measured_at": "2026-08-13T07:20:56.113822+00:00",
             "raw_flow_type": "verification_then_password",
             "raw_stop_reason": "password_step_reached"
           },

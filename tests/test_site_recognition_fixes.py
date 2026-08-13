@@ -169,6 +169,17 @@ class UrlPatternBudgetTests(unittest.TestCase):
         self.assertGreater(len(LoginLinkDiscovery._SIGNUP_URL_PATTERNS), 0)
 
 
+class ScanBlockerTests(unittest.TestCase):
+    """扫码阻断词表：'扫码下载'是 App 下载引导不是认证（酷安/得物修复）。"""
+
+    def test_scan_download_not_blocker(self):
+        self.assertNotIn("扫码下载", _BLOCKER_HINTS["scan"])
+
+    def test_scan_login_kept(self):
+        for kw in ("扫码登录", "扫一扫登录", "微信扫一扫", "扫码注册"):
+            self.assertIn(kw, _BLOCKER_HINTS["scan"], kw)
+
+
 class OrganizationalSignupExclusionTests(unittest.TestCase):
     """机构/企业/商家注册不能冒充普通用户注册入口（zhihu /org/signup 修复）。"""
 

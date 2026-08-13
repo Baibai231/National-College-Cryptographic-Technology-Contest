@@ -1,0 +1,221 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T09:54:09.859974+00:00",
+  "report_title": "www.ximalaya.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.ximalaya.com",
+      "name": "www.ximalaya.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.ximalaya.com/signup",
+          "final_url": "https://www.ximalaya.com/signup",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.ximalaya.com/signup",
+              "ui_type": "standalone_page",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-13T09:13:32.312623+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.ximalaya.com/signup",
+          "final_url": "https://www.ximalaya.com/",
+          "observed_route": "扫码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "扫码",
+              "fields_observed": [],
+              "methods_observed": [
+                "qr"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "qr"
+          ],
+          "verification_observed": [
+            "qr"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.ximalaya.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://www.ximalaya.com/",
+              "ui_type": "modal",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_password_signup_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T09:12:24.053793+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "qr_or_scan"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "scan"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

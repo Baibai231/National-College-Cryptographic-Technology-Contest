@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.281175+00:00",
+  "generated_at": "2026-08-13T09:54:09.831312+00:00",
   "report_title": "www.ctrip.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,31 +20,31 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.ctrip.com/",
-          "final_url": "https://www.ctrip.com/",
-          "observed_route": "手机号 → 扫码",
+          "start_url": "https://passport.ctrip.com/user/reg/home",
+          "final_url": "https://passport.ctrip.com/user/reg/home",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone"
               ],
               "methods_observed": [
                 "phone",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "inline_widget"
+                "modal"
               ],
-              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -52,24 +52,25 @@
           ],
           "methods_observed": [
             "phone",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "inline_widget"
+            "modal"
           ],
-          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.ctrip.com/",
-              "ui_type": "inline_widget",
+              "url": "https://passport.ctrip.com/user/reg/home",
+              "ui_type": "modal",
               "fields": [
                 "phone"
               ],
@@ -77,24 +78,24 @@
                 "phone"
               ],
               "blockers": [
-                "scan"
+                "sms_code"
               ],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T09:41:52.113361+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-13T07:21:48.172135+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "unknown"
           },
           "policy": {
@@ -102,23 +103,22 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan"
+                "sms_code"
               ]
             },
             "security": {
@@ -130,31 +130,31 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.ctrip.com/",
-          "final_url": "https://www.ctrip.com/",
-          "observed_route": "手机号 → 扫码",
+          "start_url": "https://passport.ctrip.com/user/reg/home",
+          "final_url": "https://passport.ctrip.com/user/reg/home",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone"
               ],
               "methods_observed": [
                 "phone",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "inline_widget"
+                "modal"
               ],
-              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -162,24 +162,25 @@
           ],
           "methods_observed": [
             "phone",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "inline_widget"
+            "modal"
           ],
-          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.ctrip.com/",
-              "ui_type": "inline_widget",
+              "url": "https://passport.ctrip.com/user/reg/home",
+              "ui_type": "modal",
               "fields": [
                 "phone"
               ],
@@ -187,24 +188,25 @@
                 "phone"
               ],
               "blockers": [
-                "scan"
+                "sms_code"
               ],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_signup_tab"
+              "note": "entry_native_click_failed"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T09:41:46.885467+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-13T07:21:40.532344+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "unknown"
           },
           "policy": {
@@ -212,23 +214,22 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan"
+                "sms_code"
               ]
             },
             "security": {

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.282148+00:00",
+  "generated_at": "2026-08-13T09:54:09.833319+00:00",
   "report_title": "www.dianping.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://verify.meituan.com/v2/app/general_page?requestCode=c220e64b17964b1c9ce64b5641f9b6cd&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
-          "final_url": "https://verify.meituan.com/v2/app/general_page?requestCode=c220e64b17964b1c9ce64b5641f9b6cd&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+          "start_url": "https://verify.meituan.com/v2/app/general_page?requestCode=1d9f9d471f904fcb9069e3a9491f3e62&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+          "final_url": "https://verify.meituan.com/v2/app/general_page?requestCode=1d9f9d471f904fcb9069e3a9491f3e62&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -51,7 +51,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://verify.meituan.com/v2/app/general_page?requestCode=c220e64b17964b1c9ce64b5641f9b6cd&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+              "url": "https://verify.meituan.com/v2/app/general_page?requestCode=1d9f9d471f904fcb9069e3a9491f3e62&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-12T09:41:36.785135+00:00",
+            "measured_at": "2026-08-13T07:21:18.193006+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -102,8 +102,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://verify.meituan.com/v2/app/general_page?requestCode=d2b025fa152440cb8f735ed02d5655a3&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
-          "final_url": "https://verify.meituan.com/v2/app/general_page?requestCode=d2b025fa152440cb8f735ed02d5655a3&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+          "start_url": "https://verify.meituan.com/v2/app/general_page?requestCode=04dd9ab9e0004e02a99fd6c156b0b297&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+          "final_url": "https://verify.meituan.com/v2/app/general_page?requestCode=04dd9ab9e0004e02a99fd6c156b0b297&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -117,7 +117,7 @@
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
@@ -125,45 +125,43 @@
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://verify.meituan.com/v2/app/general_page?requestCode=d2b025fa152440cb8f735ed02d5655a3&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+              "url": "https://verify.meituan.com/v2/app/general_page?requestCode=04dd9ab9e0004e02a99fd6c156b0b297&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [],
+              "blockers": [
+                "slide"
+              ],
               "actions": [
-                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-12T09:41:31.168286+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-13T07:21:13.683096+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -173,7 +171,9 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "slide"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

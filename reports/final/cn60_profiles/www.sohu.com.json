@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.301325+00:00",
+  "generated_at": "2026-08-13T09:54:09.855845+00:00",
   "report_title": "www.sohu.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -92,7 +92,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T08:14:39.566920+00:00",
+            "measured_at": "2026-08-13T07:01:52.247393+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -205,7 +205,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T08:14:31.363453+00:00",
+            "measured_at": "2026-08-13T07:01:43.769715+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

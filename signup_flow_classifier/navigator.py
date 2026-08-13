@@ -251,6 +251,14 @@ def _is_organizational_signup(url: str) -> bool:
         "/org/signup", "/organization/signup", "/enterprise/register",
         "/business/register", "/merchant/register", "/company/register",
     )
+    # 主机含 dealer（经销商，zol 的 dealer.zol.com.cn 实测）等明确机构语义时排除。
+    try:
+        host = urlparse(url).hostname or ""
+        if any(mark in host for mark in ("dealer", "merchant", "business",
+                                         "enterprise")):
+            return True
+    except Exception:
+        pass
     return any(path.endswith(item) or item + "/" in path for item in blocked)
 
 
@@ -416,7 +424,11 @@ for (const el of all) {
   }
   // div/span 必须是叶子式、可交互且语义紧凑，避免点击包含整页文字的大容器。
   if (['DIV','SPAN'].includes(el.tagName)) {
-    if (!nativeInteractive || text.length > 40) continue;
+    // explicit 精确匹配的"登录/注册"文字不算大容器（thepaper 纯 div 登录
+    // 按钮实测 cursor:auto 无 onclick，但 React 事件绑在更上层）；
+    // 只有非 explicit 的 div/span 才要求 nativeInteractive。
+    if (!explicit && (!nativeInteractive || text.length > 40)) continue;
+    if (text.length > 40 && !explicit) continue;
     // 只有子元素是真正可点击目标（A/BUTTON 等）且文本相同时，父才是容器；
     // div>span 的"登录"按钮（36kr user-login 实测）子元素只是纯展示文本，
     // 父元素 cursor:pointer 才是真实点击目标，不能跳过。
@@ -570,7 +582,25 @@ def safe_click_entry(
         if btn is None:
             driver.switch_to.default_content()
             return NavigationOutcome(False, False, "entry_target_missing")
-        btn.click()
+        # 用 ActionChains 点击（真实鼠标事件）：React hover 型登录弹窗
+        # （掘金/力扣实测）只响应真实鼠标，原生 click 后弹窗不保持打开。
+        # iframe 内元素先切回主文档再按坐标点击，避免 iframe 上下文
+        # ActionChains 定位失败。
+        try:
+            from selenium.webdriver import ActionChains
+            ActionChains(driver).move_to_element(btn).click().perform()
+        except Exception:
+            try:
+                driver.switch_to.default_content()
+                ActionChains(driver).move_to_element(btn).click().perform()
+            except Exception:
+                try:
+                    driver.switch_to.frame(btn)
+                    btn.click()
+                    driver.switch_to.default_content()
+                except Exception:
+                    driver.switch_to.default_content()
+                    btn.click()
         # 保留 data-ap-entry-token 供调用方做"链接 href 兜底导航"读取，
         # 读取方负责清理；这里不再移除。
         driver.switch_to.default_content()
@@ -686,11 +716,20 @@ def safe_click_tab(driver: WebDriver, kind: str) -> NavigationOutcome:
     js = (
         "const targets = " + quoted + ";" +
         "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');"
+        "const visible = e => { const r=e.getBoundingClientRect(),s=getComputedStyle(e);"
+        "  return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'; };"
         "const els = [...document.querySelectorAll("
         "\"div, span, li, a, button, [role='tab'], [class*='tab'], [class*='Tab']\")];"
         "for (const t of targets) {"
         "  const tn = norm(t);"
-        "  const matches = els.filter(e => e.offsetParent !== null && norm(e.textContent.trim()) === tn);"
+        "  // 先精确匹配；再对短文本（<=12 字，含短信登录+帐号登录合并文本，zol 实测）做包含匹配。"
+        "  // 可见性用 getBoundingClientRect（与 detect_tabs 一致）；offsetParent"
+        "  // 在部分 SPA（快手登录弹窗实测）为 null 但元素可见可点。"
+        "  const matches = els.filter(e => visible(e) && ("
+        "    norm(e.textContent.trim()) === tn"
+        "    || (tn.length <= 8 && norm(e.textContent.trim()).length <= 12"
+        "        && norm(e.textContent.trim()).includes(tn))"
+        "  ));"
         "  if (matches.length) {"
         "    const el = matches.sort((a,b) => a.children.length - b.children.length)[0];"
         "    const target = el.closest(\"button, a, [role='tab'], [role='button'], li\") || el;"

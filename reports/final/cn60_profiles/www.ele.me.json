@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.285535+00:00",
+  "generated_at": "2026-08-13T09:54:09.836364+00:00",
   "report_title": "www.ele.me 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.ele.me/waimai",
-          "final_url": "https://www.ele.me/waimai",
+          "start_url": "https://www.ele.me/waimai?spm=a2f95.17632747.0.0.501a7d17E8LeUI",
+          "final_url": "https://www.ele.me/waimai?spm=a2f95.17632747.0.0.501a7d17E8LeUI",
           "observed_route": "未确认具体方式",
           "observed_routes": [],
           "fields_observed": [],
@@ -36,7 +36,7 @@
           "steps": [],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:41:41.009922+00:00",
+            "measured_at": "2026-08-13T07:21:34.590664+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "access_blocked"
           },
@@ -88,7 +88,7 @@
           "steps": [],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:41:40.579610+00:00",
+            "measured_at": "2026-08-13T07:21:27.152494+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "access_blocked"
           },

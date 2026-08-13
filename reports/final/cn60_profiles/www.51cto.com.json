@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.274354+00:00",
+  "generated_at": "2026-08-13T09:54:09.821174+00:00",
   "report_title": "www.51cto.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,22 +22,18 @@
           "status": "observed",
           "start_url": "https://www.51cto.com/",
           "final_url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
-          "observed_route": "短信验证码/扫码；备选：邮箱/账号/邮箱 → 短信验证码 → 口令",
+          "observed_route": "短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
               ],
               "summary": "短信验证码/扫码",
               "fields_observed": [],
               "methods_observed": [
                 "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "google"
+                "qr"
               ],
               "verification_observed": [
                 "sms",
@@ -46,60 +42,20 @@
               "password_state": "not_observed_before_verification",
               "ui_types": [],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "邮箱/账号/邮箱 → 短信验证码 → 口令",
-              "fields_observed": [
-                "email",
-                "identifier",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "email",
-                "identifier",
-                "sms",
-                "third_party",
-                "wechat"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
-          "fields_observed": [
-            "email",
-            "identifier",
-            "password"
-          ],
+          "fields_observed": [],
           "methods_observed": [
-            "password",
-            "email",
-            "identifier",
             "sms",
-            "qr",
-            "third_party",
-            "wechat",
-            "google"
+            "qr"
           ],
           "verification_observed": [
             "sms",
             "qr"
           ],
-          "password_state": "multiple_observed_routes",
-          "ui_types": [
-            "inline_widget"
-          ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "password_state": "not_observed_before_verification",
+          "ui_types": [],
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -109,11 +65,7 @@
               "url": "https://www.51cto.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "google",
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "hover_click"
@@ -126,38 +78,29 @@
               "url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "password_tab_clicked_and_changed"
+              "note": "no_sms_tab"
             },
             {
               "step": 3,
               "url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "email",
-                "identifier",
-                "password"
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "scan"
               ],
-              "methods": [
-                "email",
-                "identifier",
-                "sso",
-                "wechat"
-              ],
-              "blockers": [],
               "actions": [],
               "tabs": [
                 "sms_tab",
@@ -168,14 +111,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:32:17.199325+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-13T06:58:02.800385+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -183,22 +126,19 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "password",
                 "sms_or_otp",
-                "qr_or_scan",
-                "third_party",
-                "email"
+                "qr_or_scan"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
+              "password_status": "not_determined",
+              "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
-              "identifier_observed": true,
+              "identifier_observed": false,
               "blocking_factors": [
                 "scan"
               ]
@@ -214,22 +154,18 @@
           "status": "observed",
           "start_url": "https://www.51cto.com/",
           "final_url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
-          "observed_route": "短信验证码/扫码；备选：手机号/账号/邮箱 → 短信验证码",
+          "observed_route": "短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
               ],
               "summary": "短信验证码/扫码",
               "fields_observed": [],
               "methods_observed": [
                 "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "google"
+                "qr"
               ],
               "verification_observed": [
                 "sms",
@@ -238,58 +174,20 @@
               "password_state": "not_observed_before_verification",
               "ui_types": [],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "手机号/账号/邮箱 → 短信验证码",
-              "fields_observed": [
-                "phone",
-                "identifier",
-                "code"
-              ],
-              "methods_observed": [
-                "phone",
-                "identifier",
-                "sms",
-                "third_party",
-                "wechat"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
-          "fields_observed": [
-            "phone",
-            "identifier",
-            "code"
-          ],
+          "fields_observed": [],
           "methods_observed": [
-            "phone",
-            "identifier",
             "sms",
-            "qr",
-            "third_party",
-            "wechat",
-            "google"
+            "qr"
           ],
           "verification_observed": [
             "sms",
             "qr"
           ],
           "password_state": "not_observed_before_verification",
-          "ui_types": [
-            "inline_widget"
-          ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；安全测量停在短信验证码步骤，验证后页面未访问",
+          "ui_types": [],
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -299,11 +197,7 @@
               "url": "https://www.51cto.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "google",
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -316,39 +210,9 @@
               "url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [
                 "scan"
-              ],
-              "actions": [
-                "tab_click"
-              ],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": "sms_tab_clicked_and_changed"
-            },
-            {
-              "step": 3,
-              "url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "identifier",
-                "code"
-              ],
-              "methods": [
-                "identifier",
-                "phone",
-                "sso",
-                "wechat"
-              ],
-              "blockers": [
-                "sms_code"
               ],
               "actions": [
                 "none"
@@ -357,19 +221,37 @@
                 "sms_tab",
                 "password_tab"
               ],
-              "note": ""
+              "note": "no_sms_tab"
+            },
+            {
+              "step": 3,
+              "url": "https://home.51cto.com/index/?from_service=icv&reback=https://www.51cto.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:32:04.872797+00:00",
+            "measured_at": "2026-08-13T06:57:52.372567+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sms"
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -378,23 +260,20 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "human_blocked",
-              "evidence_boundary": "pre_verification_only"
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
-                "third_party",
-                "phone"
+                "qr_or_scan"
               ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": true,
-              "phone_observed": true,
-              "identifier_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
               "blocking_factors": [
-                "scan",
-                "sms_code"
+                "scan"
               ]
             },
             "security": {

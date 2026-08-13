@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.276176+00:00",
+  "generated_at": "2026-08-13T09:54:09.824204+00:00",
   "report_title": "www.acfun.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -85,7 +85,7 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "entry_clicked_no_change"
+              "note": "login_combined_text_clicked_and_changed"
             },
             {
               "step": 2,
@@ -114,7 +114,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:32:16.978223+00:00",
+            "measured_at": "2026-08-13T07:10:32.368542+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -218,7 +218,6 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click",
                 "entry_click"
               ],
               "tabs": [],
@@ -251,7 +250,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:32:04.330932+00:00",
+            "measured_at": "2026-08-13T07:10:28.919288+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

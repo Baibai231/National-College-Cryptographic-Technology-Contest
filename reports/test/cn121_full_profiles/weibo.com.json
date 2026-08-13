@@ -1,0 +1,346 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T05:48:43.835982+00:00",
+  "report_title": "weibo.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn121_full_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "weibo.com",
+      "name": "weibo.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
+          "final_url": "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&disp=popup&url=https%3A%2F%2Fweibo.com%2Fnewlogin%3Ftabtype%3Dweibo%26gid%3D102803%26openLoginLayer%3D0%26url%3Dhttps%3A%2F%2Fweibo.com%2F&from=weibopro",
+          "observed_route": "手机号/邮箱 → 短信验证码/扫码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2,
+                3
+              ],
+              "summary": "手机号/邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "phone",
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "email",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_after_verification_screen",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "email",
+            "password",
+            "code"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "email",
+            "sms",
+            "qr",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "observed_after_verification_screen",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&disp=popup&url=https%3A%2F%2Fweibo.com%2Fnewlogin%3Ftabtype%3Dweibo%26gid%3D102803%26openLoginLayer%3D0%26url%3Dhttps%3A%2F%2Fweibo.com%2F&from=weibopro",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "sms_code",
+                "scan"
+              ],
+              "actions": [
+                "none",
+                "auth_mode_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "auth_mode_text_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&disp=popup&url=https%3A%2F%2Fweibo.com%2Fnewlogin%3Ftabtype%3Dweibo%26gid%3D102803%26openLoginLayer%3D0%26url%3Dhttps%3A%2F%2Fweibo.com%2F&from=weibopro",
+              "ui_type": "standalone_page",
+              "fields": [
+                "email",
+                "password"
+              ],
+              "methods": [
+                "email",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T05:15:31.807546+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party",
+                "email",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "scan",
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
+          "final_url": "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&disp=popup&url=https%3A%2F%2Fweibo.com%2Fnewlogin%3Ftabtype%3Dweibo%26gid%3D102803%26openLoginLayer%3D0%26url%3Dhttps%3A%2F%2Fweibo.com%2F&from=weibopro",
+          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码/扫码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms",
+            "qr",
+            "third_party",
+            "wechat",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms",
+            "qr"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://weibo.com/newlogin?tabtype=weibo&gid=102803&openLoginLayer=0&url=https://weibo.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&disp=popup&url=https%3A%2F%2Fweibo.com%2Fnewlogin%3Ftabtype%3Dweibo%26gid%3D102803%26openLoginLayer%3D0%26url%3Dhttps%3A%2F%2Fweibo.com%2F&from=weibopro",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "sms_code",
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T05:15:25.251273+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "qr_or_scan",
+                "third_party",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "scan",
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.275668+00:00",
+  "generated_at": "2026-08-13T09:54:09.822330+00:00",
   "report_title": "www.58.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://tj.58.com/",
-          "final_url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2a3d-e772-2c8d26df330c&ClickID=5",
+          "final_url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2d60-bb6c-eea625e67c07&ClickID=5",
           "observed_route": "扫码",
           "observed_routes": [
             {
@@ -75,7 +75,7 @@
             },
             {
               "step": 2,
-              "url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2a3d-e772-2c8d26df330c&ClickID=5",
+              "url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2d60-bb6c-eea625e67c07&ClickID=5",
               "ui_type": "standalone_page",
               "fields": [],
               "methods": [],
@@ -83,17 +83,17 @@
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "password_tab_clicked_no_change"
+              "note": "no_password_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:18:12.706348+00:00",
+            "measured_at": "2026-08-13T07:08:05.167462+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -134,53 +134,55 @@
         "signup": {
           "status": "observed",
           "start_url": "https://tj.58.com/",
-          "final_url": "https://passport.58.com/login/?path=https://employer.58.com/index?spm=sousuo_zhaoren",
-          "observed_route": "账号/邮箱 → 短信验证码/扫码 → 口令",
+          "final_url": "https://passport.58.com/reg/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-20fb-19f8-6f5654051715&ClickID=5",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
+              "summary": "手机号/账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
+                "phone",
                 "identifier",
-                "password"
+                "password",
+                "code"
               ],
               "methods_observed": [
                 "password",
+                "phone",
                 "identifier",
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
-              "password_state": "observed_before_verification",
+              "password_state": "observed_alongside_verification",
               "ui_types": [
-                "standalone_page"
+                "inline_widget"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
+            "phone",
             "identifier",
-            "password"
+            "password",
+            "code"
           ],
           "methods_observed": [
             "password",
+            "phone",
             "identifier",
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
-          "password_state": "observed_before_verification",
+          "password_state": "observed_alongside_verification",
           "ui_types": [
-            "standalone_page"
+            "inline_widget"
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
           "limitations": [],
@@ -196,34 +198,33 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "login_structural_semantics_clicked_and_changed"
+              "note": "register_accessible_text_clicked_and_changed"
             },
             {
               "step": 2,
-              "url": "https://passport.58.com/login/?path=https://employer.58.com/index?spm=sousuo_zhaoren",
-              "ui_type": "standalone_page",
+              "url": "https://passport.58.com/reg/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-20fb-19f8-6f5654051715&ClickID=5",
+              "ui_type": "inline_widget",
               "fields": [
+                "phone",
                 "identifier",
-                "password"
+                "password",
+                "code"
               ],
               "methods": [
-                "identifier"
+                "identifier",
+                "phone"
               ],
               "blockers": [
-                "scan"
+                "sms_code"
               ],
               "actions": [],
-              "tabs": [
-                "sms_tab",
-                "password_tab",
-                "register_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:17:41.990360+00:00",
+            "measured_at": "2026-08-13T07:07:52.386471+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -239,21 +240,21 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "qr_or_scan"
+                "phone"
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
-              "phone_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
-                "scan"
+                "sms_code"
               ]
             },
             "security": {

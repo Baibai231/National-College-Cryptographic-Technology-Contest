@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.295451+00:00",
+  "generated_at": "2026-08-13T09:54:09.849030+00:00",
   "report_title": "www.ly.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -27,7 +27,6 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
               ],
               "summary": "账号/邮箱 → 短信验证码 → 口令",
@@ -40,7 +39,8 @@
                 "identifier",
                 "sms",
                 "third_party",
-                "wechat"
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
                 "sms"
@@ -61,7 +61,8 @@
             "identifier",
             "sms",
             "third_party",
-            "wechat"
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
             "sms"
@@ -78,10 +79,7 @@
               "url": "https://www.ly.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -98,7 +96,9 @@
                 "password"
               ],
               "methods": [
+                "alipay",
                 "identifier",
+                "qq",
                 "sso",
                 "wechat"
               ],
@@ -115,7 +115,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:41:54.341903+00:00",
+            "measured_at": "2026-08-13T07:22:04.949817+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -164,7 +164,6 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
               ],
               "summary": "手机号 → 口令",
@@ -174,9 +173,7 @@
               ],
               "methods_observed": [
                 "password",
-                "phone",
-                "third_party",
-                "wechat"
+                "phone"
               ],
               "verification_observed": [],
               "password_state": "observed_before_verification",
@@ -192,9 +189,7 @@
           ],
           "methods_observed": [
             "password",
-            "phone",
-            "third_party",
-            "wechat"
+            "phone"
           ],
           "verification_observed": [],
           "password_state": "observed_before_verification",
@@ -209,10 +204,7 @@
               "url": "https://www.ly.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -241,7 +233,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:41:54.026939+00:00",
+            "measured_at": "2026-08-13T07:21:58.432880+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -263,7 +255,6 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "password_observed",

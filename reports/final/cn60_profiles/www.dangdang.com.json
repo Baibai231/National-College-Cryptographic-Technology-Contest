@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.281502+00:00",
+  "generated_at": "2026-08-13T09:54:09.832717+00:00",
   "report_title": "www.dangdang.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -38,6 +38,7 @@
                 "sms",
                 "third_party",
                 "wechat",
+                "qq",
                 "weibo"
               ],
               "verification_observed": [
@@ -58,6 +59,7 @@
             "sms",
             "third_party",
             "wechat",
+            "qq",
             "weibo"
           ],
           "verification_observed": [
@@ -91,6 +93,8 @@
                 "password"
               ],
               "methods": [
+                "alipay",
+                "qq",
                 "sso",
                 "wechat",
                 "weibo"
@@ -107,7 +111,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:16:48.728899+00:00",
+            "measured_at": "2026-08-13T07:06:09.915255+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -159,10 +163,7 @@
               "summary": "一次性验证码",
               "fields_observed": [],
               "methods_observed": [
-                "one_time_code",
-                "third_party",
-                "wechat",
-                "weibo"
+                "one_time_code"
               ],
               "verification_observed": [
                 "one_time_code"
@@ -174,10 +175,7 @@
           ],
           "fields_observed": [],
           "methods_observed": [
-            "one_time_code",
-            "third_party",
-            "wechat",
-            "weibo"
+            "one_time_code"
           ],
           "verification_observed": [
             "one_time_code"
@@ -186,7 +184,8 @@
           "ui_types": [],
           "safe_stop": "安全测量停在一次性验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -207,11 +206,7 @@
               "url": "https://login.dangdang.com/?type=2&returnurl=https%3A%2F%2Fwww.dangdang.com%2F",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat",
-                "weibo"
-              ],
+              "methods": [],
               "blockers": [
                 "verification_code"
               ],
@@ -225,29 +220,28 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T08:16:46.647355+00:00",
-            "raw_flow_type": "sso_only",
-            "raw_stop_reason": "external_idp_detected"
+            "confidence": "medium",
+            "measured_at": "2026-08-13T07:06:04.693537+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "sso_only",
-            "stop_reason": "external_idp_detected",
-            "primary_method": "sso"
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "external_idp_detected",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "one_time_code",
-                "third_party"
+                "one_time_code"
               ],
               "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.301594+00:00",
+  "generated_at": "2026-08-13T09:54:09.856150+00:00",
   "report_title": "www.suning.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -42,6 +42,7 @@
                 "qr",
                 "third_party",
                 "wechat",
+                "qq",
                 "weibo"
               ],
               "verification_observed": [
@@ -66,6 +67,7 @@
             "qr",
             "third_party",
             "wechat",
+            "qq",
             "weibo"
           ],
           "verification_observed": [
@@ -98,6 +100,7 @@
               "ui_type": "standalone_page",
               "fields": [],
               "methods": [
+                "qq",
                 "sso",
                 "wechat",
                 "weibo"
@@ -122,6 +125,7 @@
               ],
               "methods": [
                 "identifier",
+                "qq",
                 "sso",
                 "wechat",
                 "weibo"
@@ -138,7 +142,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:16:40.507914+00:00",
+            "measured_at": "2026-08-13T07:06:02.280729+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -266,7 +270,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:16:39.970425+00:00",
+            "measured_at": "2026-08-13T07:05:52.822405+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.279594+00:00",
+  "generated_at": "2026-08-13T09:54:09.829089+00:00",
   "report_title": "www.china.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -73,7 +73,7 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
+              "note": "entry_clicked_no_change"
             },
             {
               "step": 2,
@@ -96,7 +96,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:15:08.158191+00:00",
+            "measured_at": "2026-08-13T07:02:05.317322+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -174,7 +174,9 @@
             "inline_widget"
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "limitations": [
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
@@ -187,7 +189,7 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
+              "note": "entry_clicked_no_change"
             },
             {
               "step": 2,
@@ -201,31 +203,35 @@
                 "identifier"
               ],
               "blockers": [],
-              "actions": [],
+              "actions": [
+                "none",
+                "none",
+                "none"
+              ],
               "tabs": [
                 "register_tab"
               ],
-              "note": ""
+              "note": "no_register_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:14:57.626268+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-13T07:01:59.931567+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "no_signup_entry"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "unknown",
+            "stop_reason": "no_signup_entry",
+            "primary_method": ""
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "classified",
+              "status": "unknown",
               "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "stop_reason": "no_signup_entry",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

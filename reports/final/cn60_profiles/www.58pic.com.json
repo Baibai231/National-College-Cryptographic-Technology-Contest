@@ -1,0 +1,268 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T09:54:09.823192+00:00",
+  "report_title": "www.58pic.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/final/cn60_final_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.58pic.com",
+      "name": "www.58pic.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.58pic.com/",
+          "final_url": "https://www.58pic.com/login",
+          "observed_route": "短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "短信验证码",
+              "fields_observed": [],
+              "methods_observed": [
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "sms",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.58pic.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.58pic.com/login",
+              "ui_type": "standalone_page",
+              "fields": [],
+              "methods": [
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": "no_sms_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T08:57:35.656426+00:00",
+            "raw_flow_type": "sso_only",
+            "raw_stop_reason": "external_idp_detected"
+          },
+          "raw_result": {
+            "flow_type": "sso_only",
+            "stop_reason": "external_idp_detected",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "external_idp_detected",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.58pic.com/",
+          "final_url": "https://www.58pic.com/login",
+          "observed_route": "短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "短信验证码",
+              "fields_observed": [],
+              "methods_observed": [
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "sms",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "standalone_page"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.58pic.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.58pic.com/login",
+              "ui_type": "standalone_page",
+              "fields": [],
+              "methods": [
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": "no_sms_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T08:57:34.043620+00:00",
+            "raw_flow_type": "sso_only",
+            "raw_stop_reason": "external_idp_detected"
+          },
+          "raw_result": {
+            "flow_type": "sso_only",
+            "stop_reason": "external_idp_detected",
+            "primary_method": "sso"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "external_idp_detected",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "third_party"
+              ],
+              "password_status": "no_password_in_safely_reachable_flow",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

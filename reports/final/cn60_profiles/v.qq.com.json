@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.271308+00:00",
+  "generated_at": "2026-08-13T09:54:09.816484+00:00",
   "report_title": "v.qq.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -33,10 +33,7 @@
               "fields_observed": [],
               "methods_observed": [
                 "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "qq"
+                "qr"
               ],
               "verification_observed": [
                 "sms",
@@ -50,10 +47,7 @@
           "fields_observed": [],
           "methods_observed": [
             "sms",
-            "qr",
-            "third_party",
-            "wechat",
-            "qq"
+            "qr"
           ],
           "verification_observed": [
             "sms",
@@ -84,34 +78,47 @@
               "url": "https://v.qq.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "qq",
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "password_tab_clicked_no_change"
+              "note": "no_sms_tab"
+            },
+            {
+              "step": 3,
+              "url": "https://v.qq.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [],
+              "tabs": [
+                "password_tab",
+                "sms_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:12:18.801714+00:00",
+            "measured_at": "2026-08-13T06:58:52.067726+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sso"
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -125,8 +132,7 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
-                "third_party"
+                "qr_or_scan"
               ],
               "password_status": "not_determined",
               "password_observed": false,
@@ -159,10 +165,7 @@
               "fields_observed": [],
               "methods_observed": [
                 "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "qq"
+                "qr"
               ],
               "verification_observed": [
                 "sms",
@@ -176,10 +179,7 @@
           "fields_observed": [],
           "methods_observed": [
             "sms",
-            "qr",
-            "third_party",
-            "wechat",
-            "qq"
+            "qr"
           ],
           "verification_observed": [
             "sms",
@@ -210,34 +210,48 @@
               "url": "https://v.qq.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "qq",
-                "sso",
-                "wechat"
-              ],
+              "methods": [],
               "blockers": [
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none"
               ],
               "tabs": [
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "sms_tab_clicked_and_changed"
+              "note": "no_sms_tab"
+            },
+            {
+              "step": 3,
+              "url": "https://v.qq.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "password_tab",
+                "sms_tab"
+              ],
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:12:15.995497+00:00",
+            "measured_at": "2026-08-13T06:58:42.500162+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sso"
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -251,8 +265,7 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
-                "third_party"
+                "qr_or_scan"
               ],
               "password_status": "not_determined",
               "password_observed": false,

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.286114+00:00",
+  "generated_at": "2026-08-13T09:54:09.837451+00:00",
   "report_title": "www.fliggy.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -35,7 +35,8 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms"
+                "sms",
+                "third_party"
               ],
               "verification_observed": [
                 "sms"
@@ -52,7 +53,8 @@
           ],
           "methods_observed": [
             "phone",
-            "sms"
+            "sms",
+            "third_party"
           ],
           "verification_observed": [
             "sms"
@@ -75,7 +77,9 @@
                 "phone"
               ],
               "methods": [
-                "phone"
+                "phone",
+                "sso",
+                "taobao"
               ],
               "blockers": [
                 "sms_code"
@@ -91,14 +95,14 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T09:42:03.150835+00:00",
+            "measured_at": "2026-08-13T07:22:13.604479+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
             "flow_type": "otp_only",
             "stop_reason": "no_password_observed",
-            "primary_method": "unknown"
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -112,6 +116,7 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
+                "third_party",
                 "phone"
               ],
               "password_status": "no_password_in_safely_reachable_flow",
@@ -133,13 +138,14 @@
         "signup": {
           "status": "observed",
           "start_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=fliggy",
-          "final_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=fliggy",
+          "final_url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -147,7 +153,8 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms"
+                "sms",
+                "third_party"
               ],
               "verification_observed": [
                 "sms"
@@ -164,7 +171,8 @@
           ],
           "methods_observed": [
             "phone",
-            "sms"
+            "sms",
+            "third_party"
           ],
           "verification_observed": [
             "sms"
@@ -187,6 +195,27 @@
                 "phone"
               ],
               "methods": [
+                "phone",
+                "sso",
+                "taobao"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
+            },
+            {
+              "step": 2,
+              "url": "https://reg.taobao.com/havanaone/register/register.htm?bizEntrance=person_pc&bizName=taobao&regBizSource=tbtop",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
                 "phone"
               ],
               "blockers": [
@@ -195,22 +224,20 @@
               "actions": [
                 "none"
               ],
-              "tabs": [
-                "register_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T09:42:01.034503+00:00",
+            "measured_at": "2026-08-13T07:22:07.949706+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
             "flow_type": "otp_only",
             "stop_reason": "no_password_observed",
-            "primary_method": "unknown"
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -224,6 +251,7 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
+                "third_party",
                 "phone"
               ],
               "password_status": "no_password_in_safely_reachable_flow",

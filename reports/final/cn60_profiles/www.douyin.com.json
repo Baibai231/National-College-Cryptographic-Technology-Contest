@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.284121+00:00",
+  "generated_at": "2026-08-13T09:54:09.834832+00:00",
   "report_title": "www.douyin.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.douyin.com/jingxuan",
           "final_url": "https://www.douyin.com/jingxuan",
-          "observed_route": "手机号/账号/邮箱 → 短信验证码/扫码；备选：手机号/账号/邮箱 → 短信验证码/扫码 → 口令",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -49,43 +49,13 @@
                 "inline_widget"
               ],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                2
-              ],
-              "summary": "手机号/账号/邮箱 → 短信验证码/扫码 → 口令",
-              "fields_observed": [
-                "phone",
-                "identifier",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "phone",
-                "identifier",
-                "sms",
-                "qr"
-              ],
-              "verification_observed": [
-                "sms",
-                "qr"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
-            "identifier",
-            "password"
+            "identifier"
           ],
           "methods_observed": [
-            "password",
             "phone",
             "identifier",
             "sms",
@@ -95,11 +65,11 @@
             "sms",
             "qr"
           ],
-          "password_state": "multiple_observed_routes",
+          "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -121,48 +91,26 @@
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "password_tab_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.douyin.com/jingxuan",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "identifier",
-                "password"
-              ],
-              "methods": [
-                "identifier",
-                "phone"
-              ],
-              "blockers": [
-                "scan"
-              ],
-              "actions": [],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": ""
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:50:56.030125+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-13T07:09:59.596187+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "email_only"
           },
           "policy": {
             "schema_version": "1.0",
@@ -170,18 +118,17 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "password",
                 "sms_or_otp",
                 "qr_or_scan",
                 "phone"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
+              "password_status": "not_determined",
+              "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": true,
@@ -270,18 +217,18 @@
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none"
               ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "sms_tab_clicked_no_change"
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:50:37.348162+00:00",
+            "measured_at": "2026-08-13T07:09:47.986149+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -1,0 +1,280 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T03:39:32.340040+00:00",
+  "report_title": "www.thepaper.cn 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn100_regression_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.thepaper.cn",
+      "name": "www.thepaper.cn",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://www.thepaper.cn/",
+          "final_url": "https://www.thepaper.cn/",
+          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.thepaper.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.thepaper.cn/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "password"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T03:18:31.684103+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
+          },
+          "raw_result": {
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.thepaper.cn/",
+          "final_url": "https://www.thepaper.cn/",
+          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.thepaper.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.thepaper.cn/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "password"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-13T03:18:17.756138+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "no_signup_entry"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "no_signup_entry",
+            "primary_method": ""
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "high",
+              "stop_reason": "no_signup_entry",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

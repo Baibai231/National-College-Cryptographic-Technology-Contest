@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.273384+00:00",
+  "generated_at": "2026-08-13T09:54:09.818864+00:00",
   "report_title": "www.12306.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -40,10 +40,7 @@
                 "password",
                 "phone",
                 "email",
-                "identifier",
-                "third_party",
-                "wechat",
-                "weibo"
+                "identifier"
               ],
               "verification_observed": [],
               "password_state": "observed_before_verification",
@@ -63,10 +60,7 @@
             "password",
             "phone",
             "email",
-            "identifier",
-            "third_party",
-            "wechat",
-            "weibo"
+            "identifier"
           ],
           "verification_observed": [],
           "password_state": "observed_before_verification",
@@ -89,10 +83,7 @@
               "methods": [
                 "email",
                 "identifier",
-                "phone",
-                "sso",
-                "wechat",
-                "weibo"
+                "phone"
               ],
               "blockers": [
                 "tos"
@@ -104,7 +95,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:51:47.469556+00:00",
+            "measured_at": "2026-08-13T07:22:19.089963+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -126,7 +117,6 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "third_party",
                 "email",
                 "phone"
               ],
@@ -168,10 +158,7 @@
                 "password",
                 "phone",
                 "email",
-                "identifier",
-                "third_party",
-                "wechat",
-                "weibo"
+                "identifier"
               ],
               "verification_observed": [],
               "password_state": "observed_before_verification",
@@ -191,10 +178,7 @@
             "password",
             "phone",
             "email",
-            "identifier",
-            "third_party",
-            "wechat",
-            "weibo"
+            "identifier"
           ],
           "verification_observed": [],
           "password_state": "observed_before_verification",
@@ -217,10 +201,31 @@
               "methods": [
                 "email",
                 "identifier",
+                "phone"
+              ],
+              "blockers": [
+                "tos"
+              ],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://kyfw.12306.cn/otn/regist/init",
+              "ui_type": "multi_step_wizard",
+              "fields": [
                 "phone",
-                "sso",
-                "wechat",
-                "weibo"
+                "email",
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "email",
+                "identifier",
+                "phone"
               ],
               "blockers": [
                 "tos"
@@ -232,7 +237,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T09:51:42.140751+00:00",
+            "measured_at": "2026-08-13T07:22:17.936774+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -254,7 +259,6 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "third_party",
                 "email",
                 "phone"
               ],

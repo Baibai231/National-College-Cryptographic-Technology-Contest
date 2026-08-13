@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.284540+00:00",
+  "generated_at": "2026-08-13T09:54:09.835132+00:00",
   "report_title": "www.douyu.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -27,8 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                3
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -37,10 +36,7 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "third_party",
-                "wechat",
-                "weibo"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -58,10 +54,7 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "third_party",
-            "wechat",
-            "weibo"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -81,11 +74,7 @@
               "url": "https://www.douyu.com/?dyshid=0-",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat",
-                "weibo"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "hover_click"
@@ -96,16 +85,26 @@
             {
               "step": 2,
               "url": "https://www.douyu.com/?dyshid=0-",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.douyu.com/?dyshid=0-",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
                 "code"
               ],
               "methods": [
-                "phone",
-                "sso",
-                "wechat",
-                "weibo"
+                "phone"
               ],
               "blockers": [
                 "sms_code"
@@ -119,7 +118,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T09:33:23.618754+00:00",
+            "measured_at": "2026-08-13T07:11:38.135086+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -140,7 +139,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "no_password_in_safely_reachable_flow",
@@ -168,7 +166,6 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
               ],
               "summary": "手机号 → 短信验证码",
@@ -178,10 +175,7 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "third_party",
-                "wechat",
-                "weibo"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -199,10 +193,7 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "third_party",
-            "wechat",
-            "weibo"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -222,11 +213,7 @@
               "url": "https://www.douyu.com/?dyshid=0-",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "sso",
-                "wechat",
-                "weibo"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "hover_click"
@@ -243,10 +230,7 @@
                 "code"
               ],
               "methods": [
-                "phone",
-                "sso",
-                "wechat",
-                "weibo"
+                "phone"
               ],
               "blockers": [
                 "sms_code"
@@ -260,7 +244,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-12T09:33:07.934631+00:00",
+            "measured_at": "2026-08-13T07:11:28.698471+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -281,7 +265,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "no_password_in_safely_reachable_flow",

@@ -1,0 +1,241 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-13T05:48:43.858064+00:00",
+  "report_title": "www.jd.com 登录/注册认证档案",
+  "automatic_result_sources": [
+    "reports/test/cn121_full_20260813.jsonl"
+  ],
+  "safety": {
+    "identity_information_filled": false,
+    "verification_code_sent": false,
+    "captcha_bypassed": false,
+    "login_or_signup_submitted": false,
+    "account_created": false
+  },
+  "sites": [
+    {
+      "id": "www.jd.com",
+      "name": "www.jd.com",
+      "category": "待补充",
+      "automatic": {
+        "login": {
+          "status": "observed",
+          "start_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+          "final_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+          "observed_route": "手机号",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号",
+              "fields_observed": [
+                "phone"
+              ],
+              "methods_observed": [
+                "phone"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [
+            "phone"
+          ],
+          "methods_observed": [
+            "phone"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-13T05:12:51.246185+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "no_safe_action"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "no_safe_action",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "no_safe_action",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+          "final_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+          "observed_route": "手机号",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号",
+              "fields_observed": [
+                "phone"
+              ],
+              "methods_observed": [
+                "phone"
+              ],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [
+            "phone"
+          ],
+          "methods_observed": [
+            "phone"
+          ],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-13T05:12:42.560401+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "signup",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

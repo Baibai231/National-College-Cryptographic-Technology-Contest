@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-12T10:04:19.273838+00:00",
+  "generated_at": "2026-08-13T09:54:09.819195+00:00",
   "report_title": "www.163.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260812.jsonl"
+    "reports/final/cn60_final_20260813.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -21,75 +21,33 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.163.com/",
-          "final_url": "https://www.163.com/",
-          "observed_route": "手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令",
+          "final_url": "https://id.163.com/mail/index.html#/email",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
-              "summary": "手机号 → 短信验证码",
-              "fields_observed": [
-                "phone"
-              ],
-              "methods_observed": [
-                "phone",
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "手机号 → 短信验证码 → 口令",
-              "fields_observed": [
-                "phone",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "phone",
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
-          "fields_observed": [
-            "phone",
-            "password"
-          ],
-          "methods_observed": [
-            "password",
-            "phone",
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
-          "password_state": "multiple_observed_routes",
-          "ui_types": [
-            "inline_widget"
-          ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
@@ -107,85 +65,46 @@
             },
             {
               "step": 2,
-              "url": "https://www.163.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [
-                "sms_code",
-                "tos"
-              ],
+              "url": "https://id.163.com/mail/index.html#/email",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
               "actions": [
-                "tab_click"
+                "none"
               ],
-              "tabs": [
-                "email_tab",
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": "password_tab_clicked_in_iframe_and_changed"
-            },
-            {
-              "step": 3,
-              "url": "https://www.163.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "password"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [
-                "tos"
-              ],
-              "actions": [],
-              "tabs": [
-                "email_tab",
-                "sms_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-12T08:29:06.253689+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "confidence": "low",
+            "measured_at": "2026-08-13T09:14:59.968372+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "password_step_reached",
-              "evidence_boundary": "pre_verification_only"
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "password",
-                "sms_or_otp",
-                "phone"
-              ],
-              "password_status": "password_observed",
-              "password_observed": true,
-              "verification_observed": true,
-              "phone_observed": true,
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": [
-                "sms_code",
-                "tos"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -272,7 +191,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-12T08:28:51.252618+00:00",
+            "measured_at": "2026-08-13T09:14:59.967353+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
