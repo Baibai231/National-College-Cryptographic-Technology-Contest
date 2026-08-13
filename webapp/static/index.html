@@ -57,7 +57,9 @@
 </head>
 <body>
 <div class="container py-4">
-  <h3 class="mb-1">注册流程测量平台</h3>
+  <h3 class="mb-1">注册流程测量平台
+    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showAdminModal()">待审核管理</button>
+  </h3>
   <p class="text-muted small mb-3">
     共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站
   </p>
@@ -142,6 +144,25 @@
   </div>
 </div>
 
+<div id="adminModal" class="my-modal" style="display:none">
+  <div class="my-modal-box my-modal-lg">
+    <div class="my-modal-head">
+      <b>待审核管理（管理员）</b>
+      <button type="button" class="my-modal-close" onclick="hideAdmin()">×</button>
+    </div>
+    <div class="my-modal-body">
+      <div class="mb-2 d-flex gap-2">
+        <input id="admin-token" class="form-control" type="password" placeholder="管理员口令" style="max-width:220px">
+        <button type="button" class="btn btn-primary btn-sm" onclick="loadPending()">刷新列表</button>
+      </div>
+      <div id="admin-list" class="small"></div>
+    </div>
+    <div class="my-modal-foot">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="hideAdmin()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const FLOW_ZH = {
   direct_password: "直接口令", identifier_then_password: "先标识后口令",
@@ -153,6 +174,10 @@ const FLOW_ZH = {
 let allSites = [];
 let currentFilter = 'all';
 
+function fmtTime(t) {
+  if (!t) return '—';
+  return String(t).slice(0, 10);
+}
 function badge(flow) {
   return `<span class="flow-badge b-${flow || 'unknown'}">${FLOW_ZH[flow] || '未确认'}</span>`;
 }
@@ -313,6 +338,7 @@ async function showDetail(host) {
         <tr><td>字段</td><td>${s.login.fields}</td><td>${s.signup.fields}</td></tr>
         <tr><td>阻断</td><td>${s.login.blockers}</td><td>${s.signup.blockers}</td></tr>
         <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
+        <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
       </tbody>
     </table>
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">

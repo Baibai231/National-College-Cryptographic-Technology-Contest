@@ -16,7 +16,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -204,9 +204,76 @@ def submit_review(req: ReviewRequest):
     return {"ok": True, "message": f"已提交 {host} 的人工观察，等待管理员核验"}
 
 
+@app.post("/api/reviews/{review_id}/approve")
+def approve_review(review_id: int,
+                   admin_token: str = Header("", alias="X-Admin-Token")):
+    """管理员核验通过：合并人工观察进 sites 表 + manual_review.json。
+
+    需要 SITES_ADMIN_TOKEN 环境变量（服务器部署时设置）匹配才允许。
+    """
+    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
+    if not expected:
+        raise HTTPException(403, "服务器未设置 SITES_ADMIN_TOKEN，无法审核")
+    if admin_token != expected:
+        raise HTTPException(403, "管理员口令错误")
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, hostname, login, signup, note, submitter, submitted_at "
+            "FROM reviews_pending WHERE id = ?", (review_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, f"待审核记录不存在: {review_id}")
+        _rid, host, login, signup, note, submitter, ts = row
+        # 1) 更新 sites 表（合并人工结果）
+        cur.execute("""
+            UPDATE sites SET manual_login = CASE WHEN ? != '' THEN ? ELSE manual_login END,
+                            manual_signup = CASE WHEN ? != '' THEN ? ELSE manual_signup END,
+                            manual_note = CASE WHEN ? != '' THEN ? ELSE manual_note END,
+                            manual_verified = 1,
+                            match_status = 'manual_verified'
+            WHERE hostname = ?
+        """, (login, login, signup, signup, note, note, host))
+        # 2) 删除待审核记录
+        cur.execute("DELETE FROM reviews_pending WHERE id = ?", (review_id,))
+        conn.commit()
+    finally:
+        conn.close()
+    # 3) 写回 misc/manual_review.json（保持数据同步，便于 git 提交）
+    try:
+        manual_path = _PROJECT_ROOT / "misc" / "manual_review.json"
+        if manual_path.is_file():
+            import json as _json
+            with open(manual_path, encoding="utf-8") as f:
+                manual = _json.load(f)
+            sites = manual.setdefault("sites", {})
+            entry = sites.setdefault(host, {})
+            if login:
+                entry["manual_login"] = login
+            if signup:
+                entry["manual_signup"] = signup
+            if note:
+                entry["note"] = note
+            entry["verified"] = True
+            entry["reviewed_from"] = f"web@{submitter or 'admin'}@{ts}"
+            manual["updated_at"] = datetime.now(timezone.utc).isoformat()
+            with open(manual_path, "w", encoding="utf-8") as f:
+                _json.dump(manual, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass  # 写回失败不影响数据库生效
+    return {"ok": True, "message": f"已通过 {host} 的人工观察"}
+
+
 @app.delete("/api/reviews/{review_id}")
-def delete_review(review_id: int):
-    """管理员核验后删除待审核记录。"""
+def delete_review(review_id: int,
+                  admin_token: str = Header("", alias="X-Admin-Token")):
+    """管理员核验后删除待审核记录（拒绝该提交）。"""
+    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
+    if not expected:
+        raise HTTPException(403, "服务器未设置 SITES_ADMIN_TOKEN，无法审核")
+    if admin_token != expected:
+        raise HTTPException(403, "管理员口令错误")
     conn = _conn()
     try:
         cur = conn.cursor()
