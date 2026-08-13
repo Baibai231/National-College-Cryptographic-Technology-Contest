@@ -223,6 +223,77 @@ def add_site(req: AddSiteRequest):
             "message": ("更新" if exists else "新增") + f" {host} ({req.version})"}
 
 
+@app.get("/api/export")
+def export_data(admin_token: str = Header("", alias="X-Admin-Token")):
+    """导出全量站点数据（供 Mac 拉回合并，保持数据一致）。
+
+    返回：
+      records: 与 run_cn60_classify 输出同格式的测量记录列表
+      manual:  manual_review.json 内容
+    """
+    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
+    if not expected:
+        raise HTTPException(403, "服务器未设置 SITES_ADMIN_TOKEN")
+    if admin_token != expected:
+        raise HTTPException(403, "管理员口令错误")
+
+    records = []
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM sites ORDER BY hostname")
+        for row in cur.fetchall():
+            site = _row_to_site(row)
+            for kind in ("login", "signup"):
+                entry = site[kind]
+                if not entry.get("flow_type"):
+                    continue
+                rec = {
+                    "site": site.get("url") or "https://" + site["hostname"],
+                    "hostname": site["hostname"],
+                    "entry_kind": kind,
+                    "measured_at": entry.get("measured_at"),
+                    "version": site.get("version", "?"),
+                    "flow_type": entry.get("flow_type"),
+                    "confidence": None,
+                    "stop_reason": entry.get("stop_reason"),
+                    "primary_method": None,
+                    "final_url": entry.get("final_url"),
+                    "states": entry.get("steps", []),
+                    "policy": entry.get("policy", {}),
+                    "evidence": [],
+                    "error": None,
+                }
+                records.append(rec)
+        # 历史版本
+        cur.execute("SELECT * FROM site_history")
+        for r in cur.fetchall():
+            details = json.loads(r[8] or "{}")
+            records.append({
+                "site": "https://" + r[1],
+                "hostname": r[1], "entry_kind": r[2],
+                "measured_at": r[7], "version": r[3],
+                "flow_type": r[4], "confidence": None,
+                "stop_reason": r[5], "primary_method": r[6],
+                "final_url": None,
+                "states": details.get("steps", []),
+                "policy": details.get("policy", {}),
+                "evidence": [], "error": None,
+            })
+    finally:
+        conn.close()
+    manual = {}
+    manual_path = _PROJECT_ROOT / "misc" / "manual_review.json"
+    if manual_path.is_file():
+        try:
+            import json as _json
+            with open(manual_path, encoding="utf-8") as f:
+                manual = _json.load(f)
+        except Exception:
+            pass
+    return {"records": records, "manual": manual}
+
+
 @app.get("/api/stats")
 def stats():
     conn = _conn()
