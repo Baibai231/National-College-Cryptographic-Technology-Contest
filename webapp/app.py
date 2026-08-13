@@ -158,18 +158,24 @@ class ReviewRequest(BaseModel):
 
 
 @app.get("/api/reviews/pending")
-def pending_reviews():
-    """待审核的人工观察提交（管理员核验用）。"""
+def pending_reviews(hostname: str = Query("", max_length=100)):
+    """待审核的人工观察提交（管理员核验用）。可传 hostname 查单站。"""
     conn = _conn()
     try:
         cur = conn.cursor()
-        cur.execute(
-            "SELECT id, hostname, login, signup, note, submitter, submitted_at "
-            "FROM reviews_pending ORDER BY id DESC")
+        if hostname:
+            cur.execute(
+                "SELECT id, hostname, login, signup, note, submitter, submitted_at "
+                "FROM reviews_pending WHERE hostname = ? ORDER BY id DESC",
+                (hostname,))
+        else:
+            cur.execute(
+                "SELECT id, hostname, login, signup, note, submitter, submitted_at "
+                "FROM reviews_pending ORDER BY id DESC")
         rows = cur.fetchall()
     finally:
         conn.close()
-    return {"reviews": [
+    return {"total": len(rows), "reviews": [
         {"id": r[0], "hostname": r[1], "login": r[2], "signup": r[3],
          "note": r[4], "submitter": r[5], "submitted_at": r[6]}
         for r in rows

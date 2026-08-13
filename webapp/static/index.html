@@ -59,7 +59,7 @@
 <div class="container py-4">
   <h3 class="mb-1">注册流程测量平台</h3>
   <p class="text-muted small mb-3">
-    站点数据库：程序自动测量结果 + 组员人工复核对照。共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站
+    共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站
   </p>
 
   <div class="search-bar mb-4">
@@ -116,6 +116,7 @@
     </div>
     <div class="my-modal-body">
       <div class="mb-2"><b id="review-host"></b></div>
+      <div id="review-pending-tip" class="mb-2"></div>
       <div class="mb-2">
         <label class="form-label">登录方式（人工看到的）</label>
         <textarea id="review-login" class="form-control" rows="2" placeholder="如：手机号+验证码，可切密码登录"></textarea>
@@ -316,6 +317,7 @@ async function showDetail(host) {
     </table>
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
+      <span id="review-count-badge" class="small"></span>
       <div class="mt-1">登录：${s.manual.login || '—'}</div>
       <div>注册：${s.manual.signup || '—'}</div>
       ${s.manual.note ? `<div class="text-muted small">备注：${s.manual.note}</div>` : ''}
@@ -327,6 +329,15 @@ async function showDetail(host) {
     <div id="t-login" style="margin-top:10px">${stepsHtml(s.login.steps)}</div>
     <div id="t-signup" style="margin-top:10px; display:none">${stepsHtml(s.signup.steps)}</div>`;
   showDetailModal();
+  // 查询该站待审核提交数，显示在人工复核区
+  fetch('/api/reviews/pending?hostname=' + encodeURIComponent(host))
+    .then(r => r.json())
+    .then(d => {
+      const badge = document.getElementById('review-count-badge');
+      if (badge && d.total > 0)
+        badge.innerHTML = `（<b>${d.total}</b> 份待审核）`;
+    })
+    .catch(() => {});
 }
 document.addEventListener('click', e => {
   const link = e.target.closest('.site-link, .detail-btn');
@@ -344,6 +355,22 @@ document.addEventListener('click', e => {
     document.getElementById('review-signup').value = '';
     document.getElementById('review-note').value = '';
     document.getElementById('review-submitter').value = '';
+    // 查询该站已有的待审核提交，防止组员重复提交
+    const tip = document.getElementById('review-pending-tip');
+    tip.innerHTML = '<div class="text-muted small">正在查询待审核状态…</div>';
+    fetch('/api/reviews/pending?hostname=' + encodeURIComponent(reviewHost))
+      .then(r => r.json())
+      .then(d => {
+        if (d.total > 0) {
+          const names = [...new Set(d.reviews.map(x => x.submitter || '匿名'))].join('、');
+          tip.innerHTML = `<div class="alert alert-warning py-2 small">
+            该站已有 <b>${d.total}</b> 份待审核提交（${names}），
+            请先确认内容是否已有，避免重复提交。</div>`;
+        } else {
+          tip.innerHTML = `<div class="alert alert-success py-2 small">该站暂无待审核提交，可以填写。</div>`;
+        }
+      })
+      .catch(() => { tip.innerHTML = ''; });
     showReviewModal();
   }
 });

@@ -1,0 +1,10 @@
+fastapi>=0.100
+uvicorn>=0.23
+loguru>=0.6
+selenium>=4.16
+webdriver_manager>=4.0
+undetected-chromedriver>=3.5
+Faker>=18
+requests>=2.31
+tldextract>=3.2
+urllib3>=1.26
