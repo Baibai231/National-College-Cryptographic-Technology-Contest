@@ -219,11 +219,46 @@ def delete_review(review_id: int):
 
 @app.post("/api/classify")
 def classify_site(req: ClassifyRequest):
-    """输入网站主页 → 实时分类注册流程（复用测量工具，安全只读）。"""
+    """输入网站主页 → 实时分类注册流程（复用测量工具，安全只读）。
+
+    先查数据库：该域名已测过则直接返回库中结果，避免重复跑 Chrome。
+    """
     url = req.url.strip()
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     kind = req.entry_kind if req.entry_kind in ("signup", "login") else "signup"
+
+    # 数据库命中：直接返回已有结果
+    from urllib.parse import urlparse
+    host = (urlparse(url).hostname or "").lower()
+    if host:
+        conn = _conn()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM sites WHERE hostname = ?", (host,))
+            row = cur.fetchone()
+        finally:
+            conn.close()
+        if row:
+            site = _row_to_site(row)
+            entry = site[kind]
+            return {
+                "url": url,
+                "entry_kind": kind,
+                "from_database": True,
+                "hostname": host,
+                "flow_type": entry.get("flow_type"),
+                "flow_zh": entry.get("flow_zh"),
+                "stop_reason": None,
+                "primary_method": None,
+                "confidence": None,
+                "final_url": entry.get("final_url"),
+                "states": entry.get("steps", []),
+                "evidence": [],
+                "route": entry.get("route"),
+                "manual": site.get("manual"),
+            }
+
     try:
         from utils.util_test_password import _get_new_driver
         from utils.login_link_discovery import LoginLinkDiscovery

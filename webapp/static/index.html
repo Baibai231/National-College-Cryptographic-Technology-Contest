@@ -412,12 +412,17 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
     const d = await r.json();
     if (!r.ok) { box.innerHTML = `<div class="alert alert-danger py-2">${d.detail || '分类失败'}</div>`; return; }
     const ev = (d.evidence || []).slice(0, 5).map(e => `<div class="small text-muted">${e}</div>`).join('');
+    const srcTag = d.from_database
+      ? '<span class="badge text-bg-success">数据库已有该站结果</span>'
+      : '<span class="badge text-bg-secondary">现场分类</span>';
     box.innerHTML = `
       <div class="alert alert-info py-2 mb-2">
-        <b>${d.url}</b>（${d.entry_kind === 'signup' ? '注册' : '登录'}）
-        → ${badge(d.flow_type)} 置信度 ${d.confidence}
-        <div class="small mt-1">停止原因：${d.stop_reason} | 主方式：${d.primary_method}</div>
-        <div class="small text-muted">最终页：${d.final_url}</div>
+        <div><b>${d.url}</b>（${d.entry_kind === 'signup' ? '注册' : '登录'}） ${srcTag}</div>
+        <div class="mt-1">→ ${badge(d.flow_type)}${d.confidence ? ' 置信度 ' + d.confidence : ''}</div>
+        ${d.route ? `<div class="small mt-1">路线：${d.route}</div>` : ''}
+        ${d.stop_reason ? `<div class="small mt-1">停止原因：${d.stop_reason}</div>` : ''}
+        ${d.final_url ? `<div class="small text-muted">最终页：${d.final_url}</div>` : ''}
+        ${d.manual && d.manual.verified ? `<div class="small mt-1">人工复核：${d.manual.signup || d.manual.login || ''}</div>` : ''}
       </div>
       <div class="small text-muted">${ev}</div>`;
   } catch (err) {
