@@ -162,6 +162,34 @@ class AddSiteRequest(BaseModel):
     admin_token: str = ""
 
 
+_FIELD_ZH = {
+    "phone": "手机号", "email": "邮箱", "identifier": "账号/邮箱",
+    "password": "口令", "code": "一次性验证码",
+}
+_BLOCKER_ZH = {
+    "sms_code": "短信验证码", "email_code": "邮箱验证码",
+    "verification_code": "一次性验证码", "scan": "扫码",
+    "captcha": "图片/人机验证", "slide": "滑块验证",
+    "app_confirm": "App 确认", "tos": "用户协议确认",
+}
+
+
+def _extract_states(states, key):
+    """从 raw_states 提取字段/阻断：英文码→中文，转中文串（供表格显示）。"""
+    if not states:
+        return ""
+    seen = []
+    for st in states:
+        items = st.get(key) or []
+        if isinstance(items, str):
+            items = [items]
+        for it in items:
+            zh = (_FIELD_ZH if key == "fields" else _BLOCKER_ZH).get(it, it)
+            if zh not in seen:
+                seen.append(zh)
+    return "、".join(seen)
+
+
 @app.post("/api/sites")
 def add_site(req: AddSiteRequest):
     """管理员把现场分类结果写入数据库（新增或更新站点）。
@@ -184,6 +212,11 @@ def add_site(req: AddSiteRequest):
     host_main = host.replace("www.", "").split(".")[0] if "." in host else host
     keywords = json.dumps([host, host_main, host.replace("www.", "")],
                           ensure_ascii=False)
+    # 从 raw_states 提取字段/阻断（中文，用于详情表格）
+    login_fields = _extract_states(login.get("raw_states") or login.get("steps", []), "fields")
+    login_blockers = _extract_states(login.get("raw_states") or login.get("steps", []), "blockers")
+    signup_fields = _extract_states(signup.get("raw_states") or signup.get("steps", []), "fields")
+    signup_blockers = _extract_states(signup.get("raw_states") or signup.get("steps", []), "blockers")
     details = json.dumps({
         "login_steps": login.get("steps", []),
         "signup_steps": signup.get("steps", []),
@@ -202,33 +235,41 @@ def add_site(req: AddSiteRequest):
             cur.execute("""
                 UPDATE sites SET version = ?, keywords = ?,
                     login_flow = ?, login_flow_zh = ?,
-                    login_route = ?, login_final_url = ?, login_measured_at = ?,
+                    login_route = ?, login_fields = ?, login_blockers = ?,
+                    login_final_url = ?, login_measured_at = ?,
                     signup_flow = ?, signup_flow_zh = ?, signup_route = ?,
+                    signup_fields = ?, signup_blockers = ?,
                     signup_final_url = ?, signup_measured_at = ?, details_json = ?
                 WHERE hostname = ?
             """, (
                 req.version, keywords,
                 login.get("flow_type"), login.get("flow_zh"),
-                login.get("route"), login.get("final_url"), now,
+                login.get("route"), login_fields, login_blockers,
+                login.get("final_url"), now,
                 signup.get("flow_type"), signup.get("flow_zh"),
-                signup.get("route"), signup.get("final_url"), now,
+                signup.get("route"), signup_fields, signup_blockers,
+                signup.get("final_url"), now,
                 details, host,
             ))
         else:
             cur.execute("""
                 INSERT INTO sites (hostname, url, keywords, version,
-                    login_flow, login_flow_zh, login_route, login_final_url,
+                    login_flow, login_flow_zh, login_route, login_fields,
+                    login_blockers, login_final_url,
                     login_measured_at, signup_flow, signup_flow_zh,
-                    signup_route, signup_final_url, signup_measured_at,
+                    signup_route, signup_fields, signup_blockers,
+                    signup_final_url, signup_measured_at,
                     manual_login, manual_signup, manual_note,
                     manual_verified, match_status, details_json)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 host, req.url or "https://" + host, keywords, req.version,
                 login.get("flow_type"), login.get("flow_zh"),
-                login.get("route"), login.get("final_url"), now,
+                login.get("route"), login_fields, login_blockers,
+                login.get("final_url"), now,
                 signup.get("flow_type"), signup.get("flow_zh"),
-                signup.get("route"), signup.get("final_url"), now,
+                signup.get("route"), signup_fields, signup_blockers,
+                signup.get("final_url"), now,
                 "", "", "", 0, "pending_manual", details,
             ))
         conn.commit()
