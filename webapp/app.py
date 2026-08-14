@@ -429,6 +429,7 @@ class ReviewRequest(BaseModel):
     signup: str = ""
     note: str = ""
     submitter: str = ""
+    review_type: str = "manual"  # manual=人工观察提交, feedback=识别结果反馈
 
 
 @app.get("/api/reviews/pending")
@@ -439,19 +440,20 @@ def pending_reviews(hostname: str = Query("", max_length=100)):
         cur = conn.cursor()
         if hostname:
             cur.execute(
-                "SELECT id, hostname, login, signup, note, submitter, submitted_at "
+                "SELECT id, hostname, login, signup, note, submitter, review_type, submitted_at "
                 "FROM reviews_pending WHERE hostname = ? ORDER BY id DESC",
                 (hostname,))
         else:
             cur.execute(
-                "SELECT id, hostname, login, signup, note, submitter, submitted_at "
+                "SELECT id, hostname, login, signup, note, submitter, review_type, submitted_at "
                 "FROM reviews_pending ORDER BY id DESC")
         rows = cur.fetchall()
     finally:
         conn.close()
     return {"total": len(rows), "reviews": [
         {"id": r[0], "hostname": r[1], "login": r[2], "signup": r[3],
-         "note": r[4], "submitter": r[5], "submitted_at": r[6]}
+         "note": r[4], "submitter": r[5], "review_type": r[6] or "manual",
+         "submitted_at": r[7]}
         for r in rows
     ]}
 
@@ -467,15 +469,17 @@ def submit_review(req: ReviewRequest):
         cur = conn.cursor()
         cur.execute(
             "INSERT INTO reviews_pending (hostname, login, signup, note, "
-            "submitter, submitted_at) VALUES (?,?,?,?,?,?)",
+            "submitter, review_type, submitted_at) VALUES (?,?,?,?,?,?,?)",
             (host, req.login.strip(), req.signup.strip(), req.note.strip(),
              req.submitter.strip(),
+             req.review_type if req.review_type in ("manual", "feedback") else "manual",
              datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
     finally:
         conn.close()
-    return {"ok": True, "message": f"已提交 {host} 的人工观察，等待管理员核验"}
+    kind = "识别反馈" if req.review_type == "feedback" else "人工观察"
+    return {"ok": True, "message": f"已提交 {host} 的{kind}，等待管理员核验"}
 
 
 @app.post("/api/reviews/{review_id}/approve")
@@ -494,12 +498,17 @@ def approve_review(review_id: int,
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT id, hostname, login, signup, note, submitter, submitted_at "
+            "SELECT id, hostname, login, signup, note, submitter, review_type, submitted_at "
             "FROM reviews_pending WHERE id = ?", (review_id,))
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, f"待审核记录不存在: {review_id}")
-        _rid, host, login, signup, note, submitter, ts = row
+        _rid, host, login, signup, note, submitter, rtype, ts = row
+        if rtype == "feedback":
+            # 识别反馈：不自动合并人工核验，只删除（管理员已人工判断处理）
+            cur.execute("DELETE FROM reviews_pending WHERE id = ?", (review_id,))
+            conn.commit()
+            return {"ok": True, "message": f"已处理 {host} 的识别反馈（未写入人工核验）"}
         # 1) 更新 sites 表（合并人工结果）
         cur.execute("""
             UPDATE sites SET manual_login = CASE WHEN ? != '' THEN ? ELSE manual_login END,

@@ -279,6 +279,7 @@ def create_db(sites, db_path, history=None):
             signup TEXT DEFAULT '',
             note TEXT DEFAULT '',
             submitter TEXT DEFAULT '',
+            review_type TEXT DEFAULT 'manual',
             submitted_at TEXT
         )
     """)

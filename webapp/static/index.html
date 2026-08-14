@@ -67,7 +67,7 @@
 
   <div class="search-bar mb-4">
     <div class="input-group">
-      <input id="search-input" class="form-control" placeholder="搜索站点（如 知乎、慕课、baidu…）">
+      <input id="search-input" class="form-control" placeholder="搜索站点域名或中文名（如 zhihu.com、慕课）">
       <button id="search-btn" class="btn btn-primary">搜索</button>
     </div>
   </div>
@@ -144,6 +144,39 @@
     <div class="my-modal-foot">
       <button type="button" class="btn btn-secondary btn-sm" onclick="hideReview()">取消</button>
       <button type="button" class="btn btn-primary btn-sm" id="review-submit-btn">提交</button>
+    </div>
+  </div>
+</div>
+
+<div id="feedbackModal" class="my-modal" style="display:none">
+  <div class="my-modal-box">
+    <div class="my-modal-head">
+      <b>反馈识别结果</b>
+      <button type="button" class="my-modal-close" onclick="hideFeedback()">×</button>
+    </div>
+    <div class="my-modal-body">
+      <div class="mb-2"><b id="feedback-host"></b></div>
+      <div class="mb-2">
+        <label class="form-label">反馈类型</label>
+        <select id="feedback-type" class="form-select">
+          <option value="wrong">程序识别有误（和人工/实际不符）</option>
+          <option value="correct_but_marked_wrong">程序其实是对的，但被标了不一致</option>
+          <option value="other">其他问题</option>
+        </select>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">说明（必填）</label>
+        <textarea id="feedback-note" class="form-control" rows="3" placeholder="如：程序说注册是直接口令，实际注册只有手机号+验证码"></textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">你的名字</label>
+        <input id="feedback-submitter" class="form-control" placeholder="姓名或昵称">
+      </div>
+      <div class="text-muted small">反馈进入待审核列表，管理员确认后处理。</div>
+    </div>
+    <div class="my-modal-foot">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="hideFeedback()">取消</button>
+      <button type="button" class="btn btn-primary btn-sm" id="feedback-submit-btn">提交反馈</button>
     </div>
   </div>
 </div>
@@ -283,13 +316,16 @@ async function loadPending() {
   box.innerHTML = d.reviews.map(rev => `
     <div class="border rounded p-2 mb-2">
       <div><b>${rev.hostname}</b>
+        ${rev.review_type === 'feedback'
+          ? '<span class="badge text-bg-warning">识别反馈</span>'
+          : '<span class="badge text-bg-info">人工观察</span>'}
         <span class="text-muted small">提交人：${rev.submitter || '匿名'} ${(rev.submitted_at || '').slice(0, 16).replace('T', ' ')}</span>
       </div>
       ${rev.login ? `<div class="small">登录：${rev.login}</div>` : ''}
       ${rev.signup ? `<div class="small">注册：${rev.signup}</div>` : ''}
-      ${rev.note ? `<div class="small text-muted">备注：${rev.note}</div>` : ''}
+      ${rev.note ? `<div class="small text-muted">${rev.note}</div>` : ''}
       <div class="mt-1">
-        <button class="btn btn-sm btn-success" onclick="approveReview(${rev.id})">通过</button>
+        <button class="btn btn-sm btn-success" onclick="approveReview(${rev.id})">${rev.review_type === 'feedback' ? '已处理' : '通过'}</button>
         <button class="btn btn-sm btn-outline-danger" onclick="denyReview(${rev.id})">删除</button>
       </div>
     </div>`).join('');
@@ -439,6 +475,7 @@ async function showDetail(host) {
         : ''}
     </div>
     <button class="btn btn-sm btn-outline-secondary" onclick="showHistory('${s.hostname}')">查看历史程序结果</button>
+    <button class="btn btn-sm btn-outline-warning" onclick="showFeedback('${s.hostname}')">反馈识别结果</button>
     <div id="history-box" class="mt-2"></div>
     <div class="step-tabs mt-3">
       <button class="step-tab-btn active" data-pane="login" onclick="switchStepTab('login')">登录步骤</button>
@@ -464,6 +501,38 @@ document.addEventListener('click', e => {
 
 // 提交人工观察
 let reviewHost = '';
+let feedbackHost = '';
+function showFeedback(host) {
+  feedbackHost = host;
+  document.getElementById('feedback-host').textContent = host;
+  document.getElementById('feedback-type').value = 'wrong';
+  document.getElementById('feedback-note').value = '';
+  document.getElementById('feedback-submitter').value = '';
+  document.getElementById('feedbackModal').style.display = 'flex';
+}
+function hideFeedback() { document.getElementById('feedbackModal').style.display = 'none'; }
+document.getElementById('feedback-submit-btn').addEventListener('click', async () => {
+  const note = document.getElementById('feedback-note').value.trim();
+  const type = document.getElementById('feedback-type').value;
+  if (!note) { alert('请填写说明'); return; }
+  const typeMap = { wrong: '程序识别有误', correct_but_marked_wrong: '实际一致但被标不一致', other: '其他' };
+  const payload = {
+    hostname: feedbackHost,
+    login: '', signup: '',
+    note: '[' + typeMap[type] + '] ' + note,
+    submitter: document.getElementById('feedback-submitter').value,
+    review_type: 'feedback'
+  };
+  const r = await fetch('/api/reviews', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  alert(d.message || '已提交');
+  hideFeedback();
+  loadStats();
+});
 document.addEventListener('click', e => {
   const btn = e.target.closest('.review-btn');
   if (btn) {
