@@ -68,6 +68,7 @@ def _row_to_site(row):
             "route": lr, "fields": lfields, "blockers": lblockers,
             "final_url": lfinal, "measured_at": lma,
             "steps": details.get("login_steps", []),
+            "raw_states": details.get("login_raw_states", []),
             "policy": details.get("login_policy", {}),
         },
         "signup": {
@@ -75,6 +76,7 @@ def _row_to_site(row):
             "route": sr, "fields": sfields, "blockers": sblockers,
             "final_url": sfinal, "measured_at": sma,
             "steps": details.get("signup_steps", []),
+            "raw_states": details.get("signup_raw_states", []),
             "policy": details.get("signup_policy", {}),
         },
         "manual": {
@@ -172,10 +174,15 @@ def add_site(req: AddSiteRequest):
     login = req.login or {}
     signup = req.signup or {}
     now = datetime.now(timezone.utc).isoformat()
-    keywords = json.dumps([host], ensure_ascii=False)
+    # 关键词：hostname + 主域名（zhihu.com → zhihu），便于部分输入搜索
+    host_main = host.replace("www.", "").split(".")[0] if "." in host else host
+    keywords = json.dumps([host, host_main, host.replace("www.", "")],
+                          ensure_ascii=False)
     details = json.dumps({
         "login_steps": login.get("steps", []),
         "signup_steps": signup.get("steps", []),
+        "login_raw_states": login.get("raw_states", []),
+        "signup_raw_states": signup.get("raw_states", []),
         "login_policy": login.get("policy", {}),
         "signup_policy": signup.get("policy", {}),
     }, ensure_ascii=False)
@@ -187,13 +194,15 @@ def add_site(req: AddSiteRequest):
         exists = cur.fetchone() is not None
         if exists:
             cur.execute("""
-                UPDATE sites SET version = ?, login_flow = ?, login_flow_zh = ?,
+                UPDATE sites SET version = ?, keywords = ?,
+                    login_flow = ?, login_flow_zh = ?,
                     login_route = ?, login_final_url = ?, login_measured_at = ?,
                     signup_flow = ?, signup_flow_zh = ?, signup_route = ?,
                     signup_final_url = ?, signup_measured_at = ?, details_json = ?
                 WHERE hostname = ?
             """, (
-                req.version, login.get("flow_type"), login.get("flow_zh"),
+                req.version, keywords,
+                login.get("flow_type"), login.get("flow_zh"),
                 login.get("route"), login.get("final_url"), now,
                 signup.get("flow_type"), signup.get("flow_zh"),
                 signup.get("route"), signup.get("final_url"), now,
@@ -259,7 +268,7 @@ def export_data(admin_token: str = Header("", alias="X-Admin-Token")):
                     "stop_reason": entry.get("stop_reason"),
                     "primary_method": None,
                     "final_url": entry.get("final_url"),
-                    "states": entry.get("steps", []),
+                    "states": entry.get("raw_states") or entry.get("steps", []),
                     "policy": entry.get("policy", {}),
                     "evidence": [],
                     "error": None,

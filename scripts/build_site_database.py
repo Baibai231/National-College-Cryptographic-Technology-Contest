@@ -36,10 +36,14 @@ BLOCKER_ZH = {
 
 
 def _fields_zh(fields):
+    if isinstance(fields, str):
+        return fields if fields else "—"
     return "、".join(FIELD_ZH.get(f, f) for f in fields) or "—"
 
 
 def _blockers_zh(blockers):
+    if isinstance(blockers, str):
+        return blockers if blockers else "—"
     return "、".join(BLOCKER_ZH.get(b, b) for b in blockers) or "—"
 
 
@@ -138,6 +142,7 @@ def build_sites(groups):
                     {b for s in (login or {}).get("states", []) for b in s.get("blockers", [])}),
                 "final_url": (login or {}).get("final_url", ""),
                 "steps": _summary((login or {}).get("states", [])),
+                "raw_states": (login or {}).get("states", []),
                 "measured_at": (login or {}).get("measured_at", ""),
                 "policy": (login or {}).get("policy", {}),
             },
@@ -152,6 +157,7 @@ def build_sites(groups):
                     {b for s in (signup or {}).get("states", []) for b in s.get("blockers", [])}),
                 "final_url": (signup or {}).get("final_url", ""),
                 "steps": _summary((signup or {}).get("states", [])),
+                "raw_states": (signup or {}).get("states", []),
                 "measured_at": (signup or {}).get("measured_at", ""),
                 "policy": (signup or {}).get("policy", {}),
             },
@@ -280,6 +286,8 @@ def create_db(sites, db_path, history=None):
         details = {
             "login_steps": s["login"]["steps"],
             "signup_steps": s["signup"]["steps"],
+            "login_raw_states": s["login"]["raw_states"],
+            "signup_raw_states": s["signup"]["raw_states"],
             "login_policy": s["login"]["policy"],
             "signup_policy": s["signup"]["policy"],
         }

@@ -496,7 +496,7 @@ async function addSiteToDb() {
   const entry = {
     flow_type: d.flow_type, flow_zh: d.flow_zh,
     route: d.route || '', final_url: d.final_url || '',
-    steps: d.states || [], policy: {}
+    steps: d.states || [], raw_states: d.states || [], policy: {}
   };
   const payload = {
     hostname: host, url: d.url, version: 'v3',

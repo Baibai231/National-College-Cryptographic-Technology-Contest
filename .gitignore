@@ -59,3 +59,4 @@ htmlcov/
 *.LOCAL.*
 *.REMOTE.*
 webapp/browser-linux/
+webapp/sites.db
