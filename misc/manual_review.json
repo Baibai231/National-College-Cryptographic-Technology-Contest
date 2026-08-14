@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-14T05:25:25.087510+00:00",
+  "updated_at": "2026-08-14T05:30:37.182179+00:00",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
@@ -422,6 +422,13 @@
       "manual_signup": "手机号+验证码注册",
       "verified": true,
       "reviewed_from": "web@测试@2026-08-14T05:25:25.079876+00:00"
+    },
+    "www.3dmgame.com": {
+      "manual_login": "手机+验证码\n手机+密码\napp扫码",
+      "manual_signup": "手机+验证码+密码",
+      "note": "注册有8s广告弹窗",
+      "verified": true,
+      "reviewed_from": "web@cjx@2026-08-14T05:29:55.510960+00:00"
     }
   }
 }
