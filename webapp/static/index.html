@@ -254,6 +254,54 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 
 function showDetailModal() { document.getElementById('detailModal').style.display = 'flex'; }
 function hideDetail() { document.getElementById('detailModal').style.display = 'none'; }
+
+// 待审核管理（管理员）
+function showAdminModal() {
+  document.getElementById('adminModal').style.display = 'flex';
+  loadPending();
+}
+function hideAdmin() { document.getElementById('adminModal').style.display = 'none'; }
+async function loadPending() {
+  const token = document.getElementById('admin-token').value;
+  const box = document.getElementById('admin-list');
+  box.innerHTML = '<div class="text-muted">加载中…</div>';
+  const r = await fetch('/api/reviews/pending');
+  const d = await r.json();
+  if (!d.total) { box.innerHTML = '<div class="text-muted">暂无待审核提交</div>'; return; }
+  box.innerHTML = d.reviews.map(rev => `
+    <div class="border rounded p-2 mb-2">
+      <div><b>${rev.hostname}</b>
+        <span class="text-muted small">提交人：${rev.submitter || '匿名'} ${(rev.submitted_at || '').slice(0, 16).replace('T', ' ')}</span>
+      </div>
+      ${rev.login ? `<div class="small">登录：${rev.login}</div>` : ''}
+      ${rev.signup ? `<div class="small">注册：${rev.signup}</div>` : ''}
+      ${rev.note ? `<div class="small text-muted">备注：${rev.note}</div>` : ''}
+      <div class="mt-1">
+        <button class="btn btn-sm btn-success" onclick="approveReview(${rev.id})">通过</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="denyReview(${rev.id})">删除</button>
+      </div>
+    </div>`).join('');
+}
+async function approveReview(id) {
+  const token = document.getElementById('admin-token').value;
+  const r = await fetch('/api/reviews/' + id + '/approve', {
+    method: 'POST', headers: { 'X-Admin-Token': token }
+  });
+  const d = await r.json();
+  if (!r.ok) { alert(d.detail || '审核失败'); return; }
+  alert(d.message || '已通过');
+  loadPending();
+  loadStats();
+}
+async function denyReview(id) {
+  const token = document.getElementById('admin-token').value;
+  const r = await fetch('/api/reviews/' + id, {
+    method: 'DELETE', headers: { 'X-Admin-Token': token }
+  });
+  if (!r.ok) { const d = await r.json(); alert(d.detail || '删除失败'); return; }
+  loadPending();
+  loadStats();
+}
 function showReviewModal() { document.getElementById('reviewModal').style.display = 'flex'; }
 function hideReview() { document.getElementById('reviewModal').style.display = 'none'; }
 const BLOCKER_ZH = {
