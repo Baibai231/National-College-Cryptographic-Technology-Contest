@@ -84,6 +84,12 @@ def _row_to_site(row):
             "note": mnote, "verified": bool(mverified),
         },
         "match_status": match,
+        # 注册侧程序vs人工匹配：match/mismatch/pending（供筛选）
+        "signup_match": (
+            "match" if (mverified and _manual_match(sf, msignup or ""))
+            else "mismatch" if (mverified and not _manual_match(sf, msignup or ""))
+            else "pending"
+        ),
     }
 
 
