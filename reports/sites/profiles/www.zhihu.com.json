@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.731988+00:00",
+  "generated_at": "2026-08-14T15:34:35.824102+00:00",
   "report_title": "www.zhihu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -71,8 +71,7 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
@@ -90,7 +89,8 @@
                 "wechat"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "captcha"
               ],
               "actions": [
                 "none",
@@ -104,14 +104,14 @@
             }
           ],
           "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-14T10:08:10.448397+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:25:02.557791+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "sms"
           },
           "policy": {
@@ -119,8 +119,8 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -130,12 +130,13 @@
                 "third_party",
                 "phone"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "sms_code"
               ]
             },
@@ -199,8 +200,7 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
@@ -218,7 +218,8 @@
                 "wechat"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "captcha"
               ],
               "actions": [
                 "none"
@@ -231,14 +232,14 @@
             }
           ],
           "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-14T10:08:10.443341+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:25:02.557221+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "sms"
           },
           "policy": {
@@ -246,8 +247,8 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -257,12 +258,13 @@
                 "third_party",
                 "phone"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "sms_code"
               ]
             },

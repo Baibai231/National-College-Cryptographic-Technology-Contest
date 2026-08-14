@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.690788+00:00",
+  "generated_at": "2026-08-14T15:34:35.788715+00:00",
   "report_title": "www.cctv.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -83,7 +83,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:38:23.079951+00:00",
+            "measured_at": "2026-08-14T14:51:50.255638+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -122,7 +122,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.cctv.com/",
-          "final_url": "https://www.cctv.com/",
+          "final_url": "https://v.cctv.com/?spm=C96370.PPDB2vhvSivD.E59hodVIdh2C.5",
           "observed_route": "账号/邮箱 → 口令",
           "observed_routes": [
             {
@@ -185,26 +185,21 @@
             },
             {
               "step": 2,
-              "url": "https://www.cctv.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "identifier",
-                "password"
-              ],
-              "methods": [
-                "identifier"
-              ],
+              "url": "https://v.cctv.com/?spm=C96370.PPDB2vhvSivD.E59hodVIdh2C.5",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
               "blockers": [],
-              "actions": [],
-              "tabs": [
-                "register_tab"
+              "actions": [
+                "none"
               ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:38:15.083279+00:00",
+            "measured_at": "2026-08-14T14:51:16.001624+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

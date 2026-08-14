@@ -60,4 +60,5 @@ htmlcov/
 *.REMOTE.*
 webapp/browser-linux/
 webapp/sites.db
+*.jsonl.lock
 HANDOFF.md

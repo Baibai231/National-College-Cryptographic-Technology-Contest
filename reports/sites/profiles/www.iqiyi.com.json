@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.709408+00:00",
+  "generated_at": "2026-08-14T15:34:35.803937+00:00",
   "report_title": "www.iqiyi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -69,7 +69,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T11:02:55.626458+00:00",
+            "measured_at": "2026-08-14T14:33:42.170022+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -105,8 +105,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.iqiyi.com/",
-          "final_url": "https://www.iqiyi.com/",
+          "start_url": "https://www.iqiyi.com/vip/",
+          "final_url": "https://www.iqiyi.com/vip/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -119,7 +119,9 @@
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
+              "ui_types": [
+                "modal"
+              ],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -127,7 +129,9 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
+          "ui_types": [
+            "modal"
+          ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -136,28 +140,27 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.iqiyi.com/",
-              "ui_type": "unknown",
+              "url": "https://www.iqiyi.com/vip/",
+              "ui_type": "modal",
               "fields": [],
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click",
                 "none"
               ],
               "tabs": [],
-              "note": "entry_clicked_no_change"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:16:14.372169+00:00",
+            "measured_at": "2026-08-14T14:33:39.359234+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -166,7 +169,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

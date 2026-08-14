@@ -27,6 +27,7 @@ from signup_flow_classifier.navigator import (
 )
 from signup_flow_classifier.browser_failures import (
     _ACCESS_PAGE_MARKERS, _ACCESS_REDIRECT_HOSTS, detect_access_block,
+    is_human_challenge_marker,
 )
 from signup_flow_classifier.classifier_engine import _has_auto_signup
 from signup_flow_classifier.flow_types import PageState
@@ -154,8 +155,9 @@ class MultilingualCapabilityTests(unittest.TestCase):
 class AccessBlockDetectionTests(unittest.TestCase):
     """反爬重定向/整页验证识别（beian 跳转、百度安全验证、36kr 整页挑战）。"""
 
-    def test_beian_redirect_marker(self):
-        self.assertTrue(any("mps.gov.cn" in m for m in _ACCESS_PAGE_MARKERS))
+    def test_normal_footer_beian_text_is_not_global_access_marker(self):
+        self.assertNotIn("公安备案", _ACCESS_PAGE_MARKERS)
+        self.assertNotIn("备案查询", _ACCESS_PAGE_MARKERS)
 
     def test_beian_redirect_host(self):
         self.assertIn("beian.mps.gov.cn", _ACCESS_REDIRECT_HOSTS)
@@ -163,6 +165,21 @@ class AccessBlockDetectionTests(unittest.TestCase):
     def test_baidu_security_verification_marker(self):
         for m in ("百度安全验证", "请完成下方验证后继续操作", "请向右滑动完成拼图"):
             self.assertIn(m, _ACCESS_PAGE_MARKERS, m)
+
+    def test_challenge_marker_is_distinct_from_generic_access_denial(self):
+        self.assertTrue(is_human_challenge_marker("human_challenge_url"))
+        self.assertTrue(is_human_challenge_marker("百度安全验证"))
+        self.assertFalse(is_human_challenge_marker("access denied"))
+
+    def test_challenge_url_is_detected_without_site_specific_hostname(self):
+        class Driver:
+            current_url = "https://verify.example.com/v2/app/general_page"
+
+            @staticmethod
+            def execute_script(_script):
+                return {"title": "", "text": "", "controls": 0, "frames": []}
+
+        self.assertEqual(detect_access_block(Driver()), "human_challenge_url")
 
 
 class UrlPatternBudgetTests(unittest.TestCase):

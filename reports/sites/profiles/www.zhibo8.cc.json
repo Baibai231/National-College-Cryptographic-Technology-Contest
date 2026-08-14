@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.731649+00:00",
+  "generated_at": "2026-08-14T15:34:35.823844+00:00",
   "report_title": "www.zhibo8.cc 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -27,8 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -58,34 +57,22 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "entry_clicked_no_change"
-            },
-            {
-              "step": 2,
-              "url": "https://www.zhibo8.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
+                "none",
                 "none"
               ],
               "tabs": [],
-              "note": ""
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:42:59.891218+00:00",
+            "measured_at": "2026-08-14T14:56:43.241206+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -94,7 +81,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -122,8 +109,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -153,34 +139,22 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "entry_clicked_no_change"
-            },
-            {
-              "step": 2,
-              "url": "https://www.zhibo8.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
+                "none",
                 "none"
               ],
               "tabs": [],
-              "note": ""
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:42:44.725765+00:00",
+            "measured_at": "2026-08-14T14:56:40.277305+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -189,7 +163,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.707261+00:00",
+  "generated_at": "2026-08-14T15:34:35.802393+00:00",
   "report_title": "www.huya.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -91,7 +91,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:28:19.405020+00:00",
+            "measured_at": "2026-08-14T14:46:19.796588+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -202,7 +202,7 @@
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "entry_clicked_no_change"
+              "note": "register_structural_semantics_clicked_and_changed"
             },
             {
               "step": 2,
@@ -226,7 +226,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:27:34.252234+00:00",
+            "measured_at": "2026-08-14T14:45:45.001973+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

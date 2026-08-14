@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.672882+00:00",
+  "generated_at": "2026-08-14T15:34:35.775978+00:00",
   "report_title": "pan.baidu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -19,119 +19,6 @@
       "category": "待补充",
       "automatic": {
         "login": {
-          "status": "observed",
-          "start_url": "https://pan.baidu.com/",
-          "final_url": "https://pan.baidu.com/",
-          "observed_route": "短信验证码",
-          "observed_routes": [
-            {
-              "route_id": "automatic_route_1",
-              "step_numbers": [
-                1
-              ],
-              "summary": "短信验证码",
-              "fields_observed": [],
-              "methods_observed": [
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
-            }
-          ],
-          "fields_observed": [],
-          "methods_observed": [
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
-          "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
-          "steps": [
-            {
-              "step": 1,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none",
-                "none"
-              ],
-              "tabs": [
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 2,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": ""
-            }
-          ],
-          "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-14T10:48:41.120680+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
-          },
-          "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
-            "primary_method": "unknown"
-          },
-          "policy": {
-            "schema_version": "1.0",
-            "scope": "login",
-            "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
-              "evidence_boundary": "safely_reachable_ui"
-            },
-            "authentication": {
-              "observed_methods": [
-                "sms_or_otp"
-              ],
-              "password_status": "not_determined",
-              "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
-              "identifier_observed": false,
-              "blocking_factors": []
-            },
-            "security": {
-              "status": "not_observed_by_flow_classifier",
-              "note": "use login_policy_observer for passive transport and input checks"
-            }
-          },
-          "error": null
-        },
-        "signup": {
           "status": "observed",
           "start_url": "https://pan.baidu.com/",
           "final_url": "https://pan.baidu.com/",
@@ -178,7 +65,134 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:48:35.597409+00:00",
+            "measured_at": "2026-08-14T15:03:28.592313+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://pan.baidu.com/",
+          "final_url": "https://pan.baidu.com/",
+          "observed_route": "短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "短信验证码",
+              "fields_observed": [],
+              "methods_observed": [
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://pan.baidu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://pan.baidu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "no_sms_tab"
+            },
+            {
+              "step": 3,
+              "url": "https://pan.baidu.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "no_sms_tab"
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-14T15:03:16.305176+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },
@@ -197,7 +211,9 @@
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [],
+              "observed_methods": [
+                "sms_or_otp"
+              ],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,

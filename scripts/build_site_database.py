@@ -148,6 +148,7 @@ def build_sites(groups):
                 "measured_at": (login or {}).get("measured_at", ""),
                 "policy": (login or {}).get("policy", {}),
                 "error": (login or {}).get("error"),
+                "record": login or {},
             },
             "signup": {
                 "flow_type": signup_flow,
@@ -164,6 +165,7 @@ def build_sites(groups):
                 "measured_at": (signup or {}).get("measured_at", ""),
                 "policy": (signup or {}).get("policy", {}),
                 "error": (signup or {}).get("error"),
+                "record": signup or {},
             },
         }
         sites.append(site)
@@ -187,12 +189,14 @@ def attach_manual(sites, manual_path, keywords_path=None):
                 "signup": m.get("manual_signup", ""),
                 "note": m.get("note", ""),
                 "verified": bool(m.get("verified")),
+                "structured": m.get("structured", {}),
             }
             # 程序 vs 人工 匹配状态
             site["match_status"] = _match_status(site)
         else:
             site["manual"] = {
                 "login": "", "signup": "", "note": "", "verified": False,
+                "structured": {},
             }
             site["match_status"] = "pending_manual"
         # 中文关键词：hostname 去掉 www. 前缀匹配
@@ -241,9 +245,28 @@ def build_history(groups, sites):
 
 
 def create_db(sites, db_path, history=None):
+    # SQLite 是可重建索引，但待审核提交只存在其中。重建前先完整备份，
+    # 避免定时 pull/rebuild 把尚未处理的人工提交清空。
+    pending_rows = []
     if os.path.exists(db_path):
-        os.remove(db_path)
-    conn = sqlite3.connect(db_path)
+        try:
+            old = sqlite3.connect(db_path)
+            old.row_factory = sqlite3.Row
+            table = old.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='reviews_pending'"
+            ).fetchone()
+            if table:
+                pending_rows = [dict(row) for row in old.execute(
+                    "SELECT * FROM reviews_pending ORDER BY id")]
+            old.close()
+        except sqlite3.DatabaseError:
+            pending_rows = []
+    # 始终在旁路文件中完整构建；只有全部 SQL 成功后才原子替换服务索引。
+    # 构建异常时旧数据库仍可继续服务，下一次运行会清理残留 building 文件。
+    build_path = os.fspath(db_path) + ".building"
+    if os.path.exists(build_path):
+        os.remove(build_path)
+    conn = sqlite3.connect(build_path)
     cur = conn.cursor()
     cur.execute("""
         CREATE TABLE sites (
@@ -284,7 +307,8 @@ def create_db(sites, db_path, history=None):
             note TEXT DEFAULT '',
             submitter TEXT DEFAULT '',
             review_type TEXT DEFAULT 'manual',
-            submitted_at TEXT
+            submitted_at TEXT,
+            structured_json TEXT DEFAULT '{}'
         )
     """)
     for s in sites:
@@ -297,6 +321,9 @@ def create_db(sites, db_path, history=None):
             "signup_policy": s["signup"]["policy"],
             "login_error": s["login"].get("error"),
             "signup_error": s["signup"].get("error"),
+            "login_record": s["login"].get("record", {}),
+            "signup_record": s["signup"].get("record", {}),
+            "manual_structured": s["manual"].get("structured", {}),
         }
         cur.execute("""
             INSERT INTO sites VALUES (
@@ -328,8 +355,20 @@ def create_db(sites, db_path, history=None):
               h["measured_at"], h["details_json"])
              for h in history],
         )
+    if pending_rows:
+        columns = (
+            "id", "hostname", "login", "signup", "note", "submitter",
+            "review_type", "submitted_at", "structured_json")
+        cur.executemany(
+            "INSERT INTO reviews_pending (" + ",".join(columns) + ") "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            [tuple(row.get(column, "{}" if column == "structured_json" else "")
+                   for column in columns)
+             for row in pending_rows],
+        )
     conn.commit()
     conn.close()
+    os.replace(build_path, db_path)
 
 
 def main():

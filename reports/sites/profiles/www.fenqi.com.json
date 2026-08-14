@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.701981+00:00",
+  "generated_at": "2026-08-14T15:34:35.797460+00:00",
   "report_title": "www.fenqi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:58:22.735634+00:00",
+            "measured_at": "2026-08-14T15:13:26.074758+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:58:21.618071+00:00",
+            "measured_at": "2026-08-14T15:13:25.421748+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

@@ -51,11 +51,6 @@ _ACCESS_PAGE_MARKERS = (
     "请求被拒绝",
     "禁止访问",
     "当前访问疑似异常",
-    # 反爬重定向到公安备案查询页（beian.mps.gov.cn）：目标站点认为
-    # 当前访问来自非正常客户端，跳到备案查询站而不是返回认证页。
-    "mps.gov.cn",
-    "公安备案",
-    "备案查询",
     # 百度系整页安全验证（贴吧/百度首页实测）：整页滑块验证不是
     # 局部验证码组件，属于访问阻断。
     "百度安全验证",
@@ -71,6 +66,16 @@ _ACCESS_REDIRECT_HOSTS = (
 _CHALLENGE_FRAME_MARKERS = (
     "captcha", "geetest", "challenge", "security-check", "verify",
     "验证码", "安全验证",
+)
+
+_CHALLENGE_URL_MARKERS = (
+    "/captcha", "captcha-", "-captcha", "/challenge", "/security-check",
+    "/general_page",
+)
+
+_HUMAN_CHALLENGE_MARKERS = (
+    "百度安全验证", "请完成下方验证后继续操作", "请向右滑动完成拼图",
+    "full_page_captcha", "human_challenge_url",
 )
 
 _SERVER_ERROR_PAGE_MARKERS = (
@@ -113,11 +118,17 @@ def detect_access_block(driver) -> Optional[str]:
         current_host = ""
         try:
             from urllib.parse import urlparse
-            current_host = urlparse(driver.current_url).hostname or ""
+            parsed = urlparse(driver.current_url)
+            current_host = parsed.hostname or ""
+            current_path = (parsed.path or "").lower()
         except Exception:
             pass
         if any(host in (current_host or "") for host in _ACCESS_REDIRECT_HOSTS):
             return f"redirect_to_{current_host}"
+        host_label = (current_host.split(".", 1)[0] if current_host else "")
+        if (host_label in {"verify", "captcha", "challenge"}
+                or any(marker in current_path for marker in _CHALLENGE_URL_MARKERS)):
+            return "human_challenge_url"
     except Exception:
         pass
     try:
@@ -150,6 +161,11 @@ def detect_access_block(driver) -> Optional[str]:
                     and any(marker in semantic for marker in _CHALLENGE_FRAME_MARKERS)):
                 return "full_page_captcha"
     return None
+
+
+def is_human_challenge_marker(marker: str) -> bool:
+    """Distinguish a solvable human gate from a generic access denial."""
+    return any(value in (marker or "") for value in _HUMAN_CHALLENGE_MARKERS)
 
 
 def detect_server_error_page(driver) -> Optional[str]:

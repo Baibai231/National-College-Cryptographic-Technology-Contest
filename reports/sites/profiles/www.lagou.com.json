@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.714668+00:00",
+  "generated_at": "2026-08-14T15:34:35.808637+00:00",
   "report_title": "www.lagou.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -53,6 +53,7 @@
               "fields": [],
               "methods": [],
               "blockers": [
+                "captcha",
                 "slide"
               ],
               "actions": [
@@ -64,7 +65,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:25:50.761404+00:00",
+            "measured_at": "2026-08-14T14:44:29.466770+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -90,6 +91,7 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "slide"
               ]
             },
@@ -135,6 +137,7 @@
               "fields": [],
               "methods": [],
               "blockers": [
+                "captcha",
                 "slide"
               ],
               "actions": [
@@ -146,7 +149,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:25:48.438828+00:00",
+            "measured_at": "2026-08-14T14:44:25.939480+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -172,6 +175,7 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "slide"
               ]
             },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.725725+00:00",
+  "generated_at": "2026-08-14T15:34:35.818272+00:00",
   "report_title": "www.thepaper.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -104,7 +104,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:18:31.266608+00:00",
+            "measured_at": "2026-08-14T14:36:15.969667+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -148,14 +148,14 @@
           "status": "observed",
           "start_url": "https://www.thepaper.cn/",
           "final_url": "https://www.thepaper.cn/",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码/一次性验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
-              "summary": "手机号 → 短信验证码 → 口令",
+              "summary": "手机号 → 短信验证码/一次性验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "password"
@@ -163,10 +163,12 @@
               "methods_observed": [
                 "password",
                 "phone",
-                "sms"
+                "sms",
+                "one_time_code"
               ],
               "verification_observed": [
-                "sms"
+                "sms",
+                "one_time_code"
               ],
               "password_state": "observed_alongside_verification",
               "ui_types": [
@@ -182,10 +184,12 @@
           "methods_observed": [
             "password",
             "phone",
-            "sms"
+            "sms",
+            "one_time_code"
           ],
           "verification_observed": [
-            "sms"
+            "sms",
+            "one_time_code"
           ],
           "password_state": "observed_alongside_verification",
           "ui_types": [
@@ -199,6 +203,19 @@
             {
               "step": 1,
               "url": "https://www.thepaper.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.thepaper.cn/",
               "ui_type": "modal",
               "fields": [
                 "phone",
@@ -208,7 +225,8 @@
                 "phone"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "verification_code"
               ],
               "actions": [
                 "none"
@@ -221,7 +239,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:18:08.610404+00:00",
+            "measured_at": "2026-08-14T14:35:59.732381+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "no_signup_entry"
           },
@@ -251,7 +269,8 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "sms_code"
+                "sms_code",
+                "verification_code"
               ]
             },
             "security": {

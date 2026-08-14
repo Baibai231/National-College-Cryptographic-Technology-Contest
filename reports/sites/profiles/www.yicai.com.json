@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.729432+00:00",
+  "generated_at": "2026-08-14T15:34:35.821607+00:00",
   "report_title": "www.yicai.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -65,8 +65,7 @@
           ],
           "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
@@ -82,7 +81,8 @@
                 "phone"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "captcha"
               ],
               "actions": [
                 "none",
@@ -96,14 +96,14 @@
             }
           ],
           "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-14T10:40:21.938097+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:53:44.203788+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "sms"
           },
           "policy": {
@@ -111,8 +111,8 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -120,12 +120,13 @@
                 "sms_or_otp",
                 "phone"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "sms_code"
               ]
             },
@@ -145,7 +146,8 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -183,8 +185,7 @@
           ],
           "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
@@ -224,7 +225,8 @@
                 "phone"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "captcha"
               ],
               "actions": [
                 "none"
@@ -237,14 +239,14 @@
             }
           ],
           "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-14T10:40:12.433689+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:53:39.028758+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "sms"
           },
           "policy": {
@@ -252,8 +254,8 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -261,12 +263,13 @@
                 "sms_or_otp",
                 "phone"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "sms_code"
               ]
             },

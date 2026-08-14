@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.723128+00:00",
+  "generated_at": "2026-08-14T15:34:35.815484+00:00",
   "report_title": "www.qyer.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,98 +20,113 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://passport.qyer.com/register/mobile?ref=https%3A%2F%2Fwww.qyer.com%2F",
-          "final_url": "https://passport.qyer.com/register/mobile?ref=https%3A%2F%2Fwww.qyer.com%2F",
-          "observed_route": "手机号/邮箱/账号/邮箱 → 短信验证码 → 口令",
+          "start_url": "https://www.qyer.com/",
+          "final_url": "https://passport.qyer.com/login?ref=https%3A%2F%2Fwww.qyer.com%2F",
+          "observed_route": "邮箱 → 扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
-              "summary": "手机号/邮箱/账号/邮箱 → 短信验证码 → 口令",
+              "summary": "邮箱 → 扫码",
               "fields_observed": [
-                "phone",
-                "email",
-                "identifier",
-                "password",
-                "code"
+                "email"
               ],
               "methods_observed": [
-                "password",
-                "phone",
                 "email",
-                "identifier",
-                "sms"
+                "qr",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo",
+                "taobao"
               ],
               "verification_observed": [
-                "sms"
+                "qr"
               ],
-              "password_state": "observed_alongside_verification",
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [
-                "standalone_page"
+                "sso_iframe"
               ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
+              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
-            "phone",
-            "email",
-            "identifier",
-            "password",
-            "code"
+            "email"
           ],
           "methods_observed": [
-            "password",
-            "phone",
             "email",
-            "identifier",
-            "sms"
+            "qr",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo",
+            "taobao"
           ],
           "verification_observed": [
-            "sms"
+            "qr"
           ],
-          "password_state": "observed_alongside_verification",
+          "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [
-            "standalone_page"
+            "sso_iframe"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
+          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问",
           "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://passport.qyer.com/register/mobile?ref=https%3A%2F%2Fwww.qyer.com%2F",
-              "ui_type": "standalone_page",
+              "url": "https://www.qyer.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.qyer.com/login?ref=https%3A%2F%2Fwww.qyer.com%2F",
+              "ui_type": "sso_iframe",
               "fields": [
-                "phone",
-                "email",
-                "identifier",
-                "password",
-                "code"
+                "email"
               ],
               "methods": [
                 "email",
-                "identifier",
-                "phone"
+                "qq",
+                "qr",
+                "sso",
+                "taobao",
+                "wechat",
+                "weibo"
               ],
               "blockers": [
-                "sms_code"
+                "captcha"
               ],
-              "actions": [],
-              "tabs": [],
-              "note": ""
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [
+                "password_tab",
+                "register_tab"
+              ],
+              "note": "no_password_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:50:09.206020+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-14T14:12:21.466972+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "email_only"
           },
           "policy": {
             "schema_version": "1.0",
@@ -119,23 +134,22 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "password_step_reached",
-              "evidence_boundary": "pre_verification_only"
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "password",
-                "sms_or_otp",
-                "email",
-                "phone"
+                "qr_or_scan",
+                "third_party",
+                "email"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
-              "verification_observed": true,
-              "phone_observed": true,
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
               "identifier_observed": true,
               "blocking_factors": [
-                "sms_code"
+                "captcha"
               ]
             },
             "security": {
@@ -231,7 +245,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:50:04.380680+00:00",
+            "measured_at": "2026-08-14T15:05:15.443512+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

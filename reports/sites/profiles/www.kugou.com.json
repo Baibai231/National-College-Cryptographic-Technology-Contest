@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.713864+00:00",
+  "generated_at": "2026-08-14T15:34:35.807815+00:00",
   "report_title": "www.kugou.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -69,7 +69,8 @@
                 "qr"
               ],
               "blockers": [
-                "scan"
+                "scan",
+                "captcha"
               ],
               "actions": [
                 "none"
@@ -80,7 +81,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:31:29.804471+00:00",
+            "measured_at": "2026-08-14T14:48:40.373028+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -108,6 +109,7 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
+                "captcha",
                 "scan"
               ]
             },
@@ -180,7 +182,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:31:15.102452+00:00",
+            "measured_at": "2026-08-14T14:48:28.003331+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.730344+00:00",
+  "generated_at": "2026-08-14T15:34:35.822954+00:00",
   "report_title": "www.youku.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,95 +20,52 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.youku.com/ku/webhome",
-          "final_url": "https://www.youku.com/ku/webhome",
-          "observed_route": "短信验证码",
+          "start_url": "https://www.youku.com///_____tmd_____/punish?x5secdata=xfzHQ14cSexDdnUAeOKVihlgoCfUjZlYe-TRZRAWFqJvmXECNF2ykXZZ-FhSxEcJhF1H8kdxUYsYg84bmNJC_UjlFjMdBqnfiAj19CjmfP_Z5ouOQFPBf7bjWO2M8YRNQtDlqsRU8XQgEi8xPehInAyGEI2RoOLbnbEbSTPKPPUcAVnY6xwGgGKkGNVxBt4ZKUG_NaKi0KWpkREixifbAIf7PqiThd4vA5nimbmxXOhwb-eLEN8im727WdUi8W32z-3LZcAhEBImslEmMU-DMZ9imlCbcM97D4T_uZ9uNPkr6sBAkqhtiERWvWHHEoYF_i2gbVdSvuN1UPdmyDYZ8dB5jztoKfCRrxHjxnGk3VhGwjYfoYuNwYum6fZi7BxXTy8OqyJLsfU1t56WqC9uPpsOYrYPhm0wsNrIaZAcx2hT5onDXuYFemFO8FehaLgjHXC3ogugjXKG68A3lgdnO1MQc6AERke4SEJWS37S8cQoTFwkbba5dMB4jOqWmcUDkz__bx__www.youku.com%2f&x5step=1",
+          "final_url": "https://www.youku.com///_____tmd_____/punish?x5secdata=xfzHQ14cSexDdnUAeOKVihlgoCfUjZlYe-TRZRAWFqJvmXECNF2ykXZZ-FhSxEcJhF1H8kdxUYsYg84bmNJC_UjlFjMdBqnfiAj19CjmfP_Z5ouOQFPBf7bjWO2M8YRNQtDlqsRU8XQgEi8xPehInAyGEI2RoOLbnbEbSTPKPPUcAVnY6xwGgGKkGNVxBt4ZKUG_NaKi0KWpkREixifbAIf7PqiThd4vA5nimbmxXOhwb-eLEN8im727WdUi8W32z-3LZcAhEBImslEmMU-DMZ9imlCbcM97D4T_uZ9uNPkr6sBAkqhtiERWvWHHEoYF_i2gbVdSvuN1UPdmyDYZ8dB5jztoKfCRrxHjxnGk3VhGwjYfoYuNwYum6fZi7BxXTy8OqyJLsfU1t56WqC9uPpsOYrYPhm0wsNrIaZAcx2hT5onDXuYFemFO8FehaLgjHXC3ogugjXKG68A3lgdnO1MQc6AERke4SEJWS37S8cQoTFwkbba5dMB4jOqWmcUDkz__bx__www.youku.com%2f&x5step=1",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
-              "summary": "短信验证码",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
+              "methods_observed": [],
+              "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
+          "methods_observed": [],
+          "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "已记录页面阻断因素，未继续交互",
           "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [
-                "auto_signup"
-              ],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.youku.com/ku/webhome",
+              "url": "https://www.youku.com///_____tmd_____/punish?x5secdata=xfzHQ14cSexDdnUAeOKVihlgoCfUjZlYe-TRZRAWFqJvmXECNF2ykXZZ-FhSxEcJhF1H8kdxUYsYg84bmNJC_UjlFjMdBqnfiAj19CjmfP_Z5ouOQFPBf7bjWO2M8YRNQtDlqsRU8XQgEi8xPehInAyGEI2RoOLbnbEbSTPKPPUcAVnY6xwGgGKkGNVxBt4ZKUG_NaKi0KWpkREixifbAIf7PqiThd4vA5nimbmxXOhwb-eLEN8im727WdUi8W32z-3LZcAhEBImslEmMU-DMZ9imlCbcM97D4T_uZ9uNPkr6sBAkqhtiERWvWHHEoYF_i2gbVdSvuN1UPdmyDYZ8dB5jztoKfCRrxHjxnGk3VhGwjYfoYuNwYum6fZi7BxXTy8OqyJLsfU1t56WqC9uPpsOYrYPhm0wsNrIaZAcx2hT5onDXuYFemFO8FehaLgjHXC3ogugjXKG68A3lgdnO1MQc6AERke4SEJWS37S8cQoTFwkbba5dMB4jOqWmcUDkz__bx__www.youku.com%2f&x5step=1",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [
-                "tos"
+                "captcha",
+                "slide"
               ],
               "actions": [
-                "none",
                 "none"
               ],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 3,
-              "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [
-                "tos"
-              ],
-              "actions": [],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T09:15:15.625266+00:00",
+            "measured_at": "2026-08-14T14:33:50.652162+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -127,16 +84,15 @@
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "sms_or_otp"
-              ],
+              "observed_methods": [],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "tos"
+                "captcha",
+                "slide"
               ]
             },
             "security": {
@@ -148,96 +104,51 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.youku.com/ku/webhome",
-          "final_url": "https://www.youku.com/ku/webhome",
-          "observed_route": "短信验证码",
+          "start_url": "https://www.youku.com///_____tmd_____/punish?x5secdata=xfJXr4R9zdf0Q-g8zajNpFjpzl4_OGAEpDKPHlC-0thjg4u16tbrQMEaY_qrNqgCwH4LJ0O0F3cB9pEd_Qq5qzNltkqh6685E1fxlAKnwxxW6uKeKNnSwY-8gyYOKvF0f7VZx6DV-9_9q2hfsqvCL0Fg1vqcAaumCfu9XFPYUjtFd_vNJS03JqxoAvS5tW412T91FZ_hGUvrqVoE0u_6N4buo2EqJwLx2sSb2qnnAKeD8xzJe500fe820cPr0HvRQzHiNwU8MM8PIpgblG-Hs3XQlUvLqTR4HTTnAerMJEC2vd5G7i0802Ybzo1olpBmWNnsWEczWGG35AXfhrXANeR7I6rrVdXVq3KBWtTqiqWHw1kpf3oaME3UPNNYSn1TyhYqKcza8ov2I2aADJqxVYvUWcJTyAg3XAvyAeUmtbn7Koj3LsMX9tqCmj4RB4ckPRypqqFSdxczNIt7lBLVzihE_2C0feE5GfTt3KfJ4tU5IWSFg2DimvgKsPW1JtZ4t3__bx__www.youku.com%2f&x5step=1",
+          "final_url": "https://www.youku.com///_____tmd_____/punish?x5secdata=xfJXr4R9zdf0Q-g8zajNpFjpzl4_OGAEpDKPHlC-0thjg4u16tbrQMEaY_qrNqgCwH4LJ0O0F3cB9pEd_Qq5qzNltkqh6685E1fxlAKnwxxW6uKeKNnSwY-8gyYOKvF0f7VZx6DV-9_9q2hfsqvCL0Fg1vqcAaumCfu9XFPYUjtFd_vNJS03JqxoAvS5tW412T91FZ_hGUvrqVoE0u_6N4buo2EqJwLx2sSb2qnnAKeD8xzJe500fe820cPr0HvRQzHiNwU8MM8PIpgblG-Hs3XQlUvLqTR4HTTnAerMJEC2vd5G7i0802Ybzo1olpBmWNnsWEczWGG35AXfhrXANeR7I6rrVdXVq3KBWtTqiqWHw1kpf3oaME3UPNNYSn1TyhYqKcza8ov2I2aADJqxVYvUWcJTyAg3XAvyAeUmtbn7Koj3LsMX9tqCmj4RB4ckPRypqqFSdxczNIt7lBLVzihE_2C0feE5GfTt3KfJ4tU5IWSFg2DimvgKsPW1JtZ4t3__bx__www.youku.com%2f&x5step=1",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
-              "summary": "短信验证码",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
+              "methods_observed": [],
+              "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
+          "methods_observed": [],
+          "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "已记录页面阻断因素，未继续交互",
           "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.youku.com/ku/webhome",
+              "url": "https://www.youku.com///_____tmd_____/punish?x5secdata=xfJXr4R9zdf0Q-g8zajNpFjpzl4_OGAEpDKPHlC-0thjg4u16tbrQMEaY_qrNqgCwH4LJ0O0F3cB9pEd_Qq5qzNltkqh6685E1fxlAKnwxxW6uKeKNnSwY-8gyYOKvF0f7VZx6DV-9_9q2hfsqvCL0Fg1vqcAaumCfu9XFPYUjtFd_vNJS03JqxoAvS5tW412T91FZ_hGUvrqVoE0u_6N4buo2EqJwLx2sSb2qnnAKeD8xzJe500fe820cPr0HvRQzHiNwU8MM8PIpgblG-Hs3XQlUvLqTR4HTTnAerMJEC2vd5G7i0802Ybzo1olpBmWNnsWEczWGG35AXfhrXANeR7I6rrVdXVq3KBWtTqiqWHw1kpf3oaME3UPNNYSn1TyhYqKcza8ov2I2aADJqxVYvUWcJTyAg3XAvyAeUmtbn7Koj3LsMX9tqCmj4RB4ckPRypqqFSdxczNIt7lBLVzihE_2C0feE5GfTt3KfJ4tU5IWSFg2DimvgKsPW1JtZ4t3__bx__www.youku.com%2f&x5step=1",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "auto_signup"
+              "methods": [],
+              "blockers": [
+                "slide"
               ],
-              "blockers": [],
               "actions": [
-                "entry_click"
+                "none"
               ],
               "tabs": [],
-              "note": "register_combined_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [
-                "tos"
-              ],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 3,
-              "url": "https://www.youku.com/ku/webhome",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [
-                "tos"
-              ],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": "no_sms_tab"
+              "note": "no_password_signup_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:16:26.138136+00:00",
+            "measured_at": "2026-08-14T15:21:15.663265+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -256,16 +167,14 @@
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "sms_or_otp"
-              ],
+              "observed_methods": [],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "tos"
+                "slide"
               ]
             },
             "security": {

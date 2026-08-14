@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.713576+00:00",
+  "generated_at": "2026-08-14T15:34:35.807425+00:00",
   "report_title": "www.kuaishou.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,42 +20,30 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.kuaishou.com/new-reco",
-          "final_url": "https://www.kuaishou.com/new-reco",
-          "observed_route": "短信验证码",
+          "start_url": "https://www.kuaishou.com/",
+          "final_url": "https://www.kuaishou.com/",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "短信验证码",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
+              "methods_observed": [],
+              "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "modal"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
+          "methods_observed": [],
+          "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "modal"
-          ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
             "当前自动证据不足以确认完整路线"
@@ -63,8 +51,8 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.kuaishou.com/new-reco",
-              "ui_type": "modal",
+              "url": "https://www.kuaishou.com/",
+              "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
@@ -72,15 +60,13 @@
                 "none",
                 "none"
               ],
-              "tabs": [
-                "sms_tab"
-              ],
-              "note": "no_sms_tab"
+              "tabs": [],
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:27:02.140872+00:00",
+            "measured_at": "2026-08-14T14:45:21.182520+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -99,9 +85,7 @@
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "sms_or_otp"
-              ],
+              "observed_methods": [],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
@@ -118,42 +102,30 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.kuaishou.com/new-reco",
-          "final_url": "https://www.kuaishou.com/new-reco",
-          "observed_route": "短信验证码",
+          "start_url": "https://www.kuaishou.com/",
+          "final_url": "https://www.kuaishou.com/",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "短信验证码",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
+              "methods_observed": [],
+              "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "modal"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
+          "methods_observed": [],
+          "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "modal"
-          ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
             "当前自动证据不足以确认完整路线"
@@ -161,8 +133,8 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.kuaishou.com/new-reco",
-              "ui_type": "modal",
+              "url": "https://www.kuaishou.com/",
+              "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
@@ -170,15 +142,13 @@
                 "none",
                 "none"
               ],
-              "tabs": [
-                "sms_tab"
-              ],
-              "note": "no_sms_tab"
+              "tabs": [],
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:26:48.562088+00:00",
+            "measured_at": "2026-08-14T14:45:20.498135+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -197,9 +167,7 @@
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "sms_or_otp"
-              ],
+              "observed_methods": [],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.678512+00:00",
+  "generated_at": "2026-08-14T15:34:35.780364+00:00",
   "report_title": "www.2345.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -69,7 +69,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:50:33.543386+00:00",
+            "measured_at": "2026-08-14T14:12:59.300644+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -154,7 +154,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:50:32.999869+00:00",
+            "measured_at": "2026-08-14T14:12:49.829541+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

@@ -4,6 +4,10 @@
 > 服务器：Ubuntu 22.04，网站 http://120.53.5.132:8000
 > 更新：2026-08-14
 
+> 当前维护基线固定为 **v3**。本轮数据权威来源、网页实时写入、每 6 小时同步以及
+> Mac/GitHub/服务器的完整关系见 [DATA_FLOW.md](DATA_FLOW.md)。不要把
+> `webapp/sites.db` 当成唯一数据源，它只是可重建的网页索引。
+
 ---
 
 ## 一、版本问题
@@ -12,15 +16,15 @@
 版本号（`misc/measure_version.txt`）标记"代码大版本"，区分不同代码测出的结果。
 网站显示当前版本，历史版本可查。
 
-### 方案 1：大改动升版本（推荐）
+### 方案 1：未来确需大版本时再升版本
 ```bash
 # Mac
-echo "v4" > misc/measure_version.txt     # 手动升版本（大改动才升）
+# 当前任务不要修改 misc/measure_version.txt；它必须保持 v3
 # 重新测量需要更新的站（或全量）
 .venv/bin/python scripts/run_measurement.py --input misc/sites_base_60.txt --output reports/sites/sites_latest.jsonl --workers 3
 .venv/bin/python scripts/build_site_database.py
 ```
-新结果标 v4 显示，旧 v3 自动进"历史结果"。
+当前改进周期的所有新结果仍标 `v3`。只有项目负责人以后明确决定新版本时才升级。
 
 ### 方案 2：小修复不升版本（日常用）
 小 bug 修复后**不升版本**，直接重新测量受影响的站：
@@ -39,7 +43,8 @@ printf "https://www.zhihu.com/\nhttps://www.imooc.com/\n" > /tmp/fix.txt
 | 大改动 | 分类逻辑重构、新增流程类型、字段语义变化 | 是 |
 
 ### 常见问题
-- **两轮结果不一样**：站点风控波动（登录弹窗时开时不开），不是版本问题。跑 2 次取多数。
+- **两轮结果不一样**：站点风控会波动。两次全量后对差异项做第三次定向复测，
+  采用多数结果；只有一轮取得有效页面证据时优先成功记录，三次都不同时标记人工关注。
 - **网页入库的站版本低**：服务器代码旧。同步代码后重新入库即可（更新覆盖）。
 
 ---
@@ -47,39 +52,39 @@ printf "https://www.zhihu.com/\nhttps://www.imooc.com/\n" > /tmp/fix.txt
 ## 二、同步问题（Mac ↔ 服务器）
 
 ### 背景
-代码和数据的流向：Mac 是数据源头，服务器是展示+增量收集。
+Mac 负责开发和全量验收，服务器负责展示与网页增量；GitHub 是两端的交换桥梁。
+程序结果以 `reports/sites/sites_latest.jsonl` 为准，人工结果以
+`misc/manual_review.json` 为准。服务器每 6 小时先保存网页增量，再拉取、重建、
+重启和推送，因此不会用一次数据库重建抹掉网页新增站点或待审核记录。
 
 ### 方案 1：标准同步流程（推荐）
 ```bash
-# Mac 端
-cd ~/Desktop/2026\ Chinacode/large-scale-web-measurement
-.venv/bin/python scripts/pull_web_data.py --host http://120.53.5.132:8000 --token 你的口令
-# ↑ 第1步：拉回服务器增量（新站/人工审核），保证 Mac 数据不丢
-./webapp/package.sh
-scp /tmp/measure.tar.gz ubuntu@120.53.5.132:~
-# ↑ 第2步：打包上传
+# Mac：提交并推送代码/正式数据；获取服务器网页增量时直接拉取
+git push
+git pull --rebase
 
-# 服务器端
-cd ~ && mkdir -p measure && tar xzf measure.tar.gz -C measure
-cp ~/manual_backup.json measure/misc/manual_review.json 2>/dev/null; true
-cd measure && .venv/bin/python scripts/build_site_database.py && sudo systemctl restart sites-webapp
-```
-> 先拉回再上传，顺序不能反。
-
-### 方案 2：服务器单独跑测量（不依赖 Mac 上传）
-服务器有完整代码+Chrome，可以直接跑：
-```bash
+# 服务器：立即部署（定时任务也会自动执行同一套安全流程）
 cd ~/measure
-git pull   # 如果能连 GitHub；不能就连不了，用方案1
-.venv/bin/python scripts/run_measurement.py --input misc/sites_base_60.txt --output reports/sites/sites_latest.jsonl --workers 3
-.venv/bin/python scripts/build_site_database.py
-sudo systemctl restart sites-webapp
+./webapp/server_sync.sh
 ```
+`server_sync.sh` 的顺序固定为：快照网页权威数据 → 恢复干净工作树 → pull --rebase →
+按站点/入口原子回放 → 生成报告并提交 → 重建 SQLite → 重启 → push。拉取失败也会先
+恢复快照。完整解释见 `webapp/DATA_FLOW.md`。
+
+### 方案 2：API 主动拉回（GitHub 暂未同步时）
+```bash
+cd "/Users/cjx_main/Desktop/2026 Chinacode/large-scale-web-measurement"
+.venv/bin/python scripts/pull_web_data.py \
+  --host http://120.53.5.132:8000 --token 你的口令
+```
+该脚本按 `(hostname, entry_kind)` 原子合并，保留完整状态、证据、置信度与错误信息。
 
 ### 常见问题
-- **服务器连不上 GitHub**：正常（国内网络）。一律用方案 1（Mac 打包上传）。
-- **包解压后文件散落**：必须用 `tar xzf xxx.tar.gz -C ~/measure`（-C 指定目录）。
-- **人工审核数据被覆盖**：上传前先 `cp ~/measure/misc/manual_review.json ~/manual_backup.json`，解压后恢复。
+- **服务器连不上 GitHub**：`server_sync.sh` 会重试；仍失败时保留本地提交，下次继续。
+- **人工审核或待审核会不会被覆盖**：已审核数据已写回 JSON；待审核行在重建 SQLite
+  前备份并在重建后恢复。
+- **网页新增站点何时可见**：写入成功后本浏览器立即可见，其他页面最多 30 秒刷新；
+  GitHub/Mac 则等下一次同步（最多约 6 小时）。
 
 ---
 
@@ -146,7 +151,9 @@ sudo systemctl restart sites-webapp
 ### 常见问题
 - **组员重复提交**：已有提示。你审核时删除重复的即可。
 - **口令忘了**：服务器 `sudo systemctl show sites-webapp -p Environment` 查看，或改 systemd 文件重新设置。
-- **审核后正确率没变**：审核只影响"人工已核验"计数和该站状态；程序正确率是自动计算的（程序结论 vs 人工文本粗匹配），如果人工文本写得不含"密码/验证码"关键词可能不计入匹配，属正常。
+- **审核后正确率没变**：审核通过后会立即重新计算。`unknown`、程序异常或人工没有
+  提供可比较字段时归入“证据不足”，不进入正确率分母；同时查看覆盖率才能知道
+  已核验记录中有多少真正可比较。结构化选项比自由文本更稳定。
 
 ---
 
@@ -155,10 +162,10 @@ sudo systemctl restart sites-webapp
 | 想做什么 | 命令 |
 |---|---|
 | 本地预览网站 | `./webapp/run_server.sh 8000` → http://127.0.0.1:8000 |
-| 更新服务器代码 | Mac `package.sh` + `scp` + 服务器 `tar -C ~/measure` + `restart` |
+| 更新服务器代码 | Mac push；服务器 `git pull --rebase`、重建数据库、重启服务 |
 | 拉回网站数据 | `.venv/bin/python scripts/pull_web_data.py --host http://120.53.5.132:8000 --token 口令` |
-| 全量重测 | `scripts/run_measurement.py --input misc/sites_base_60.txt --output reports/sites/sites_latest.jsonl --workers 3` |
+| 全量重测 | `./webapp/update_data.sh`（默认合并四份清单，共 151 站） |
 | 重建数据库 | `scripts/build_site_database.py` |
 | 审核人工提交 | 网页「待审核管理」或 `merge_reviews.py --apply` |
-| 升版本 | `echo "v4" > misc/measure_version.txt` |
+| 查看当前版本 | `cat misc/measure_version.txt`（本轮必须为 `v3`） |
 | 服务器重启自启 | systemd 已配置，重启服务器后网站自动恢复 |

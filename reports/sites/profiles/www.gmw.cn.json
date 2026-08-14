@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.703968+00:00",
+  "generated_at": "2026-08-14T15:34:35.798982+00:00",
   "report_title": "www.gmw.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:39:44.454347+00:00",
+            "measured_at": "2026-08-14T14:53:10.118719+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:39:18.011476+00:00",
+            "measured_at": "2026-08-14T14:52:15.155883+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

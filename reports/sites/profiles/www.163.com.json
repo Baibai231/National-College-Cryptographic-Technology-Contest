@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.677970+00:00",
+  "generated_at": "2026-08-14T15:34:35.779777+00:00",
   "report_title": "www.163.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -107,7 +107,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:09:28.462650+00:00",
+            "measured_at": "2026-08-14T14:26:26.627134+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

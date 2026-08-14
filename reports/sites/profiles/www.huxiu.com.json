@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.706927+00:00",
+  "generated_at": "2026-08-14T15:34:35.802095+00:00",
   "report_title": "www.huxiu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -35,7 +35,7 @@
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
@@ -43,11 +43,8 @@
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
@@ -55,33 +52,35 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [],
+              "blockers": [
+                "captcha",
+                "slide"
+              ],
               "actions": [
-                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-14T10:12:48.406163+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:30:37.601821+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -91,7 +90,10 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "captcha",
+                "slide"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -117,7 +119,7 @@
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
@@ -125,11 +127,8 @@
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
@@ -137,33 +136,35 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [],
+              "blockers": [
+                "captcha",
+                "slide"
+              ],
               "actions": [
-                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-14T10:12:42.786148+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:30:35.533253+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -173,7 +174,10 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "captcha",
+                "slide"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

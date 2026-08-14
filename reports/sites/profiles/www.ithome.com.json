@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.709759+00:00",
+  "generated_at": "2026-08-14T15:34:35.804200+00:00",
   "report_title": "www.ithome.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,56 +22,129 @@
           "status": "observed",
           "start_url": "https://www.ithome.com/",
           "final_url": "https://www.ithome.com/",
-          "observed_route": "未确认具体方式",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
-          "safe_stop": "已记录页面阻断因素，未继续交互",
-          "limitations": [],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
               "url": "https://www.ithome.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
               "blockers": [
+                "sms_code",
                 "slide"
               ],
               "actions": [
-                "none"
+                "none",
+                "auth_mode_click"
               ],
+              "tabs": [],
+              "note": "auth_mode_structural_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.ithome.com/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [
+                "none",
+                "auth_mode_click"
+              ],
+              "tabs": [],
+              "note": "auth_mode_structural_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.ithome.com/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [],
               "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:13:59.990517+00:00",
+            "measured_at": "2026-08-14T14:31:10.171111+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
@@ -80,17 +153,21 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
-              "observed_methods": [],
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "slide"
+                "slide",
+                "sms_code"
               ]
             },
             "security": {
@@ -104,37 +181,66 @@
           "status": "observed",
           "start_url": "https://www.ithome.com/",
           "final_url": "https://www.ithome.com/",
-          "observed_route": "未确认具体方式",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
-          "safe_stop": "已记录页面阻断因素，未继续交互",
-          "limitations": [],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
               "url": "https://www.ithome.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
               "blockers": [
+                "sms_code",
                 "slide"
               ],
               "actions": [
@@ -146,14 +252,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:13:49.668644+00:00",
+            "measured_at": "2026-08-14T14:30:59.941708+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
@@ -162,17 +268,21 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
-              "observed_methods": [],
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "slide"
+                "slide",
+                "sms_code"
               ]
             },
             "security": {

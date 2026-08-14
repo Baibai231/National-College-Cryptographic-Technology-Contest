@@ -102,13 +102,33 @@ server {
 
 ## 更新流程
 
-每次有新测量/人工核验：
+代码与正式数据经 GitHub 部署；`reports/sites/sites_latest.jsonl` 和
+`misc/manual_review.json` 是持久数据，`webapp/sites.db` 只是可重建索引。
+立即部署：
 
 ```bash
-git pull
+cd ~/measure
+git pull --rebase
 .venv/bin/python scripts/build_site_database.py   # 重建数据库
 sudo systemctl restart sites-webapp               # 或重启 run_server.sh
+curl -fsS http://127.0.0.1:8000/api/stats
 ```
+
+建议设置每 6 小时同步。脚本会先快照服务器上的网页新增站点与已审核人工数据，
+用干净工作树拉取远端，再按站点/入口原子回放并提交；即使 Mac 与服务器同时修改
+JSONL 也不会直接 rebase 冲突，拉取失败时快照也会恢复。reports 变化时会重新生成档案。
+
+```bash
+chmod +x webapp/server_sync.sh
+crontab -e
+```
+
+```cron
+0 */6 * * * cd /home/ubuntu/measure && ./webapp/server_sync.sh >> logs/server_sync.log 2>&1
+```
+
+完整三端关系、实时刷新与正确率计算规则见 [DATA_FLOW.md](DATA_FLOW.md)。当前部署
+版本继续使用 `v3`，不要改为 v4。
 
 ## 注意事项
 

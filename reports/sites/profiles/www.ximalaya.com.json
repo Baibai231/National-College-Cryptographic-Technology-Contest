@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.728816+00:00",
+  "generated_at": "2026-08-14T15:34:35.821065+00:00",
   "report_title": "www.ximalaya.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,23 +20,22 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.ximalaya.com/signup",
-          "final_url": "https://www.ximalaya.com/signup",
+          "start_url": "https://passport.ximalaya.com/page/register_rule",
+          "final_url": "https://passport.ximalaya.com/page/register_rule_v18",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "standalone_page"
-              ],
+              "ui_types": [],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -44,9 +43,7 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "standalone_page"
-          ],
+          "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -55,28 +52,40 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.ximalaya.com/signup",
-              "ui_type": "standalone_page",
+              "url": "https://passport.ximalaya.com/page/register_rule",
+              "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_structural_semantics_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.ximalaya.com/page/register_rule_v18",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T11:00:14.151173+00:00",
+            "measured_at": "2026-08-14T15:15:58.169950+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
@@ -85,7 +94,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -106,24 +115,21 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.ximalaya.com/signup",
-          "final_url": "https://www.ximalaya.com/",
+          "start_url": "https://passport.ximalaya.com/page/register_rule",
+          "final_url": "https://passport.ximalaya.com/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "modal"
-              ],
+              "ui_types": [],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -131,9 +137,7 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "modal"
-          ],
+          "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -142,40 +146,28 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.ximalaya.com/",
+              "url": "https://passport.ximalaya.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "entry_clicked_no_change"
-            },
-            {
-              "step": 2,
-              "url": "https://www.ximalaya.com/",
-              "ui_type": "modal",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
+                "none",
                 "none"
               ],
               "tabs": [],
-              "note": ""
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:59:54.118870+00:00",
+            "measured_at": "2026-08-14T15:15:50.666018+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -184,7 +176,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

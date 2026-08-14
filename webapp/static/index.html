@@ -53,6 +53,8 @@
   .search-bar { max-width: 720px; }
   .site-title { font-size: 0.95rem; }
   .route-text { font-size: 0.8rem; color: #6c757d; }
+  .reason-box { font-size: 0.78rem; line-height: 1.35; max-height: 5.6em; overflow: auto; }
+  .trait-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(125px,1fr)); gap: 5px 10px; }
 </style>
 </head>
 <body>
@@ -61,7 +63,9 @@
     <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showAdminModal()" id="admin-btn">待审核管理</button>
   </h3>
   <p class="text-muted small mb-3">
-    共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站，程序正确率 <span id="stat-accuracy">-</span>
+    共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站；
+    注册正确率 <span id="stat-accuracy">-</span>，覆盖率 <span id="stat-coverage">-</span>；
+    登录正确率 <span id="stat-login-accuracy">-</span>，覆盖率 <span id="stat-login-coverage">-</span>
     <span id="stat-pending" class="ms-2"></span>
   </p>
 
@@ -126,10 +130,12 @@
       <div class="mb-2">
         <label class="form-label">登录方式（人工看到的）</label>
         <textarea id="review-login" class="form-control" rows="2" placeholder="如：手机号+验证码，可切密码登录"></textarea>
+        <div id="review-login-traits" class="mt-2"></div>
       </div>
       <div class="mb-2">
         <label class="form-label">注册方式（人工看到的）</label>
         <textarea id="review-signup" class="form-control" rows="2" placeholder="如：手机号+验证码注册，无密码"></textarea>
+        <div id="review-signup-traits" class="mt-2"></div>
       </div>
       <div class="mb-2">
         <label class="form-label">备注（可选）</label>
@@ -211,6 +217,12 @@ const FLOW_ZH = {
 let allSites = [];
 let currentFilter = 'all';
 
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+}
+
 function fmtTime(t) {
   if (!t) return '—';
   return String(t).slice(0, 10);
@@ -225,24 +237,30 @@ function matchBadge(status) {
 }
 function siteCard(s) {
   const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
+  const comparison = s.signup_comparison || s.comparison;
+  let reason = '';
+  if (s.signup_match === 'match' && comparison)
+    reason = `<div class="mt-2 p-2 bg-success-subtle text-success reason-box"><b>为什么正确：</b>${esc(comparison.reason)}</div>`;
+  else if (s.signup_match === 'mismatch' && comparison)
+    reason = `<div class="mt-2 p-2 bg-danger-subtle text-danger reason-box"><b>为什么错误：</b>${esc(comparison.reason)}</div>`;
+  else if ((s.signup_match || '').startsWith('inconclusive') && comparison)
+    reason = `<div class="mt-2 p-2 bg-secondary-subtle text-secondary reason-box"><b>暂不能判定：</b>${esc(comparison.reason)}</div>`;
   return `
   <div class="col-md-6 col-lg-4">
     <div class="card h-100 p-3">
       <div class="d-flex justify-content-between align-items-start">
-        <a href="#" class="text-decoration-none fw-bold site-link site-title" data-host="${s.hostname}">${s.hostname}</a>
+        <a href="#" class="text-decoration-none fw-bold site-link site-title" data-host="${esc(s.hostname)}">${esc(s.hostname)}</a>
         ${matchBadge(s.match_status)}
       </div>
-      <div class="small text-muted">${kw}</div>
+      <div class="small text-muted">${esc(kw)}</div>
       <div class="mt-2 small">
-        <div>登录 ${badge(s.login.flow_type)} <span class="route-text">${s.login.route || '—'}</span></div>
-        <div class="mt-1">注册 ${badge(s.signup.flow_type)} <span class="route-text">${s.signup.route || '—'}</span></div>
+        <div>登录 ${badge(s.login.flow_type)} <span class="route-text">${esc(s.login.route || '—')}</span></div>
+        <div class="mt-1">注册 ${badge(s.signup.flow_type)} <span class="route-text">${esc(s.signup.route || '—')}</span></div>
       </div>
-      ${s.signup_match === 'match' && s.comparison
-        ? `<div class="mt-2 small text-success"><b>为什么正确：</b>${s.comparison.reason}</div>`
-        : ''}
+      ${reason}
       <div class="mt-2">
-        <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${s.hostname}">详情</button>
-        <button class="btn btn-sm btn-outline-primary review-btn" data-host="${s.hostname}">提交人工观察</button>
+        <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${esc(s.hostname)}">详情</button>
+        <button class="btn btn-sm btn-outline-primary review-btn" data-host="${esc(s.hostname)}">提交人工观察</button>
       </div>
     </div>
   </div>`;
@@ -267,6 +285,15 @@ async function loadStats() {
   if (d.program_accuracy) {
     document.getElementById('stat-accuracy').textContent =
       d.program_accuracy.rate + '%（' + d.program_accuracy.match + '/' + d.program_accuracy.total + '）';
+    document.getElementById('stat-coverage').textContent =
+      d.program_accuracy.coverage_rate + '%（可判定 ' + d.program_accuracy.evaluated + '/' + d.program_accuracy.verified + '）';
+  }
+  if (d.accuracy && d.accuracy.login) {
+    const login = d.accuracy.login;
+    document.getElementById('stat-login-accuracy').textContent =
+      login.rate + '%（' + login.match + '/' + login.evaluated + '）';
+    document.getElementById('stat-login-coverage').textContent =
+      login.coverage_rate + '%（可判定 ' + login.evaluated + '/' + login.verified + '）';
   }
   const pend = document.getElementById('stat-pending');
   const adminBtn = document.getElementById('admin-btn');
@@ -318,15 +345,15 @@ async function loadPending() {
   if (!d.total) { box.innerHTML = '<div class="text-muted">暂无待审核提交</div>'; return; }
   box.innerHTML = d.reviews.map(rev => `
     <div class="border rounded p-2 mb-2">
-      <div><b>${rev.hostname}</b>
+      <div><b>${esc(rev.hostname)}</b>
         ${rev.review_type === 'feedback'
           ? '<span class="badge text-bg-warning">识别反馈</span>'
           : '<span class="badge text-bg-info">人工观察</span>'}
-        <span class="text-muted small">提交人：${rev.submitter || '匿名'} ${(rev.submitted_at || '').slice(0, 16).replace('T', ' ')}</span>
+        <span class="text-muted small">提交人：${esc(rev.submitter || '匿名')} ${esc((rev.submitted_at || '').slice(0, 16).replace('T', ' '))}</span>
       </div>
-      ${rev.login ? `<div class="small">登录：${rev.login}</div>` : ''}
-      ${rev.signup ? `<div class="small">注册：${rev.signup}</div>` : ''}
-      ${rev.note ? `<div class="small text-muted">${rev.note}</div>` : ''}
+      ${rev.login ? `<div class="small">登录：${esc(rev.login)}</div>` : ''}
+      ${rev.signup ? `<div class="small">注册：${esc(rev.signup)}</div>` : ''}
+      ${rev.note ? `<div class="small text-muted">${esc(rev.note)}</div>` : ''}
       <div class="mt-1">
         <button class="btn btn-sm btn-success" onclick="approveReview(${rev.id})">${rev.review_type === 'feedback' ? '已处理' : '通过'}</button>
         <button class="btn btn-sm btn-outline-danger" onclick="denyReview(${rev.id})">删除</button>
@@ -341,8 +368,8 @@ async function approveReview(id) {
   const d = await r.json();
   if (!r.ok) { alert(d.detail || '审核失败'); return; }
   alert(d.message || '已通过');
-  loadPending();
-  loadStats();
+  await Promise.all([loadPending(), loadStats(),
+    search(document.getElementById('search-input').value)]);
 }
 async function denyReview(id) {
   const token = document.getElementById('admin-token').value;
@@ -355,6 +382,37 @@ async function denyReview(id) {
 }
 function showReviewModal() { document.getElementById('reviewModal').style.display = 'flex'; }
 function hideReview() { document.getElementById('reviewModal').style.display = 'none'; }
+function traitForm(prefix) {
+  return `<div class="border rounded p-2 small">
+    <div class="mb-1"><b>结构化核验</b>（用于即时判断正确/错误）</div>
+    <select id="${prefix}-password" class="form-select form-select-sm mb-2">
+      <option value="">长期口令：未确认</option>
+      <option value="yes">存在长期口令</option>
+      <option value="no">无需长期口令</option>
+    </select>
+    <div class="trait-grid">
+      ${[['otp','短信/邮箱验证码'],['scan','扫码/App确认'],['captcha','人机/滑块'],
+         ['tos','协议确认'],['sso','第三方登录'],['no_web','无网页入口']]
+        .map(([key,label]) => `<label><input class="form-check-input me-1" type="checkbox" id="${prefix}-${key}">${label}</label>`).join('')}
+    </div>
+  </div>`;
+}
+function resetTraits(prefix) {
+  document.getElementById(prefix + '-password').value = '';
+  ['otp','scan','captcha','tos','sso','no_web'].forEach(key =>
+    document.getElementById(prefix + '-' + key).checked = false);
+}
+function readTraits(prefix) {
+  const result = {};
+  const password = document.getElementById(prefix + '-password').value;
+  if (password) result.password = password === 'yes';
+  ['otp','scan','captcha','tos','sso','no_web'].forEach(key => {
+    if (document.getElementById(prefix + '-' + key).checked) result[key] = true;
+  });
+  return result;
+}
+document.getElementById('review-login-traits').innerHTML = traitForm('review-login');
+document.getElementById('review-signup-traits').innerHTML = traitForm('review-signup');
 const BLOCKER_ZH = {
   sms_code: "短信验证码", email_code: "邮箱验证码",
   verification_code: "一次性验证码", scan: "扫码",
@@ -450,17 +508,25 @@ async function showDetail(host) {
   if (!r.ok) { alert('未找到站点'); return; }
   const s = await r.json();
   document.getElementById('modal-title').innerHTML =
-    `${s.hostname} ${matchBadge(s.match_status)}`;
+    `${esc(s.hostname)} ${matchBadge(s.match_status)}`;
+  const comparisonHtml = (label, status, comparison) => {
+    if (!comparison || status === 'pending') return '';
+    const style = status === 'match' ? 'text-success' :
+      status === 'mismatch' ? 'text-danger' : 'text-secondary';
+    const title = status === 'match' ? '为什么正确' :
+      status === 'mismatch' ? '为什么错误' : '暂不能判定';
+    return `<div class="mt-2 ${style}"><b>${label}${title}：</b>${esc(comparison.reason)}</div>`;
+  };
   document.getElementById('modal-body').innerHTML = `
     <table class="table table-sm table-bordered align-middle">
       <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
       <tbody>
         <tr><td>类型</td><td>${badge(s.login.flow_type)}</td><td>${badge(s.signup.flow_type)}</td></tr>
-        <tr><td>路线</td><td>${s.login.route}</td><td>${s.signup.route}</td></tr>
-        <tr><td>字段</td><td>${s.login.fields}</td><td>${s.signup.fields}</td></tr>
-        <tr><td>阻断</td><td>${s.login.blockers}</td><td>${s.signup.blockers}</td></tr>
+        <tr><td>路线</td><td>${esc(s.login.route)}</td><td>${esc(s.signup.route)}</td></tr>
+        <tr><td>字段</td><td>${esc(s.login.fields)}</td><td>${esc(s.signup.fields)}</td></tr>
+        <tr><td>阻断</td><td>${esc(s.login.blockers)}</td><td>${esc(s.signup.blockers)}</td></tr>
         <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
-        <tr><td>判断依据</td><td>${s.login.program_reason || '—'}</td><td>${s.signup.program_reason || '—'}</td></tr>
+        <tr><td>判断依据</td><td>${esc(s.login.program_reason || '—')}</td><td>${esc(s.signup.program_reason || '—')}</td></tr>
         <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
         <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
       </tbody>
@@ -468,18 +534,14 @@ async function showDetail(host) {
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
-      <div class="mt-1">登录：${s.manual.login || '—'}</div>
-      <div>注册：${s.manual.signup || '—'}</div>
-      ${s.manual.note ? `<div class="text-muted small">备注：${s.manual.note}</div>` : ''}
-      ${s.signup_match === 'mismatch'
-        ? `<div class="mt-2 text-danger fw-bold">识别不一致：${s.comparison ? s.comparison.reason : `程序认为注册是「${s.signup.flow_zh}」，人工观察是「${s.manual.signup || '未填写'}」`}</div>`
-        : ''}
-      ${s.signup_match === 'match'
-        ? `<div class="mt-2 text-success small"><b>为什么正确：</b>${s.comparison ? s.comparison.reason : '程序与人工识别一致'}</div>`
-        : ''}
+      <div class="mt-1">登录：${esc(s.manual.login || '—')}</div>
+      <div>注册：${esc(s.manual.signup || '—')}</div>
+      ${s.manual.note ? `<div class="text-muted small">备注：${esc(s.manual.note)}</div>` : ''}
+      ${comparisonHtml('登录', s.login_match, s.login_comparison)}
+      ${comparisonHtml('注册', s.signup_match, s.signup_comparison || s.comparison)}
     </div>
-    <button class="btn btn-sm btn-outline-secondary" onclick="showHistory('${s.hostname}')">查看历史程序结果</button>
-    <button class="btn btn-sm btn-outline-warning" onclick="showFeedback('${s.hostname}')">反馈识别结果</button>
+    <button class="btn btn-sm btn-outline-secondary" id="detail-history-btn">查看历史程序结果</button>
+    <button class="btn btn-sm btn-outline-warning" id="detail-feedback-btn">反馈识别结果</button>
     <div id="history-box" class="mt-2"></div>
     <div class="step-tabs mt-3">
       <button class="step-tab-btn active" data-pane="login" onclick="switchStepTab('login')">登录步骤</button>
@@ -488,6 +550,8 @@ async function showDetail(host) {
     <div id="t-login" style="margin-top:10px">${stepsHtml(s.login.steps)}</div>
     <div id="t-signup" style="margin-top:10px; display:none">${stepsHtml(s.signup.steps)}</div>`;
   showDetailModal();
+  document.getElementById('detail-history-btn').onclick = () => showHistory(s.hostname);
+  document.getElementById('detail-feedback-btn').onclick = () => showFeedback(s.hostname);
   // 查询该站待审核提交数，显示在人工复核区
   fetch('/api/reviews/pending?hostname=' + encodeURIComponent(host))
     .then(r => r.json())
@@ -546,6 +610,8 @@ document.addEventListener('click', e => {
     document.getElementById('review-signup').value = '';
     document.getElementById('review-note').value = '';
     document.getElementById('review-submitter').value = '';
+    resetTraits('review-login');
+    resetTraits('review-signup');
     // 查询该站已有的待审核提交，防止组员重复提交
     const tip = document.getElementById('review-pending-tip');
     tip.innerHTML = '<div class="text-muted small">正在查询待审核状态…</div>';
@@ -555,7 +621,7 @@ document.addEventListener('click', e => {
         if (d.total > 0) {
           const names = [...new Set(d.reviews.map(x => x.submitter || '匿名'))].join('、');
           tip.innerHTML = `<div class="alert alert-warning py-2 small">
-            该站已有 <b>${d.total}</b> 份待审核提交（${names}），
+            该站已有 <b>${d.total}</b> 份待审核提交（${esc(names)}），
             请先确认内容是否已有，避免重复提交。</div>`;
         } else {
           tip.innerHTML = `<div class="alert alert-success py-2 small">该站暂无待审核提交，可以填写。</div>`;
@@ -571,7 +637,11 @@ document.getElementById('review-submit-btn').addEventListener('click', async () 
     login: document.getElementById('review-login').value,
     signup: document.getElementById('review-signup').value,
     note: document.getElementById('review-note').value,
-    submitter: document.getElementById('review-submitter').value
+    submitter: document.getElementById('review-submitter').value,
+    structured: {
+      login: readTraits('review-login'),
+      signup: readTraits('review-signup')
+    }
   };
   if (!payload.login && !payload.signup) { alert('请至少填写登录或注册观察'); return; }
   const r = await fetch('/api/reviews', {
@@ -670,7 +740,10 @@ async function addSiteToDb() {
       const entry = {
         flow_type: d.flow_type, flow_zh: d.flow_zh,
         route: d.route || '', final_url: d.final_url || '',
-        steps: d.states || [], raw_states: d.states || [], policy: {}
+        steps: d.states || [], raw_states: d.states || [], policy: d.policy || {},
+        confidence: d.confidence, stop_reason: d.stop_reason,
+        primary_method: d.primary_method, evidence: d.evidence || [],
+        error: d.error || null, measured_at: d.measured_at
       };
       if (kind === 'login') login = entry; else signup = entry;
     }
@@ -680,7 +753,10 @@ async function addSiteToDb() {
     const entry = {
       flow_type: d.flow_type, flow_zh: d.flow_zh,
       route: d.route || '', final_url: d.final_url || '',
-      steps: d.states || [], raw_states: d.states || [], policy: {}
+      steps: d.states || [], raw_states: d.states || [], policy: d.policy || {},
+      confidence: d.confidence, stop_reason: d.stop_reason,
+      primary_method: d.primary_method, evidence: d.evidence || [],
+      error: d.error || null, measured_at: d.measured_at
     };
     if (d.entry_kind === 'login') login = entry; else signup = entry;
   }
@@ -703,6 +779,15 @@ async function addSiteToDb() {
 
 loadStats();
 search('');
+// 其他浏览器或组员提交的数据无需手动刷新；打开弹窗时暂停，避免打断填写。
+setInterval(() => {
+  const modalOpen = [...document.querySelectorAll('.my-modal')]
+    .some(el => el.style.display && el.style.display !== 'none');
+  if (!modalOpen && document.visibilityState === 'visible') {
+    loadStats();
+    search(document.getElementById('search-input').value);
+  }
+}, 30000);
 </script>
 </body>
 </html>

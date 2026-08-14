@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.670574+00:00",
+  "generated_at": "2026-08-14T15:34:35.774502+00:00",
   "report_title": "cloud.tencent.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -104,7 +104,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:48:21.895328+00:00",
+            "measured_at": "2026-08-14T15:03:08.200776+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -232,7 +232,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:48:12.692873+00:00",
+            "measured_at": "2026-08-14T15:03:00.565217+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

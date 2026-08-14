@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.715363+00:00",
+  "generated_at": "2026-08-14T15:34:35.809198+00:00",
   "report_title": "www.liepin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -95,7 +95,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:49:32.427402+00:00",
+            "measured_at": "2026-08-14T15:04:20.890436+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -138,14 +138,13 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.liepin.com/",
-          "final_url": "https://www.liepin.com/login?backUrl=https%3A%2F%2Fwww.liepin.com%2F",
+          "final_url": "https://www.liepin.com/",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -161,8 +160,7 @@
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "inline_widget",
-                "standalone_page"
+                "inline_widget"
               ],
               "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
@@ -180,8 +178,7 @@
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "inline_widget",
-            "standalone_page"
+            "inline_widget"
           ],
           "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
@@ -204,54 +201,6 @@
                 "sms_code",
                 "tos"
               ],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [
-                "password_tab"
-              ],
-              "note": "register_combined_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.liepin.com/login?backUrl=https%3A%2F%2Fwww.liepin.com%2F",
-              "ui_type": "standalone_page",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "auto_signup",
-                "phone"
-              ],
-              "blockers": [
-                "sms_code",
-                "tos"
-              ],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [
-                "password_tab"
-              ],
-              "note": "entry_clicked_no_change"
-            },
-            {
-              "step": 3,
-              "url": "https://www.liepin.com/login?backUrl=https%3A%2F%2Fwww.liepin.com%2F",
-              "ui_type": "standalone_page",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "auto_signup",
-                "phone"
-              ],
-              "blockers": [
-                "sms_code",
-                "tos"
-              ],
               "actions": [],
               "tabs": [
                 "password_tab"
@@ -261,7 +210,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:49:18.403516+00:00",
+            "measured_at": "2026-08-14T15:04:19.617567+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

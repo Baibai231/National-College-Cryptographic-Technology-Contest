@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.716586+00:00",
+  "generated_at": "2026-08-14T15:34:35.810077+00:00",
   "report_title": "www.mafengwo.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,13 +21,13 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.mafengwo.cn/",
-          "final_url": "https://passport.mafengwo.cn/",
+          "final_url": "https://www.mafengwo.cn/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -57,37 +57,22 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://passport.mafengwo.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
                 "none",
                 "none"
               ],
-              "tabs": [
-                "password_tab"
-              ],
-              "note": "no_password_tab"
+              "tabs": [],
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:24:26.459754+00:00",
+            "measured_at": "2026-08-14T14:42:53.282974+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -96,7 +81,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.694771+00:00",
+  "generated_at": "2026-08-14T15:34:35.792258+00:00",
   "report_title": "www.d1ev.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:55:02.009787+00:00",
+            "measured_at": "2026-08-14T15:09:56.186774+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:54:52.678698+00:00",
+            "measured_at": "2026-08-14T15:09:53.161016+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

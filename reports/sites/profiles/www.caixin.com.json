@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.690057+00:00",
+  "generated_at": "2026-08-14T15:34:35.788056+00:00",
   "report_title": "www.caixin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -94,7 +94,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:40:09.026743+00:00",
+            "measured_at": "2026-08-14T14:53:30.541016+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -231,7 +231,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:39:52.712951+00:00",
+            "measured_at": "2026-08-14T14:53:15.696771+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

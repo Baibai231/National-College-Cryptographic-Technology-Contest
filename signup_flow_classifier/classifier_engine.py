@@ -46,6 +46,7 @@ from signup_flow_classifier.browser_failures import (
     detect_access_block,
     detect_blank_auth_page,
     detect_server_error_page,
+    is_human_challenge_marker,
 )
 
 # 这些类型 → 继续执行密码政策测量
@@ -150,6 +151,13 @@ class SignupFlowClassifierEngine:
                 result.final_url = self.driver.current_url
             except Exception:
                 pass
+            if is_human_challenge_marker(access_marker):
+                from signup_flow_classifier.flow_types import PageState
+                result.states.append(PageState(
+                    step=0, url=result.final_url or signup_url,
+                    blockers=["captcha"], note="full_page_human_challenge"))
+                return self._done(
+                    result, "human_blocked", "high", StopReason.HUMAN_BLOCKED.value)
             return self._done(result, "unknown", "high", StopReason.ACCESS_BLOCKED.value)
 
         server_error = detect_server_error_page(self.driver)
@@ -243,6 +251,11 @@ class SignupFlowClassifierEngine:
             if access_marker:
                 record_evidence(result, "access_blocked:{}".format(access_marker))
                 result.final_url = state.url
+                if is_human_challenge_marker(access_marker):
+                    if "captcha" not in state.blockers:
+                        state.blockers.append("captcha")
+                    return self._done(
+                        result, "human_blocked", "high", StopReason.HUMAN_BLOCKED.value)
                 return self._done(result, "unknown", "high", StopReason.ACCESS_BLOCKED.value)
 
             # 记录本步状态
@@ -738,6 +751,14 @@ class SignupFlowClassifierEngine:
             # ---- 安全前进（点击"下一步/继续"） ----
             outcome = safe_advance(self.driver, allow_local_test_values=False)
             state.actions.append("next" if outcome.clicked else "none")
+            # safe_advance performs a fresh blocker scan.  A challenge can mount
+            # between state sampling and navigation; retain that evidence rather
+            # than ending with an empty unknown state.
+            if outcome.reason == "human_blocked" and "captcha" not in state.blockers:
+                state.blockers.append("captcha")
+            elif (outcome.reason == "verification_required"
+                  and "verification_code" not in state.blockers):
+                state.blockers.append("verification_code")
             record_evidence(
                 result, "step={};navigation={}".format(step, outcome.reason))
             if not outcome.changed:

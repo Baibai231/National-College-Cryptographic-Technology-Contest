@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.675261+00:00",
+  "generated_at": "2026-08-14T15:34:35.777646+00:00",
   "report_title": "v.qq.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -27,7 +27,8 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                2,
+                3
               ],
               "summary": "短信验证码",
               "fields_observed": [],
@@ -52,10 +53,7 @@
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
           "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "limitations": [],
           "steps": [
             {
               "step": 1,
@@ -93,7 +91,9 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [],
+              "blockers": [
+                "captcha"
+              ],
               "actions": [
                 "none"
               ],
@@ -105,23 +105,23 @@
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-14T10:17:05.137713+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-14T14:34:07.440920+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -133,7 +133,9 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "captcha"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -229,7 +231,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:16:58.570232+00:00",
+            "measured_at": "2026-08-14T14:33:54.825300+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

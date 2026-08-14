@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.703585+00:00",
+  "generated_at": "2026-08-14T15:34:35.798669+00:00",
   "report_title": "www.gitee.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -97,7 +97,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:15:27.489464+00:00",
+            "measured_at": "2026-08-14T14:33:00.156641+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -220,7 +220,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:15:06.591584+00:00",
+            "measured_at": "2026-08-14T14:32:44.642971+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.689769+00:00",
+  "generated_at": "2026-08-14T15:34:35.787785+00:00",
   "report_title": "www.bitauto.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:53:01.394099+00:00",
+            "measured_at": "2026-08-14T15:08:16.191667+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -102,7 +102,7 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.bitauto.com/",
+          "start_url": "https://www.bitauto.com/jp/",
           "final_url": "https://www.bitauto.com/jp/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:52:52.108059+00:00",
+            "measured_at": "2026-08-14T15:08:10.341038+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

@@ -21,6 +21,8 @@ from pathlib import Path
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_PROJECT_ROOT))
 
+from scripts.site_data_store import merge_manual_reviews, upsert_records
+
 
 def fetch(host, token):
     import urllib.request
@@ -34,48 +36,15 @@ def fetch(host, token):
 
 def merge_records(records, jsonl_path):
     """按 (hostname, entry_kind) 合并：服务器记录覆盖本地同站同入口。"""
-    local = {}
-    if os.path.isfile(jsonl_path):
-        with open(jsonl_path, encoding="utf-8") as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                r = json.loads(line)
-                key = (r.get("hostname"), r.get("entry_kind"))
-                local[key] = r
-    added = updated = 0
-    for r in records:
-        key = (r.get("hostname"), r.get("entry_kind"))
-        if not key[0] or not key[1]:
-            continue
-        if key in local:
-            updated += 1
-        else:
-            added += 1
-        local[key] = r
-    with open(jsonl_path, "w", encoding="utf-8") as f:
-        for r in local.values():
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    return added, updated, len(local)
+    valid = [r for r in records
+             if r.get("hostname") and r.get("entry_kind") in ("login", "signup")]
+    result = upsert_records(jsonl_path, valid)
+    return result["added"], result["updated"], result["total"]
 
 
 def merge_manual(manual_data, manual_path):
     """合并人工核验：服务器 manual 覆盖本地同站。"""
-    local = {}
-    if manual_path.is_file():
-        with open(manual_path, encoding="utf-8") as f:
-            local = json.load(f)
-    server_sites = manual_data.get("sites", {})
-    local_sites = local.setdefault("sites", {})
-    merged = 0
-    for host, entry in server_sites.items():
-        if host not in local_sites or local_sites[host] != entry:
-            local_sites[host] = entry
-            merged += 1
-    local["updated_at"] = manual_data.get("updated_at", "")
-    with open(manual_path, "w", encoding="utf-8") as f:
-        json.dump(local, f, ensure_ascii=False, indent=2)
-    return merged
+    return merge_manual_reviews(manual_path, manual_data)["updated"]
 
 
 def main():

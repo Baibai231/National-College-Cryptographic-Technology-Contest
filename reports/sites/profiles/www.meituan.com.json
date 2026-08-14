@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.717394+00:00",
+  "generated_at": "2026-08-14T15:34:35.810743+00:00",
   "report_title": "www.meituan.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -57,22 +57,21 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
-                "none"
+                "entry_click"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": "entry_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:23:58.880944+00:00",
+            "measured_at": "2026-08-14T14:42:19.100659+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
@@ -81,7 +80,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -139,22 +138,21 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
-                "none"
+                "entry_click"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": "entry_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:23:56.863352+00:00",
+            "measured_at": "2026-08-14T14:42:18.021209+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
@@ -163,7 +161,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

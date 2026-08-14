@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.669645+00:00",
+  "generated_at": "2026-08-14T15:34:35.773677+00:00",
   "report_title": "36kr.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -27,7 +27,8 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -60,12 +61,25 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "entry_clicked_no_change"
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://36kr.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:10:52.249047+00:00",
+            "measured_at": "2026-08-14T14:28:01.616883+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },
@@ -160,7 +174,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T10:10:29.500791+00:00",
+            "measured_at": "2026-08-14T14:27:18.109656+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

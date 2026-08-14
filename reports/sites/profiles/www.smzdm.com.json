@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.723939+00:00",
+  "generated_at": "2026-08-14T15:34:35.816400+00:00",
   "report_title": "www.smzdm.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,30 +22,32 @@
           "status": "observed",
           "start_url": "https://www.smzdm.com/",
           "final_url": "https://www.smzdm.com/",
-          "observed_route": "手机号 → 短信验证码",
+          "observed_route": "手机号 → 短信验证码/一次性验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码",
+              "summary": "手机号 → 短信验证码/一次性验证码",
               "fields_observed": [
                 "phone",
                 "code"
               ],
               "methods_observed": [
                 "phone",
-                "sms"
+                "sms",
+                "one_time_code"
               ],
               "verification_observed": [
-                "sms"
+                "sms",
+                "one_time_code"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -54,16 +56,18 @@
           ],
           "methods_observed": [
             "phone",
-            "sms"
+            "sms",
+            "one_time_code"
           ],
           "verification_observed": [
-            "sms"
+            "sms",
+            "one_time_code"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
             "程序置信度为 medium"
@@ -81,7 +85,8 @@
                 "phone"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "verification_code"
               ],
               "actions": [
                 "none"
@@ -92,7 +97,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T10:12:38.301403+00:00",
+            "measured_at": "2026-08-14T14:30:24.905333+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -121,7 +126,8 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "sms_code"
+                "sms_code",
+                "verification_code"
               ]
             },
             "security": {
@@ -197,19 +203,6 @@
                 "sms_code"
               ],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "register_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.smzdm.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
                 "none"
               ],
               "tabs": [],
@@ -218,7 +211,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T10:12:35.166787+00:00",
+            "measured_at": "2026-08-14T14:30:14.052829+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

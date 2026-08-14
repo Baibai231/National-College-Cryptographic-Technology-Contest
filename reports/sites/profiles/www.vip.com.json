@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T11:18:45.727561+00:00",
+  "generated_at": "2026-08-14T15:34:35.819959+00:00",
   "report_title": "www.vip.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -131,7 +131,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:23:19.103492+00:00",
+            "measured_at": "2026-08-14T14:41:07.835699+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -275,7 +275,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:23:14.216238+00:00",
+            "measured_at": "2026-08-14T14:40:53.304664+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
