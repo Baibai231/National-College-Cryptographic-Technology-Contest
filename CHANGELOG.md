@@ -9,7 +9,7 @@
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
-| 2026-08-14 | Codex（Mac） | v3 持续改进（进行中）：打通网页新增站点/人工核验与 reports、GitHub、服务器的数据闭环；升级正确性指标、错误原因展示及 unknown 识别 | webapp/、scripts/、signup_flow_classifier/、tests/、reports/、HANDOFF.md | 代码/数据已推送，待服务器拉取验收 |
+| 2026-08-15 | Codex（Mac） | v3 数据闭环改进完成：网页持久化、结构化核验、双侧原因、诚实指标、unknown 优化、两轮全量回归及三端同步均完成并上线 | webapp/、scripts/、signup_flow_classifier/、tests/、reports/、HANDOFF.md | 已推送并于 00:00 定时部署验收 |
 | 2026-08-14 | Codex（Mac） | 修正正式汇总表输出位置与逐站档案相对链接，删除两个已被正式域名取代的旧别名档案 | scripts/generate_profiles.py、reports/sites/sites_summary.md、reports/sites/profiles/ | 本次提交 |
 | 2026-08-14 | Codex（Mac） | 保持 v3：修正扫码登录语义与第三方登录识别，新增两轮全量回归对比，并为网站正确/错误判断补充可读依据 | signup_flow_classifier/、scripts/run_measurement.py、scripts/compare_measurement_rounds.py、webapp/、tests/、reports/ | 本次提交 |
 | 2026-08-12 | cjx（Mac） | 修复慕课网手机号字段被误判为 email、知乎机构号注册入口误当普通注册 | signup_flow_classifier/page_detector.py、utils/login_link_discovery.py、utils/js/form_detection_addons.js、tests/test_site_recognition_fixes.py | 未推送 |
@@ -20,7 +20,7 @@
 
 ## 实现细节
 
-### 7. v3 数据闭环、核验指标与识别优化（2026-08-14，进行中）
+### 7. v3 数据闭环、核验指标与识别优化（2026-08-14～15，已完成）
 
 - [x] 网页新增/更新站点原子写入 `reports/sites/sites_latest.jsonl`，保留完整证据和未修改的一侧结果。
 - [x] SQLite 先在旁路文件完整构建并原子替换，失败时旧库继续服务，同时保留待审核；
@@ -33,16 +33,18 @@
   挑战 URL 归为可解释的人工阻断；补齐自动化测试，未加入网站域名硬编码。
 - [x] 完成两轮 151 站全量回归（各 302 条，273 条语义一致）、46 条差异定向复测、
   多数/成功证据仲裁及人工抽查；正式数据 302 条全部保持 `v3`，无错误记录。
-- [ ] 更新 Mac、GitHub、服务器之间的数据流说明并完成线上部署验收。
+- [x] 更新 Mac、GitHub、服务器之间的数据流说明；GitHub 推送后由服务器 00:00 定时
+  自动拉取、重建并重启，公网 API 与真实页面均完成验收。
 
 阶段验证：正式 `unknown` 115→101；人工核验口径下，登录正确率 71.7%→72.7%、
 覆盖率 63.9%→66.3%，注册正确率 79.2%→80.0%、覆盖率 57.8%→60.2%。
 完整两轮差异和人工抽查见 `reports/archive/v3_data_sync_acceptance_20260814.md`。
 `webapp/DATA_FLOW.md` 已写明 reports/manual 权威数据与 SQLite 可重建索引的边界。
-最终本地验证：84/84 自动化测试、Shell/前端语法检查、151 站 API 冒烟通过；增量快照
+最终验证：84/84 自动化测试、Shell/前端语法检查、151 站 API 冒烟通过；增量快照
 测试确认网页变更可回放且不会覆盖 Mac 同期更新，完整快照回放精确恢复 302/302 条；真实浏览器
-确认卡片主动展示正确/错误/证据不足原因，详情分别展示登录/注册原因，结构化核验表单
-完整且控制台无错误。待 GitHub 推送及服务器拉取后完成线上验收。
+确认卡片主动展示登录/注册各自的正确/错误/证据不足原因，详情分别展示双侧原因，
+结构化核验表单完整且控制台无错误。2026-08-15 00:00 服务器定时部署成功；公网核对
+151 站全部 v3、程序错误 0、已核验双侧原因 166/166 完整。
 
 ### 6. 扫码语义、第三方登录与报告解释（2026-08-14）
 
