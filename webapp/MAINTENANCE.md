@@ -67,8 +67,9 @@ git pull --rebase
 cd ~/measure
 ./webapp/server_sync.sh
 ```
-`server_sync.sh` 的顺序固定为：快照网页权威数据 → 恢复干净工作树 → pull --rebase →
-按站点/入口原子回放 → 生成报告并提交 → 重建 SQLite → 重启 → push。拉取失败也会先
+`server_sync.sh` 的顺序固定为：快照网页相对旧 HEAD 的真实增量 → 恢复干净工作树 →
+pull --rebase → 按站点/入口原子回放增量 → 生成报告并提交 → 重建 SQLite → 重启 →
+push。未变化的旧服务器记录不会覆盖 Mac 新全量结果；拉取失败也会先
 恢复快照。完整解释见 `webapp/DATA_FLOW.md`。
 
 ### 方案 2：API 主动拉回（GitHub 暂未同步时）

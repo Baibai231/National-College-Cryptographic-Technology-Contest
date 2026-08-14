@@ -1,4 +1,4 @@
-"""Merge a server snapshot back into the authoritative project data files."""
+"""Merge a server delta snapshot into the authoritative project data files."""
 import argparse
 import json
 import sys
@@ -12,8 +12,8 @@ from scripts.site_data_store import merge_manual_reviews, upsert_records
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--records", required=True, help="snapshot JSONL")
-    parser.add_argument("--manual", required=True, help="snapshot manual JSON")
+    parser.add_argument("--records", required=True, help="delta snapshot JSONL")
+    parser.add_argument("--manual", required=True, help="delta snapshot manual JSON")
     parser.add_argument(
         "--target-records", default="reports/sites/sites_latest.jsonl")
     parser.add_argument(

@@ -114,9 +114,11 @@ sudo systemctl restart sites-webapp               # 或重启 run_server.sh
 curl -fsS http://127.0.0.1:8000/api/stats
 ```
 
-建议设置每 6 小时同步。脚本会先快照服务器上的网页新增站点与已审核人工数据，
+建议设置每 6 小时同步。脚本只快照服务器相对旧 HEAD 真正变化的网页站点/入口与
+已审核人工条目，
 用干净工作树拉取远端，再按站点/入口原子回放并提交；即使 Mac 与服务器同时修改
-JSONL 也不会直接 rebase 冲突，拉取失败时快照也会恢复。reports 变化时会重新生成档案。
+JSONL 也不会直接 rebase 冲突，未修改的服务器旧记录不会覆盖 Mac 新全量结果；拉取
+失败时快照也会恢复。reports 变化时会重新生成档案。
 
 ```bash
 chmod +x webapp/server_sync.sh

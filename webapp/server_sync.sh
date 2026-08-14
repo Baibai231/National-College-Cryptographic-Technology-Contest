@@ -34,8 +34,8 @@ retry() {
 }
 replay_snapshot() {
   .venv/bin/python scripts/merge_data_files.py \
-    --records "$SNAPSHOT_DIR/sites_latest.jsonl" \
-    --manual "$SNAPSHOT_DIR/manual_review.json" >> "$LOG" 2>&1
+    --records "$SNAPSHOT_DIR/records_delta.jsonl" \
+    --manual "$SNAPSHOT_DIR/manual_delta.json" >> "$LOG" 2>&1
   SNAPSHOT_REPLAYED=1
 }
 generate_reports() {
@@ -47,7 +47,7 @@ generate_reports() {
 
 log "=== 开始同步 ==="
 OLD_HEAD=$(git rev-parse HEAD)
-LOCAL_DATA_CHANGES=$(git status --porcelain -- "${DATA_FILES[@]}" | head -40)
+LOCAL_DATA_CHANGES=$(git status --porcelain -- "${AUTHORITATIVE_FILES[@]}" | head -40)
 HAS_SNAPSHOT=0
 
 if [ -n "$LOCAL_DATA_CHANGES" ]; then
@@ -63,11 +63,12 @@ if [ -n "$LOCAL_DATA_CHANGES" ]; then
     fi
   }
   trap cleanup_snapshot EXIT
-  cp reports/sites/sites_latest.jsonl "$SNAPSHOT_DIR/sites_latest.jsonl"
-  cp misc/manual_review.json "$SNAPSHOT_DIR/manual_review.json"
+  .venv/bin/python scripts/snapshot_data_changes.py \
+    --output-records "$SNAPSHOT_DIR/records_delta.jsonl" \
+    --output-manual "$SNAPSHOT_DIR/manual_delta.json" >> "$LOG" 2>&1
   HAS_SNAPSHOT=1
   log "已快照服务器网页数据: $LOCAL_DATA_CHANGES"
-  git restore --worktree -- "${DATA_FILES[@]}"
+  git restore --worktree -- "${AUTHORITATIVE_FILES[@]}"
 else
   log "服务器网页数据无变化"
 fi
@@ -81,8 +82,8 @@ if ! retry "git pull --rebase" git pull --rebase; then
   exit 1
 fi
 
-# 拉取成功后按 (hostname, entry_kind) 回放；服务器网页记录覆盖同键远端记录，
-# 远端其他网站/另一侧结果仍完整保留。人工数据按网站同样合并。
+# 拉取成功后只回放相对旧 HEAD 真正变化的 (hostname, entry_kind)；服务器网页增量
+# 覆盖同键远端记录，远端其他网站/另一侧结果完整保留。人工数据按网站同样合并。
 if [ "$HAS_SNAPSHOT" -eq 1 ]; then
   replay_snapshot
   generate_reports
