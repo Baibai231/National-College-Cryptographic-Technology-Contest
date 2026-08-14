@@ -364,3 +364,29 @@ click 后弹窗不保持，改用真实鼠标事件点击（无退化，稳定�
 
 验证：搜索（慕课/知乎/京东）、详情（policy）、提交/查看/删除审核、
 首页渲染全部通过；回归测试 26/26。
+
+## 版本更新流程约定（重要，2026-08-14 起生效）
+
+每次修改**注册分类相关逻辑**（大版本）后，**必须重跑全部站点并更新数据**，否则网站显示的是旧代码测的结果：
+
+```bash
+# 1. 升版本号（大改动才升，小修复不用）
+echo "v4" > misc/measure_version.txt
+
+# 2. 重跑全部站点（150站约40分钟）
+.venv/bin/python scripts/run_measurement.py \
+  --input misc/sites_base_60.txt --input misc/sites_extra_60.txt --input misc/sites_new_30.txt \
+  --output reports/sites/sites_latest.jsonl --workers 3
+
+# 3. 重建数据库 + 提交
+.venv/bin/python scripts/build_site_database.py
+git add -A && git commit -m "data: v4 全量重测" && git push
+
+# 4. 服务器自动/手动同步（webapp/server_sync.sh 或 git pull + build + restart）
+```
+
+判断标准：
+- **大版本**：分类逻辑重构、新增流程类型、字段语义变化 → 升版本 + 全量重跑
+- **小修复**：误判修复、等待时序、网络容错 → 不升版本，只重跑受影响的站
+
+注意：重跑结果写入 `reports/sites/sites_latest.jsonl`（覆盖），旧版本结果在网站"历史结果"里可查。

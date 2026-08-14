@@ -325,11 +325,14 @@ def stats():
             if _manual_match(ft, manual or ""):
                 match += 1
         rate = round(match / verified * 100, 1) if verified else 0.0
+        cur.execute("SELECT COUNT(*) FROM reviews_pending")
+        pending = cur.fetchone()[0]
     finally:
         conn.close()
     return {
         "total_sites": total,
         "manual_verified": verified,
+        "pending_reviews": pending,
         "program_accuracy": {"match": match, "total": verified,
                              "rate": rate},
         "signup_distribution": signup_dist,
