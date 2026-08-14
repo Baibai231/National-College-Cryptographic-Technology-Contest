@@ -60,3 +60,4 @@ htmlcov/
 *.REMOTE.*
 webapp/browser-linux/
 webapp/sites.db
+HANDOFF.md
