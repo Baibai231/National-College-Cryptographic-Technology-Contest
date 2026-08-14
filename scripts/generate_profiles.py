@@ -547,7 +547,7 @@ def render_markdown(payload: dict) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _render_summary_table(payloads: list) -> str:
+def _render_summary_table(payloads: list, profile_link_prefix: str = "") -> str:
     lines = [
         "# 国内网站认证档案汇总表",
         "",
@@ -563,7 +563,7 @@ def _render_summary_table(payloads: list) -> str:
         login_ft = (login["raw_result"] or {}).get("flow_type")
         signup_ft = (signup["raw_result"] or {}).get("flow_type")
         lines.append(
-            f"| [{site['name']}]({_profile_stem(site['id'])}.md) | "
+            f"| [{site['name']}]({profile_link_prefix}{_profile_stem(site['id'])}.md) | "
             f"{FLOW_ZH.get(login_ft, '未测')} | {FLOW_ZH.get(signup_ft, '未测')} | "
             f"{login['observed_route']} | {signup['observed_route']} | "
             f"{PASSWORD_STATE_ZH[signup['password_state']]} | "
@@ -626,7 +626,10 @@ def main() -> None:
         _render_summary_table(payloads), encoding="utf-8")
     summary = Path(args.summary)
     summary.parent.mkdir(parents=True, exist_ok=True)
-    summary.write_text(_render_summary_table(payloads), encoding="utf-8")
+    relative_profiles = Path(os.path.relpath(output_dir, summary.parent)).as_posix()
+    summary_link_prefix = "" if relative_profiles == "." else f"{relative_profiles}/"
+    summary.write_text(
+        _render_summary_table(payloads, summary_link_prefix), encoding="utf-8")
     print(f"已生成 {len(payloads)} 个档案到 {output_dir}/，汇总表 {summary}")
 
 
