@@ -1,9 +1,9 @@
 """从批量分类 JSONL 生成国内网站逐站认证档案 + 汇总表。
 
 用法:
-  .venv/bin/python scripts/generate_cn60_profiles.py \
-      --results reports/cn60_classify_20260812.jsonl \
-      --profiles-dir reports/cn60_profiles
+  .venv/bin/python scripts/generate_profiles.py \
+      --results reports/sites/sites_latest.jsonl \
+      --profiles-dir reports/sites/profiles
 """
 import argparse
 import json

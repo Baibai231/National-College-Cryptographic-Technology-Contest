@@ -1,10 +1,10 @@
 """批量分类国内网站（login+signup），只观察不测政策。
 
 用法:
-  .venv/bin/python scripts/run_cn60_classify.py --kinds signup,login \
-      --output reports/cn60_classify_20260812.jsonl --workers 3
+  .venv/bin/python scripts/run_measurement.py --kinds signup,login \
+      --output reports/sites/sites_latest.jsonl --workers 3
   # 续跑（跳过已有记录）
-  .venv/bin/python scripts/run_cn60_classify.py --output reports/cn60_classify_20260812.jsonl --resume
+  .venv/bin/python scripts/run_measurement.py --output reports/sites/sites_latest.jsonl --resume
 
 安全边界：与单站诊断一致——不填字段、不点发送验证码、不提交、不创建账号。
 """
@@ -79,7 +79,7 @@ def classify_one(site: str, kind: str) -> dict:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--input", default="misc/cn_sites_60.txt")
+    ap.add_argument("--input", default="misc/sites_base_60.txt")
     ap.add_argument("--kinds", default="signup,login",
                     help="逗号分隔入口类型")
     ap.add_argument("--output", required=True)

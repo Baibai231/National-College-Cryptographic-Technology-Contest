@@ -228,7 +228,7 @@ def export_data(admin_token: str = Header("", alias="X-Admin-Token")):
     """导出全量站点数据（供 Mac 拉回合并，保持数据一致）。
 
     返回：
-      records: 与 run_cn60_classify 输出同格式的测量记录列表
+      records: 与 run_measurement 输出同格式的测量记录列表
       manual:  manual_review.json 内容
     """
     expected = os.environ.get("SITES_ADMIN_TOKEN", "")
