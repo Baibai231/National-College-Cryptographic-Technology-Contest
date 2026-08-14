@@ -318,12 +318,18 @@ def stats():
         verified = cur.fetchone()[0]
         # 程序 vs 人工 粗匹配正确率（已核验站中，程序注册结论与人工描述一致的比例）
         cur.execute(
-            "SELECT signup_flow, manual_signup, manual_verified FROM sites "
+            "SELECT hostname, signup_flow, manual_signup FROM sites "
             "WHERE manual_verified = 1")
         match = 0
-        for ft, manual, _v in cur.fetchall():
+        correct_sites, wrong_sites = [], []
+        for host, ft, manual in cur.fetchall():
             if _manual_match(ft, manual or ""):
                 match += 1
+                correct_sites.append({"hostname": host, "program": ft,
+                                      "manual": (manual or "")[:60]})
+            else:
+                wrong_sites.append({"hostname": host, "program": ft,
+                                    "manual": (manual or "")[:60]})
         rate = round(match / verified * 100, 1) if verified else 0.0
         cur.execute("SELECT COUNT(*) FROM reviews_pending")
         pending = cur.fetchone()[0]
@@ -334,7 +340,9 @@ def stats():
         "manual_verified": verified,
         "pending_reviews": pending,
         "program_accuracy": {"match": match, "total": verified,
-                             "rate": rate},
+                             "rate": rate,
+                             "correct_sites": correct_sites,
+                             "wrong_sites": wrong_sites},
         "signup_distribution": signup_dist,
         "login_distribution": login_dist,
         "flow_zh": FLOW_ZH,

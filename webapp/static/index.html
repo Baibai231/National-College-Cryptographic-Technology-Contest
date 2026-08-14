@@ -58,10 +58,11 @@
 <body>
 <div class="container py-4">
   <h3 class="mb-1">注册流程测量平台
-    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showAdminModal()">待审核管理</button>
+    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showAdminModal()" id="admin-btn">待审核管理</button>
   </h3>
   <p class="text-muted small mb-3">
     共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站，程序正确率 <span id="stat-accuracy">-</span>
+    <button class="btn btn-sm btn-link p-0 ms-1 align-baseline" onclick="showAccuracy()" id="accuracy-btn" style="font-size:0.8rem">明细</button>
     <span id="stat-pending" class="ms-2"></span>
   </p>
 
@@ -164,6 +165,21 @@
   </div>
 </div>
 
+<div id="accuracyModal" class="my-modal" style="display:none">
+  <div class="my-modal-box my-modal-lg">
+    <div class="my-modal-head">
+      <b>程序 vs 人工正确率明细</b>
+      <button type="button" class="my-modal-close" onclick="hideAccuracy()">×</button>
+    </div>
+    <div class="my-modal-body">
+      <div id="accuracy-body" class="small">加载中…</div>
+    </div>
+    <div class="my-modal-foot">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="hideAccuracy()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const FLOW_ZH = {
   direct_password: "直接口令", identifier_then_password: "先标识后口令",
@@ -223,14 +239,22 @@ async function loadStats() {
   const d = await r.json();
   document.getElementById('stat-total').textContent = d.total_sites;
   document.getElementById('stat-verified').textContent = d.manual_verified;
-  if (d.program_accuracy)
+  if (d.program_accuracy) {
+    accuracyData = d.program_accuracy;
     document.getElementById('stat-accuracy').textContent =
       d.program_accuracy.rate + '%（' + d.program_accuracy.match + '/' + d.program_accuracy.total + '）';
+  }
   const pend = document.getElementById('stat-pending');
-  if (d.pending_reviews > 0)
-    pend.innerHTML = `<button class="btn btn-sm btn-danger" onclick="showAdminModal()">待审核 ${d.pending_reviews} 份</button>`;
-  else
+  const adminBtn = document.getElementById('admin-btn');
+  if (d.pending_reviews > 0) {
+    adminBtn.className = 'btn btn-sm btn-danger ms-2';
+    adminBtn.textContent = '待审核管理（' + d.pending_reviews + '）';
+    pend.innerHTML = '<span class="text-danger small">有 ' + d.pending_reviews + ' 份人工提交待审核</span>';
+  } else {
+    adminBtn.className = 'btn btn-sm btn-outline-secondary ms-2';
+    adminBtn.textContent = '待审核管理';
     pend.innerHTML = '';
+  }
 }
 async function search(q) {
   const r = await fetch('/api/sites?q=' + encodeURIComponent(q) + '&limit=1000');
@@ -259,6 +283,25 @@ function hideDetail() { document.getElementById('detailModal').style.display = '
 function showAdminModal() {
   document.getElementById('adminModal').style.display = 'flex';
   loadPending();
+}
+let accuracyData = null;
+function showAccuracy() {
+  document.getElementById('accuracyModal').style.display = 'flex';
+  if (accuracyData) renderAccuracy();
+}
+function hideAccuracy() { document.getElementById('accuracyModal').style.display = 'none'; }
+function renderAccuracy() {
+  const a = accuracyData || { correct_sites: [], wrong_sites: [], match: 0, total: 0 };
+  const correct = (a.correct_sites || []).map(s =>
+    `<li>${s.hostname} <span class="text-muted">程序:${s.program} | 人工:${s.manual}</span></li>`).join('');
+  const wrong = (a.wrong_sites || []).map(s =>
+    `<li class="text-danger">${s.hostname} <span class="text-muted">程序:${s.program} | 人工:${s.manual}</span></li>`).join('');
+  document.getElementById('accuracy-body').innerHTML = `
+    <p>共核验 ${a.total} 站，程序与人工一致 ${a.match} 站（${a.rate}%）。</p>
+    <p class="text-danger mb-1"><b>疑似不一致（${a.wrong_sites.length}）——请人工复核：</b></p>
+    <ul class="mb-3">${wrong || '<li class="text-muted">无</li>'}</ul>
+    <p class="mb-1"><b>一致（${a.correct_sites.length}）：</b></p>
+    <ul class="small" style="max-height:300px;overflow:auto">${correct || '<li class="text-muted">无</li>'}</ul>`;
 }
 function hideAdmin() { document.getElementById('adminModal').style.display = 'none'; }
 async function loadPending() {
