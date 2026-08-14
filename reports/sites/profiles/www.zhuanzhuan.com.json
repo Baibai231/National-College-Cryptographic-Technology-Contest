@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.863129+00:00",
+  "generated_at": "2026-08-14T11:18:45.732779+00:00",
   "report_title": "www.zhuanzhuan.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -70,7 +70,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:23:28.917299+00:00",
+            "measured_at": "2026-08-14T10:47:02.556513+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -156,7 +156,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:23:26.021679+00:00",
+            "measured_at": "2026-08-14T10:46:52.020578+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

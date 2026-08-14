@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.850469+00:00",
+  "generated_at": "2026-08-14T11:18:45.717681+00:00",
   "report_title": "www.mgtv.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -54,7 +54,9 @@
               "url": "https://www.mgtv.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "agree_click",
@@ -67,7 +69,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T06:59:14.074555+00:00",
+            "measured_at": "2026-08-14T10:17:30.514413+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -137,7 +139,9 @@
               "url": "https://www.mgtv.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "agree_click",
@@ -150,7 +154,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T06:58:53.686686+00:00",
+            "measured_at": "2026-08-14T10:17:22.972911+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

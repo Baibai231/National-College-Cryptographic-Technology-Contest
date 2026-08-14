@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.819894+00:00",
+  "generated_at": "2026-08-14T11:18:45.678929+00:00",
   "report_title": "www.360.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -95,7 +95,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T08:57:07.819479+00:00",
+            "measured_at": "2026-08-14T10:50:57.678650+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -213,7 +213,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T08:56:46.901047+00:00",
+            "measured_at": "2026-08-14T10:50:41.904645+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

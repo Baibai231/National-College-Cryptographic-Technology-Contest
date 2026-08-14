@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.811305+00:00",
+  "generated_at": "2026-08-14T11:18:45.669645+00:00",
   "report_title": "36kr.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,110 +22,75 @@
           "status": "observed",
           "start_url": "https://36kr.com/",
           "final_url": "https://36kr.com/",
-          "observed_route": "手机号 → 短信验证码",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码",
-              "fields_observed": [
-                "phone",
-                "code"
-              ],
-              "methods_observed": [
-                "phone",
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "inline_widget"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
-          "fields_observed": [
-            "phone",
-            "code"
-          ],
-          "methods_observed": [
-            "phone",
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
-          "password_state": "not_observed_before_verification",
-          "ui_types": [
-            "inline_widget"
-          ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
               "step": 1,
               "url": "https://36kr.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [
-                "sms_code"
-              ],
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
               "actions": [
-                "none",
-                "none"
+                "entry_click"
               ],
-              "tabs": [
-                "password_tab"
-              ],
-              "note": "no_password_tab"
+              "tabs": [],
+              "note": "entry_clicked_no_change"
             }
           ],
           "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-13T06:52:09.168069+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:10:52.249047+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
-            "primary_method": "sms"
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
-              "evidence_boundary": "pre_verification_only"
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "sms_or_otp",
-                "phone"
-              ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "observed_methods": [],
+              "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": true,
-              "phone_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": [
-                "sms_code"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -162,7 +127,8 @@
           "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "程序置信度为 low"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
@@ -194,13 +160,13 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:42:23.180753+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "measured_at": "2026-08-14T10:10:29.500791+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {

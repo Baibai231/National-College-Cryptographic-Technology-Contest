@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.861912+00:00",
+  "generated_at": "2026-08-14T11:18:45.731260+00:00",
   "report_title": "www.zhaopin.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -77,6 +77,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
@@ -92,7 +93,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:08:40.156956+00:00",
+            "measured_at": "2026-08-14T10:25:30.873867+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -198,6 +199,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
@@ -219,6 +221,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone",
                 "sso",
                 "wechat"
@@ -236,7 +239,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:08:32.206626+00:00",
+            "measured_at": "2026-08-14T10:25:20.197868+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

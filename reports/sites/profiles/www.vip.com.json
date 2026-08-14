@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.858946+00:00",
+  "generated_at": "2026-08-14T11:18:45.727561+00:00",
   "report_title": "www.vip.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -42,7 +42,8 @@
                 "third_party",
                 "wechat",
                 "qq",
-                "weibo"
+                "weibo",
+                "alipay"
               ],
               "verification_observed": [
                 "qr"
@@ -65,7 +66,8 @@
             "third_party",
             "wechat",
             "qq",
-            "weibo"
+            "weibo",
+            "alipay"
           ],
           "verification_observed": [
             "qr"
@@ -85,6 +87,7 @@
               "methods": [
                 "alipay",
                 "qq",
+                "qr",
                 "sso",
                 "wechat",
                 "weibo"
@@ -113,13 +116,12 @@
                 "alipay",
                 "identifier",
                 "qq",
+                "qr",
                 "sso",
                 "wechat",
                 "weibo"
               ],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "register_tab"
@@ -129,7 +131,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:05:28.144059+00:00",
+            "measured_at": "2026-08-14T10:23:19.103492+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -193,7 +195,8 @@
                 "third_party",
                 "wechat",
                 "qq",
-                "weibo"
+                "weibo",
+                "alipay"
               ],
               "verification_observed": [
                 "qr"
@@ -216,7 +219,8 @@
             "third_party",
             "wechat",
             "qq",
-            "weibo"
+            "weibo",
+            "alipay"
           ],
           "verification_observed": [
             "qr"
@@ -236,6 +240,7 @@
               "methods": [
                 "alipay",
                 "qq",
+                "qr",
                 "sso",
                 "wechat",
                 "weibo"
@@ -270,7 +275,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:05:17.211281+00:00",
+            "measured_at": "2026-08-14T10:23:14.216238+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

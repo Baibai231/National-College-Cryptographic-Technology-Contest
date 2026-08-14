@@ -68,7 +68,7 @@ class PageState:
     fields: List[str] = field(default_factory=list)      # 识别到的可见输入框: email/phone/password/code/identifier
     actions: List[str] = field(default_factory=list)     # 执行过的动作: next/submit/click_tab/click_link/none
     blockers: List[str] = field(default_factory=list)    # 阻断因素: captcha/sms_code/email_code/verification_code/slide/scan/app_confirm/tos/other
-    methods: List[str] = field(default_factory=list)     # 发现的注册方式: email/phone/sms/sso/wechat/qq/weibo/google/apple
+    methods: List[str] = field(default_factory=list)     # 发现的注册方式: email/phone/sms/qr/auto_signup/sso/wechat/qq/weibo/google/apple/...
     available_actions: List[str] = field(default_factory=list)  # 当前可见动作: next/send_code/submit/external_sso
     tabs: List[str] = field(default_factory=list)          # 表单内 tab: password_tab/password_signup_tab/sms_tab/email_tab/register_tab
     note: str = ""

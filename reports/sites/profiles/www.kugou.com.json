@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.847188+00:00",
+  "generated_at": "2026-08-14T11:18:45.713864+00:00",
   "report_title": "www.kugou.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -65,7 +65,9 @@
               "url": "https://www.kugou.com/",
               "ui_type": "multi_step_wizard",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qr"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -78,7 +80,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:13:01.298021+00:00",
+            "measured_at": "2026-08-14T10:31:29.804471+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -163,7 +165,9 @@
               "url": "https://www.kugou.com/",
               "ui_type": "multi_step_wizard",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qr"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -176,7 +180,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:12:48.320585+00:00",
+            "measured_at": "2026-08-14T10:31:15.102452+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

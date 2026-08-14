@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.812704+00:00",
+  "generated_at": "2026-08-14T11:18:45.671192+00:00",
   "report_title": "juejin.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -69,7 +69,8 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -81,13 +82,14 @@
                 "code"
               ],
               "methods": [
-                "phone"
+                "phone",
+                "qr"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
@@ -97,14 +99,14 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T06:53:28.013672+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:12:20.750069+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -112,8 +114,8 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -122,13 +124,12 @@
                 "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },
@@ -190,7 +191,8 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -202,13 +204,38 @@
                 "code"
               ],
               "methods": [
-                "phone"
+                "phone",
+                "qr"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://juejin.cn/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone",
+                "qr"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
               "tabs": [
                 "password_tab"
               ],
@@ -216,14 +243,14 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T06:53:20.075165+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:12:20.337976+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -231,8 +258,8 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -241,13 +268,12 @@
                 "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },

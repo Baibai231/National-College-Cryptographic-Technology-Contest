@@ -2,6 +2,7 @@
 
 用法:
   .venv/bin/python scripts/run_measurement.py --kinds signup,login \
+      --input misc/sites_base_60.txt --input misc/sites_extra_60.txt \
       --output reports/sites/sites_latest.jsonl --workers 3
   # 续跑（跳过已有记录）
   .venv/bin/python scripts/run_measurement.py --output reports/sites/sites_latest.jsonl --resume
@@ -79,19 +80,35 @@ def classify_one(site: str, kind: str) -> dict:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--input", default="misc/sites_base_60.txt")
+    ap.add_argument("--input", action="append", default=[],
+                    help="站点清单，可重复传入；自动按 hostname 去重")
     ap.add_argument("--kinds", default="signup,login",
                     help="逗号分隔入口类型")
     ap.add_argument("--output", required=True)
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--resume", action="store_true",
                     help="跳过输出文件中已存在的 (site, entry_kind) 记录")
+    ap.add_argument("--overwrite", action="store_true",
+                    help="开始前清空输出文件；与 --resume 互斥")
     ap.add_argument("--only", default="", help="只跑逗号分隔的主机名子集")
     args = ap.parse_args()
 
-    with open(args.input, encoding="utf-8") as handle:
-        sites = [line.strip() for line in handle
-                 if line.strip() and not line.lstrip().startswith("#")]
+    if args.resume and args.overwrite:
+        ap.error("--resume 与 --overwrite 不能同时使用")
+    inputs = args.input or ["misc/sites_base_60.txt"]
+    sites = []
+    seen_hosts = set()
+    for input_path in inputs:
+        with open(input_path, encoding="utf-8") as handle:
+            for line in handle:
+                site = line.strip()
+                if not site or site.lstrip().startswith("#"):
+                    continue
+                host = urlparse(site).hostname or site
+                if host in seen_hosts:
+                    continue
+                seen_hosts.add(host)
+                sites.append(site)
     if args.only:
         only = {h.strip() for h in args.only.split(",") if h.strip()}
         sites = [s for s in sites
@@ -101,6 +118,8 @@ def main():
     tasks = [(s, k) for s in sites for k in kinds]
 
     done = set()
+    if args.overwrite and os.path.isfile(args.output):
+        os.remove(args.output)
     if args.resume and os.path.isfile(args.output):
         with open(args.output, encoding="utf-8") as handle:
             for line in handle:

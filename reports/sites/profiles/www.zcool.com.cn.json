@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.861611+00:00",
+  "generated_at": "2026-08-14T11:18:45.730815+00:00",
   "report_title": "www.zcool.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,21 +22,20 @@
           "status": "observed",
           "start_url": "https://www.zcool.com.cn/",
           "final_url": "https://passport.zcool.com.cn/loginApp.do?appId=1006&cback=https%3A%2F%2Fwww.zcool.com.cn%2F",
-          "observed_route": "短信验证码/一次性验证码/扫码",
+          "observed_route": "短信验证码/一次性验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "短信验证码/一次性验证码/扫码",
+              "summary": "短信验证码/一次性验证码",
               "fields_observed": [
                 "code"
               ],
               "methods_observed": [
                 "sms",
                 "one_time_code",
-                "qr",
                 "third_party",
                 "wechat",
                 "qq",
@@ -44,14 +43,13 @@
               ],
               "verification_observed": [
                 "sms",
-                "one_time_code",
-                "qr"
+                "one_time_code"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码、一次性验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -60,7 +58,6 @@
           "methods_observed": [
             "sms",
             "one_time_code",
-            "qr",
             "third_party",
             "wechat",
             "qq",
@@ -68,14 +65,13 @@
           ],
           "verification_observed": [
             "sms",
-            "one_time_code",
-            "qr"
+            "one_time_code"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码、一次性验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -101,6 +97,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "qq",
                 "sso",
                 "wechat",
@@ -108,7 +105,6 @@
               ],
               "blockers": [
                 "verification_code",
-                "scan",
                 "slide"
               ],
               "actions": [
@@ -123,7 +119,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T06:56:45.010645+00:00",
+            "measured_at": "2026-08-14T10:14:49.509933+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -144,7 +140,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "third_party"
               ],
               "password_status": "not_determined",
@@ -153,7 +148,6 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "slide",
                 "verification_code"
               ]
@@ -181,7 +175,11 @@
                 "phone"
               ],
               "methods_observed": [
-                "phone"
+                "phone",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
               ],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
@@ -195,7 +193,11 @@
             "phone"
           ],
           "methods_observed": [
-            "phone"
+            "phone",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo"
           ],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
@@ -226,7 +228,11 @@
                 "phone"
               ],
               "methods": [
-                "phone"
+                "phone",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
               ],
               "blockers": [
                 "slide",
@@ -241,14 +247,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T06:56:10.081498+00:00",
+            "measured_at": "2026-08-14T10:14:32.527934+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -262,6 +268,7 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
+                "third_party",
                 "phone"
               ],
               "password_status": "not_determined",

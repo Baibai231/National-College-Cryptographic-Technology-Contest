@@ -58,7 +58,13 @@ def _row_to_site(row):
      lfinal, lma, sf, sfzh, sr, sfields, sblockers, sfinal, sma,
      mlogin, msignup, mnote, mverified, match, details_json) = row
     details = json.loads(details_json or "{}")
-    return {
+    login_error = details.get("login_error") or ""
+    signup_error = details.get("signup_error") or ""
+    login_states = details.get("login_raw_states", [])
+    signup_states = details.get("signup_raw_states", [])
+    login_methods = _methods_from_states(login_states)
+    signup_methods = _methods_from_states(signup_states)
+    site = {
         "hostname": hostname,
         "url": url,
         "keywords": json.loads(keywords or "[]"),
@@ -68,16 +74,20 @@ def _row_to_site(row):
             "route": lr, "fields": lfields, "blockers": lblockers,
             "final_url": lfinal, "measured_at": lma,
             "steps": details.get("login_steps", []),
-            "raw_states": details.get("login_raw_states", []),
+            "raw_states": login_states,
             "policy": details.get("login_policy", {}),
+            "program_reason": _program_reason(
+                lf, lr, lfields, lblockers, login_error, login_methods),
         },
         "signup": {
             "flow_type": sf, "flow_zh": sfzh or "未确认",
             "route": sr, "fields": sfields, "blockers": sblockers,
             "final_url": sfinal, "measured_at": sma,
             "steps": details.get("signup_steps", []),
-            "raw_states": details.get("signup_raw_states", []),
+            "raw_states": signup_states,
             "policy": details.get("signup_policy", {}),
+            "program_reason": _program_reason(
+                sf, sr, sfields, sblockers, signup_error, signup_methods),
         },
         "manual": {
             "login": mlogin, "signup": msignup,
@@ -85,12 +95,14 @@ def _row_to_site(row):
         },
         "match_status": match,
         # 注册侧程序vs人工匹配：match/mismatch/pending（供筛选）
-        "signup_match": (
-            "match" if (mverified and _manual_match(sf, msignup or ""))
-            else "mismatch" if (mverified and not _manual_match(sf, msignup or ""))
-            else "pending"
-        ),
     }
+    comparison = _manual_comparison(
+        sf, msignup or "", sr or "", sfields or "", sblockers or "",
+        verified=bool(mverified), methods=signup_methods,
+    )
+    site["signup_match"] = comparison["status"]
+    site["comparison"] = comparison
+    return site
 
 
 @app.get("/api/sites")
@@ -364,19 +376,23 @@ def stats():
         cur.execute("SELECT COUNT(*) FROM sites WHERE manual_verified = 1")
         verified = cur.fetchone()[0]
         # 程序 vs 人工 粗匹配正确率（已核验站中，程序注册结论与人工描述一致的比例）
-        cur.execute(
-            "SELECT hostname, signup_flow, manual_signup FROM sites "
-            "WHERE manual_verified = 1")
+        cur.execute("SELECT * FROM sites WHERE manual_verified = 1")
         match = 0
         correct_sites, wrong_sites = [], []
-        for host, ft, manual in cur.fetchall():
-            if _manual_match(ft, manual or ""):
+        for row in cur.fetchall():
+            site = _row_to_site(row)
+            comparison = site["comparison"]
+            item = {
+                "hostname": site["hostname"],
+                "program": site["signup"]["flow_type"],
+                "manual": (site["manual"]["signup"] or "")[:100],
+                "reason": comparison["reason"],
+            }
+            if comparison["status"] == "match":
                 match += 1
-                correct_sites.append({"hostname": host, "program": ft,
-                                      "manual": (manual or "")[:60]})
+                correct_sites.append(item)
             else:
-                wrong_sites.append({"hostname": host, "program": ft,
-                                    "manual": (manual or "")[:60]})
+                wrong_sites.append(item)
         rate = round(match / verified * 100, 1) if verified else 0.0
         cur.execute("SELECT COUNT(*) FROM reviews_pending")
         pending = cur.fetchone()[0]
@@ -396,26 +412,136 @@ def stats():
     }
 
 
-def _manual_match(flow_type, manual_text):
-    """程序 flow_type 与人工描述文本的粗匹配。
+_METHOD_ZH = {
+    "phone": "手机号", "email": "邮箱", "identifier": "账号/邮箱",
+    "qr": "扫码", "sso": "第三方登录", "wechat": "微信", "qq": "QQ",
+    "weibo": "微博", "google": "Google", "apple": "Apple",
+    "github": "GitHub", "gitee": "Gitee", "microsoft": "Microsoft",
+    "baidu": "百度", "dingtalk": "钉钉", "douyin": "抖音",
+    "xiaohongshu": "小红书", "alipay": "支付宝", "taobao": "淘宝",
+    "xiaomi": "小米", "huawei": "华为", "solana": "Solana",
+    "auto_signup": "登录即注册",
+}
 
-    规则（保守）：只做"是否出现密码框"这一核心结论对比——
-    程序说有密码（direct/verification/identifier）时人工文本应提到
-    密码/口令；程序说无密码（otp/email/sso/unknown）时人工不应明确
-    说"设置密码/密码注册"。无法判断时视为一致（不扣分）。
-    """
-    t = manual_text.lower()
-    has_pwd_word = ("密码" in t or "口令" in t or "password" in t)
-    prog_has_pwd = flow_type in (
-        "direct_password", "verification_then_password",
-        "identifier_then_password", "multiple_methods")
-    if prog_has_pwd:
-        return has_pwd_word
-    if flow_type in ("otp_only", "email_only", "sso_only"):
-        # 程序说无密码，人工明确说注册需设置密码 → 不一致
-        return not ("设置密码" in t or "密码注册" in t or "密码框" in t
-                    or "有密码" in t)
-    return True  # human_blocked / unknown / no_web_signup：不判错
+
+def _methods_from_states(states):
+    seen = []
+    for state in states or []:
+        for method in state.get("methods") or []:
+            name = _METHOD_ZH.get(method, method)
+            if name not in seen:
+                seen.append(name)
+    return "、".join(seen)
+
+
+def _program_reason(flow_type, route="", fields="", blockers="", error="", methods=""):
+    """把程序证据转换为可直接展示的判断依据。"""
+    route = route if route and route != "—" else "未记录到可辨认路线"
+    blocker_text = blockers if blockers and blockers != "—" else "未记录到人工门槛"
+    method_text = methods or "未记录到具体方式"
+    reasons = {
+        "direct_password": f"安全可达页面已出现口令框；观测路线：{route}。",
+        "identifier_then_password": f"先看到账号标识，安全点击下一步后出现口令框；观测路线：{route}。",
+        "verification_then_password": f"状态序列先出现验证码步骤，之后出现口令框；观测路线：{route}。",
+        "otp_only": f"安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：{route}。",
+        "email_only": f"安全可达范围只确认邮箱路线，未看到长期口令框；观测路线：{route}。",
+        "sso_only": f"只确认到第三方登录入口（{method_text}），没有发现站点自有账号字段；观测路线：{route}。",
+        "multiple_methods": f"页面同时提供多种可见认证方式（{method_text}）；观测路线：{route}。",
+        "human_blocked": f"程序遇到{blocker_text}，遵守安全边界停止；停止前路线：{route}。",
+        "no_web_signup": "没有发现可用的网页注册入口。",
+        "unknown": f"在安全点击范围内没有取得足够证据，暂不猜测；观测路线：{route}。",
+        "error": (
+            "目标页面渲染超时，程序没有形成分类结论。"
+            if "timeout" in error.lower()
+            else "测量发生异常，程序没有形成可靠分类结论。"
+        ),
+    }
+    return reasons.get(flow_type, f"程序根据可见字段和状态序列判断；观测路线：{route}。")
+
+
+def _manual_traits(manual_text):
+    t = (manual_text or "").lower().replace(" ", "")
+    negative_pwd = any(x in t for x in (
+        "无密码", "没有密码", "无需密码", "不需要密码", "无口令", "仅验证码"))
+    positive_source = t
+    for phrase in ("无密码", "没有密码", "无需密码", "不需要密码", "无口令"):
+        positive_source = positive_source.replace(phrase, "")
+    has_password = any(x in positive_source for x in (
+        "密码", "口令", "password"))
+    has_otp = any(x in t for x in ("验证码", "短信", "动态码", "otp", "手机验证"))
+    has_scan = any(x in t for x in ("扫码", "二维码", "扫一扫", "app确认"))
+    has_captcha = any(x in t for x in (
+        "人机", "滑块", "captcha", "验证块", "图形验证码"))
+    has_tos = any(x in t for x in ("协议", "条款", "隐私", "同意"))
+    has_human_gate = has_otp or has_scan or has_captcha or any(
+        x in t for x in (
+            "需验证", "验证后", "手机验证"))
+    has_sso = any(x in t for x in (
+        "第三方", "sso", "oauth", "微信", "qq", "微博", "gitee", "google",
+        "solana", "支付宝", "淘宝", "华为", "小米", "小红书", "企业微信"))
+    no_web = any(x in t for x in (
+        "无登录注册", "无注册界面", "无独立注册", "无网页注册", "无法登录",
+        "无登录", "无注册选项", "没有注册", "仅登录界面"))
+    return {
+        "password": has_password, "negative_password": negative_pwd,
+        "otp": has_otp, "scan": has_scan, "human_gate": has_human_gate,
+        "captcha": has_captcha, "tos": has_tos,
+        "sso": has_sso, "no_web": no_web,
+    }
+
+
+def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
+                       verified=True, methods=""):
+    """返回人工对照状态及可复核原因，避免把 unknown/human_blocked 一律算对。"""
+    if not verified:
+        return {"status": "pending", "reason": "尚无人工复核，当前只展示程序判断依据。"}
+    traits = _manual_traits(manual_text)
+    program_reason = _program_reason(flow_type, route, fields, blockers, methods=methods)
+    matched = False
+    difference = ""
+
+    if flow_type in ("direct_password", "identifier_then_password", "verification_then_password"):
+        matched = traits["password"] and not traits["negative_password"]
+        difference = "程序报告可达口令框，但人工没有确认口令注册，或明确记录为无密码。"
+    elif flow_type in ("otp_only", "email_only"):
+        matched = not traits["password"] and (traits["otp"] or traits["negative_password"])
+        difference = "程序报告未见长期口令，但人工确认注册需要设置密码。"
+    elif flow_type == "sso_only":
+        matched = traits["sso"] and not traits["password"] and not traits["otp"]
+        difference = "程序报告仅第三方登录，但人工还观察到站点自有验证码或口令路线。"
+    elif flow_type == "human_blocked":
+        blocker_lower = (blockers or "").lower()
+        same_gate = any((
+            traits["otp"] and any(x in blocker_lower for x in ("短信", "邮箱验证码", "一次性验证码", "sms", "otp")),
+            traits["scan"] and any(x in blocker_lower for x in ("扫码", "scan", "app 确认")),
+            traits["captcha"] and any(x in blocker_lower for x in ("人机", "图片", "滑块", "captcha", "slide")),
+            traits["tos"] and any(x in blocker_lower for x in ("协议", "条款", "tos")),
+        ))
+        matched = same_gate and not (traits["password"] and not traits["human_gate"])
+        difference = "程序停止的具体门槛与人工记录不同，或人工已确认可直接到达口令框。"
+    elif flow_type in ("unknown", "no_web_signup"):
+        matched = traits["no_web"]
+        difference = "程序没有确认注册流程，但人工已经观察到明确的注册方式。"
+    elif flow_type == "multiple_methods":
+        matched = sum(bool(traits[x]) for x in ("password", "otp", "sso", "scan")) >= 2
+        difference = "程序报告多方式并存，但人工描述不足以确认两种以上方式。"
+    else:
+        difference = "程序未形成可与人工核验的有效结论。"
+
+    if matched:
+        return {
+            "status": "match",
+            "reason": f"{program_reason} 人工复核为“{manual_text or '未填写'}”，核心路线一致。",
+        }
+    return {
+        "status": "mismatch",
+        "reason": f"差异：{difference} 程序依据：{program_reason} 人工复核为“{manual_text or '未填写'}”。",
+    }
+
+
+def _manual_match(flow_type, manual_text):
+    """兼容旧调用：使用新的结构化人工对照规则。"""
+    return _manual_comparison(flow_type, manual_text)["status"] == "match"
 
 
 class ClassifyRequest(BaseModel):

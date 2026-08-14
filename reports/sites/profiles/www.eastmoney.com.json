@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.836085+00:00",
+  "generated_at": "2026-08-14T11:18:45.700757+00:00",
   "report_title": "www.eastmoney.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -65,7 +65,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:20:38.087666+00:00",
+            "measured_at": "2026-08-14T10:43:50.633013+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -119,7 +119,7 @@
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
@@ -127,11 +127,8 @@
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
@@ -139,33 +136,35 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [],
+              "blockers": [
+                "captcha",
+                "slide"
+              ],
               "actions": [
-                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "entry_native_click_failed"
+              "note": "no_password_signup_tab"
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-13T07:19:49.542809+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-14T11:06:20.128083+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -175,7 +174,10 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "captcha",
+                "slide"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

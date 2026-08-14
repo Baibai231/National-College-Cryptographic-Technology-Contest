@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.839083+00:00",
+  "generated_at": "2026-08-14T11:18:45.704267+00:00",
   "report_title": "www.goofish.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,50 +22,47 @@
           "status": "observed",
           "start_url": "https://www.goofish.com/",
           "final_url": "https://www.goofish.com/",
-          "observed_route": "一次性验证码/扫码",
+          "observed_route": "一次性验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "一次性验证码/扫码",
+              "summary": "一次性验证码",
               "fields_observed": [
                 "code"
               ],
               "methods_observed": [
-                "one_time_code",
-                "qr"
+                "one_time_code"
               ],
               "verification_observed": [
-                "one_time_code",
-                "qr"
+                "one_time_code"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "modal"
               ],
-              "safe_stop": "安全测量停在一次性验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在一次性验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
             "code"
           ],
           "methods_observed": [
-            "one_time_code",
-            "qr"
+            "one_time_code"
           ],
           "verification_observed": [
-            "one_time_code",
-            "qr"
+            "one_time_code"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在一次性验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在一次性验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -77,25 +74,24 @@
               ],
               "methods": [],
               "blockers": [
-                "verification_code",
-                "scan"
+                "verification_code"
               ],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:23:22.190578+00:00",
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:46:39.966800+00:00",
             "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "raw_stop_reason": "verification_required"
           },
           "raw_result": {
             "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "stop_reason": "verification_required",
             "primary_method": "email"
           },
           "policy": {
@@ -103,14 +99,13 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "one_time_code",
-                "qr_or_scan"
+                "one_time_code"
               ],
               "password_status": "not_determined",
               "password_observed": false,
@@ -118,7 +113,6 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "verification_code"
               ]
             },
@@ -133,50 +127,47 @@
           "status": "observed",
           "start_url": "https://www.goofish.com/",
           "final_url": "https://www.goofish.com/",
-          "observed_route": "一次性验证码/扫码",
+          "observed_route": "一次性验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "一次性验证码/扫码",
+              "summary": "一次性验证码",
               "fields_observed": [
                 "code"
               ],
               "methods_observed": [
-                "one_time_code",
-                "qr"
+                "one_time_code"
               ],
               "verification_observed": [
-                "one_time_code",
-                "qr"
+                "one_time_code"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "modal"
               ],
-              "safe_stop": "安全测量停在一次性验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在一次性验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
             "code"
           ],
           "methods_observed": [
-            "one_time_code",
-            "qr"
+            "one_time_code"
           ],
           "verification_observed": [
-            "one_time_code",
-            "qr"
+            "one_time_code"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在一次性验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在一次性验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -188,25 +179,24 @@
               ],
               "methods": [],
               "blockers": [
-                "verification_code",
-                "scan"
+                "verification_code"
               ],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_signup_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:23:12.662372+00:00",
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:46:27.635058+00:00",
             "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "raw_stop_reason": "verification_required"
           },
           "raw_result": {
             "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "stop_reason": "verification_required",
             "primary_method": "email"
           },
           "policy": {
@@ -214,14 +204,13 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "one_time_code",
-                "qr_or_scan"
+                "one_time_code"
               ],
               "password_status": "not_determined",
               "password_observed": false,
@@ -229,7 +218,6 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "verification_code"
               ]
             },

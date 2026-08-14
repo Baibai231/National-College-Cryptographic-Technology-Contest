@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.859974+00:00",
+  "generated_at": "2026-08-14T11:18:45.728816+00:00",
   "report_title": "www.ximalaya.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -70,7 +70,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T09:13:32.312623+00:00",
+            "measured_at": "2026-08-14T11:00:14.151173+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -108,42 +108,36 @@
           "status": "observed",
           "start_url": "https://www.ximalaya.com/signup",
           "final_url": "https://www.ximalaya.com/",
-          "observed_route": "扫码",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
-              "summary": "扫码",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "qr"
-              ],
-              "verification_observed": [
-                "qr"
-              ],
-              "password_state": "not_observed_before_verification",
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [
                 "modal"
               ],
-              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "qr"
-          ],
-          "verification_observed": [
-            "qr"
-          ],
-          "password_state": "not_observed_before_verification",
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问",
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
@@ -165,48 +159,42 @@
               "ui_type": "modal",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_signup_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T09:12:24.053793+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:59:54.118870+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "qr_or_scan"
-              ],
+              "observed_methods": [],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

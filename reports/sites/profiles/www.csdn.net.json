@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.831097+00:00",
+  "generated_at": "2026-08-14T11:18:45.693456+00:00",
   "report_title": "www.csdn.net 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,7 +36,7 @@
           "steps": [],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T06:52:28.291449+00:00",
+            "measured_at": "2026-08-14T10:11:48.355314+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "access_blocked"
           },
@@ -88,7 +88,7 @@
           "steps": [],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T06:52:26.867159+00:00",
+            "measured_at": "2026-08-14T10:11:46.977383+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "access_blocked"
           },

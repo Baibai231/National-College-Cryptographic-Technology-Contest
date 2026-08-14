@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.860534+00:00",
+  "generated_at": "2026-08-14T11:18:45.729432+00:00",
   "report_title": "www.yicai.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,32 +22,30 @@
           "status": "observed",
           "start_url": "https://www.yicai.com/",
           "final_url": "https://www.yicai.com/",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -56,20 +54,19 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -81,13 +78,14 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
@@ -98,14 +96,14 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:17:25.697912+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:40:21.938097+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -113,23 +111,21 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },
@@ -144,32 +140,30 @@
           "status": "observed",
           "start_url": "https://www.yicai.com/",
           "final_url": "https://www.yicai.com/",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -178,20 +172,19 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -203,13 +196,39 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://www.yicai.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "none"
+              ],
               "tabs": [
                 "sms_tab",
                 "password_tab"
@@ -218,14 +237,14 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:17:20.038131+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:40:12.433689+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -233,23 +252,21 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },

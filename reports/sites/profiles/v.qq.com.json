@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.816484+00:00",
+  "generated_at": "2026-08-14T11:18:45.675261+00:00",
   "report_title": "v.qq.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,42 +22,39 @@
           "status": "observed",
           "start_url": "https://v.qq.com/",
           "final_url": "https://v.qq.com/",
-          "observed_route": "短信验证码/扫码",
+          "observed_route": "短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "短信验证码/扫码",
+              "summary": "短信验证码",
               "fields_observed": [],
               "methods_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
-              "password_state": "not_observed_before_verification",
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [],
           "methods_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
-          "password_state": "not_observed_before_verification",
+          "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
@@ -79,9 +76,7 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [
                 "none",
                 "none"
@@ -98,10 +93,10 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "scan"
+              "blockers": [],
+              "actions": [
+                "none"
               ],
-              "actions": [],
               "tabs": [
                 "password_tab",
                 "sms_tab"
@@ -110,38 +105,35 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T06:58:52.067726+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:17:05.137713+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "sms_or_otp",
-                "qr_or_scan"
+                "sms_or_otp"
               ],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -154,42 +146,39 @@
           "status": "observed",
           "start_url": "https://v.qq.com/",
           "final_url": "https://v.qq.com/",
-          "observed_route": "短信验证码/扫码",
+          "observed_route": "短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "短信验证码/扫码",
+              "summary": "短信验证码",
               "fields_observed": [],
               "methods_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
-              "password_state": "not_observed_before_verification",
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [],
           "methods_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
-          "password_state": "not_observed_before_verification",
+          "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
@@ -211,9 +200,7 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [
                 "none"
               ],
@@ -229,9 +216,7 @@
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [
                 "none"
               ],
@@ -243,38 +228,35 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T06:58:42.500162+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:16:58.570232+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "sms_or_otp",
-                "qr_or_scan"
+                "sms_or_otp"
               ],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

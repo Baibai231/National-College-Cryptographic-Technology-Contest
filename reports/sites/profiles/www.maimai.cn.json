@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.849839+00:00",
+  "generated_at": "2026-08-14T11:18:45.716996+00:00",
   "report_title": "www.maimai.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -27,6 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
               "summary": "手机号 → 短信验证码/扫码",
@@ -69,7 +70,8 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -77,7 +79,9 @@
               "url": "https://maimai.cn/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -94,28 +98,29 @@
                 "code"
               ],
               "methods": [
-                "phone"
+                "auto_signup",
+                "phone",
+                "qr"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:09:23.402532+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:25:53.784964+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -123,8 +128,8 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -133,13 +138,12 @@
                 "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },
@@ -159,6 +163,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
               "summary": "手机号 → 短信验证码/扫码",
@@ -201,7 +206,8 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -209,7 +215,9 @@
               "url": "https://maimai.cn/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -226,26 +234,29 @@
                 "code"
               ],
               "methods": [
-                "phone"
+                "auto_signup",
+                "phone",
+                "qr"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "none"
+              ],
               "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:09:11.638145+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:25:53.088106+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -253,8 +264,8 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -263,13 +274,12 @@
                 "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },

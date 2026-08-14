@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.833875+00:00",
+  "generated_at": "2026-08-14T11:18:45.697975+00:00",
   "report_title": "www.dongchedi.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -78,6 +78,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
@@ -96,7 +97,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:03:31.826956+00:00",
+            "measured_at": "2026-08-14T10:21:39.001234+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -195,6 +196,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
@@ -218,6 +220,7 @@
                 "code"
               ],
               "methods": [
+                "auto_signup",
                 "phone"
               ],
               "blockers": [
@@ -235,7 +238,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:03:18.361291+00:00",
+            "measured_at": "2026-08-14T10:21:25.749670+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

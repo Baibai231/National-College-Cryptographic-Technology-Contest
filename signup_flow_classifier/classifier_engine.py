@@ -33,6 +33,12 @@ from signup_flow_classifier.navigator import (
     safe_click_tab,
     safe_click_auth_mode_switch,
 )
+
+
+def _has_auto_signup(states) -> bool:
+    """状态序列是否明确表明“登录即注册/登录或注册”。"""
+    return any(
+        "auto_signup" in getattr(state, "methods", []) for state in states)
 from signup_flow_classifier.classifier import classify, primary_method
 from signup_flow_classifier.evidence import finalize, record_evidence, record_step
 from signup_flow_classifier.browser_failures import (
@@ -446,6 +452,7 @@ class SignupFlowClassifierEngine:
                 entry_kind == "login"
                 or signup_entry_clicked
                 or self._url_is_requested_entry(state.url, "signup")
+                or "auto_signup" in state.methods
             )
             # signup 且有"注册"tab 但还没点过：弹窗默认可能是登录视图，
             # 先切到注册 tab 再判断密码框，避免登录密码框冒充注册证据。
@@ -743,7 +750,9 @@ class SignupFlowClassifierEngine:
         # signup 模式"仅登录界面"守卫：全程没点过注册入口/注册 tab、
         # URL 也不是注册页，但检测到了密码框——这是登录界面（shimo/
         # 百度等仅登录站的实测），不能把登录密码框当注册证据。
-        if entry_kind == "signup" and not signup_entry_clicked:
+        auto_signup_seen = _has_auto_signup(result.states)
+        if (entry_kind == "signup" and not signup_entry_clicked
+                and not auto_signup_seen):
             login_only_url = any(
                 self._url_is_requested_entry(getattr(s, "url", ""), "login")
                 for s in result.states

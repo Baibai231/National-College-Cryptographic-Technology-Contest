@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.824204+00:00",
+  "generated_at": "2026-08-14T11:18:45.685977+00:00",
   "report_title": "www.acfun.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -27,6 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
               "summary": "账号/邮箱 → 扫码 → 口令",
@@ -37,10 +38,7 @@
               "methods_observed": [
                 "password",
                 "identifier",
-                "qr",
-                "third_party",
-                "wechat",
-                "weibo"
+                "qr"
               ],
               "verification_observed": [
                 "qr"
@@ -59,10 +57,7 @@
           "methods_observed": [
             "password",
             "identifier",
-            "qr",
-            "third_party",
-            "wechat",
-            "weibo"
+            "qr"
           ],
           "verification_observed": [
             "qr"
@@ -79,7 +74,9 @@
               "url": "https://www.acfun.cn/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -97,13 +94,9 @@
               ],
               "methods": [
                 "identifier",
-                "sso",
-                "wechat",
-                "weibo"
+                "qr"
               ],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "password_tab",
@@ -114,7 +107,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:10:32.368542+00:00",
+            "measured_at": "2026-08-14T10:27:24.040779+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -127,7 +120,7 @@
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
+              "status": "classified",
               "confidence": "high",
               "stop_reason": "password_step_reached",
               "evidence_boundary": "safely_reachable_ui"
@@ -135,17 +128,14 @@
             "authentication": {
               "observed_methods": [
                 "password",
-                "qr_or_scan",
-                "third_party"
+                "qr_or_scan"
               ],
               "password_status": "password_observed",
               "password_observed": true,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -163,6 +153,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
               "summary": "账号/邮箱 → 扫码 → 口令",
@@ -173,10 +164,7 @@
               "methods_observed": [
                 "password",
                 "identifier",
-                "qr",
-                "third_party",
-                "wechat",
-                "weibo"
+                "qr"
               ],
               "verification_observed": [
                 "qr"
@@ -195,10 +183,7 @@
           "methods_observed": [
             "password",
             "identifier",
-            "qr",
-            "third_party",
-            "wechat",
-            "weibo"
+            "qr"
           ],
           "verification_observed": [
             "qr"
@@ -208,14 +193,19 @@
             "standalone_page"
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
               "url": "https://www.acfun.cn/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -233,13 +223,9 @@
               ],
               "methods": [
                 "identifier",
-                "sso",
-                "wechat",
-                "weibo"
+                "qr"
               ],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "password_tab",
@@ -249,39 +235,36 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:10:28.919288+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:27:21.780141+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "no_signup_entry"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
+            "flow_type": "unknown",
+            "stop_reason": "no_signup_entry",
             "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "no_signup_entry",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
                 "password",
-                "qr_or_scan",
-                "third_party"
+                "qr_or_scan"
               ],
               "password_status": "password_observed",
               "password_observed": true,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

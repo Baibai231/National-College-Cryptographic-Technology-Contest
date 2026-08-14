@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.823192+00:00",
+  "generated_at": "2026-08-14T11:18:45.684114+00:00",
   "report_title": "www.58pic.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -27,6 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
               "summary": "短信验证码",
@@ -71,7 +72,9 @@
               "url": "https://www.58pic.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -85,6 +88,7 @@
               "ui_type": "standalone_page",
               "fields": [],
               "methods": [
+                "auto_signup",
                 "qq",
                 "sso",
                 "wechat",
@@ -103,7 +107,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T08:57:35.656426+00:00",
+            "measured_at": "2026-08-14T10:51:36.422830+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },
@@ -149,6 +153,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
+                1,
                 2
               ],
               "summary": "短信验证码",
@@ -193,7 +198,9 @@
               "url": "https://www.58pic.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
                 "entry_click"
@@ -207,6 +214,7 @@
               "ui_type": "standalone_page",
               "fields": [],
               "methods": [
+                "auto_signup",
                 "qq",
                 "sso",
                 "wechat",
@@ -225,7 +233,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T08:57:34.043620+00:00",
+            "measured_at": "2026-08-14T10:51:31.303757+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },

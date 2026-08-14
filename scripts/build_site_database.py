@@ -127,13 +127,15 @@ def build_sites(groups):
         kinds = groups[host]
         login = _pick_latest(kinds.get("login"))
         signup = _pick_latest(kinds.get("signup"))
+        login_flow = "error" if (login or {}).get("error") else (login or {}).get("flow_type")
+        signup_flow = "error" if (signup or {}).get("error") else (signup or {}).get("flow_type")
         site = {
             "hostname": host,
             "url": (login or signup or {}).get("site", "https://" + host),
             "version": (signup or login or {}).get("version", ""),
             "login": {
-                "flow_type": (login or {}).get("flow_type"),
-                "flow_zh": FLOW_ZH.get((login or {}).get("flow_type"), "未确认"),
+                "flow_type": login_flow,
+                "flow_zh": FLOW_ZH.get(login_flow, "未确认"),
                 "stop_reason": (login or {}).get("stop_reason"),
                 "route": _route((login or {}).get("states", []), "login"),
                 "fields": _fields_zh(
@@ -145,10 +147,11 @@ def build_sites(groups):
                 "raw_states": (login or {}).get("states", []),
                 "measured_at": (login or {}).get("measured_at", ""),
                 "policy": (login or {}).get("policy", {}),
+                "error": (login or {}).get("error"),
             },
             "signup": {
-                "flow_type": (signup or {}).get("flow_type"),
-                "flow_zh": FLOW_ZH.get((signup or {}).get("flow_type"), "未确认"),
+                "flow_type": signup_flow,
+                "flow_zh": FLOW_ZH.get(signup_flow, "未确认"),
                 "stop_reason": (signup or {}).get("stop_reason"),
                 "route": _route((signup or {}).get("states", []), "signup"),
                 "fields": _fields_zh(
@@ -160,6 +163,7 @@ def build_sites(groups):
                 "raw_states": (signup or {}).get("states", []),
                 "measured_at": (signup or {}).get("measured_at", ""),
                 "policy": (signup or {}).get("policy", {}),
+                "error": (signup or {}).get("error"),
             },
         }
         sites.append(site)
@@ -291,6 +295,8 @@ def create_db(sites, db_path, history=None):
             "signup_raw_states": s["signup"]["raw_states"],
             "login_policy": s["login"]["policy"],
             "signup_policy": s["signup"]["policy"],
+            "login_error": s["login"].get("error"),
+            "signup_error": s["signup"].get("error"),
         }
         cur.execute("""
             INSERT INTO sites VALUES (

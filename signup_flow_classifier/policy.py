@@ -48,7 +48,7 @@ def summarize_policy(entry_kind: str, flow_type: str, confidence: str,
         observed_methods.append("email_otp")
     elif verification_observed:
         observed_methods.append("one_time_code")
-    if "scan" in blockers:
+    if "scan" in blockers or "qr" in methods:
         observed_methods.append("qr_or_scan")
     if "sso" in methods or methods & {"wechat", "qq", "weibo", "google", "apple", "github"}:
         observed_methods.append("third_party")

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.859661+00:00",
+  "generated_at": "2026-08-14T11:18:45.728496+00:00",
   "report_title": "www.xiaohongshu.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,9 +36,7 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "third_party",
-                "wechat"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -56,9 +54,7 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "third_party",
-            "wechat"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -82,9 +78,7 @@
                 "code"
               ],
               "methods": [
-                "phone",
-                "sso",
-                "wechat"
+                "phone"
               ],
               "blockers": [
                 "sms_code"
@@ -100,7 +94,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:10:18.246346+00:00",
+            "measured_at": "2026-08-14T10:27:16.008096+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "verification_required"
           },
@@ -121,7 +115,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "not_determined",
@@ -142,8 +135,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.xiaohongshu.com/explore/6a4c501a00000000220165c9?xsec_token=ABJkld-qlc5D18LnfdT6tS40tX9b-omuvg0Cv01V7No2A=&xsec_source=pc_feed",
-          "final_url": "https://www.xiaohongshu.com/explore/6a4c501a00000000220165c9?xsec_token=ABJkld-qlc5D18LnfdT6tS40tX9b-omuvg0Cv01V7No2A=&xsec_source=pc_feed",
+          "start_url": "https://www.xiaohongshu.com/explore",
+          "final_url": "https://www.xiaohongshu.com/explore",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
@@ -158,9 +151,7 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "third_party",
-                "wechat"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -178,9 +169,7 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "third_party",
-            "wechat"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -197,16 +186,14 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.xiaohongshu.com/explore/6a4c501a00000000220165c9?xsec_token=ABJkld-qlc5D18LnfdT6tS40tX9b-omuvg0Cv01V7No2A=&xsec_source=pc_feed",
+              "url": "https://www.xiaohongshu.com/explore",
               "ui_type": "modal",
               "fields": [
                 "phone",
                 "code"
               ],
               "methods": [
-                "phone",
-                "sso",
-                "wechat"
+                "phone"
               ],
               "blockers": [
                 "sms_code"
@@ -222,7 +209,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:10:18.183612+00:00",
+            "measured_at": "2026-08-14T09:31:21.540758+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "verification_required"
           },
@@ -243,7 +230,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "not_determined",

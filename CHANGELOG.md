@@ -9,6 +9,7 @@
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
+| 2026-08-14 | Codex（Mac） | 保持 v3：修正扫码登录语义与第三方登录识别，新增两轮全量回归对比，并为网站正确/错误判断补充可读依据 | signup_flow_classifier/、scripts/run_measurement.py、scripts/compare_measurement_rounds.py、webapp/、tests/、reports/ | 本次提交 |
 | 2026-08-12 | cjx（Mac） | 修复慕课网手机号字段被误判为 email、知乎机构号注册入口误当普通注册 | signup_flow_classifier/page_detector.py、utils/login_link_discovery.py、utils/js/form_detection_addons.js、tests/test_site_recognition_fixes.py | 未推送 |
 | 2026-08-12 | cjx（Mac） | 从旧分支按能力挑选移植：多语言词表、弱结构词防御、容器硬规则、hover 菜单 | signup_flow_classifier/page_detector.py、signup_flow_classifier/navigator.py、signup_flow_classifier/classifier_engine.py、tests/ | 未推送 |
 | 2026-08-12 | cjx（Mac） | 批量识别问题修复（36kr 文章误点/视口检查/叶子检查/beian 阻断/百度安全验证/URL 模式预算/JS 容错）+ reports 目录结构调整 | signup_flow_classifier/navigator.py、classifier_engine.py、browser_failures.py、page_detector.py、utils/login_link_discovery.py、scripts/、reports/ | 未推送 |
@@ -16,6 +17,17 @@
 ---
 
 ## 实现细节
+
+### 6. 扫码语义、第三方登录与报告解释（2026-08-14）
+
+- 扫码与表单可以同时存在：二维码记录为 `methods=qr`；只有页面确实没有可用字段时，
+  才把 `scan` 作为阻断原因，避免“有手机号/密码框却被扫码阻断”的误判。
+- 扩展图标按钮和常见第三方提供方识别，并排除站点自身品牌被误当第三方登录；
+  同时识别“登录即注册”语义及更完整的短信验证码文案。
+- 批量脚本支持合并多份站点清单、去重与显式覆盖输出；增加两轮结果的逐入口语义对比。
+- 报告后端改用逐字段人工/程序对照；匹配项展示“为什么正确”，不匹配项展示
+  程序识别与人工记录的具体差异，不再把人工未知项算作正确。
+- 版本号继续为 `v3`，没有升级为 v4。
 
 ### 1. 修复 imooc（慕课网）注册手机号字段被误判为 email（2026-08-12）
 

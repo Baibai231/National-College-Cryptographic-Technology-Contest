@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.845200+00:00",
+  "generated_at": "2026-08-14T11:18:45.711543+00:00",
   "report_title": "www.jiemian.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.jiemian.com/about/clause.html",
           "final_url": "https://www.jiemian.com/about/clause.html",
-          "observed_route": "手机号/账号/邮箱 → 短信验证码/扫码 → 口令",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -30,7 +30,7 @@
                 2,
                 3
               ],
-              "summary": "手机号/账号/邮箱 → 短信验证码/扫码 → 口令",
+              "summary": "手机号/账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "identifier",
@@ -42,11 +42,12 @@
                 "phone",
                 "identifier",
                 "sms",
-                "qr"
+                "third_party",
+                "qq",
+                "weibo"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "observed_after_verification_screen",
               "ui_types": [
@@ -66,11 +67,12 @@
             "phone",
             "identifier",
             "sms",
-            "qr"
+            "third_party",
+            "qq",
+            "weibo"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "observed_after_verification_screen",
           "ui_types": [
@@ -121,11 +123,13 @@
                 "password"
               ],
               "methods": [
-                "identifier"
+                "auto_signup",
+                "identifier",
+                "qq",
+                "sso",
+                "weibo"
               ],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "password_tab",
@@ -136,7 +140,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:01:40.682466+00:00",
+            "measured_at": "2026-08-14T10:19:16.955076+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -158,7 +162,7 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "qr_or_scan",
+                "third_party",
                 "phone"
               ],
               "password_status": "password_observed",
@@ -167,7 +171,6 @@
               "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },
@@ -285,7 +288,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:01:09.074574+00:00",
+            "measured_at": "2026-08-14T10:18:45.978105+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

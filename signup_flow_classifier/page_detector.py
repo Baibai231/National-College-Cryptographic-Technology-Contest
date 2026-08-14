@@ -48,6 +48,23 @@ _SSO_PROVIDERS = {
     "taobao": ["淘宝", "taobao"],
     "xiaomi": ["小米", "xiaomi"],
     "huawei": ["华为", "huawei"],
+    "microsoft": ["microsoft", "微软", "login.microsoftonline.com"],
+    "baidu": ["百度", "baidu", "openapi.baidu.com"],
+    "dingtalk": ["钉钉", "dingtalk"],
+    "douyin": ["抖音", "douyin", "toutiao"],
+    "xiaohongshu": ["小红书", "xiaohongshu", "rednote"],
+    "solana": ["solana", "phantom"],
+}
+_SSO_FIRST_PARTY_HOSTS = {
+    "google": ["google.com"], "apple": ["apple.com"],
+    "wechat": ["weixin.qq.com", "wechat.com"], "qq": ["qq.com"],
+    "weibo": ["weibo.com"], "github": ["github.com"],
+    "gitee": ["gitee.com"], "alipay": ["alipay.com"],
+    "taobao": ["taobao.com"], "xiaomi": ["mi.com", "xiaomi.com"],
+    "huawei": ["huawei.com"], "microsoft": ["microsoft.com"],
+    "baidu": ["baidu.com"], "dingtalk": ["dingtalk.com"],
+    "douyin": ["douyin.com"], "xiaohongshu": ["xiaohongshu.com"],
+    "solana": ["solana.com"],
 }
 _SSO_ACTION_HINTS = [
     "sign in", "log in", "login", "continue with", "sign up with",
@@ -56,6 +73,28 @@ _SSO_ACTION_HINTS = [
     "anmelden", "einloggen", "registrieren", "ログイン", "新規登録",
     "로그인", "회원가입", "войти", "зарегистрироваться",
 ]
+_SSO_PROVIDER_ACTIONS = {
+    "google": ["使用 google", "google 登录", "sign in with google", "continue with google"],
+    "apple": ["使用 apple", "apple 登录", "sign in with apple", "continue with apple"],
+    "wechat": [
+        "微信登录", "微信扫码", "使用微信", "扫码方式：微信", "扫码方式:微信",
+        "wechat login", "login with wechat",
+    ],
+    "qq": ["qq登录", "使用qq", "login with qq"],
+    "weibo": ["微博登录", "使用微博", "login with weibo"],
+    "github": ["github 登录", "sign in with github", "continue with github"],
+    "gitee": ["gitee 登录", "使用gitee", "sign in with gitee"],
+    "alipay": ["支付宝登录", "使用支付宝", "alipay login"],
+    "taobao": ["淘宝登录", "使用淘宝", "taobao login"],
+    "xiaomi": ["小米登录", "使用小米", "xiaomi login"],
+    "huawei": ["华为登录", "使用华为", "huawei login"],
+    "microsoft": ["microsoft 登录", "sign in with microsoft", "continue with microsoft"],
+    "baidu": ["百度登录", "使用百度", "baidu login"],
+    "dingtalk": ["钉钉登录", "使用钉钉", "dingtalk login"],
+    "douyin": ["抖音登录", "使用抖音", "douyin login"],
+    "xiaohongshu": ["小红书登录", "使用小红书", "xiaohongshu login"],
+    "solana": ["solana 登录", "connect solana", "phantom wallet"],
+}
 
 _BLOCKER_HINTS = {
     "captcha": [
@@ -77,9 +116,14 @@ _NEXT_TEXTS = {
     "continuar", "次へ", "계속", "далее", "продолжить",
 }
 _SEND_CODE_HINTS = [
-    "发送验证码", "获取验证码", "send code", "get code", "重新发送", "resend",
+    "发送验证码", "获取验证码", "发送短信验证码", "获取短信验证码",
+    "send code", "get code", "重新发送", "resend",
     "envoyer le code", "código", "code senden", "コードを送信", "인증번호 전송",
     "отправить код",
+]
+_AUTO_SIGNUP_HINTS = [
+    "登录/注册", "登录或注册", "注册/登录", "注册或登录", "登录即注册",
+    "未注册手机验证后自动注册", "未注册手机号验证后自动注册",
 ]
 _SUBMIT_HINTS = [
     "注册", "提交", "完成", "创建账号", "创建账户", "sign up", "register",
@@ -101,6 +145,46 @@ def configure_performance_optimizations(enabled: bool) -> None:
 def _match_any(text: str, keywords: List[str]) -> bool:
     lowered = text.lower()
     return any(keyword.lower() in lowered for keyword in keywords)
+
+
+def _provider_from_semantic(semantic: str) -> Optional[str]:
+    """从按钮文字/属性/链接中识别第三方身份提供商。"""
+    for provider, hints in _SSO_PROVIDERS.items():
+        for hint in hints:
+            normalized = hint.lower()
+            if (re.fullmatch(r"[a-z0-9_-]+", normalized)
+                    and not re.search(
+                        rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])",
+                        semantic.lower(),
+                    )):
+                continue
+            if normalized in semantic.lower():
+                return provider
+    return None
+
+
+def _provider_is_first_party(provider: str, hostname: str) -> bool:
+    host = (hostname or "").lower().split(":", 1)[0].strip(".")
+    return any(
+        host == domain or host.endswith("." + domain)
+        for domain in _SSO_FIRST_PARTY_HOSTS.get(provider, [])
+    )
+
+
+def _normalize_auth_semantics(fields: List[str], blockers, methods):
+    """统一扫码语义：二维码是并行方式，只有无字段时才是硬阻断。
+
+    页面同时存在手机号、验证码或口令等自有字段时，用户可以选择字段路线，
+    二维码不应让分类器提前停止；但二维码本身仍作为 ``qr`` 方式保留证据。
+    """
+    normalized_blockers = list(dict.fromkeys(blockers or []))
+    normalized_methods = list(dict.fromkeys(methods or []))
+    if "scan" in normalized_blockers:
+        if "qr" not in normalized_methods:
+            normalized_methods.append("qr")
+        if fields:
+            normalized_blockers = [b for b in normalized_blockers if b != "scan"]
+    return normalized_blockers, normalized_methods
 
 
 def _is_visible_enabled(el) -> bool:
@@ -337,22 +421,96 @@ def detect_blockers(driver: WebDriver) -> List[str]:
 def _sso_provider(driver: WebDriver, el) -> Optional[str]:
     text = _element_text(el)
     href = (el.get_attribute("href") or "").strip()
-    if not _match_any(text, _SSO_ACTION_HINTS):
+    class_name = el.get_attribute("class") or ""
+    semantic = " ".join((
+        text, href, class_name, el.get_attribute("id") or "",
+        el.get_attribute("aria-label") or "", el.get_attribute("title") or "",
+    ))
+    provider = _provider_from_semantic(semantic)
+    if not provider:
         return None
-    # 站内链接（如 github.com/signup 页头的 "Sign in" 链接）不视为第三方登录
-    if href:
-        try:
-            from urllib.parse import urljoin, urlparse
-            current = urlparse(driver.current_url)
-            target = urlparse(urljoin(driver.current_url, href))
-            if current.hostname and target.hostname and current.hostname == target.hostname:
-                return None
-        except Exception:
-            pass
-    for provider, hints in _SSO_PROVIDERS.items():
-        if _match_any(text, hints) or _match_any(href, hints):
-            return provider
-    return None
+    # 提供商自己站内的登录按钮不是第三方登录（如 gitee.com 的 Gitee 登录）。
+    try:
+        if _provider_is_first_party(provider, urlparse(driver.current_url).hostname or ""):
+            return None
+    except Exception:
+        pass
+    action_signal = _match_any(semantic, _SSO_ACTION_HINTS)
+    auth_href = bool(re.search(
+        r"oauth|authorize|connect|servicelogin|openid|passport|/auth(?:/|$)",
+        href, re.I,
+    ))
+    try:
+        provider_only_button = (
+            (el.tag_name or "").lower() == "button"
+            or (el.get_attribute("role") or "").lower() == "button"
+        ) and 0 < len(text.strip()) <= 20
+    except Exception:
+        provider_only_button = False
+    icon_only = not text.strip() and bool(_provider_from_semantic(semantic))
+    if not (action_signal or auth_href or provider_only_button or icon_only):
+        return None
+    # 图标按钮常没有“登录/使用”等文字，只在 aria/title/class/id/href 中
+    # 暴露 provider。提供商信号明确时允许识别；普通社交分享链接由调用方的
+    # 认证上下文守卫排除。
+    return provider
+
+
+def _control_in_auth_scope(driver: WebDriver, el, fields: List[str]) -> bool:
+    """第三方控件必须属于当前认证区域，不能只靠整页标题/正文命中。"""
+    try:
+        path = urlparse(driver.current_url or "").path
+        if re.search(r"/(login|signin|sign-in|register|signup|passport|oauth|auth|account)(/|$)",
+                     path, re.I):
+            return True
+    except Exception:
+        pass
+    try:
+        return bool(driver.execute_script(r"""
+            const el=arguments[0], hasFields=arguments[1];
+            if(el.closest("[role='dialog'],[aria-modal='true'],[class*='modal'],[class*='Modal'],[class*='drawer'],[class*='Drawer']")) return true;
+            if(!hasFields) return false;
+            let node=el;
+            for(let depth=0;node&&depth<9;depth++,node=node.parentElement){
+              if(node===document.body||node===document.documentElement) break;
+              for(const input of node.querySelectorAll('input,textarea')){
+                const r=input.getBoundingClientRect(), s=getComputedStyle(input);
+                if(r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden') return true;
+              }
+            }
+            return false;
+        """, el, bool(fields)))
+    except Exception:
+        return False
+
+
+def _is_auth_context(driver: WebDriver, fields: List[str]) -> bool:
+    """当前文档是否确实处在登录/注册语境，防止把分享按钮当 SSO。"""
+    if fields:
+        return True
+    try:
+        path = urlparse(driver.current_url or "").path
+        if re.search(r"/(login|signin|sign-in|register|signup|passport|oauth|auth|account)(/|$)",
+                     path, re.I):
+            return True
+    except Exception:
+        pass
+    try:
+        title = driver.title or ""
+        if _match_any(title, ["登录", "登陆", "注册", "sign in", "log in", "sign up", "register"]):
+            return True
+    except Exception:
+        pass
+    try:
+        return any(
+            _is_visible_enabled(el)
+            for el in driver.find_elements(
+                By.CSS_SELECTOR,
+                "[role='dialog'], [aria-modal='true'], [class*='modal'], [class*='Modal'], [class*='drawer']",
+            )
+        )
+    except Exception:
+        return False
 
 
 def detect_methods(driver: WebDriver) -> List[str]:
@@ -363,8 +521,19 @@ def detect_methods(driver: WebDriver) -> List[str]:
         if field_type in fields:
             methods.append(field_type)
 
+    if not _is_auth_context(driver, fields):
+        return methods
+
+    for el in driver.find_elements(
+            By.CSS_SELECTOR, "button, a, input[type='button'], input[type='submit']"):
+        if _is_visible_enabled(el) and _match_any(_control_label(el), _AUTO_SIGNUP_HINTS):
+            methods.append("auto_signup")
+            break
+
     for el in driver.find_elements(By.CSS_SELECTOR, "button, a, [role='button']"):
         if not _is_visible_enabled(el):
+            continue
+        if not _control_in_auth_scope(driver, el, fields):
             continue
         provider = _sso_provider(driver, el)
         if provider:
@@ -738,16 +907,27 @@ def _detect_page_semantics(driver: WebDriver, fields: List[str]) -> dict:
     config = {
         "blockers": _BLOCKER_HINTS,
         "send": _SEND_CODE_HINTS,
+        "auto_signup": _AUTO_SIGNUP_HINTS,
         "submit": _SUBMIT_HINTS,
         "next": list(_NEXT_TEXTS),
         "sso_actions": _SSO_ACTION_HINTS,
         "sso_providers": _SSO_PROVIDERS,
+        "sso_provider_actions": _SSO_PROVIDER_ACTIONS,
+        "sso_first_party": _SSO_FIRST_PARTY_HOSTS,
         "tabs": _TAB_KINDS,
     }
     script = r"""
 const cfg=arguments[0], presetFields=arguments[1]||[];
 const clean=v=>(v||'').replace(/\s+/g,' ').trim().toLowerCase().replace(/帐/g,'账');
 const has=(text,hints)=>hints.some(h=>text.includes(clean(h)));
+const providerHas=(text,hints)=>hints.some(raw=>{
+ const hint=clean(raw); if(!hint)return false;
+ // 中文、URL 和带空格动作短语可以可靠地做子串匹配；纯英文品牌名必须
+ // 是完整 token，避免 apple 命中 apply、qq 命中任意 class 片段。
+ if(/[^a-z0-9_-]/.test(hint)||hint.includes('.')||hint.includes('/'))return text.includes(hint);
+ const escaped=hint.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ return new RegExp('(^|[^a-z0-9])'+escaped+'([^a-z0-9]|$)','i').test(text);
+});
 const visible=el=>{try{const r=el.getBoundingClientRect(),s=getComputedStyle(el);
  return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'
    &&!el.disabled&&el.getAttribute('aria-disabled')!=='true';}catch(e){return false;}};
@@ -771,6 +951,16 @@ for(const [kind,hints] of Object.entries(cfg.blockers)) if(has(blockerText,hints
 const add=(arr,value)=>{if(value&&!arr.includes(value))arr.push(value);};
 for(const field of presetFields) if(['email','phone','identifier'].includes(field)) add(methods,field);
 let hasDialog=false,hasDrawer=false,authTexts=[];
+const sharesAuthFieldScope=el=>{
+ let node=el;
+ for(let depth=0;node&&depth<6;depth++,node=node.parentElement){
+  if(node===document.body||node===document.documentElement)break;
+  try{
+   if([...node.querySelectorAll("input,textarea")].some(input=>visible(input)))return true;
+  }catch(e){}
+ }
+ return false;
+};
 for(const root of roots){
  for(const el of root.querySelectorAll("[role='dialog'],[aria-modal='true'],[class*='modal'],[class*='Modal']"))
   if(visible(el)){hasDialog=true;authTexts.push(clean(el.innerText||el.textContent||''));break;}
@@ -780,8 +970,6 @@ for(const root of roots){
  // 首页普通内容里的"关注微博/微信"分享链接（外部 href）不是第三方登录
  // （东方财富首页实测 sso 误判）；只有认证界面里出现才算。
  const authUrlPath=/\/(login|signin|sign-in|register|signup|passport|oauth|auth|account)(\/|$)/i.test(location.pathname);
- const inAuthContext=hasDialog||hasDrawer||presetFields.length>0||authUrlPath
-   || has(clean(document.title),['登录','登陆','注册','sign in','log in','sign up','register']);
  for(const el of root.querySelectorAll("button,a,input,[role='button'],[role='link'],[role='tab'],select,textarea,[class*='tab'],[class*='Tab'],div,span,li")){
   if(!visible(el))continue;
   const label=clean(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'');
@@ -793,6 +981,7 @@ for(const root of roots){
    add(blockers,presetFields.includes('phone')||label.includes('短信')||label.includes('sms')
      ?'sms_code':presetFields.includes('email')?'email_code':'verification_code');
   }
+   if(has(label,cfg.auto_signup))add(methods,'auto_signup');
    if(has(label,cfg.submit))add(actions,'submit');
    if(cfg.next.map(clean).includes(label))add(actions,'next');
    for(const [kind,hints] of Object.entries(cfg.tabs))
@@ -805,12 +994,40 @@ for(const root of roots){
    const isRealClickable = el.tagName==='A' || el.tagName==='BUTTON'
      || ['button','link','tab'].includes(clean(el.getAttribute('role')))
      || el.hasAttribute('onclick') || el.hasAttribute('tabindex');
-   if(isRealClickable&&inAuthContext&&has(semantic,cfg.sso_actions)){
+   const insideAuthBox=!!el.closest("[role='dialog'],[aria-modal='true'],[class*='modal'],[class*='Modal'],[class*='drawer'],[class*='Drawer']");
+   // “页面标题含登录”或“页面某处有手机号字段”都不能把整页正文变成认证区。
+   // 普通页面只接受认证弹窗内、或与可见认证字段共享近邻容器的控件；
+   // 独立认证 URL 才允许扫描整页。
+   const inAuthContext=authUrlPath||insideAuthBox
+     || (presetFields.length>0&&sharesAuthFieldScope(el));
+   if(isRealClickable&&inAuthContext){
     let external=!href;
     try{if(href){const target=new URL(href,location.href);external=!target.hostname||target.hostname!==location.hostname;}}
     catch(e){}
+    const actionSignal=has(semantic,cfg.sso_actions);
+    const authHref=/oauth|authorize|connect|servicelogin|openid|passport|\/auth(?:\/|$)/i.test(href);
+    const providerOnlyButton=(el.tagName==='BUTTON'||clean(el.getAttribute('role'))==='button')
+      &&label.length>0&&label.length<=20;
     if(external)for(const [provider,hints] of Object.entries(cfg.sso_providers)){
-     if(has(semantic,hints)){add(methods,'sso');add(methods,provider);add(actions,'external_sso');}
+     const firstParty=(cfg.sso_first_party[provider]||[]).some(d=>location.hostname===d||location.hostname.endsWith('.'+d));
+     if(!firstParty&&providerHas(semantic,hints)&&(actionSignal||authHref||providerOnlyButton)){
+      add(methods,'sso');add(methods,provider);add(actions,'external_sso');
+     }
+    }
+    // OAuth 图标按钮常走站内 JS/中转链接，文字为空，只在 aria/title/class/id
+    // 里出现 provider。认证上下文 + 真可点击 + 明确 provider 三重守卫可识别
+    // 这类按钮，同时继续排除普通首页的社交分享图标。
+    if(!external){
+     const providerAttrs=clean([label,href,el.getAttribute('aria-label'),el.title,
+       el.name,el.id,typeof el.className==='string'?el.className:''].join(' '));
+     for(const [provider,hints] of Object.entries(cfg.sso_providers)){
+      const firstParty=(cfg.sso_first_party[provider]||[]).some(d=>location.hostname===d||location.hostname.endsWith('.'+d));
+      const iconOnly=!label&&providerHas(providerAttrs,hints);
+      if(!firstParty&&providerHas(providerAttrs,hints)
+          &&(actionSignal||authHref||providerOnlyButton||iconOnly)){
+       add(methods,'sso');add(methods,provider);add(actions,'external_sso');
+      }
+     }
     }
    }
  }
@@ -824,14 +1041,18 @@ for(const root of roots){
 // 二维码登录页有时没有可点击的微信按钮，只有“微信登录”标题和二维码
 // （人人都是产品经理等）。在明确认证文档/弹窗中，可用可见正文识别
 // 第三方提供商；不在普通内容页全局匹配，避免文章正文造成误报。
-const authPath=/\/(login|signin|sign-in|passport|oauth|auth)(\/|$)/i.test(location.pathname)
- || has(clean(document.title),['登录','登陆','sign in','log in']);
+const authPath=/\/(login|signin|sign-in|passport|oauth|auth)(\/|$)/i.test(location.pathname);
 // 有弹窗时只读弹窗内文字，不能把遮罩后的文章正文（例如“微信教程”）
 // 当成当前注册弹窗提供了微信登录。
 const providerText=authTexts.length?authTexts.join(' '):(authPath?allText:'');
+// scan 的词表只能在当前认证弹窗或独立认证页内生效；普通正文即使出现
+// “扫码登录”等介绍性文字，也不能制造二维码认证证据。
+if(blockers.includes('scan')&&!(providerText&&has(providerText,cfg.blockers.scan)))
+ blockers.splice(blockers.indexOf('scan'),1);
 if(providerText&&has(providerText,['登录','登陆','sign in','log in','扫码'])){
- for(const [provider,hints] of Object.entries(cfg.sso_providers)){
-  if(has(providerText,hints)){add(methods,'sso');add(methods,provider);}
+ for(const [provider,hints] of Object.entries(cfg.sso_provider_actions)){
+  const firstParty=(cfg.sso_first_party[provider]||[]).some(d=>location.hostname===d||location.hostname.endsWith('.'+d));
+  if(!firstParty&&has(providerText,hints)){add(methods,'sso');add(methods,provider);}
  }
 }
 if(presetFields.includes('code'))add(blockers,
@@ -863,6 +1084,8 @@ def detect_page_state(driver: WebDriver, step: int) -> PageState:
         state.ui_type = detect_page_style(driver)
         state.blockers = detect_blockers(driver)
         state.methods = detect_methods(driver)
+        state.blockers, state.methods = _normalize_auth_semantics(
+            state.fields, state.blockers, state.methods)
         state.available_actions = detect_available_actions(driver)
         state.tabs = detect_tabs_all_frames(driver)
         return state
@@ -903,4 +1126,6 @@ def detect_page_state(driver: WebDriver, step: int) -> PageState:
         state.methods = detect_methods(driver)
         state.available_actions = detect_available_actions(driver)
         state.tabs = detect_tabs_all_frames(driver)
+    state.blockers, state.methods = _normalize_auth_semantics(
+        state.fields, state.blockers, state.methods)
     return state

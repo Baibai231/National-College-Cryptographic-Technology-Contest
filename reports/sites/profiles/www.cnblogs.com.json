@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.830049+00:00",
+  "generated_at": "2026-08-14T11:18:45.692212+00:00",
   "report_title": "www.cnblogs.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -106,7 +106,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T09:15:57.959901+00:00",
+            "measured_at": "2026-08-14T10:16:00.746966+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -224,7 +224,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T09:15:45.765782+00:00",
+            "measured_at": "2026-08-14T10:15:49.317843+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

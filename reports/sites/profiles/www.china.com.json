@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.829089+00:00",
+  "generated_at": "2026-08-14T11:18:45.691096+00:00",
   "report_title": "www.china.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,7 +36,9 @@
               ],
               "methods_observed": [
                 "password",
-                "identifier"
+                "identifier",
+                "third_party",
+                "qq"
               ],
               "verification_observed": [],
               "password_state": "observed_before_verification",
@@ -52,7 +54,9 @@
           ],
           "methods_observed": [
             "password",
-            "identifier"
+            "identifier",
+            "third_party",
+            "qq"
           ],
           "verification_observed": [],
           "password_state": "observed_before_verification",
@@ -84,7 +88,9 @@
                 "password"
               ],
               "methods": [
-                "identifier"
+                "identifier",
+                "qq",
+                "sso"
               ],
               "blockers": [],
               "actions": [],
@@ -96,7 +102,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:02:05.317322+00:00",
+            "measured_at": "2026-08-14T10:20:24.188866+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -116,7 +122,8 @@
             },
             "authentication": {
               "observed_methods": [
-                "password"
+                "password",
+                "third_party"
               ],
               "password_status": "password_observed",
               "password_observed": true,
@@ -150,7 +157,9 @@
               ],
               "methods_observed": [
                 "password",
-                "identifier"
+                "identifier",
+                "third_party",
+                "qq"
               ],
               "verification_observed": [],
               "password_state": "observed_before_verification",
@@ -166,7 +175,9 @@
           ],
           "methods_observed": [
             "password",
-            "identifier"
+            "identifier",
+            "third_party",
+            "qq"
           ],
           "verification_observed": [],
           "password_state": "observed_before_verification",
@@ -200,7 +211,9 @@
                 "password"
               ],
               "methods": [
-                "identifier"
+                "identifier",
+                "qq",
+                "sso"
               ],
               "blockers": [],
               "actions": [
@@ -216,7 +229,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:01:59.931567+00:00",
+            "measured_at": "2026-08-14T10:20:07.866470+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "no_signup_entry"
           },
@@ -236,7 +249,8 @@
             },
             "authentication": {
               "observed_methods": [
-                "password"
+                "password",
+                "third_party"
               ],
               "password_status": "password_observed",
               "password_observed": true,

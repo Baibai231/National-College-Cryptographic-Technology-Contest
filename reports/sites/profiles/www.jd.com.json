@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.844234+00:00",
+  "generated_at": "2026-08-14T11:18:45.710502+00:00",
   "report_title": "www.jd.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,111 +20,96 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.jd.com/",
-          "final_url": "https://www.jd.com/",
-          "observed_route": "手机号 → 短信验证码",
+          "start_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+          "final_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+          "observed_route": "手机号",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码",
+              "summary": "手机号",
               "fields_observed": [
-                "phone",
-                "code"
+                "phone"
               ],
               "methods_observed": [
-                "phone",
-                "sms"
+                "phone"
               ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_before_verification",
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [
-                "drawer"
+                "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [
-            "phone",
-            "code"
+            "phone"
           ],
           "methods_observed": [
-            "phone",
-            "sms"
+            "phone"
           ],
-          "verification_observed": [
-            "sms"
-          ],
-          "password_state": "not_observed_before_verification",
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [
-            "drawer"
+            "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.jd.com/",
-              "ui_type": "drawer",
+              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+              "ui_type": "inline_widget",
               "fields": [
-                "phone",
-                "code"
+                "phone"
               ],
               "methods": [
                 "phone"
               ],
-              "blockers": [
-                "sms_code"
-              ],
+              "blockers": [],
               "actions": [
                 "none"
               ],
-              "tabs": [
-                "register_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-13T06:50:29.128147+00:00",
-            "raw_flow_type": "otp_only",
-            "raw_stop_reason": "no_password_observed"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:09:11.080999+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "no_safe_action"
           },
           "raw_result": {
-            "flow_type": "otp_only",
-            "stop_reason": "no_password_observed",
-            "primary_method": "sms"
+            "flow_type": "unknown",
+            "stop_reason": "no_safe_action",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "no_password_observed",
-              "evidence_boundary": "pre_verification_only"
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "no_safe_action",
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
                 "phone"
               ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": true,
+              "verification_observed": false,
               "phone_observed": true,
               "identifier_observed": false,
-              "blocking_factors": [
-                "sms_code"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -172,7 +157,8 @@
           ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "程序置信度为 low"
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
           ],
           "steps": [
             {
@@ -212,13 +198,13 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:41:06.519442+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-14T10:09:09.821728+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.844576+00:00",
+  "generated_at": "2026-08-14T11:18:45.710804+00:00",
   "report_title": "www.jdytoy.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T09:05:14.699484+00:00",
+            "measured_at": "2026-08-14T10:59:13.627580+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T09:04:59.199056+00:00",
+            "measured_at": "2026-08-14T10:59:00.390973+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

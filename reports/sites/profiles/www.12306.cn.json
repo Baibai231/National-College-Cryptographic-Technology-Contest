@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.818864+00:00",
+  "generated_at": "2026-08-14T11:18:45.677431+00:00",
   "report_title": "www.12306.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,14 +22,14 @@
           "status": "observed",
           "start_url": "https://kyfw.12306.cn/otn/regist/init",
           "final_url": "https://kyfw.12306.cn/otn/regist/init",
-          "observed_route": "手机号/邮箱/账号/邮箱 → 口令",
+          "observed_route": "手机号/邮箱/账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号/邮箱/账号/邮箱 → 口令",
+              "summary": "手机号/邮箱/账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "email",
@@ -40,10 +40,13 @@
                 "password",
                 "phone",
                 "email",
-                "identifier"
+                "identifier",
+                "sms"
               ],
-              "verification_observed": [],
-              "password_state": "observed_before_verification",
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
               "ui_types": [
                 "multi_step_wizard"
               ],
@@ -60,10 +63,13 @@
             "password",
             "phone",
             "email",
-            "identifier"
+            "identifier",
+            "sms"
           ],
-          "verification_observed": [],
-          "password_state": "observed_before_verification",
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
           "ui_types": [
             "multi_step_wizard"
           ],
@@ -86,6 +92,7 @@
                 "phone"
               ],
               "blockers": [
+                "sms_code",
                 "tos"
               ],
               "actions": [],
@@ -95,7 +102,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:22:19.089963+00:00",
+            "measured_at": "2026-08-14T10:45:16.555777+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -111,7 +118,7 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
@@ -122,10 +129,11 @@
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
+                "sms_code",
                 "tos"
               ]
             },
@@ -140,14 +148,14 @@
           "status": "observed",
           "start_url": "https://kyfw.12306.cn/otn/regist/init",
           "final_url": "https://kyfw.12306.cn/otn/regist/init",
-          "observed_route": "手机号/邮箱/账号/邮箱 → 口令",
+          "observed_route": "手机号/邮箱/账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号/邮箱/账号/邮箱 → 口令",
+              "summary": "手机号/邮箱/账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "email",
@@ -158,10 +166,13 @@
                 "password",
                 "phone",
                 "email",
-                "identifier"
+                "identifier",
+                "sms"
               ],
-              "verification_observed": [],
-              "password_state": "observed_before_verification",
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
               "ui_types": [
                 "multi_step_wizard"
               ],
@@ -178,10 +189,13 @@
             "password",
             "phone",
             "email",
-            "identifier"
+            "identifier",
+            "sms"
           ],
-          "verification_observed": [],
-          "password_state": "observed_before_verification",
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
           "ui_types": [
             "multi_step_wizard"
           ],
@@ -204,6 +218,7 @@
                 "phone"
               ],
               "blockers": [
+                "sms_code",
                 "tos"
               ],
               "actions": [
@@ -228,6 +243,7 @@
                 "phone"
               ],
               "blockers": [
+                "sms_code",
                 "tos"
               ],
               "actions": [],
@@ -237,7 +253,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:22:17.936774+00:00",
+            "measured_at": "2026-08-14T10:45:16.067926+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -253,7 +269,7 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
@@ -264,10 +280,11 @@
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
+                "sms_code",
                 "tos"
               ]
             },

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.831312+00:00",
+  "generated_at": "2026-08-14T11:18:45.693670+00:00",
   "report_title": "www.ctrip.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -89,14 +89,14 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:21:48.172135+00:00",
+            "measured_at": "2026-08-14T10:44:48.618001+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
             "flow_type": "otp_only",
             "stop_reason": "no_password_observed",
-            "primary_method": "unknown"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
@@ -131,13 +131,14 @@
         "signup": {
           "status": "observed",
           "start_url": "https://passport.ctrip.com/user/reg/home",
-          "final_url": "https://passport.ctrip.com/user/reg/home",
+          "final_url": "https://contents.ctrip.com/huodong/privacypolicypc/index?type=0",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -191,23 +192,37 @@
                 "sms_code"
               ],
               "actions": [
-                "none",
-                "none"
+                "entry_click"
               ],
               "tabs": [],
-              "note": "entry_native_click_failed"
+              "note": "register_structural_semantics_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://contents.ctrip.com/huodong/privacypolicypc/index?type=0",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "register_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:21:40.532344+00:00",
+            "measured_at": "2026-08-14T10:44:42.403411+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
             "flow_type": "otp_only",
             "stop_reason": "no_password_observed",
-            "primary_method": "unknown"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",

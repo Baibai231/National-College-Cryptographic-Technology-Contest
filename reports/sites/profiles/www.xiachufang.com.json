@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.859322+00:00",
+  "generated_at": "2026-08-14T11:18:45.728007+00:00",
   "report_title": "www.xiachufang.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -112,14 +112,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:26:17.347368+00:00",
+            "measured_at": "2026-08-14T10:49:56.366554+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sso"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
@@ -246,14 +246,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:26:16.936560+00:00",
+            "measured_at": "2026-08-14T10:49:39.351714+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sso"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",

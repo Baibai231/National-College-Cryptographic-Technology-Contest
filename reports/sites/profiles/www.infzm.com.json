@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.842955+00:00",
+  "generated_at": "2026-08-14T11:18:45.708939+00:00",
   "report_title": "www.infzm.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -65,7 +65,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:18:12.529247+00:00",
+            "measured_at": "2026-08-14T10:41:14.825260+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },
@@ -146,7 +146,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:17:51.821244+00:00",
+            "measured_at": "2026-08-14T10:40:50.753178+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

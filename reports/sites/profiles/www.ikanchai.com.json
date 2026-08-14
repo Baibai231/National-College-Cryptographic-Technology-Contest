@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.842295+00:00",
+  "generated_at": "2026-08-14T11:18:45.707982+00:00",
   "report_title": "www.ikanchai.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,9 +36,7 @@
               ],
               "methods_observed": [
                 "password",
-                "identifier",
-                "third_party",
-                "qq"
+                "identifier"
               ],
               "verification_observed": [],
               "password_state": "observed_before_verification",
@@ -54,9 +52,7 @@
           ],
           "methods_observed": [
             "password",
-            "identifier",
-            "third_party",
-            "qq"
+            "identifier"
           ],
           "verification_observed": [],
           "password_state": "observed_before_verification",
@@ -88,9 +84,7 @@
                 "password"
               ],
               "methods": [
-                "identifier",
-                "qq",
-                "sso"
+                "identifier"
               ],
               "blockers": [],
               "actions": [],
@@ -100,7 +94,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T09:04:55.180629+00:00",
+            "measured_at": "2026-08-14T10:58:57.093059+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -120,8 +114,7 @@
             },
             "authentication": {
               "observed_methods": [
-                "password",
-                "third_party"
+                "password"
               ],
               "password_status": "password_observed",
               "password_observed": true,
@@ -198,7 +191,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T09:04:47.035810+00:00",
+            "measured_at": "2026-08-14T10:58:53.368877+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

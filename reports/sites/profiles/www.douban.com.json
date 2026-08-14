@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.834520+00:00",
+  "generated_at": "2026-08-14T11:18:45.698626+00:00",
   "report_title": "www.douban.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -92,7 +92,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T06:49:45.430761+00:00",
+            "measured_at": "2026-08-14T10:08:26.000410+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "verification_required"
           },
@@ -245,7 +245,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T06:49:30.208706+00:00",
+            "measured_at": "2026-08-14T10:08:10.450441+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "verification_required"
           },

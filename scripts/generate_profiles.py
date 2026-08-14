@@ -22,7 +22,11 @@ BLOCKER_ORDER = (
     "sms_code", "email_code", "verification_code", "scan", "captcha",
     "slide", "app_confirm", "tos",
 )
-PROVIDERS = ("wechat", "qq", "weibo", "google", "apple", "github")
+PROVIDERS = (
+    "wechat", "qq", "weibo", "google", "apple", "github", "gitee",
+    "microsoft", "baidu", "dingtalk", "douyin", "xiaohongshu", "alipay",
+    "taobao", "xiaomi", "huawei", "solana",
+)
 
 FIELD_ZH = {
     "phone": "手机号", "email": "邮箱", "identifier": "账号/邮箱",
@@ -34,7 +38,11 @@ METHOD_ZH = {
     "email_otp": "邮箱验证码", "one_time_code": "一次性验证码",
     "qr": "扫码", "sso": "第三方认证", "third_party": "第三方认证",
     "wechat": "微信", "qq": "QQ", "weibo": "微博", "google": "Google",
-    "apple": "Apple", "github": "GitHub",
+    "apple": "Apple", "github": "GitHub", "gitee": "Gitee",
+    "microsoft": "Microsoft", "baidu": "百度", "dingtalk": "钉钉",
+    "douyin": "抖音", "xiaohongshu": "小红书", "alipay": "支付宝",
+    "taobao": "淘宝", "xiaomi": "小米", "huawei": "华为",
+    "solana": "Solana", "auto_signup": "登录即注册",
 }
 UI_ZH = {
     "standalone_page": "独立页面", "modal": "弹窗", "drawer": "抽屉",
@@ -130,7 +138,7 @@ def _observed_methods(fields: set, blockers: set, methods: set, tabs: set) -> li
     elif "verification_code" in blockers or (
             "code" in fields and not {"sms_code", "email_code"} & blockers):
         observed.append("one_time_code")
-    if "scan" in blockers:
+    if "scan" in blockers or "qr" in methods:
         observed.append("qr")
     providers = [provider for provider in PROVIDERS if provider in methods]
     if "sso" in methods or providers:
@@ -153,7 +161,7 @@ def _verification_methods(fields: set, blockers: set, methods: set,
     if "verification_code" in blockers or (
             "code" in fields and not {"sms_code", "email_code"} & blockers):
         values.append("one_time_code")
-    if "scan" in blockers:
+    if "scan" in blockers or "qr" in methods:
         values.append("qr")
     return _ordered(values, ("sms", "email_otp", "one_time_code", "qr"))
 

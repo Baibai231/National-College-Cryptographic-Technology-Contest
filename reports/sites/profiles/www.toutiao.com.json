@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.857781+00:00",
+  "generated_at": "2026-08-14T11:18:45.726371+00:00",
   "report_title": "www.toutiao.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.toutiao.com/",
-          "final_url": "https://www.toutiao.com/?wid=1786604988887",
+          "start_url": "https://www.toutiao.com/?wid=1786699844770",
+          "final_url": "https://www.toutiao.com/?wid=1786699844770",
           "observed_route": "手机号/账号/邮箱 → 短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "手机号/账号/邮箱 → 短信验证码/扫码",
               "fields_observed": [
@@ -41,7 +41,8 @@
                 "qr",
                 "third_party",
                 "wechat",
-                "qq"
+                "qq",
+                "douyin"
               ],
               "verification_observed": [
                 "sms",
@@ -65,7 +66,8 @@
             "qr",
             "third_party",
             "wechat",
-            "qq"
+            "qq",
+            "douyin"
           ],
           "verification_observed": [
             "sms",
@@ -77,66 +79,55 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.toutiao.com/?wid=1786604988887",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.toutiao.com/?wid=1786604988887",
+              "url": "https://www.toutiao.com/?wid=1786699844770",
               "ui_type": "modal",
               "fields": [
                 "phone",
                 "identifier"
               ],
               "methods": [
+                "douyin",
                 "identifier",
                 "phone",
                 "qq",
+                "qr",
                 "sso",
                 "wechat"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:09:47.577956+00:00",
+            "confidence": "medium",
+            "measured_at": "2026-08-14T09:30:43.666455+00:00",
             "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "raw_stop_reason": "verification_required"
           },
           "raw_result": {
             "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": "email_only"
+            "stop_reason": "verification_required",
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -152,7 +143,6 @@
               "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },
@@ -186,7 +176,8 @@
                 "qr",
                 "third_party",
                 "wechat",
-                "qq"
+                "qq",
+                "douyin"
               ],
               "verification_observed": [
                 "sms",
@@ -210,7 +201,8 @@
             "qr",
             "third_party",
             "wechat",
-            "qq"
+            "qq",
+            "douyin"
           ],
           "verification_observed": [
             "sms",
@@ -222,7 +214,8 @@
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -247,41 +240,42 @@
                 "identifier"
               ],
               "methods": [
+                "douyin",
                 "identifier",
                 "phone",
                 "qq",
+                "qr",
                 "sso",
                 "wechat"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
               "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_password_signup_tab"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:09:36.370799+00:00",
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:26:15.936352+00:00",
             "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "raw_stop_reason": "verification_required"
           },
           "raw_result": {
             "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": "email_only"
+            "stop_reason": "verification_required",
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
@@ -297,7 +291,6 @@
               "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },

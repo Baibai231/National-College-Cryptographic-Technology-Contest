@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.840362+00:00",
+  "generated_at": "2026-08-14T11:18:45.705776+00:00",
   "report_title": "www.huaweicloud.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,14 +22,14 @@
           "status": "observed",
           "start_url": "https://www.huaweicloud.com/",
           "final_url": "https://auth.huaweicloud.com/authui/login.html?locale=zh-cn&service=https%3A%2F%2Fwww.huaweicloud.com%2F#/login",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
@@ -37,19 +37,18 @@
               "methods_observed": [
                 "phone",
                 "sms",
-                "qr",
                 "third_party",
-                "wechat"
+                "wechat",
+                "alipay"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -59,21 +58,21 @@
           "methods_observed": [
             "phone",
             "sms",
-            "qr",
             "third_party",
-            "wechat"
+            "wechat",
+            "alipay"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -99,16 +98,16 @@
               ],
               "methods": [
                 "alipay",
-                "huawei",
+                "auto_signup",
                 "phone",
                 "sso",
                 "wechat"
               ],
               "blockers": [
-                "sms_code",
-                "scan"
+                "sms_code"
               ],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
@@ -119,14 +118,14 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T07:24:51.835622+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-14T10:48:32.377694+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -134,24 +133,22 @@
             "scope": "login",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "third_party",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code"
               ]
             },
@@ -165,7 +162,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.huaweicloud.com/",
-          "final_url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=6f53a36dc2ca47fcacb196c74dfe3884&lang=zh-cn",
+          "final_url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=8608b8cbc0c944e69ccb4fd1b6495892&lang=zh-cn",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
@@ -228,7 +225,7 @@
             },
             {
               "step": 2,
-              "url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=6f53a36dc2ca47fcacb196c74dfe3884&lang=zh-cn",
+              "url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=8608b8cbc0c944e69ccb4fd1b6495892&lang=zh-cn",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -249,7 +246,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:24:47.861015+00:00",
+            "measured_at": "2026-08-14T10:48:25.651605+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

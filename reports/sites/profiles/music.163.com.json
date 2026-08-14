@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.813778+00:00",
+  "generated_at": "2026-08-14T11:18:45.672437+00:00",
   "report_title": "music.163.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -32,9 +32,7 @@
               "summary": "扫码",
               "fields_observed": [],
               "methods_observed": [
-                "qr",
-                "third_party",
-                "wechat"
+                "qr"
               ],
               "verification_observed": [
                 "qr"
@@ -48,9 +46,7 @@
           ],
           "fields_observed": [],
           "methods_observed": [
-            "qr",
-            "third_party",
-            "wechat"
+            "qr"
           ],
           "verification_observed": [
             "qr"
@@ -70,8 +66,7 @@
               "ui_type": "modal",
               "fields": [],
               "methods": [
-                "sso",
-                "wechat"
+                "qr"
               ],
               "blockers": [
                 "scan"
@@ -85,14 +80,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:12:30.392200+00:00",
+            "measured_at": "2026-08-14T09:34:33.234505+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sso"
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -105,8 +100,7 @@
             },
             "authentication": {
               "observed_methods": [
-                "qr_or_scan",
-                "third_party"
+                "qr_or_scan"
               ],
               "password_status": "not_determined",
               "password_observed": false,
@@ -138,9 +132,7 @@
               "summary": "扫码",
               "fields_observed": [],
               "methods_observed": [
-                "qr",
-                "third_party",
-                "wechat"
+                "qr"
               ],
               "verification_observed": [
                 "qr"
@@ -154,9 +146,7 @@
           ],
           "fields_observed": [],
           "methods_observed": [
-            "qr",
-            "third_party",
-            "wechat"
+            "qr"
           ],
           "verification_observed": [
             "qr"
@@ -176,8 +166,7 @@
               "ui_type": "modal",
               "fields": [],
               "methods": [
-                "sso",
-                "wechat"
+                "qr"
               ],
               "blockers": [
                 "scan"
@@ -191,14 +180,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:12:20.577444+00:00",
+            "measured_at": "2026-08-14T09:34:32.615537+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "sso"
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -211,8 +200,7 @@
             },
             "authentication": {
               "observed_methods": [
-                "qr_or_scan",
-                "third_party"
+                "qr_or_scan"
               ],
               "password_status": "not_determined",
               "password_observed": false,

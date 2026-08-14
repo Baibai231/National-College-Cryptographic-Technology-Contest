@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.824876+00:00",
+  "generated_at": "2026-08-14T11:18:45.686860+00:00",
   "report_title": "www.aliyun.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.aliyun.com/",
-          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aMoRONH&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aXJoHW7&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
           "observed_route": "账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
@@ -37,10 +37,7 @@
               "methods_observed": [
                 "password",
                 "identifier",
-                "sms",
-                "third_party",
-                "wechat",
-                "weibo"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -59,10 +56,7 @@
           "methods_observed": [
             "password",
             "identifier",
-            "sms",
-            "third_party",
-            "wechat",
-            "weibo"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -89,19 +83,14 @@
             },
             {
               "step": 2,
-              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aMoRONH&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aXJoHW7&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "identifier",
                 "password"
               ],
               "methods": [
-                "alipay",
-                "identifier",
-                "sso",
-                "taobao",
-                "wechat",
-                "weibo"
+                "identifier"
               ],
               "blockers": [],
               "actions": [],
@@ -113,7 +102,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:24:37.957660+00:00",
+            "measured_at": "2026-08-14T10:48:03.414708+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -134,8 +123,7 @@
             "authentication": {
               "observed_methods": [
                 "password",
-                "sms_or_otp",
-                "third_party"
+                "sms_or_otp"
               ],
               "password_status": "password_observed",
               "password_observed": true,
@@ -154,7 +142,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.aliyun.com/",
-          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154aRWUmwC&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154a6FCH8V&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
@@ -214,7 +202,7 @@
             },
             {
               "step": 2,
-              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154aRWUmwC&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154a6FCH8V&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone"
@@ -237,14 +225,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:24:26.530120+00:00",
+            "measured_at": "2026-08-14T10:47:53.853117+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",

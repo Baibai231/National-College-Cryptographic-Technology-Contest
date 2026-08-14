@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.825572+00:00",
+  "generated_at": "2026-08-14T11:18:45.687723+00:00",
   "report_title": "www.anjuke.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=1af93da926a52013e9788e9f58345c52_2664dcb4f0684dffa7c4679022adf55a&callback=shield&from=antispam",
-          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=1af93da926a52013e9788e9f58345c52_2664dcb4f0684dffa7c4679022adf55a&callback=shield&from=antispam",
+          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_7cbe7e2a80584b528c1286b566a00fb6&callback=shield&from=antispam",
+          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_7cbe7e2a80584b528c1286b566a00fb6&callback=shield&from=antispam",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -51,7 +51,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=1af93da926a52013e9788e9f58345c52_2664dcb4f0684dffa7c4679022adf55a&callback=shield&from=antispam",
+              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_7cbe7e2a80584b528c1286b566a00fb6&callback=shield&from=antispam",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:07:52.191362+00:00",
+            "measured_at": "2026-08-14T10:24:54.257845+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -102,8 +102,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_2f772b56afaa4de1b099c7f1c38233c7&callback=shield&from=antispam",
-          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_2f772b56afaa4de1b099c7f1c38233c7&callback=shield&from=antispam",
+          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_c2e2a3f19f144eb6a2140e7651fdee5d&callback=shield&from=antispam",
+          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_c2e2a3f19f144eb6a2140e7651fdee5d&callback=shield&from=antispam",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -133,7 +133,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_2f772b56afaa4de1b099c7f1c38233c7&callback=shield&from=antispam",
+              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_c2e2a3f19f144eb6a2140e7651fdee5d&callback=shield&from=antispam",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-13T07:07:49.231012+00:00",
+            "measured_at": "2026-08-14T10:24:50.618636+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

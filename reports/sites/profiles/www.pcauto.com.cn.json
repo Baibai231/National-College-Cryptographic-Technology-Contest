@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.852659+00:00",
+  "generated_at": "2026-08-14T11:18:45.720392+00:00",
   "report_title": "www.pcauto.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -124,7 +124,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:03:40.324045+00:00",
+            "measured_at": "2026-08-14T10:21:48.417790+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -170,14 +170,14 @@
           "status": "observed",
           "start_url": "https://www.pcauto.com.cn/",
           "final_url": "https://my.pcauto.com.cn/passport/mobileRegister.jsp",
-          "observed_route": "手机号 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "手机号 → 口令",
+              "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "password"
@@ -185,13 +185,16 @@
               "methods_observed": [
                 "password",
                 "phone",
+                "sms",
                 "third_party",
                 "wechat",
                 "qq",
                 "weibo"
               ],
-              "verification_observed": [],
-              "password_state": "observed_before_verification",
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
               "ui_types": [
                 "inline_widget"
               ],
@@ -205,13 +208,16 @@
           "methods_observed": [
             "password",
             "phone",
+            "sms",
             "third_party",
             "wechat",
             "qq",
             "weibo"
           ],
-          "verification_observed": [],
-          "password_state": "observed_before_verification",
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_alongside_verification",
           "ui_types": [
             "inline_widget"
           ],
@@ -226,7 +232,6 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click",
                 "entry_click"
               ],
               "tabs": [],
@@ -248,6 +253,7 @@
                 "weibo"
               ],
               "blockers": [
+                "sms_code",
                 "slide",
                 "tos"
               ],
@@ -258,7 +264,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:03:40.231569+00:00",
+            "measured_at": "2026-08-14T10:21:41.075100+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -274,7 +280,7 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
@@ -285,11 +291,12 @@
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
                 "slide",
+                "sms_code",
                 "tos"
               ]
             },

@@ -1,0 +1,668 @@
+{
+  "audits": [
+    {
+      "hostname": "36kr.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+短信验证码注册，无密码",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+短信验证码注册，无密码”。"
+    },
+    {
+      "hostname": "cloud.tencent.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "口令、手机号、一次性验证码 → 短信验证码、用户协议确认",
+      "manual_signup": "手机号+密码注册",
+      "reason": "安全可达页面已出现口令框；观测路线：口令、手机号、一次性验证码 → 短信验证码、用户协议确认。 人工复核为“手机号+密码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "juejin.cn",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，无密码",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，无密码”，核心路线一致。"
+    },
+    {
+      "hostname": "leetcode.cn",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，无密码",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，无密码”，核心路线一致。"
+    },
+    {
+      "hostname": "music.163.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "扫码",
+      "manual_signup": "扫码/手机验证注册",
+      "reason": "程序遇到扫码，遵守安全边界停止；停止前路线：扫码。 人工复核为“扫码/手机验证注册”，核心路线一致。"
+    },
+    {
+      "hostname": "pan.baidu.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "百度账号注册，手机+密码",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“百度账号注册，手机+密码”。"
+    },
+    {
+      "hostname": "segmentfault.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，无密码",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，无密码”，核心路线一致。"
+    },
+    {
+      "hostname": "shimo.im",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "账号/邮箱、口令",
+      "manual_signup": "无独立注册表单，仅登录界面",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：账号/邮箱、口令。 人工复核为“无独立注册表单，仅登录界面”，核心路线一致。"
+    },
+    {
+      "hostname": "tieba.baidu.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "百度安全验证+扫码，注册按钮藏在登录里",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“百度安全验证+扫码，注册按钮藏在登录里”。"
+    },
+    {
+      "hostname": "v.qq.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "扫码/手机验证注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“扫码/手机验证注册”。"
+    },
+    {
+      "hostname": "web.okjike.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "扫码登录注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“扫码登录注册”。"
+    },
+    {
+      "hostname": "weibo.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，无密码",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，无密码”，核心路线一致。"
+    },
+    {
+      "hostname": "work.weixin.qq.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "仅企业微信，第三方登录",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“仅企业微信，第三方登录”。"
+    },
+    {
+      "hostname": "www.10jqka.com.cn",
+      "status": "match",
+      "program_flow": "verification_then_password",
+      "program_route": "手机号、一次性验证码 → 短信验证码 → 手机号、一次性验证码、口令",
+      "manual_signup": "手机号+验证码+密码注册（先验证后口令）",
+      "reason": "状态序列先出现验证码步骤，之后出现口令框；观测路线：手机号、一次性验证码 → 短信验证码 → 手机号、一次性验证码、口令。 人工复核为“手机号+验证码+密码注册（先验证后口令）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.12306.cn",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "账号/邮箱、口令、邮箱、手机号 → 短信验证码、用户协议确认",
+      "manual_signup": "账号+密码注册（首页点注册或登录页点注册12306账号）",
+      "reason": "安全可达页面已出现口令框；观测路线：账号/邮箱、口令、邮箱、手机号 → 短信验证码、用户协议确认。 人工复核为“账号+密码注册（首页点注册或登录页点注册12306账号）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.163.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "手机号、口令",
+      "manual_signup": "手机号+密码注册",
+      "reason": "安全可达页面已出现口令框；观测路线：手机号、口令。 人工复核为“手机号+密码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.2345.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+验证码注册”。"
+    },
+    {
+      "hostname": "www.3dmgame.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "手机号、口令、一次性验证码 → 短信验证码",
+      "manual_signup": "手机+验证码+密码",
+      "reason": "安全可达页面已出现口令框；观测路线：手机号、口令、一次性验证码 → 短信验证码。 人工复核为“手机+验证码+密码”，核心路线一致。"
+    },
+    {
+      "hostname": "www.51cto.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+验证码注册，无密码（危险模式：仅登录）",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+验证码注册，无密码（危险模式：仅登录）”。"
+    },
+    {
+      "hostname": "www.51job.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，无密码",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，无密码”，核心路线一致。"
+    },
+    {
+      "hostname": "www.52pojie.cn",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "账号/邮箱、口令、邮箱",
+      "manual_signup": "邮箱+密码注册（需勾选用户须知）",
+      "reason": "安全可达页面已出现口令框；观测路线：账号/邮箱、口令、邮箱。 人工复核为“邮箱+密码注册（需勾选用户须知）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.58.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "手机号、一次性验证码、账号/邮箱、口令 → 短信验证码",
+      "manual_signup": "手机号+验证码+密码注册",
+      "reason": "安全可达页面已出现口令框；观测路线：手机号、一次性验证码、账号/邮箱、口令 → 短信验证码。 人工复核为“手机号+验证码+密码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.acfun.cn",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "账号/邮箱、口令",
+      "manual_signup": "注册表单藏在登录界面，手机+验证码+密码",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：账号/邮箱、口令。 人工复核为“注册表单藏在登录界面，手机+验证码+密码”。"
+    },
+    {
+      "hostname": "www.aliyun.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号 → 短信验证码、用户协议确认",
+      "manual_signup": "手机号+验证码注册，还有其他第三方验证方式",
+      "reason": "程序遇到用户协议确认、短信验证码，遵守安全边界停止；停止前路线：手机号 → 短信验证码、用户协议确认。 人工复核为“手机号+验证码注册，还有其他第三方验证方式”，核心路线一致。"
+    },
+    {
+      "hostname": "www.amap.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号、一次性验证码 → 滑块验证、短信验证码",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "程序遇到滑块验证、短信验证码，遵守安全边界停止；停止前路线：手机号、一次性验证码 → 滑块验证、短信验证码。 人工复核为“手机号+验证码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.anjuke.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+验证码注册（有验证块）",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+验证码注册（有验证块）”。"
+    },
+    {
+      "hostname": "www.autohome.com.cn",
+      "status": "mismatch",
+      "program_flow": "human_blocked",
+      "program_route": "扫码",
+      "manual_signup": "注册需验证",
+      "reason": "差异：程序停止的具体门槛与人工记录不同，或人工已确认可直接到达口令框。 程序依据：程序遇到扫码，遵守安全边界停止；停止前路线：扫码。 人工复核为“注册需验证”。"
+    },
+    {
+      "hostname": "www.baidu.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "账号/邮箱、口令 → 用户协议确认",
+      "manual_signup": "百度账号注册，手机+密码（危险模式：仅登录界面）",
+      "reason": "安全可达页面已出现口令框；观测路线：账号/邮箱、口令 → 用户协议确认。 人工复核为“百度账号注册，手机+密码（危险模式：仅登录界面）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.bilibili.com",
+      "status": "mismatch",
+      "program_flow": "direct_password",
+      "program_route": "账号/邮箱、口令",
+      "manual_signup": "手机号+验证码注册，无密码（危险模式：仅登录）",
+      "reason": "差异：程序报告可达口令框，但人工没有确认口令注册，或明确记录为无密码。 程序依据：安全可达页面已出现口令框；观测路线：账号/邮箱、口令。 人工复核为“手机号+验证码注册，无密码（危险模式：仅登录）”。"
+    },
+    {
+      "hostname": "www.caixin.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "邮箱、口令、一次性验证码 → 邮箱验证码",
+      "manual_signup": "手机号+密码注册（危险模式）",
+      "reason": "安全可达页面已出现口令框；观测路线：邮箱、口令、一次性验证码 → 邮箱验证码。 人工复核为“手机号+密码注册（危险模式）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.cctv.com",
+      "status": "mismatch",
+      "program_flow": "direct_password",
+      "program_route": "账号/邮箱、口令",
+      "manual_signup": "注册表单藏在登录界面",
+      "reason": "差异：程序报告可达口令框，但人工没有确认口令注册，或明确记录为无密码。 程序依据：安全可达页面已出现口令框；观测路线：账号/邮箱、口令。 人工复核为“注册表单藏在登录界面”。"
+    },
+    {
+      "hostname": "www.china.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "账号/邮箱、口令",
+      "manual_signup": "注册表单藏在登录界面",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：账号/邮箱、口令。 人工复核为“注册表单藏在登录界面”。"
+    },
+    {
+      "hostname": "www.chinanews.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册表单",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册表单”，核心路线一致。"
+    },
+    {
+      "hostname": "www.cnblogs.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "手机号、口令 → 图片/人机验证",
+      "manual_signup": "手机号+密码注册",
+      "reason": "安全可达页面已出现口令框；观测路线：手机号、口令 → 图片/人机验证。 人工复核为“手机号+密码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.coolapk.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册表单",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册表单”，核心路线一致。"
+    },
+    {
+      "hostname": "www.csdn.net",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "扫码注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“扫码注册”。"
+    },
+    {
+      "hostname": "www.ctrip.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号 → 短信验证码",
+      "manual_signup": "手机号+验证码注册（B类，解决手机号后有测政策机会）",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号 → 短信验证码。 人工复核为“手机号+验证码注册（B类，解决手机号后有测政策机会）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.dangdang.com",
+      "status": "mismatch",
+      "program_flow": "otp_only",
+      "program_route": "一次性验证码",
+      "manual_signup": "手机号+密码注册",
+      "reason": "差异：程序报告未见长期口令，但人工确认注册需要设置密码。 程序依据：安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：一次性验证码。 人工复核为“手机号+密码注册”。"
+    },
+    {
+      "hostname": "www.dewu.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册表单",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册表单”，核心路线一致。"
+    },
+    {
+      "hostname": "www.dianping.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+验证码注册”。"
+    },
+    {
+      "hostname": "www.dingtalk.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+验证码（B类未正确识别）",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+验证码（B类未正确识别）”。"
+    },
+    {
+      "hostname": "www.dongchedi.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册（危险模式：仅登录）",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册（危险模式：仅登录）”，核心路线一致。"
+    },
+    {
+      "hostname": "www.meituan.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册界面",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册界面”，核心路线一致。"
+    },
+    {
+      "hostname": "www.mgtv.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "短信登录后自动注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“短信登录后自动注册”。"
+    },
+    {
+      "hostname": "www.miguvideo.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "密码登录内点注册，需短信验证",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“密码登录内点注册，需短信验证”。"
+    },
+    {
+      "hostname": "www.nbd.com.cn",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册界面",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册界面”，核心路线一致。"
+    },
+    {
+      "hostname": "www.nowcoder.com",
+      "status": "mismatch",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "邮箱-人机验证-口令（备选）",
+      "reason": "差异：程序报告未见长期口令，但人工确认注册需要设置密码。 程序依据：安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“邮箱-人机验证-口令（备选）”。"
+    },
+    {
+      "hostname": "www.oschina.net",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号、一次性验证码 → 短信验证码、用户协议确认",
+      "manual_signup": "手机号+验证码注册，有第三方(Gitee)",
+      "reason": "程序遇到用户协议确认、短信验证码，遵守安全边界停止；停止前路线：手机号、一次性验证码 → 短信验证码、用户协议确认。 人工复核为“手机号+验证码注册，有第三方(Gitee)”，核心路线一致。"
+    },
+    {
+      "hostname": "www.pcauto.com.cn",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "手机号、口令 → 滑块验证、短信验证码、用户协议确认",
+      "manual_signup": "手机+密码注册，除滑块还需手机验证码",
+      "reason": "安全可达页面已出现口令框；观测路线：手机号、口令 → 滑块验证、短信验证码、用户协议确认。 人工复核为“手机+密码注册，除滑块还需手机验证码”，核心路线一致。"
+    },
+    {
+      "hostname": "www.pconline.com.cn",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，有第三方",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，有第三方”，核心路线一致。"
+    },
+    {
+      "hostname": "www.people.com.cn",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "账号/邮箱、口令、一次性验证码 → 一次性验证码 → 手机号、口令 → 短信验证码",
+      "manual_signup": "手机号+短信验证码+设置密码注册",
+      "reason": "安全可达页面已出现口令框；观测路线：账号/邮箱、口令、一次性验证码 → 一次性验证码 → 手机号、口令 → 短信验证码。 人工复核为“手机号+短信验证码+设置密码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.pinduoduo.com",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "商家入驻注册需手机+密码+验证码",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“商家入驻注册需手机+密码+验证码”。"
+    },
+    {
+      "hostname": "www.qq.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "扫码",
+      "manual_signup": "扫码注册",
+      "reason": "程序遇到扫码，遵守安全边界停止；停止前路线：扫码。 人工复核为“扫码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.qunar.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册选项",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册选项”，核心路线一致。"
+    },
+    {
+      "hostname": "www.qyer.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "手机号、一次性验证码、账号/邮箱、口令、邮箱 → 短信验证码",
+      "manual_signup": "手机+验证码+用户名+密码注册",
+      "reason": "安全可达页面已出现口令框；观测路线：手机号、一次性验证码、账号/邮箱、口令、邮箱 → 短信验证码。 人工复核为“手机+验证码+用户名+密码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.sina.com.cn",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "邮箱、口令",
+      "manual_signup": "第三方/app扫码/手机+验证码注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：邮箱、口令。 人工复核为“第三方/app扫码/手机+验证码注册”。"
+    },
+    {
+      "hostname": "www.smzdm.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "注册仅手机+验证码，有第三方",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“注册仅手机+验证码，有第三方”，核心路线一致。"
+    },
+    {
+      "hostname": "www.sohu.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，有第三方",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，有第三方”，核心路线一致。"
+    },
+    {
+      "hostname": "www.suning.com",
+      "status": "mismatch",
+      "program_flow": "direct_password",
+      "program_route": "手机号、一次性验证码、口令 → 短信验证码",
+      "manual_signup": "注册需跳转+同意注册协议",
+      "reason": "差异：程序报告可达口令框，但人工没有确认口令注册，或明确记录为无密码。 程序依据：安全可达页面已出现口令框；观测路线：手机号、一次性验证码、口令 → 短信验证码。 人工复核为“注册需跳转+同意注册协议”。"
+    },
+    {
+      "hostname": "www.taobao.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，另有企业注册",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号 → 短信验证码。 人工复核为“手机号+验证码注册，另有企业注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.taptap.cn",
+      "status": "mismatch",
+      "program_flow": "human_blocked",
+      "program_route": "App 确认",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "差异：程序停止的具体门槛与人工记录不同，或人工已确认可直接到达口令框。 程序依据：程序遇到App 确认，遵守安全边界停止；停止前路线：App 确认。 人工复核为“手机号+验证码注册”。"
+    },
+    {
+      "hostname": "www.thepaper.cn",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "手机号、口令 → 短信验证码",
+      "manual_signup": "仅手机+验证码注册，无二维码界面",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：手机号、口令 → 短信验证码。 人工复核为“仅手机+验证码注册，无二维码界面”。"
+    },
+    {
+      "hostname": "www.tianya.cn",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无法登录",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无法登录”，核心路线一致。"
+    },
+    {
+      "hostname": "www.toutiao.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "账号/邮箱、手机号 → 短信验证码",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "程序遇到短信验证码，遵守安全边界停止；停止前路线：账号/邮箱、手机号 → 短信验证码。 人工复核为“手机号+验证码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.tuniu.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号、一次性验证码 → 用户协议确认、短信验证码",
+      "manual_signup": "手机验证后出现密码框，还有动态验证码",
+      "reason": "程序遇到用户协议确认、短信验证码，遵守安全边界停止；停止前路线：手机号、一次性验证码 → 用户协议确认、短信验证码。 人工复核为“手机验证后出现密码框，还有动态验证码”，核心路线一致。"
+    },
+    {
+      "hostname": "www.v2ex.com",
+      "status": "match",
+      "program_flow": "sso_only",
+      "program_route": "未确认",
+      "manual_signup": "google/solana 注册",
+      "reason": "只确认到第三方登录入口（第三方登录、Solana、Google），没有发现站点自有账号字段；观测路线：未确认。 人工复核为“google/solana 注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.vip.com",
+      "status": "match",
+      "program_flow": "direct_password",
+      "program_route": "扫码 → 手机号、口令",
+      "manual_signup": "先进入登录界面再点注册进入注册界面，密码框直接表明密码政策",
+      "reason": "安全可达页面已出现口令框；观测路线：扫码 → 手机号、口令。 人工复核为“先进入登录界面再点注册进入注册界面，密码框直接表明密码政策”，核心路线一致。"
+    },
+    {
+      "hostname": "www.xiachufang.com",
+      "status": "mismatch",
+      "program_flow": "human_blocked",
+      "program_route": "手机号 → 滑块验证、短信验证码、用户协议确认",
+      "manual_signup": "仅扫码登录",
+      "reason": "差异：程序停止的具体门槛与人工记录不同，或人工已确认可直接到达口令框。 程序依据：程序遇到用户协议确认、滑块验证、短信验证码，遵守安全边界停止；停止前路线：手机号 → 滑块验证、短信验证码、用户协议确认。 人工复核为“仅扫码登录”。"
+    },
+    {
+      "hostname": "www.xiaohongshu.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+验证码注册，+第三方(小红书/微信)",
+      "reason": "程序遇到短信验证码，遵守安全边界停止；停止前路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+验证码注册，+第三方(小红书/微信)”，核心路线一致。"
+    },
+    {
+      "hostname": "www.xinhuanet.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册界面",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册界面”，核心路线一致。"
+    },
+    {
+      "hostname": "www.yicai.com",
+      "status": "mismatch",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机号+密码注册",
+      "reason": "差异：程序报告未见长期口令，但人工确认注册需要设置密码。 程序依据：安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机号+密码注册”。"
+    },
+    {
+      "hostname": "www.yiche.com",
+      "status": "mismatch",
+      "program_flow": "human_blocked",
+      "program_route": "手机号、一次性验证码 → 短信验证码、用户协议确认",
+      "manual_signup": "手机号+密码注册",
+      "reason": "差异：程序停止的具体门槛与人工记录不同，或人工已确认可直接到达口令框。 程序依据：程序遇到用户协议确认、短信验证码，遵守安全边界停止；停止前路线：手机号、一次性验证码 → 短信验证码、用户协议确认。 人工复核为“手机号+密码注册”。"
+    },
+    {
+      "hostname": "www.youku.com",
+      "status": "mismatch",
+      "program_flow": "human_blocked",
+      "program_route": "用户协议确认",
+      "manual_signup": "仅登录界面，第三方(淘宝/支付宝/微信)或手机+验证码注册",
+      "reason": "差异：程序停止的具体门槛与人工记录不同，或人工已确认可直接到达口令框。 程序依据：程序遇到用户协议确认，遵守安全边界停止；停止前路线：用户协议确认。 人工复核为“仅登录界面，第三方(淘宝/支付宝/微信)或手机+验证码注册”。"
+    },
+    {
+      "hostname": "www.zcool.com.cn",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号 → 滑块验证、用户协议确认",
+      "manual_signup": "注册+第三方，手机注册需滑块",
+      "reason": "程序遇到用户协议确认、滑块验证，遵守安全边界停止；停止前路线：手机号 → 滑块验证、用户协议确认。 人工复核为“注册+第三方，手机注册需滑块”，核心路线一致。"
+    },
+    {
+      "hostname": "www.zhaopin.com",
+      "status": "match",
+      "program_flow": "human_blocked",
+      "program_route": "手机号、一次性验证码 → 短信验证码、用户协议确认",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "程序遇到用户协议确认、短信验证码，遵守安全边界停止；停止前路线：手机号、一次性验证码 → 短信验证码、用户协议确认。 人工复核为“手机号+验证码注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.zhibo8.cc",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机号+验证码注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机号+验证码注册”。"
+    },
+    {
+      "hostname": "www.zhihu.com",
+      "status": "mismatch",
+      "program_flow": "otp_only",
+      "program_route": "手机号 → 短信验证码",
+      "manual_signup": "扫码/第三方注册（扫码后无需口令）",
+      "reason": "差异：程序报告未见长期口令，但人工确认注册需要设置密码。 程序依据：安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号 → 短信验证码。 人工复核为“扫码/第三方注册（扫码后无需口令）”。"
+    },
+    {
+      "hostname": "www.zhipin.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "手机+验证码或微信sso注册",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“手机+验证码或微信sso注册”，核心路线一致。"
+    },
+    {
+      "hostname": "www.zhuanzhuan.com",
+      "status": "match",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "无登录注册界面",
+      "reason": "在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“无登录注册界面”，核心路线一致。"
+    },
+    {
+      "hostname": "www.zol.com.cn",
+      "status": "mismatch",
+      "program_flow": "unknown",
+      "program_route": "未确认",
+      "manual_signup": "手机+密码+人机+短信验证码注册",
+      "reason": "差异：程序没有确认注册流程，但人工已经观察到明确的注册方式。 程序依据：在安全点击范围内没有取得足够证据，暂不猜测；观测路线：未确认。 人工复核为“手机+密码+人机+短信验证码注册”。"
+    },
+    {
+      "hostname": "xueqiu.com",
+      "status": "match",
+      "program_flow": "otp_only",
+      "program_route": "手机号、一次性验证码 → 短信验证码",
+      "manual_signup": "无注册界面，手机+验证码自动注册",
+      "reason": "安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号、一次性验证码 → 短信验证码。 人工复核为“无注册界面，手机+验证码自动注册”，核心路线一致。"
+    },
+    {
+      "hostname": "y.qq.com",
+      "status": "mismatch",
+      "program_flow": "sso_only",
+      "program_route": "未确认",
+      "manual_signup": "注册藏在qq登录里，手机+短信+昵称+密码+协议",
+      "reason": "差异：程序报告仅第三方登录，但人工还观察到站点自有验证码或口令路线。 程序依据：只确认到第三方登录入口（第三方登录、微信），没有发现站点自有账号字段；观测路线：未确认。 人工复核为“注册藏在qq登录里，手机+短信+昵称+密码+协议”。"
+    },
+    {
+      "hostname": "you.163.com",
+      "status": "mismatch",
+      "program_flow": "otp_only",
+      "program_route": "手机号 → 短信验证码",
+      "manual_signup": "注册在邮箱登录里，邮箱+密码+协议",
+      "reason": "差异：程序报告未见长期口令，但人工确认注册需要设置密码。 程序依据：安全可达范围只看到一次性验证码，未看到长期口令框；观测路线：手机号 → 短信验证码。 人工复核为“注册在邮箱登录里，邮箱+密码+协议”。"
+    }
+  ]
+}

@@ -237,6 +237,9 @@ function siteCard(s) {
         <div>登录 ${badge(s.login.flow_type)} <span class="route-text">${s.login.route || '—'}</span></div>
         <div class="mt-1">注册 ${badge(s.signup.flow_type)} <span class="route-text">${s.signup.route || '—'}</span></div>
       </div>
+      ${s.signup_match === 'match' && s.comparison
+        ? `<div class="mt-2 small text-success"><b>为什么正确：</b>${s.comparison.reason}</div>`
+        : ''}
       <div class="mt-2">
         <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${s.hostname}">详情</button>
         <button class="btn btn-sm btn-outline-primary review-btn" data-host="${s.hostname}">提交人工观察</button>
@@ -457,6 +460,7 @@ async function showDetail(host) {
         <tr><td>字段</td><td>${s.login.fields}</td><td>${s.signup.fields}</td></tr>
         <tr><td>阻断</td><td>${s.login.blockers}</td><td>${s.signup.blockers}</td></tr>
         <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
+        <tr><td>判断依据</td><td>${s.login.program_reason || '—'}</td><td>${s.signup.program_reason || '—'}</td></tr>
         <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
         <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
       </tbody>
@@ -468,10 +472,10 @@ async function showDetail(host) {
       <div>注册：${s.manual.signup || '—'}</div>
       ${s.manual.note ? `<div class="text-muted small">备注：${s.manual.note}</div>` : ''}
       ${s.signup_match === 'mismatch'
-        ? `<div class="mt-2 text-danger fw-bold">⚠ 识别不一致：程序认为注册是「${s.signup.flow_zh}」，人工观察是「${s.manual.signup || '未填写'}」</div>`
+        ? `<div class="mt-2 text-danger fw-bold">识别不一致：${s.comparison ? s.comparison.reason : `程序认为注册是「${s.signup.flow_zh}」，人工观察是「${s.manual.signup || '未填写'}」`}</div>`
         : ''}
       ${s.signup_match === 'match'
-        ? `<div class="mt-2 text-success small">✓ 程序与人工识别一致</div>`
+        ? `<div class="mt-2 text-success small"><b>为什么正确：</b>${s.comparison ? s.comparison.reason : '程序与人工识别一致'}</div>`
         : ''}
     </div>
     <button class="btn btn-sm btn-outline-secondary" onclick="showHistory('${s.hostname}')">查看历史程序结果</button>

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.815117+00:00",
+  "generated_at": "2026-08-14T11:18:45.673310+00:00",
   "report_title": "segmentfault.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -38,8 +38,7 @@
                 "phone",
                 "sms",
                 "third_party",
-                "wechat",
-                "qq"
+                "wechat"
               ],
               "verification_observed": [
                 "sms"
@@ -59,8 +58,7 @@
             "phone",
             "sms",
             "third_party",
-            "wechat",
-            "qq"
+            "wechat"
           ],
           "verification_observed": [
             "sms"
@@ -85,7 +83,6 @@
               ],
               "methods": [
                 "phone",
-                "qq",
                 "sso",
                 "wechat"
               ],
@@ -104,7 +101,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T06:57:30.794052+00:00",
+            "measured_at": "2026-08-14T10:15:41.430648+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -164,8 +161,7 @@
                 "phone",
                 "sms",
                 "third_party",
-                "wechat",
-                "qq"
+                "wechat"
               ],
               "verification_observed": [
                 "sms"
@@ -185,8 +181,7 @@
             "phone",
             "sms",
             "third_party",
-            "wechat",
-            "qq"
+            "wechat"
           ],
           "verification_observed": [
             "sms"
@@ -211,7 +206,6 @@
               ],
               "methods": [
                 "phone",
-                "qq",
                 "sso",
                 "wechat"
               ],
@@ -219,18 +213,30 @@
                 "sms_code"
               ],
               "actions": [
-                "none",
-                "none"
+                "entry_click"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "entry_native_click_failed"
+              "note": "register_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://segmentfault.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T06:57:21.757823+00:00",
+            "measured_at": "2026-08-14T10:15:29.220426+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

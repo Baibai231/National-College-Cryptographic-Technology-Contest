@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.812186+00:00",
+  "generated_at": "2026-08-14T11:18:45.670574+00:00",
   "report_title": "cloud.tencent.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -22,14 +22,14 @@
           "status": "observed",
           "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
           "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
-          "observed_route": "手机号 → 短信验证码/扫码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码/扫码 → 口令",
+              "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "password",
@@ -39,13 +39,12 @@
                 "password",
                 "phone",
                 "sms",
-                "qr",
                 "third_party",
-                "wechat"
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "observed_alongside_verification",
               "ui_types": [
@@ -63,13 +62,12 @@
             "password",
             "phone",
             "sms",
-            "qr",
             "third_party",
-            "wechat"
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "observed_alongside_verification",
           "ui_types": [
@@ -89,12 +87,12 @@
               ],
               "methods": [
                 "phone",
+                "qq",
                 "sso",
                 "wechat"
               ],
               "blockers": [
                 "sms_code",
-                "scan",
                 "tos"
               ],
               "actions": [],
@@ -106,7 +104,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:24:45.036705+00:00",
+            "measured_at": "2026-08-14T10:48:21.895328+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -128,7 +126,6 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "qr_or_scan",
                 "third_party",
                 "phone"
               ],
@@ -138,7 +135,6 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code",
                 "tos"
               ]
@@ -154,14 +150,14 @@
           "status": "observed",
           "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
           "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
-          "observed_route": "手机号 → 短信验证码/扫码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码/扫码 → 口令",
+              "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
                 "phone",
                 "password",
@@ -171,13 +167,12 @@
                 "password",
                 "phone",
                 "sms",
-                "qr",
                 "third_party",
-                "wechat"
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "observed_alongside_verification",
               "ui_types": [
@@ -195,13 +190,12 @@
             "password",
             "phone",
             "sms",
-            "qr",
             "third_party",
-            "wechat"
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "observed_alongside_verification",
           "ui_types": [
@@ -221,12 +215,12 @@
               ],
               "methods": [
                 "phone",
+                "qq",
                 "sso",
                 "wechat"
               ],
               "blockers": [
                 "sms_code",
-                "scan",
                 "tos"
               ],
               "actions": [],
@@ -238,7 +232,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:24:40.247691+00:00",
+            "measured_at": "2026-08-14T10:48:12.692873+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -260,7 +254,6 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "qr_or_scan",
                 "third_party",
                 "phone"
               ],
@@ -270,7 +263,6 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan",
                 "sms_code",
                 "tos"
               ]

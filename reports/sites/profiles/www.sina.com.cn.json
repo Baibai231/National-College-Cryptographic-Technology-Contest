@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.854997+00:00",
+  "generated_at": "2026-08-14T11:18:45.723530+00:00",
   "report_title": "www.sina.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -40,8 +40,7 @@
                 "sms",
                 "qr",
                 "third_party",
-                "wechat",
-                "weibo"
+                "wechat"
               ],
               "verification_observed": [
                 "sms",
@@ -64,8 +63,7 @@
             "sms",
             "qr",
             "third_party",
-            "wechat",
-            "weibo"
+            "wechat"
           ],
           "verification_observed": [
             "sms",
@@ -101,13 +99,11 @@
               ],
               "methods": [
                 "email",
+                "qr",
                 "sso",
-                "wechat",
-                "weibo"
+                "wechat"
               ],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "sms_tab",
@@ -118,7 +114,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T06:51:42.437285+00:00",
+            "measured_at": "2026-08-14T10:10:27.553890+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -131,7 +127,7 @@
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
+              "status": "classified",
               "confidence": "high",
               "stop_reason": "password_step_reached",
               "evidence_boundary": "safely_reachable_ui"
@@ -149,9 +145,7 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -182,8 +176,7 @@
                 "sms",
                 "qr",
                 "third_party",
-                "wechat",
-                "weibo"
+                "wechat"
               ],
               "verification_observed": [
                 "sms",
@@ -206,8 +199,7 @@
             "sms",
             "qr",
             "third_party",
-            "wechat",
-            "weibo"
+            "wechat"
           ],
           "verification_observed": [
             "sms",
@@ -218,7 +210,10 @@
             "standalone_page"
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
@@ -243,13 +238,11 @@
               ],
               "methods": [
                 "email",
+                "qr",
                 "sso",
-                "wechat",
-                "weibo"
+                "wechat"
               ],
-              "blockers": [
-                "scan"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "sms_tab",
@@ -259,23 +252,23 @@
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-13T06:51:09.805424+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "confidence": "low",
+            "measured_at": "2026-08-14T10:09:54.532503+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "no_signup_entry"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
+            "flow_type": "unknown",
+            "stop_reason": "no_signup_entry",
             "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "password_step_reached",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "no_signup_entry",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -291,9 +284,7 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": [
-                "scan"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

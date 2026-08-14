@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.822330+00:00",
+  "generated_at": "2026-08-14T11:18:45.682879+00:00",
   "report_title": "www.58.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://tj.58.com/",
-          "final_url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2d60-bb6c-eea625e67c07&ClickID=5",
+          "final_url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2d1e-6e43-bea6d1efadd0&ClickID=5",
           "observed_route": "扫码",
           "observed_routes": [
             {
@@ -75,10 +75,12 @@
             },
             {
               "step": 2,
-              "url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2d60-bb6c-eea625e67c07&ClickID=5",
+              "url": "https://passport.58.com/login/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-2d1e-6e43-bea6d1efadd0&ClickID=5",
               "ui_type": "standalone_page",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qr"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -93,7 +95,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:08:05.167462+00:00",
+            "measured_at": "2026-08-14T10:25:07.457737+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -134,7 +136,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://tj.58.com/",
-          "final_url": "https://passport.58.com/reg/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-20fb-19f8-6f5654051715&ClickID=5",
+          "final_url": "https://passport.58.com/reg/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-245b-a354-dea1140a03b5&ClickID=5",
           "observed_route": "手机号/账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
@@ -202,7 +204,7 @@
             },
             {
               "step": 2,
-              "url": "https://passport.58.com/reg/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-20fb-19f8-6f5654051715&ClickID=5",
+              "url": "https://passport.58.com/reg/?path=https%3A%2F%2Ftj.58.com%2F&source=58-homepage-pc&PGTID=0d100000-0001-245b-a354-dea1140a03b5&ClickID=5",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -224,7 +226,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:07:52.386471+00:00",
+            "measured_at": "2026-08-14T10:24:56.368708+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

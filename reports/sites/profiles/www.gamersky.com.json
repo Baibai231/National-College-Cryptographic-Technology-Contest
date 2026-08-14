@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.837769+00:00",
+  "generated_at": "2026-08-14T11:18:45.702606+00:00",
   "report_title": "www.gamersky.com 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,9 +36,7 @@
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "third_party",
-                "qq"
+                "sms"
               ],
               "verification_observed": [
                 "sms"
@@ -56,9 +54,7 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "third_party",
-            "qq"
+            "sms"
           ],
           "verification_observed": [
             "sms"
@@ -95,9 +91,7 @@
                 "code"
               ],
               "methods": [
-                "phone",
-                "qq",
-                "sso"
+                "phone"
               ],
               "blockers": [
                 "sms_code"
@@ -115,7 +109,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-13T07:25:20.786181+00:00",
+            "measured_at": "2026-08-14T10:49:11.130141+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -136,7 +130,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "third_party",
                 "phone"
               ],
               "password_status": "no_password_in_safely_reachable_flow",
@@ -248,7 +241,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:25:16.032563+00:00",
+            "measured_at": "2026-08-14T10:49:10.100121+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -18,6 +18,8 @@ if _PROJECT_ROOT not in sys.path:
 from signup_flow_classifier.page_detector import (
     _classify_combined, classify_input_type, _BLOCKER_HINTS, _EMAIL_HINTS,
     _PHONE_HINTS, _PASSWORD_HINTS, _CODE_HINTS, _IDENTIFIER_HINTS,
+    _normalize_auth_semantics, _provider_from_semantic,
+    _provider_is_first_party, _SEND_CODE_HINTS, _AUTO_SIGNUP_HINTS,
 )
 from signup_flow_classifier.navigator import (
     _is_organizational_signup, _entry_text_match, _ENTRY_REGISTER_TEXTS,
@@ -26,6 +28,9 @@ from signup_flow_classifier.navigator import (
 from signup_flow_classifier.browser_failures import (
     _ACCESS_PAGE_MARKERS, _ACCESS_REDIRECT_HOSTS, detect_access_block,
 )
+from signup_flow_classifier.classifier_engine import _has_auto_signup
+from signup_flow_classifier.flow_types import PageState
+from signup_flow_classifier.classifier import primary_method
 
 
 class FakeElement:
@@ -178,6 +183,72 @@ class ScanBlockerTests(unittest.TestCase):
     def test_scan_login_kept(self):
         for kw in ("扫码登录", "扫一扫登录", "微信扫一扫", "扫码注册"):
             self.assertIn(kw, _BLOCKER_HINTS["scan"], kw)
+
+    def test_scan_with_visible_fields_is_method_not_blocker(self):
+        blockers, methods = _normalize_auth_semantics(
+            ["phone", "code"], ["scan", "sms_code"], ["phone"])
+        self.assertNotIn("scan", blockers)
+        self.assertIn("sms_code", blockers)
+        self.assertIn("qr", methods)
+
+    def test_scan_without_fields_remains_hard_blocker(self):
+        blockers, methods = _normalize_auth_semantics([], ["scan"], [])
+        self.assertIn("scan", blockers)
+        self.assertIn("qr", methods)
+
+    def test_non_scan_blockers_are_unchanged(self):
+        blockers, methods = _normalize_auth_semantics(
+            ["phone"], ["captcha", "tos"], ["phone"])
+        self.assertEqual(blockers, ["captcha", "tos"])
+        self.assertEqual(methods, ["phone"])
+
+
+class ThirdPartyProviderTests(unittest.TestCase):
+    """图标型第三方入口识别，同时排除提供商自己站内的一方登录。"""
+
+    def test_icon_only_provider_semantics(self):
+        cases = {
+            "icon-login-wechat": "wechat",
+            "oauth-btn qq": "qq",
+            "third-party-weibo": "weibo",
+            "auth-gitee": "gitee",
+            "login-alipay": "alipay",
+            "wallet phantom": "solana",
+            "xiaohongshu-login": "xiaohongshu",
+        }
+        for semantic, expected in cases.items():
+            self.assertEqual(_provider_from_semantic(semantic), expected)
+
+    def test_first_party_provider_hosts(self):
+        self.assertTrue(_provider_is_first_party("gitee", "passport.gitee.com"))
+        self.assertTrue(_provider_is_first_party("qq", "www.qq.com"))
+        self.assertFalse(_provider_is_first_party("gitee", "www.oschina.net"))
+
+    def test_ascii_provider_names_require_token_boundaries(self):
+        self.assertIsNone(_provider_from_semantic("apply-button request-query"))
+        self.assertEqual(_provider_from_semantic("apple-login-button"), "apple")
+
+
+class AutomaticSignupSemanticsTests(unittest.TestCase):
+    def test_sms_button_phrases_are_covered(self):
+        self.assertIn("获取短信验证码", _SEND_CODE_HINTS)
+        self.assertIn("发送短信验证码", _SEND_CODE_HINTS)
+
+    def test_login_register_combined_labels_are_covered(self):
+        for text in ("登录/注册", "登录或注册", "登录即注册"):
+            self.assertIn(text, _AUTO_SIGNUP_HINTS)
+
+    def test_auto_signup_state_confirms_signup_context(self):
+        self.assertTrue(_has_auto_signup([
+            PageState(url="https://example.com/signin", methods=["auto_signup"])]))
+        self.assertFalse(_has_auto_signup([
+            PageState(url="https://example.com/signin", methods=["phone"])]))
+
+    def test_send_code_button_without_code_field_is_still_sms_primary(self):
+        states = [PageState(
+            url="https://example.com/signin", fields=["phone"],
+            blockers=["sms_code"], methods=["phone", "sso", "wechat"])]
+        self.assertEqual(primary_method(states), "sms")
 
 
 class OrganizationalSignupExclusionTests(unittest.TestCase):

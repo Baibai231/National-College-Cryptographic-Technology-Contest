@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.857173+00:00",
+  "generated_at": "2026-08-14T11:18:45.725725+00:00",
   "report_title": "www.thepaper.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -104,7 +104,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:00:54.107313+00:00",
+            "measured_at": "2026-08-14T10:18:31.266608+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -153,7 +153,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -199,19 +199,6 @@
             {
               "step": 1,
               "url": "https://www.thepaper.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.thepaper.cn/",
               "ui_type": "modal",
               "fields": [
                 "phone",
@@ -234,7 +221,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:00:38.070607+00:00",
+            "measured_at": "2026-08-14T10:18:08.610404+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "no_signup_entry"
           },

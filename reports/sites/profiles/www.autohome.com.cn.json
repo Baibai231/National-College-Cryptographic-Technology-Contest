@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-13T09:54:09.825994+00:00",
+  "generated_at": "2026-08-14T11:18:45.688016+00:00",
   "report_title": "www.autohome.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
-    "reports/final/cn60_final_20260813.jsonl"
+    "reports/sites/sites_latest.jsonl"
   ],
   "safety": {
     "identity_information_filled": false,
@@ -36,8 +36,8 @@
                 "sms",
                 "qr",
                 "third_party",
-                "qq",
-                "weibo"
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
                 "sms",
@@ -56,8 +56,8 @@
             "sms",
             "qr",
             "third_party",
-            "qq",
-            "weibo"
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
             "sms",
@@ -78,7 +78,12 @@
               "url": "https://www.autohome.com.cn/tianjin/",
               "ui_type": "multi_step_wizard",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qq",
+                "qr",
+                "sso",
+                "wechat"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -99,8 +104,9 @@
               "fields": [],
               "methods": [
                 "qq",
+                "qr",
                 "sso",
-                "weibo"
+                "wechat"
               ],
               "blockers": [
                 "scan"
@@ -115,7 +121,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:03:16.162739+00:00",
+            "measured_at": "2026-08-14T09:22:20.709695+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -164,13 +170,17 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "短信验证码/扫码",
               "fields_observed": [],
               "methods_observed": [
                 "sms",
-                "qr"
+                "qr",
+                "third_party",
+                "wechat",
+                "qq"
               ],
               "verification_observed": [
                 "sms",
@@ -178,6 +188,7 @@
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
+                "modal",
                 "multi_step_wizard"
               ],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
@@ -186,7 +197,10 @@
           "fields_observed": [],
           "methods_observed": [
             "sms",
-            "qr"
+            "qr",
+            "third_party",
+            "wechat",
+            "qq"
           ],
           "verification_observed": [
             "sms",
@@ -194,6 +208,7 @@
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
+            "modal",
             "multi_step_wizard"
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
@@ -206,7 +221,12 @@
               "url": "https://www.autohome.com.cn/tianjin/",
               "ui_type": "multi_step_wizard",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qq",
+                "qr",
+                "sso",
+                "wechat"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -222,9 +242,14 @@
             {
               "step": 2,
               "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
+              "ui_type": "modal",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qq",
+                "qr",
+                "sso",
+                "wechat"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -240,9 +265,14 @@
             {
               "step": 3,
               "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
+              "ui_type": "modal",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "qq",
+                "qr",
+                "sso",
+                "wechat"
+              ],
               "blockers": [
                 "scan"
               ],
@@ -256,14 +286,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-13T07:02:55.232445+00:00",
+            "measured_at": "2026-08-14T10:20:46.674823+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -277,7 +307,8 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan"
+                "qr_or_scan",
+                "third_party"
               ],
               "password_status": "not_determined",
               "password_observed": false,

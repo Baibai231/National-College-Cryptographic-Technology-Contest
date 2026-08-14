@@ -18,10 +18,13 @@ def primary_method(states: List[PageState]) -> str:
     has_code = any("code" in s.fields for s in states)
     has_phone = any("phone" in s.fields for s in states)
     has_email = any("email" in s.fields or "identifier" in s.fields for s in states)
+    has_verification = any(
+        {"sms_code", "email_code", "verification_code"} & set(s.blockers)
+        for s in states)
     has_sso = any("sso" in s.methods for s in states)
     if has_password:
         return "password"
-    if has_code:
+    if has_code or has_verification:
         return "sms" if has_phone else "email"
     if has_email:
         return "email_only"
