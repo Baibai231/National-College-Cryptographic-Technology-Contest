@@ -237,14 +237,18 @@ function matchBadge(status) {
 }
 function siteCard(s) {
   const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
-  const comparison = s.signup_comparison || s.comparison;
-  let reason = '';
-  if (s.signup_match === 'match' && comparison)
-    reason = `<div class="mt-2 p-2 bg-success-subtle text-success reason-box"><b>为什么正确：</b>${esc(comparison.reason)}</div>`;
-  else if (s.signup_match === 'mismatch' && comparison)
-    reason = `<div class="mt-2 p-2 bg-danger-subtle text-danger reason-box"><b>为什么错误：</b>${esc(comparison.reason)}</div>`;
-  else if ((s.signup_match || '').startsWith('inconclusive') && comparison)
-    reason = `<div class="mt-2 p-2 bg-secondary-subtle text-secondary reason-box"><b>暂不能判定：</b>${esc(comparison.reason)}</div>`;
+  const sideReason = (label, status, comparison) => {
+    if (!comparison || !status || status === 'pending') return '';
+    const config = status === 'match'
+      ? ['bg-success-subtle text-success', '为什么正确']
+      : status === 'mismatch'
+        ? ['bg-danger-subtle text-danger', '为什么错误']
+        : ['bg-secondary-subtle text-secondary', '暂不能判定'];
+    return `<div class="mt-2 p-2 ${config[0]} reason-box"><b>${label}${config[1]}：</b>${esc(comparison.reason)}</div>`;
+  };
+  const reason =
+    sideReason('登录', s.login_match, s.login_comparison) +
+    sideReason('注册', s.signup_match, s.signup_comparison || s.comparison);
   return `
   <div class="col-md-6 col-lg-4">
     <div class="card h-100 p-3">

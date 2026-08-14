@@ -10,7 +10,12 @@ class WebAppUiTests(unittest.TestCase):
 
     def test_cards_proactively_show_mismatch_reason(self):
         self.assertIn("为什么错误", self.html)
-        self.assertIn("s.signup_match === 'mismatch'", self.html)
+        self.assertIn("s.login_match", self.html)
+        self.assertIn("status === 'mismatch'", self.html)
+
+    def test_cards_show_login_and_signup_reasons_independently(self):
+        self.assertIn("sideReason('登录', s.login_match", self.html)
+        self.assertIn("sideReason('注册', s.signup_match", self.html)
 
     def test_manual_review_has_structured_inputs(self):
         self.assertIn("结构化核验", self.html)
