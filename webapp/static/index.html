@@ -53,7 +53,10 @@
   .search-bar { max-width: 720px; }
   .site-title { font-size: 0.95rem; }
   .route-text { font-size: 0.8rem; color: #6c757d; }
-  .reason-box { font-size: 0.78rem; line-height: 1.35; max-height: 5.6em; overflow: auto; }
+  .side-badge { font-size: 0.72rem; padding: 1px 6px; border-radius: 8px; margin-left: 4px; white-space: nowrap; }
+  .badge-ok { background: #e6f4ea; color: #1e7e34; }
+  .badge-bad { background: #fde8e8; color: #c62828; }
+  .badge-wait { background: #f5f5f5; color: #8a8a8a; }
   .trait-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(125px,1fr)); gap: 5px 10px; }
 </style>
 </head>
@@ -239,18 +242,13 @@ function matchBadge(status) {
 }
 function siteCard(s) {
   const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
-  const sideReason = (label, status, comparison) => {
-    if (!comparison || !status || status === 'pending') return '';
-    const config = status === 'match'
-      ? ['bg-success-subtle text-success', '为什么正确']
-      : status === 'mismatch'
-        ? ['bg-danger-subtle text-danger', '为什么错误']
-        : ['bg-secondary-subtle text-secondary', '暂不能判定'];
-    return `<div class="mt-2 p-2 ${config[0]} reason-box"><b>${label}${config[1]}：</b>${esc(comparison.reason)}</div>`;
+  const sideBadge = (label, status) => {
+    const config = status === 'match' ? ['识别正确', 'badge-ok']
+      : status === 'mismatch' ? ['识别错误', 'badge-bad']
+      : status === 'pending' ? ['待核验', 'badge-wait']
+      : ['证据不足', 'badge-wait'];
+    return `<span class="side-badge ${config[1]}">${label}${config[0]}</span>`;
   };
-  const reason =
-    sideReason('登录', s.login_match, s.login_comparison) +
-    sideReason('注册', s.signup_match, s.signup_comparison || s.comparison);
   return `
   <div class="col-md-6 col-lg-4">
     <div class="card h-100 p-3">
@@ -260,10 +258,9 @@ function siteCard(s) {
       </div>
       <div class="small text-muted">${esc(kw)}</div>
       <div class="mt-2 small">
-        <div>登录 ${badge(s.login.flow_type)} <span class="route-text">${esc(s.login.route || '—')}</span></div>
-        <div class="mt-1">注册 ${badge(s.signup.flow_type)} <span class="route-text">${esc(s.signup.route || '—')}</span></div>
+        <div>登录 ${badge(s.login.flow_type)} ${sideBadge('登录', s.login_match)}</div>
+        <div class="mt-1">注册 ${badge(s.signup.flow_type)} ${sideBadge('注册', s.signup_match)}</div>
       </div>
-      ${reason}
       <div class="mt-2">
         <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${esc(s.hostname)}">详情</button>
         <button class="btn btn-sm btn-outline-primary review-btn" data-host="${esc(s.hostname)}">提交人工观察</button>
@@ -549,35 +546,68 @@ async function showDetail(host) {
   const s = await r.json();
   document.getElementById('modal-title').innerHTML =
     `${esc(s.hostname)} ${matchBadge(s.match_status)}`;
-  const comparisonHtml = (label, status, comparison) => {
-    if (!comparison || status === 'pending') return '';
-    const style = status === 'match' ? 'text-success' :
-      status === 'mismatch' ? 'text-danger' : 'text-secondary';
-    const title = status === 'match' ? '为什么正确' :
-      status === 'mismatch' ? '为什么错误' : '暂不能判定';
-    return `<div class="mt-2 ${style}"><b>${label}${title}：</b>${esc(comparison.reason)}</div>`;
+  const METHOD_STATUS_ZH = { confirmed: '确认可用', blocked: '门槛阻拦', observed: '仅观察到' };
+  const UI_ZH = { standalone_page: '独立页面', '独立页': '独立页面', modal: '弹窗', drawer: '侧边抽屉',
+    multi_step_wizard: '分步表单', inline_widget: '页面挂件', '内嵌挂件': '页面挂件',
+    sso_iframe: '第三方嵌入', unknown: '页面' };
+  const CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+  const methodRouteZh = (m) => {
+    const route = (m.route || '')
+      .replace(/（门槛：[^）]*）/g, '')
+      .replace(/第(\d+)步\(([^)]*)\)/g, (_, s, u) => '步骤' + s + ' · ' + (UI_ZH[u] || u));
+    const blocker = (m.blockers || []).map(b => BLOCKER_ZH[b] || b).join('、');
+    return (route ? route + (blocker ? ' · 需' + blocker : '') : (blocker ? '需' + blocker : ''));
   };
-  const METHOD_STATUS_ZH = { confirmed: '确认', blocked: '被门槛挡', observed: '弱证据' };
   const methodsHtml = (list) => {
     if (!list || !list.length) return '<span class="text-muted">—</span>';
-    return list.map(m => `
-      <div class="small mb-1">
-        ${esc(m.name_zh || m.method)}
-        <span class="badge ${m.status === 'confirmed' ? 'text-bg-success' : m.status === 'blocked' ? 'text-bg-warning' : 'text-bg-secondary'}">${METHOD_STATUS_ZH[m.status] || esc(m.status)}</span>
-        <span class="text-muted d-block">${esc(m.route || '')}</span>
-      </div>`).join('');
+    return list.map((m, i) => {
+      const num = CN_NUM[i] || (i + 1);
+      const statusZh = METHOD_STATUS_ZH[m.status] || m.status;
+      const cls = m.status === 'confirmed' ? 'text-success'
+        : m.status === 'blocked' ? 'text-warning' : 'text-secondary';
+      const route = methodRouteZh(m);
+      return `<div class="small mb-1">
+        <b>方法${num}：</b>${esc(m.name_zh || m.method)}
+        <span class="${cls}">（${statusZh}）</span>
+        ${route ? `<span class="text-muted d-block ps-4">${esc(route)}</span>` : ''}
+      </div>`;
+    }).join('');
+  };
+  const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured) => {
+    if (!comparison || status === 'pending') return '';
+    const statusZh = status === 'match' ? '识别正确'
+      : status === 'mismatch' ? '识别错误'
+      : status === 'inconclusive_program' ? '程序证据不足'
+      : '人工证据不足';
+    const cls = status === 'match' ? 'text-success'
+      : status === 'mismatch' ? 'text-danger' : 'text-secondary';
+    const progMethods = (methods || []).map(m => m.name_zh || m.method).join('、') || '—';
+    const MANUAL_TRAIT_ZH = { password: '口令', otp: '验证码', scan: '扫码',
+      captcha: '人机验证', tos: '协议', sso: '第三方', no_web: '无网页入口' };
+    const manualTraits = Object.keys(manualStructured || {})
+      .filter(k => manualStructured[k] === true && MANUAL_TRAIT_ZH[k])
+      .map(k => MANUAL_TRAIT_ZH[k]).join('、');
+    const firstSentence = (comparison.reason || '').split('。')[0] + '。';
+    return `<div class="mt-3">
+      <b>${label} · <span class="${cls}">${statusZh}</span></b>
+      <table class="table table-sm table-bordered align-middle mt-1 mb-0">
+        <thead><tr><th style="width:70px"></th><th>程序</th><th>人工</th></tr></thead>
+        <tbody>
+          <tr><td>主类型</td><td>${esc(flowZh)}</td><td>${esc((manualText || '—').replace(/\n/g, '；'))}</td></tr>
+          <tr><td>方法</td><td>${esc(progMethods)}</td><td>${esc(manualTraits || '—')}</td></tr>
+          <tr><td>结论</td><td colspan="2" class="${cls}">${esc(firstSentence)}</td></tr>
+        </tbody>
+      </table>
+      <div class="text-muted small mt-1">${esc(comparison.reason)}</div>
+    </div>`;
   };
   document.getElementById('modal-body').innerHTML = `
     <table class="table table-sm table-bordered align-middle">
       <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
       <tbody>
-        <tr><td>类型</td><td>${badge(s.login.flow_type)}</td><td>${badge(s.signup.flow_type)}</td></tr>
+        <tr><td>类型</td><td>${badge(s.login.flow_type)}<div class="small text-muted">${esc(s.login.route || '')}</div></td><td>${badge(s.signup.flow_type)}<div class="small text-muted">${esc(s.signup.route || '')}</div></td></tr>
         <tr><td>方法清单</td><td>${methodsHtml(s.login.methods)}</td><td>${methodsHtml(s.signup.methods)}</td></tr>
-        <tr><td>路线</td><td>${esc(s.login.route)}</td><td>${esc(s.signup.route)}</td></tr>
-        <tr><td>字段</td><td>${esc(s.login.fields)}</td><td>${esc(s.signup.fields)}</td></tr>
-        <tr><td>阻断</td><td>${esc(s.login.blockers)}</td><td>${esc(s.signup.blockers)}</td></tr>
         <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
-        <tr><td>判断依据</td><td>${esc(s.login.program_reason || '—')}</td><td>${esc(s.signup.program_reason || '—')}</td></tr>
         <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
         <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
       </tbody>
@@ -585,11 +615,13 @@ async function showDetail(host) {
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
-      <div class="mt-1">登录：${esc(s.manual.login || '—')}</div>
-      <div>注册：${esc(s.manual.signup || '—')}</div>
-      ${s.manual.note ? `<div class="text-muted small">备注：${esc(s.manual.note)}</div>` : ''}
-      ${comparisonHtml('登录', s.login_match, s.login_comparison)}
-      ${comparisonHtml('注册', s.signup_match, s.signup_comparison || s.comparison)}
+      ${compRow('登录', s.login_match, s.login_comparison, s.login.flow_zh,
+        s.login.methods, s.manual.login,
+        (s.manual.structured || {}).login)}
+      ${compRow('注册', s.signup_match, s.signup_comparison || s.comparison, s.signup.flow_zh,
+        s.signup.methods, s.manual.signup,
+        (s.manual.structured || {}).signup)}
+      ${s.manual.note ? `<div class="text-muted small mt-1">备注：${esc(s.manual.note)}</div>` : ''}
     </div>
     <button class="btn btn-sm btn-outline-secondary" id="detail-history-btn">查看历史程序结果</button>
     <button class="btn btn-sm btn-outline-warning" id="detail-feedback-btn">反馈识别结果</button>

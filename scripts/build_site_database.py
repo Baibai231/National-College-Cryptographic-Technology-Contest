@@ -54,21 +54,41 @@ def _blockers_zh(blockers):
 
 
 def _route(states, entry_kind):
-    """从状态序列生成人话路线（登录/注册）。"""
+    """从状态序列生成人话路线（登录/注册）。
+
+    tab 切换（短信/密码等并行视图）不线性化成"→"链（36kr 实测），
+    只在真正前进（next/submit/click_link）时用 → 连接；
+    切换视图用"；切换视图后："。同一步内的字段与门槛合并展示。
+    """
     parts = []
-    for st in states:
-        if st.get("fields"):
-            parts.append(_fields_zh(st["fields"]))
-        if st.get("blockers"):
-            parts.append(_blockers_zh(st["blockers"]))
+    for st in states or []:
+        text = _step_text(st)
+        if not text:
+            continue
+        actions = st.get("actions") or []
+        if not parts:
+            parts.append(text)
+        elif any(a in ("tab_click", "auth_mode_click", "signup_mode_reveal")
+                 for a in actions):
+            parts.append("切换视图后：" + text)
+        elif any(a in ("next", "submit", "click_link", "entry_click")
+                 for a in actions):
+            parts.append("下一步：" + text)
+        else:
+            parts.append(text)
     if not parts:
         return "未确认"
-    # 去重保序
-    seen = []
-    for p in parts:
-        if p not in seen:
-            seen.append(p)
-    return " → ".join(seen)
+    return " → ".join(parts)
+
+
+def _step_text(st):
+    """单个状态的字段+门槛人话描述：手机号、一次性验证码（需短信验证码）。"""
+    fields = _fields_zh(st.get("fields", []))
+    blockers = _blockers_zh(st.get("blockers", []))
+    text = fields if fields and fields != "—" else ""
+    if blockers and blockers != "—":
+        text += "（需" + blockers + "）"
+    return text
 
 
 def _summary(states):
@@ -381,6 +401,29 @@ def create_db(sites, db_path, history=None):
     os.replace(build_path, db_path)
 
 
+def _load_old_db_records(db_path):
+    """把旧 SQLite sites 表里的完整原记录（details_json.login_record 等）
+    取回作为历史候选，使版本升级后旧版结果能进 site_history 表。"""
+    if not os.path.exists(db_path):
+        return []
+    records = []
+    try:
+        with sqlite3.connect(db_path, timeout=15) as old:
+            old.row_factory = sqlite3.Row
+            rows = old.execute(
+                "SELECT hostname, details_json FROM sites").fetchall()
+            for row in rows:
+                details = json.loads(row["details_json"] or "{}")
+                for kind in ("login", "signup"):
+                    rec = details.get(kind + "_record")
+                    if isinstance(rec, dict) and rec.get("hostname"):
+                        rec.setdefault("entry_kind", kind)
+                        records.append(rec)
+    except (sqlite3.DatabaseError, json.JSONDecodeError):
+        pass
+    return records
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", action="append", default=[],
@@ -399,7 +442,17 @@ def main():
             else coordinated_data_lock(lock_path))
     with lock:
         inputs = args.input or ["reports/sites/sites_latest.jsonl"]
+        # 自动加载 reports/archive/v*_official_*.jsonl 官方历史版本，
+        # 使版本升级后旧版全量结果能完整进入 site_history 表
+        import glob as _glob
+        for path in sorted(_glob.glob(
+                os.path.join(_PROJECT_ROOT, "reports", "archive",
+                             "v*_official_*.jsonl"))):
+            if path not in inputs:
+                inputs.append(path)
         groups = load_records(inputs)
+        for rec in _load_old_db_records(args.output):
+            groups[rec["hostname"]][rec["entry_kind"]].append(rec)
         print(f"加载 {sum(len(k) for h in groups for k in groups[h].values())} 条测量记录（{len(inputs)} 个文件）")
         sites = attach_manual(build_sites(groups), args.manual, args.keywords)
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
