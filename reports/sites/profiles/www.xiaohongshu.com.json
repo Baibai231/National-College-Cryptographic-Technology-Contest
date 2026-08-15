@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.595390+00:00",
+  "generated_at": "2026-08-15T19:18:31.740156+00:00",
   "report_title": "www.xiaohongshu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -19,127 +19,6 @@
       "category": "待补充",
       "automatic": {
         "login": {
-          "status": "observed",
-          "start_url": "https://www.xiaohongshu.com/explore/6a4c3905000000000e021800?xsec_token=ABJkld-qlc5D18LnfdT6tS438CDtfzdYL9HOUh70XTh44=&xsec_source=pc_feed",
-          "final_url": "https://www.xiaohongshu.com/explore/6a4c3905000000000e021800?xsec_token=ABJkld-qlc5D18LnfdT6tS438CDtfzdYL9HOUh70XTh44=&xsec_source=pc_feed",
-          "observed_route": "手机号 → 短信验证码/一次性验证码",
-          "observed_routes": [
-            {
-              "route_id": "automatic_route_1",
-              "step_numbers": [
-                1
-              ],
-              "summary": "手机号 → 短信验证码/一次性验证码",
-              "fields_observed": [
-                "phone",
-                "code"
-              ],
-              "methods_observed": [
-                "phone",
-                "sms",
-                "one_time_code"
-              ],
-              "verification_observed": [
-                "sms",
-                "one_time_code"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "modal"
-              ],
-              "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问"
-            }
-          ],
-          "fields_observed": [
-            "phone",
-            "code"
-          ],
-          "methods_observed": [
-            "phone",
-            "sms",
-            "one_time_code"
-          ],
-          "verification_observed": [
-            "sms",
-            "one_time_code"
-          ],
-          "password_state": "not_observed_before_verification",
-          "ui_types": [
-            "modal"
-          ],
-          "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问",
-          "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
-            "程序置信度为 medium"
-          ],
-          "steps": [
-            {
-              "step": 1,
-              "url": "https://www.xiaohongshu.com/explore/6a4c3905000000000e021800?xsec_token=ABJkld-qlc5D18LnfdT6tS438CDtfzdYL9HOUh70XTh44=&xsec_source=pc_feed",
-              "ui_type": "modal",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [
-                "sms_code",
-                "verification_code"
-              ],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "sms_tab"
-              ],
-              "note": ""
-            }
-          ],
-          "measurement": {
-            "confidence": "medium",
-            "measured_at": "2026-08-15T12:06:28.238949+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "verification_required"
-          },
-          "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "verification_required",
-            "primary_method": "sms"
-          },
-          "policy": {
-            "schema_version": "1.0",
-            "scope": "login",
-            "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "medium",
-              "stop_reason": "verification_required",
-              "evidence_boundary": "pre_verification_only"
-            },
-            "authentication": {
-              "observed_methods": [
-                "sms_or_otp",
-                "phone"
-              ],
-              "password_status": "not_determined",
-              "password_observed": false,
-              "verification_observed": true,
-              "phone_observed": true,
-              "identifier_observed": false,
-              "blocking_factors": [
-                "sms_code",
-                "verification_code"
-              ]
-            },
-            "security": {
-              "status": "not_observed_by_flow_classifier",
-              "note": "use login_policy_observer for passive transport and input checks"
-            }
-          },
-          "error": null
-        },
-        "signup": {
           "status": "observed",
           "start_url": "https://www.xiaohongshu.com/explore",
           "final_url": "https://www.xiaohongshu.com/explore",
@@ -220,7 +99,128 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T12:06:25.677946+00:00",
+            "measured_at": "2026-08-15T18:32:45.698312+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "verification_required"
+          },
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "verification_required",
+            "primary_method": "sms"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "medium",
+              "stop_reason": "verification_required",
+              "evidence_boundary": "pre_verification_only"
+            },
+            "authentication": {
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "sms_code",
+                "verification_code"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://www.xiaohongshu.com/explore/6a4db9dc0000000011004e44?xsec_token=AB3PuR4-JzF6lpcrByI3K0Vl0fQIMWVtl1cZVO5KArJMk=&xsec_source=pc_feed",
+          "final_url": "https://www.xiaohongshu.com/explore/6a4db9dc0000000011004e44?xsec_token=AB3PuR4-JzF6lpcrByI3K0Vl0fQIMWVtl1cZVO5KArJMk=&xsec_source=pc_feed",
+          "observed_route": "手机号 → 短信验证码/一次性验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号 → 短信验证码/一次性验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "one_time_code"
+              ],
+              "verification_observed": [
+                "sms",
+                "one_time_code"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "code"
+          ],
+          "methods_observed": [
+            "phone",
+            "sms",
+            "one_time_code"
+          ],
+          "verification_observed": [
+            "sms",
+            "one_time_code"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "modal"
+          ],
+          "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.xiaohongshu.com/explore/6a4db9dc0000000011004e44?xsec_token=AB3PuR4-JzF6lpcrByI3K0Vl0fQIMWVtl1cZVO5KArJMk=&xsec_source=pc_feed",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "verification_code"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": ""
+            }
+          ],
+          "measurement": {
+            "confidence": "medium",
+            "measured_at": "2026-08-15T18:32:38.557936+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "verification_required"
           },

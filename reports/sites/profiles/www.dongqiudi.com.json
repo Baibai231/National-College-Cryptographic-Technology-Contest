@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.569297+00:00",
+  "generated_at": "2026-08-15T19:18:31.710627+00:00",
   "report_title": "www.dongqiudi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.dongqiudi.com/match/54401095",
-          "final_url": "https://www.dongqiudi.com/match/54401095",
+          "start_url": "https://www.dongqiudi.com/match/54533568",
+          "final_url": "https://www.dongqiudi.com/match/54533568",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -51,7 +51,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.dongqiudi.com/match/54401095",
+              "url": "https://www.dongqiudi.com/match/54533568",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:16:18.843523+00:00",
+            "measured_at": "2026-08-15T18:43:10.849537+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -102,8 +102,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.dongqiudi.com/match/54401095",
-          "final_url": "https://www.dongqiudi.com/match/54401095",
+          "start_url": "https://www.dongqiudi.com/match/54533568",
+          "final_url": "https://www.dongqiudi.com/match/54533568",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -133,7 +133,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.dongqiudi.com/match/54401095",
+              "url": "https://www.dongqiudi.com/match/54533568",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:16:18.802560+00:00",
+            "measured_at": "2026-08-15T18:43:08.017272+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

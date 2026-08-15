@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.554846+00:00",
+  "generated_at": "2026-08-15T19:18:31.692651+00:00",
   "report_title": "www.12306.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -102,7 +102,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:18:55.315578+00:00",
+            "measured_at": "2026-08-15T18:45:40.561364+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -253,7 +253,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:18:53.979211+00:00",
+            "measured_at": "2026-08-15T18:45:39.972954+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

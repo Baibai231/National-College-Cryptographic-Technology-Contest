@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.561300+00:00",
+  "generated_at": "2026-08-15T19:18:31.700283+00:00",
   "report_title": "www.anjuke.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_3e2f62a156f24d6eb9f50570c1e7b743&callback=shield&from=antispam",
-          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_3e2f62a156f24d6eb9f50570c1e7b743&callback=shield&from=antispam",
+          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_76a3273794a840599c408382f7c2f898&callback=shield&from=antispam",
+          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_76a3273794a840599c408382f7c2f898&callback=shield&from=antispam",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -48,7 +48,7 @@
           "steps": [
             {
               "step": 0,
-              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_3e2f62a156f24d6eb9f50570c1e7b743&callback=shield&from=antispam",
+              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_76a3273794a840599c408382f7c2f898&callback=shield&from=antispam",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -62,7 +62,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T13:51:19.582901+00:00",
+            "measured_at": "2026-08-15T18:30:58.422443+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -100,14 +100,14 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://callback.58.com/antibot/verifycode?serialId=dee7c579864b06e0d8a76cacdea3a882_8b139e72f0184297a747ee0476e8bd5d&code=300&sign=4e45375f7f2d12258b068cb0dc4cc04c&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_421f8bc8b3414f8b93215d654fe193e2%26callback%3Dshield%26from%3Dantispam",
-          "final_url": "https://callback.58.com/antibot/verifycode?serialId=dee7c579864b06e0d8a76cacdea3a882_8b139e72f0184297a747ee0476e8bd5d&code=300&sign=4e45375f7f2d12258b068cb0dc4cc04c&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_421f8bc8b3414f8b93215d654fe193e2%26callback%3Dshield%26from%3Dantispam",
+          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_fae9317d61e94e98b4c2f3ae5c5a2cef&callback=shield&from=antispam",
+          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_fae9317d61e94e98b4c2f3ae5c5a2cef&callback=shield&from=antispam",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                0
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -115,7 +115,7 @@
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
+              "safe_stop": "已记录页面阻断因素，未继续交互"
             }
           ],
           "fields_observed": [],
@@ -123,45 +123,41 @@
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
           "steps": [
             {
-              "step": 1,
-              "url": "https://callback.58.com/antibot/verifycode?serialId=dee7c579864b06e0d8a76cacdea3a882_8b139e72f0184297a747ee0476e8bd5d&code=300&sign=4e45375f7f2d12258b068cb0dc4cc04c&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_421f8bc8b3414f8b93215d654fe193e2%26callback%3Dshield%26from%3Dantispam",
+              "step": 0,
+              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=3aaf904fe8b487ede3d26069b5454120_fae9317d61e94e98b4c2f3ae5c5a2cef&callback=shield&from=antispam",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [],
-              "actions": [
-                "none",
-                "none"
+              "blockers": [
+                "captcha"
               ],
+              "actions": [],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": "full_page_human_challenge"
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-15T12:04:41.780326+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "high",
+            "measured_at": "2026-08-15T17:39:07.033420+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
-            "primary_method": "unknown"
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": ""
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -171,7 +167,9 @@
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "captcha"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

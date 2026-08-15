@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.560654+00:00",
+  "generated_at": "2026-08-15T19:18:31.699577+00:00",
   "report_title": "www.aliyun.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,8 +21,8 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.aliyun.com/",
-          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aV1NpKQ&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
-          "observed_route": "账号/邮箱 → 短信验证码 → 口令",
+          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aoB2U6m&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "observed_route": "账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码/一次性验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -47,26 +47,56 @@
                 "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
+              ],
+              "summary": "账号/邮箱 → 短信验证码/一次性验证码",
+              "fields_observed": [
+                "identifier",
+                "code"
+              ],
+              "methods_observed": [
+                "identifier",
+                "sms",
+                "one_time_code"
+              ],
+              "verification_observed": [
+                "sms",
+                "one_time_code"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
             "identifier",
-            "password"
+            "password",
+            "code"
           ],
           "methods_observed": [
             "password",
             "identifier",
-            "sms"
+            "sms",
+            "one_time_code"
           ],
           "verification_observed": [
-            "sms"
+            "sms",
+            "one_time_code"
           ],
-          "password_state": "observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "已到达口令输入界面，未提交表单；安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -83,7 +113,7 @@
             },
             {
               "step": 2,
-              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aV1NpKQ&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aoB2U6m&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "identifier",
@@ -93,7 +123,31 @@
                 "identifier"
               ],
               "blockers": [],
-              "actions": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": "sms_tab_clicked_no_change"
+            },
+            {
+              "step": 3,
+              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aoB2U6m&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "code"
+              ],
+              "methods": [
+                "identifier"
+              ],
+              "blockers": [
+                "verification_code"
+              ],
+              "actions": [
+                "none"
+              ],
               "tabs": [
                 "sms_tab"
               ],
@@ -102,7 +156,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:21:06.854116+00:00",
+            "measured_at": "2026-08-15T18:47:59.703878+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -115,10 +169,10 @@
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "classified",
+              "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
@@ -127,10 +181,12 @@
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": []
+              "blocking_factors": [
+                "verification_code"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -142,7 +198,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.aliyun.com/",
-          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154akUfwS4&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154a0LEpni&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
@@ -202,7 +258,7 @@
             },
             {
               "step": 2,
-              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154akUfwS4&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154a0LEpni&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone"
@@ -225,7 +281,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:21:03.770267+00:00",
+            "measured_at": "2026-08-15T18:47:57.271755+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

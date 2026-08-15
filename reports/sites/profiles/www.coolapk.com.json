@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.565577+00:00",
+  "generated_at": "2026-08-15T19:18:31.706087+00:00",
   "report_title": "www.coolapk.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:15:56.272504+00:00",
+            "measured_at": "2026-08-15T18:42:43.727830+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:15:41.538974+00:00",
+            "measured_at": "2026-08-15T18:42:38.147622+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

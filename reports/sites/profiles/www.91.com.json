@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.559681+00:00",
+  "generated_at": "2026-08-15T19:18:31.698318+00:00",
   "report_title": "www.91.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -80,7 +80,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T12:25:09.080065+00:00",
+            "measured_at": "2026-08-15T18:52:23.167613+00:00",
             "raw_flow_type": "email_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -193,7 +193,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T12:25:06.864430+00:00",
+            "measured_at": "2026-08-15T18:52:13.005016+00:00",
             "raw_flow_type": "email_only",
             "raw_stop_reason": "no_password_observed"
           },

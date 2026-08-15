@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.566812+00:00",
+  "generated_at": "2026-08-15T19:18:31.707561+00:00",
   "report_title": "www.cyzone.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,14 +21,65 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.cyzone.cn/",
-          "final_url": "https://auth.cyzone.cn/#/login?callback=https%3A%2F%2Fwww.cyzone.cn%2F",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "final_url": "https://auth.cyzone.cn/#/register",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2,
                 3
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                4,
+                5
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                6
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -121,17 +172,84 @@
               "blockers": [
                 "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "tab_click"
+              ],
               "tabs": [
                 "sms_tab",
                 "register_tab"
               ],
+              "note": "sms_tab_clicked_no_change"
+            },
+            {
+              "step": 4,
+              "url": "https://auth.cyzone.cn/#/login?callback=https%3A%2F%2Fwww.cyzone.cn%2F",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "auth_mode_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "auth_mode_text_clicked_no_change"
+            },
+            {
+              "step": 5,
+              "url": "https://auth.cyzone.cn/#/login?callback=https%3A%2F%2Fwww.cyzone.cn%2F",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "register_tab_clicked_and_changed"
+            },
+            {
+              "step": 6,
+              "url": "https://auth.cyzone.cn/#/register",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:27:11.942313+00:00",
+            "measured_at": "2026-08-15T18:54:13.701133+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -282,7 +400,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:26:37.428724+00:00",
+            "measured_at": "2026-08-15T18:54:03.536832+00:00",
             "raw_flow_type": "verification_then_password",
             "raw_stop_reason": "password_step_reached"
           },

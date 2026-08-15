@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.550523+00:00",
+  "generated_at": "2026-08-15T19:18:31.686842+00:00",
   "report_title": "cloud.tencent.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
           "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -51,16 +51,48 @@
                 "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "email",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
+            "email",
             "password",
             "code"
           ],
           "methods_observed": [
             "password",
             "phone",
+            "email",
             "sms",
             "third_party",
             "wechat",
@@ -95,6 +127,35 @@
                 "sms_code",
                 "tos"
               ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "email_tab"
+              ],
+              "note": "email_tab_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "email",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "email",
+                "phone",
+                "qq",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code",
+                "tos"
+              ],
               "actions": [],
               "tabs": [
                 "email_tab"
@@ -104,7 +165,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:21:24.054070+00:00",
+            "measured_at": "2026-08-15T18:48:20.350001+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -127,13 +188,14 @@
                 "password",
                 "sms_or_otp",
                 "third_party",
+                "email",
                 "phone"
               ],
               "password_status": "password_observed",
               "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
                 "sms_code",
                 "tos"
@@ -150,7 +212,7 @@
           "status": "observed",
           "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
           "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -179,16 +241,48 @@
                 "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "email",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "email",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
+            "email",
             "password",
             "code"
           ],
           "methods_observed": [
             "password",
             "phone",
+            "email",
             "sms",
             "third_party",
             "wechat",
@@ -223,6 +317,35 @@
                 "sms_code",
                 "tos"
               ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "email_tab"
+              ],
+              "note": "email_tab_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "email",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "email",
+                "phone",
+                "qq",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code",
+                "tos"
+              ],
               "actions": [],
               "tabs": [
                 "email_tab"
@@ -232,7 +355,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:21:23.107909+00:00",
+            "measured_at": "2026-08-15T18:48:14.632699+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -255,13 +378,14 @@
                 "password",
                 "sms_or_otp",
                 "third_party",
+                "email",
                 "phone"
               ],
               "password_status": "password_observed",
               "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
                 "sms_code",
                 "tos"

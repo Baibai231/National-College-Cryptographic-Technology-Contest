@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.576859+00:00",
+  "generated_at": "2026-08-15T19:18:31.719707+00:00",
   "report_title": "www.huya.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.huya.com/",
           "final_url": "https://www.huya.com/",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -47,11 +47,35 @@
                 "inline_widget"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
             "phone",
-            "password"
+            "password",
+            "code"
           ],
           "methods_observed": [
             "password",
@@ -61,12 +85,14 @@
           "verification_observed": [
             "sms"
           ],
-          "password_state": "observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "已到达口令输入界面，未提交表单；安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -81,17 +107,40 @@
                 "phone"
               ],
               "blockers": [],
-              "actions": [],
+              "actions": [
+                "tab_click"
+              ],
               "tabs": [
                 "password_tab",
                 "sms_tab"
               ],
+              "note": "sms_tab_clicked_in_iframe_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.huya.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "captcha"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:07:17.617735+00:00",
+            "measured_at": "2026-08-15T18:33:49.199857+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -104,10 +153,10 @@
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "classified",
+              "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
@@ -117,10 +166,13 @@
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
-              "blocking_factors": []
+              "blocking_factors": [
+                "captcha",
+                "sms_code"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -226,7 +278,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:06:45.823622+00:00",
+            "measured_at": "2026-08-15T18:33:04.019111+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

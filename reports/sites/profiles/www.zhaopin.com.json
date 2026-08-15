@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.598119+00:00",
+  "generated_at": "2026-08-15T19:18:31.743120+00:00",
   "report_title": "www.zhaopin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -93,7 +93,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:05:00.192547+00:00",
+            "measured_at": "2026-08-15T18:31:15.122514+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -239,7 +239,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:04:52.223690+00:00",
+            "measured_at": "2026-08-15T18:31:06.695861+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.575007+00:00",
+  "generated_at": "2026-08-15T19:18:31.717692+00:00",
   "report_title": "www.guazi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -89,7 +89,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:31:43.649961+00:00",
+            "measured_at": "2026-08-15T18:58:49.287886+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -202,7 +202,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:31:36.745217+00:00",
+            "measured_at": "2026-08-15T18:58:48.370561+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.596009+00:00",
+  "generated_at": "2026-08-15T19:18:31.740814+00:00",
   "report_title": "www.xinhuanet.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:11:46.013278+00:00",
+            "measured_at": "2026-08-15T18:37:19.332724+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:10:58.516966+00:00",
+            "measured_at": "2026-08-15T18:37:17.182566+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

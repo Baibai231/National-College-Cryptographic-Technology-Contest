@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.585453+00:00",
+  "generated_at": "2026-08-15T19:18:31.729958+00:00",
   "report_title": "www.mgtv.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -69,7 +69,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T11:57:12.645689+00:00",
+            "measured_at": "2026-08-15T18:23:10.571104+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -154,7 +154,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T11:56:51.958241+00:00",
+            "measured_at": "2026-08-15T18:23:04.380623+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

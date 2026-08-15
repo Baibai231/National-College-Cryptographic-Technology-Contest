@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.592866+00:00",
+  "generated_at": "2026-08-15T19:18:31.737483+00:00",
   "report_title": "www.thepaper.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.thepaper.cn/",
           "final_url": "https://www.thepaper.cn/",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -47,21 +47,44 @@
                 "modal"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
+              ],
+              "summary": "账号/邮箱 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
+            "identifier",
             "password"
           ],
           "methods_observed": [
             "password",
             "phone",
+            "identifier",
             "sms"
           ],
           "verification_observed": [
             "sms"
           ],
-          "password_state": "observed_alongside_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "modal"
           ],
@@ -95,6 +118,26 @@
               "blockers": [
                 "sms_code"
               ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.thepaper.cn/",
+              "ui_type": "modal",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier"
+              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "password_tab"
@@ -104,7 +147,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:58:19.889860+00:00",
+            "measured_at": "2026-08-15T18:24:58.730867+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -132,7 +175,7 @@
               "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
                 "sms_code"
               ]
@@ -237,7 +280,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:58:03.783544+00:00",
+            "measured_at": "2026-08-15T18:24:42.771714+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

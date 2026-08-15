@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.595705+00:00",
+  "generated_at": "2026-08-15T19:18:31.740487+00:00",
   "report_title": "www.ximalaya.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -70,7 +70,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:33:29.884587+00:00",
+            "measured_at": "2026-08-15T19:00:21.958316+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -167,7 +167,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:33:08.528165+00:00",
+            "measured_at": "2026-08-15T19:00:16.554541+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

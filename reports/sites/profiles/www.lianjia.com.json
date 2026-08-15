@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.583259+00:00",
+  "generated_at": "2026-08-15T19:18:31.727434+00:00",
   "report_title": "www.lianjia.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -85,16 +85,19 @@
               "blockers": [
                 "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "none",
+                "none"
+              ],
               "tabs": [
                 "register_tab"
               ],
-              "note": ""
+              "note": "no_register_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:04:27.330527+00:00",
+            "measured_at": "2026-08-15T18:30:38.828121+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -224,16 +227,19 @@
               "blockers": [
                 "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "none",
+                "none"
+              ],
               "tabs": [
                 "register_tab"
               ],
-              "note": ""
+              "note": "no_register_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:04:20.281174+00:00",
+            "measured_at": "2026-08-15T18:30:31.214978+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.586244+00:00",
+  "generated_at": "2026-08-15T19:18:31.730925+00:00",
   "report_title": "www.nbd.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -27,7 +27,8 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -57,22 +58,34 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_structural_semantics_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.nbd.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:14:23.166086+00:00",
+            "measured_at": "2026-08-15T18:40:52.282755+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
@@ -81,7 +94,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
@@ -103,13 +116,14 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.nbd.com.cn/",
-          "final_url": "https://www.nbd.com.cn/",
+          "final_url": "https://www.nbd.com.cn/articles/2026-08-15/4543007.html",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -139,22 +153,34 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_structural_semantics_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.nbd.com.cn/articles/2026-08-15/4543007.html",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:14:21.677415+00:00",
+            "measured_at": "2026-08-15T18:40:47.912809+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
@@ -163,7 +189,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

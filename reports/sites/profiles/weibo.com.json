@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.553760+00:00",
+  "generated_at": "2026-08-15T19:18:31.691114+00:00",
   "report_title": "weibo.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -123,7 +123,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T11:51:32.174899+00:00",
+            "measured_at": "2026-08-15T18:17:31.494661+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -297,7 +297,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:51:29.150840+00:00",
+            "measured_at": "2026-08-15T18:17:30.200371+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

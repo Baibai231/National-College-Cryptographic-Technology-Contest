@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.555756+00:00",
+  "generated_at": "2026-08-15T19:18:31.693475+00:00",
   "report_title": "www.2345.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://passport.2345.com/ucf/user/login?forward=https%3A%2F%2Fwww.2345.com%2F",
           "final_url": "https://passport.2345.com/ucf/user/login?forward=https%3A%2F%2Fwww.2345.com%2F",
-          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -51,6 +51,54 @@
               "route_id": "automatic_route_2",
               "step_numbers": [
                 2
+              ],
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                3
+              ],
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                4
               ],
               "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
@@ -131,6 +179,48 @@
                 "identifier"
               ],
               "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "sms_tab_clicked_no_change"
+            },
+            {
+              "step": 3,
+              "url": "https://passport.2345.com/ucf/user/login?forward=https%3A%2F%2Fwww.2345.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier"
+              ],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_no_change"
+            },
+            {
+              "step": 4,
+              "url": "https://passport.2345.com/ucf/user/login?forward=https%3A%2F%2Fwww.2345.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier"
+              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "sms_tab",
@@ -141,7 +231,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:23:52.894809+00:00",
+            "measured_at": "2026-08-15T18:50:54.958814+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -262,7 +352,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:23:50.221404+00:00",
+            "measured_at": "2026-08-15T18:50:44.723743+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

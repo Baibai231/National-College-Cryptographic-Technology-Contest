@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.584495+00:00",
+  "generated_at": "2026-08-15T19:18:31.728907+00:00",
   "report_title": "www.mafengwo.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.mafengwo.cn/",
           "final_url": "https://passport.mafengwo.cn/",
-          "observed_route": "未确认具体方式；备选：账号/邮箱 → 口令",
+          "observed_route": "未确认具体方式；备选：账号/邮箱 → 口令；备选：账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -41,6 +41,27 @@
               "route_id": "automatic_route_2",
               "step_numbers": [
                 3
+              ],
+              "summary": "账号/邮箱 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                4
               ],
               "summary": "账号/邮箱 → 口令",
               "fields_observed": [
@@ -117,6 +138,28 @@
               "blockers": [
                 "tos"
               ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_no_change"
+            },
+            {
+              "step": 4,
+              "url": "https://passport.mafengwo.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier"
+              ],
+              "blockers": [
+                "tos"
+              ],
               "actions": [],
               "tabs": [
                 "password_tab"
@@ -126,7 +169,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:04:17.734859+00:00",
+            "measured_at": "2026-08-15T18:30:27.400859+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -276,7 +319,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:04:10.218736+00:00",
+            "measured_at": "2026-08-15T18:30:22.201967+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

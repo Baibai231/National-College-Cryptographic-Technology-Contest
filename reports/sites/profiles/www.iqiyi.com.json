@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.578414+00:00",
+  "generated_at": "2026-08-15T19:18:31.721598+00:00",
   "report_title": "www.iqiyi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -79,7 +79,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T11:55:41.284152+00:00",
+            "measured_at": "2026-08-15T18:22:12.685119+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },
@@ -115,22 +115,23 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.iqiyi.com/",
-          "final_url": "https://www.iqiyi.com/",
+          "start_url": "https://www.iqiyi.com/vip/",
+          "final_url": "https://www.iqiyi.com/vip/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
+              "ui_types": [
+                "modal"
+              ],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -138,7 +139,9 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
+          "ui_types": [
+            "modal"
+          ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -147,21 +150,8 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.iqiyi.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "register_structural_semantics_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.iqiyi.com/",
-              "ui_type": "unknown",
+              "url": "https://www.iqiyi.com/vip/",
+              "ui_type": "modal",
               "fields": [],
               "methods": [],
               "blockers": [],
@@ -174,13 +164,13 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T11:55:34.293329+00:00",
+            "measured_at": "2026-08-15T18:22:05.145726+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -189,7 +179,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

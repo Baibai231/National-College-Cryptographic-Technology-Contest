@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.587276+00:00",
+  "generated_at": "2026-08-15T19:18:31.731854+00:00",
   "report_title": "www.oschina.net 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.oschina.net/",
-          "final_url": "https://www.oschina.net/home/login?goto_page=https%3A%2F%2Fwww.oschina.net%2F",
-          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 口令",
+          "start_url": "https://www.oschina.net/home/login",
+          "final_url": "https://www.oschina.net/home/login",
+          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 口令；备选：账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -51,6 +51,29 @@
             },
             {
               "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "账号/邮箱 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "third_party",
+                "gitee"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_3",
               "step_numbers": [
                 3
               ],
@@ -101,20 +124,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.oschina.net/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.oschina.net/home/login?goto_page=https%3A%2F%2Fwww.oschina.net%2F",
+              "url": "https://www.oschina.net/home/login",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -139,8 +149,32 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
+              "step": 2,
+              "url": "https://www.oschina.net/home/login",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "gitee",
+                "identifier",
+                "sso"
+              ],
+              "blockers": [
+                "tos"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_no_change"
+            },
+            {
               "step": 3,
-              "url": "https://www.oschina.net/home/login?goto_page=https%3A%2F%2Fwww.oschina.net%2F",
+              "url": "https://www.oschina.net/home/login",
               "ui_type": "standalone_page",
               "fields": [
                 "identifier",
@@ -163,7 +197,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:51:10.905338+00:00",
+            "measured_at": "2026-08-15T18:17:16.382391+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -312,7 +346,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:51:05.018286+00:00",
+            "measured_at": "2026-08-15T18:16:59.691485+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

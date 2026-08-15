@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.560986+00:00",
+  "generated_at": "2026-08-15T19:18:31.699964+00:00",
   "report_title": "www.amap.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -99,7 +99,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:19:04.405555+00:00",
+            "measured_at": "2026-08-15T18:45:46.861658+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -221,7 +221,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:18:56.284820+00:00",
+            "measured_at": "2026-08-15T18:45:41.455223+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

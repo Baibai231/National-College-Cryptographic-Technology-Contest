@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.564930+00:00",
+  "generated_at": "2026-08-15T19:18:31.705218+00:00",
   "report_title": "www.chinanews.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -29,7 +29,10 @@
               "step_numbers": [
                 1,
                 2,
-                3
+                3,
+                4,
+                5,
+                6
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -95,11 +98,50 @@
               ],
               "tabs": [],
               "note": ""
+            },
+            {
+              "step": 4,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            },
+            {
+              "step": 5,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            },
+            {
+              "step": 6,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:12:16.608346+00:00",
+            "measured_at": "2026-08-15T18:38:19.768469+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "max_steps_reached"
           },
@@ -144,7 +186,10 @@
               "step_numbers": [
                 1,
                 2,
-                3
+                3,
+                4,
+                5,
+                6
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -209,11 +254,50 @@
               ],
               "tabs": [],
               "note": ""
+            },
+            {
+              "step": 4,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            },
+            {
+              "step": 5,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
+            },
+            {
+              "step": 6,
+              "url": "https://www.chinanews.com/",
+              "ui_type": "multi_step_wizard",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "next"
+              ],
+              "tabs": [],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:12:04.240756+00:00",
+            "measured_at": "2026-08-15T18:37:43.506447+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "max_steps_reached"
           },

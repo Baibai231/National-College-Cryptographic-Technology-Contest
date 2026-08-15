@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.598619+00:00",
+  "generated_at": "2026-08-15T19:18:31.743445+00:00",
   "report_title": "www.zhibo8.cc 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -77,7 +77,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:16:38.768996+00:00",
+            "measured_at": "2026-08-15T18:43:28.529188+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -172,7 +172,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:16:24.476980+00:00",
+            "measured_at": "2026-08-15T18:43:12.804319+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.553498+00:00",
+  "generated_at": "2026-08-15T19:18:31.690693+00:00",
   "report_title": "web.okjike.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -70,7 +70,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:16:11.278591+00:00",
+            "measured_at": "2026-08-15T18:43:05.177237+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -156,7 +156,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:16:11.220644+00:00",
+            "measured_at": "2026-08-15T18:43:00.374790+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

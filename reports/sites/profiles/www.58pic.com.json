@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.559062+00:00",
+  "generated_at": "2026-08-15T19:18:31.697501+00:00",
   "report_title": "www.58pic.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -107,7 +107,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:24:42.287838+00:00",
+            "measured_at": "2026-08-15T18:51:56.948503+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },
@@ -233,7 +233,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:24:35.176323+00:00",
+            "measured_at": "2026-08-15T18:51:44.548289+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },

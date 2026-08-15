@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.551196+00:00",
+  "generated_at": "2026-08-15T19:18:31.687838+00:00",
   "report_title": "leetcode.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://leetcode.cn/",
+          "start_url": "https://leetcode.cn/accounts/login/?next=%2F",
           "final_url": "https://leetcode.cn/accounts/login/?next=%2F",
-          "observed_route": "手机号 → 短信验证码/扫码；备选：邮箱 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码/扫码；备选：邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码/扫码；备选：邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码/扫码",
               "fields_observed": [
@@ -56,7 +56,64 @@
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
+                2
+              ],
+              "summary": "邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "email",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "apple"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
                 3
+              ],
+              "summary": "手机号 → 短信验证码/扫码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat",
+                "qq",
+                "apple"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                4
               ],
               "summary": "邮箱 → 短信验证码 → 口令",
               "fields_observed": [
@@ -114,19 +171,6 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://leetcode.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
               "url": "https://leetcode.cn/accounts/login/?next=%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -154,7 +198,60 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
+              "step": 2,
+              "url": "https://leetcode.cn/accounts/login/?next=%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "email",
+                "password"
+              ],
+              "methods": [
+                "apple",
+                "auto_signup",
+                "email",
+                "qq",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": "sms_tab_clicked_and_changed"
+            },
+            {
               "step": 3,
+              "url": "https://leetcode.cn/accounts/login/?next=%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "apple",
+                "auto_signup",
+                "phone",
+                "qq",
+                "qr",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 4,
               "url": "https://leetcode.cn/accounts/login/?next=%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -179,7 +276,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:50:53.089410+00:00",
+            "measured_at": "2026-08-15T18:16:58.160193+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -345,7 +442,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:50:43.953670+00:00",
+            "measured_at": "2026-08-15T18:16:52.562785+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

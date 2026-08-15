@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.590257+00:00",
+  "generated_at": "2026-08-15T19:18:31.734861+00:00",
   "report_title": "www.qyer.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -104,7 +104,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:23:31.376368+00:00",
+            "measured_at": "2026-08-15T18:50:17.134253+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -231,7 +231,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:23:26.793737+00:00",
+            "measured_at": "2026-08-15T18:50:12.775327+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

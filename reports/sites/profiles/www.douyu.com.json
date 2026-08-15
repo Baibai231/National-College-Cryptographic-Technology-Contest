@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.570217+00:00",
+  "generated_at": "2026-08-15T19:18:31.711851+00:00",
   "report_title": "www.douyu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -105,7 +105,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:07:39.823726+00:00",
+            "measured_at": "2026-08-15T18:34:03.411443+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -232,7 +232,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:07:33.169365+00:00",
+            "measured_at": "2026-08-15T18:33:58.282628+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

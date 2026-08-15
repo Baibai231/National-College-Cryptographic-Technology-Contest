@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.581005+00:00",
+  "generated_at": "2026-08-15T19:18:31.724882+00:00",
   "report_title": "www.kanxue.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -96,12 +96,12 @@
                 "tab_click"
               ],
               "tabs": [],
-              "note": "password_tab_clicked_no_change"
+              "note": "password_tab_clicked_and_changed"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:23:42.204619+00:00",
+            "measured_at": "2026-08-15T18:50:43.769059+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -225,7 +225,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:23:40.440269+00:00",
+            "measured_at": "2026-08-15T18:50:30.529181+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

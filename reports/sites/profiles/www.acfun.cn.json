@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.560018+00:00",
+  "generated_at": "2026-08-15T19:18:31.698766+00:00",
   "report_title": "www.acfun.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,13 +22,61 @@
           "status": "observed",
           "start_url": "https://www.acfun.cn/",
           "final_url": "https://www.acfun.cn/login/?returnUrl=https%3A%2F%2Fwww.acfun.cn%2F",
-          "observed_route": "账号/邮箱 → 扫码 → 口令",
+          "observed_route": "账号/邮箱 → 扫码 → 口令；备选：账号/邮箱 → 扫码 → 口令；备选：账号/邮箱 → 扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1,
                 2
+              ],
+              "summary": "账号/邮箱 → 扫码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "qr"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
+              ],
+              "summary": "账号/邮箱 → 扫码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "qr"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                4
               ],
               "summary": "账号/邮箱 → 扫码 → 口令",
               "fields_observed": [
@@ -97,9 +145,52 @@
                 "qr"
               ],
               "blockers": [],
-              "actions": [],
+              "actions": [
+                "tab_click"
+              ],
               "tabs": [
                 "password_tab",
+                "register_tab"
+              ],
+              "note": "register_tab_clicked_no_change"
+            },
+            {
+              "step": 3,
+              "url": "https://www.acfun.cn/login/?returnUrl=https%3A%2F%2Fwww.acfun.cn%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "qr"
+              ],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab",
+                "register_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 4,
+              "url": "https://www.acfun.cn/login/?returnUrl=https%3A%2F%2Fwww.acfun.cn%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "qr"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
                 "register_tab"
               ],
               "note": ""
@@ -107,7 +198,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:06:42.002429+00:00",
+            "measured_at": "2026-08-15T18:32:52.567304+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -235,7 +326,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T12:06:30.120680+00:00",
+            "measured_at": "2026-08-15T18:32:50.309096+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.560369+00:00",
+  "generated_at": "2026-08-15T19:18:31.699266+00:00",
   "report_title": "www.aiqicha.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786796728&signature=c49dfcfdaa4b6e0cf42252625e0ac4d6",
-          "final_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786796728&signature=c49dfcfdaa4b6e0cf42252625e0ac4d6",
+          "start_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819952&signature=6998c0c4fb0f37d2f64875e089b18f04",
+          "final_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819952&signature=6998c0c4fb0f37d2f64875e089b18f04",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -48,7 +48,7 @@
           "steps": [
             {
               "step": 0,
-              "url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786796728&signature=c49dfcfdaa4b6e0cf42252625e0ac4d6",
+              "url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819952&signature=6998c0c4fb0f37d2f64875e089b18f04",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -62,7 +62,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:25:18.193732+00:00",
+            "measured_at": "2026-08-15T18:52:30.227247+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -100,8 +100,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786796720&signature=1796ba12f32209fffa88b8563887b0ad",
-          "final_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786796720&signature=1796ba12f32209fffa88b8563887b0ad",
+          "start_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819960&signature=4d27c5fb9c5cf6f1a194525737d14b30",
+          "final_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819960&signature=4d27c5fb9c5cf6f1a194525737d14b30",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -128,7 +128,7 @@
           "steps": [
             {
               "step": 0,
-              "url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786796720&signature=1796ba12f32209fffa88b8563887b0ad",
+              "url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819960&signature=4d27c5fb9c5cf6f1a194525737d14b30",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -142,7 +142,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:25:18.035945+00:00",
+            "measured_at": "2026-08-15T18:52:29.155060+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

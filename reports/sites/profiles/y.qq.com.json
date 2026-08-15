@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.600974+00:00",
+  "generated_at": "2026-08-15T19:18:31.745678+00:00",
   "report_title": "y.qq.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -79,7 +79,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:08:45.218358+00:00",
+            "measured_at": "2026-08-15T18:34:53.140617+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },
@@ -176,7 +176,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:08:29.399416+00:00",
+            "measured_at": "2026-08-15T18:34:49.803992+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },

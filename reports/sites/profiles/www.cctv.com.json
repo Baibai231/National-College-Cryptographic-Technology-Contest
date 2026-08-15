@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.563878+00:00",
+  "generated_at": "2026-08-15T19:18:31.703954+00:00",
   "report_title": "www.cctv.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -74,16 +74,19 @@
                 "identifier"
               ],
               "blockers": [],
-              "actions": [],
+              "actions": [
+                "none",
+                "none"
+              ],
               "tabs": [
                 "register_tab"
               ],
-              "note": ""
+              "note": "no_register_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:11:58.082754+00:00",
+            "measured_at": "2026-08-15T18:37:37.385469+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -195,16 +198,19 @@
                 "identifier"
               ],
               "blockers": [],
-              "actions": [],
+              "actions": [
+                "none",
+                "none"
+              ],
               "tabs": [
                 "register_tab"
               ],
-              "note": ""
+              "note": "no_register_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:11:50.191210+00:00",
+            "measured_at": "2026-08-15T18:37:27.339871+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

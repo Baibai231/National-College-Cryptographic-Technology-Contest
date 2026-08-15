@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.574667+00:00",
+  "generated_at": "2026-08-15T19:18:31.717134+00:00",
   "report_title": "www.guancha.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,12 +22,85 @@
           "status": "observed",
           "start_url": "https://www.guancha.cn/",
           "final_url": "https://www.guancha.cn/",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                3
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                4
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -63,15 +136,94 @@
           "verification_observed": [
             "sms"
           ],
-          "password_state": "observed_alongside_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "已到达口令输入界面，未提交表单；安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
+              "url": "https://www.guancha.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "sms_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.guancha.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.guancha.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_no_change"
+            },
+            {
+              "step": 4,
               "url": "https://www.guancha.cn/",
               "ui_type": "inline_widget",
               "fields": [
@@ -97,7 +249,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:00:15.531738+00:00",
+            "measured_at": "2026-08-15T18:26:28.217989+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -142,7 +294,7 @@
           "status": "observed",
           "start_url": "https://www.guancha.cn/",
           "final_url": "https://www.guancha.cn/",
-          "observed_route": "手机号 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -168,6 +320,29 @@
                 "inline_widget"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -183,12 +358,14 @@
           "verification_observed": [
             "sms"
           ],
-          "password_state": "observed_alongside_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "已到达口令输入界面，未提交表单；安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -197,6 +374,31 @@
               "fields": [
                 "phone",
                 "password",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "slide"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "sms_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.guancha.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
                 "code"
               ],
               "methods": [
@@ -217,7 +419,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:00:09.969952+00:00",
+            "measured_at": "2026-08-15T18:26:21.337398+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

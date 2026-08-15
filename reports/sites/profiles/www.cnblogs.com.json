@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.565263+00:00",
+  "generated_at": "2026-08-15T19:18:31.705635+00:00",
   "report_title": "www.cnblogs.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,8 +21,8 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.cnblogs.com/",
-          "final_url": "https://account.cnblogs.com/signin?returnUrl=https:%2F%2Fwww.cnblogs.com%2F",
-          "observed_route": "邮箱 → 短信验证码 → 口令",
+          "final_url": "https://account.cnblogs.com/signup?returnUrl=https:%2F%2Fwww.cnblogs.com%2F",
+          "observed_route": "邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：邮箱 → 短信验证码 → 口令；备选：手机号 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -47,26 +47,99 @@
                 "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
+              ],
+              "summary": "手机号 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "code"
+              ],
+              "methods_observed": [
+                "phone",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                4
+              ],
+              "summary": "邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "email",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "email",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                5
+              ],
+              "summary": "手机号 → 口令",
+              "fields_observed": [
+                "phone",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "phone"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
+            "phone",
             "email",
-            "password"
+            "password",
+            "code"
           ],
           "methods_observed": [
             "password",
+            "phone",
             "email",
             "sms"
           ],
           "verification_observed": [
             "sms"
           ],
-          "password_state": "observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "已到达口令输入界面，未提交表单；安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -95,18 +168,87 @@
               "blockers": [
                 "captcha"
               ],
-              "actions": [],
+              "actions": [
+                "tab_click"
+              ],
               "tabs": [
                 "password_tab",
                 "sms_tab",
                 "register_tab"
               ],
+              "note": "sms_tab_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://account.cnblogs.com/signin?returnUrl=https:%2F%2Fwww.cnblogs.com%2F#sms",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "code"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "captcha"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 4,
+              "url": "https://account.cnblogs.com/signin?returnUrl=https:%2F%2Fwww.cnblogs.com%2F#password",
+              "ui_type": "standalone_page",
+              "fields": [
+                "email",
+                "password"
+              ],
+              "methods": [
+                "email"
+              ],
+              "blockers": [
+                "captcha"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "register_tab_clicked_and_changed"
+            },
+            {
+              "step": 5,
+              "url": "https://account.cnblogs.com/signup?returnUrl=https:%2F%2Fwww.cnblogs.com%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "phone",
+                "password"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [
+                "captcha"
+              ],
+              "actions": [],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:55:07.836196+00:00",
+            "measured_at": "2026-08-15T18:21:20.133903+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -122,21 +264,23 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "email"
+                "email",
+                "phone"
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
-              "phone_observed": false,
+              "verification_observed": true,
+              "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
-                "captcha"
+                "captcha",
+                "sms_code"
               ]
             },
             "security": {
@@ -148,7 +292,7 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.cnblogs.com/",
+          "start_url": "https://www.cnblogs.com/join",
           "final_url": "https://account.cnblogs.com/signup",
           "observed_route": "手机号 → 口令",
           "observed_routes": [
@@ -192,7 +336,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.cnblogs.com/",
+              "url": "https://www.cnblogs.com/join",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -224,7 +368,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:07:41.553371+00:00",
+            "measured_at": "2026-08-15T18:21:11.797675+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

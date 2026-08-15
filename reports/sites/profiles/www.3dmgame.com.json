@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-15T14:29:35.556489+00:00",
+  "generated_at": "2026-08-15T19:18:31.694426+00:00",
   "report_title": "www.3dmgame.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -92,7 +92,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:24:12.380434+00:00",
+            "measured_at": "2026-08-15T18:51:15.706587+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -227,7 +227,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T12:24:03.012189+00:00",
+            "measured_at": "2026-08-15T18:51:14.045917+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
