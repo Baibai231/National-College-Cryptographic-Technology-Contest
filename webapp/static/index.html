@@ -213,10 +213,10 @@
 
 <script>
 const FLOW_ZH = {
-  direct_password: "直接口令", identifier_then_password: "先标识后口令",
-  verification_then_password: "先验证后口令", otp_only: "仅一次性验证码",
-  email_only: "仅邮箱验证码", multiple_methods: "多方式并存",
-  sso_only: "仅第三方登录", human_blocked: "人工阻断",
+  direct_password: "密码直接可见", identifier_then_password: "先账号后密码",
+  verification_then_password: "先验证后密码", otp_only: "仅验证码（无密码）",
+  email_only: "仅邮箱", multiple_methods: "多方式并存",
+  sso_only: "仅第三方", human_blocked: "需人工验证",
   no_web_signup: "无网页注册", unknown: "未确认", error: "异常"
 };
 let allSites = [];
@@ -492,40 +492,13 @@ const NOTE_ZH = {
   no_register_tab: "页面没有找到注册入口，程序在此停止",
   no_entry_button: "页面没有找到登录/注册按钮，程序在此停止",
   entry_clicked_no_change: "点击入口后页面没有变化",
-  no_signup_entry: "没有发现注册入口",
-  human_blocked: "遇到人工验证，程序在此停止",
-  verification_required: "需要验证码才能继续，程序在此停止",
-  no_safe_action: "没有可安全执行的操作",
-  unrecognized_page: "页面无法识别，程序在此停止",
-  no_safe_button: "没有可安全点击的按钮"
+   no_signup_entry: "没有发现注册入口",
+   human_blocked: "遇到人工验证，程序在此停止",
+   verification_required: "需要验证码才能继续，程序在此停止",
+   no_safe_action: "没有可安全执行的操作",
+   unrecognized_page: "页面无法识别，程序在此停止",
+   no_safe_button: "没有可安全点击的按钮"
 };
-function stepsHtml(steps) {
-  if (!steps || !steps.length) return '<div class="text-muted small">没有记录</div>';
-  return steps.map((st, i) => {
-    const parts = [];
-    if (st.fields && st.fields !== '—') parts.push('看到【' + st.fields + '】输入框');
-    if (st.blockers && st.blockers !== '—') parts.push('遇到【' + st.blockers + '】验证/拦截');
-    const acts = (st.actions || [])
-      .map(a => ACTION_ZH.hasOwnProperty(a) ? ACTION_ZH[a] : '')
-      .filter(Boolean);
-    if (acts.length) parts.push('程序' + acts.join('、'));
-    const reason = NOTE_ZH[st.note];
-    if (reason && !parts.some(p => p.includes('停止'))) parts.push(reason);
-    if (!parts.length) parts.push('页面刚打开，还没有出现表单');
-    const urlShort = st.url ? st.url.replace(/^https?:\/\//, '').slice(0, 60) : '';
-    return `
-      <div class="step-row">
-        <b>第 ${i + 1} 步：</b>${parts.join('；')}
-        ${urlShort ? `<div class="text-muted mt-1" style="font-size:0.75rem">所在页面：${urlShort}</div>` : ''}
-      </div>`;
-  }).join('');
-}
-function switchStepTab(show) {
-  document.querySelectorAll('.step-tab-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.pane === show));
-  document.getElementById('t-login').style.display = show === 'login' ? 'block' : 'none';
-  document.getElementById('t-signup').style.display = show === 'signup' ? 'block' : 'none';
-}
 async function showHistory(host) {
   const box = document.getElementById('history-box');
   box.innerHTML = '<div class="text-muted small">加载中…</div>';
@@ -546,17 +519,12 @@ async function showDetail(host) {
   const s = await r.json();
   document.getElementById('modal-title').innerHTML =
     `${esc(s.hostname)} ${matchBadge(s.match_status)}`;
-  const METHOD_STATUS_ZH = { confirmed: '确认可用', blocked: '门槛阻拦', observed: '仅观察到' };
-  const UI_ZH = { standalone_page: '独立页面', '独立页': '独立页面', modal: '弹窗', drawer: '侧边抽屉',
-    multi_step_wizard: '分步表单', inline_widget: '页面挂件', '内嵌挂件': '页面挂件',
-    sso_iframe: '第三方嵌入', unknown: '页面' };
+  const METHOD_STATUS_ZH = { confirmed: '已确认', blocked: '需验证', observed: '仅观察到' };
   const CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-  const methodRouteZh = (m) => {
-    const route = (m.route || '')
-      .replace(/（门槛：[^）]*）/g, '')
-      .replace(/第(\d+)步\(([^)]*)\)/g, (_, s, u) => '步骤' + s + ' · ' + (UI_ZH[u] || u));
-    const blocker = (m.blockers || []).map(b => BLOCKER_ZH[b] || b).join('、');
-    return (route ? route + (blocker ? ' · 需' + blocker : '') : (blocker ? '需' + blocker : ''));
+  const methodGateZh = (m) => {
+    if (m.status !== 'blocked') return '';
+    const gate = (m.blockers || []).map(b => BLOCKER_ZH[b] || b).join('、');
+    return gate ? ' · 需' + gate : '';
   };
   const methodsHtml = (list) => {
     if (!list || !list.length) return '<span class="text-muted">—</span>';
@@ -565,11 +533,9 @@ async function showDetail(host) {
       const statusZh = METHOD_STATUS_ZH[m.status] || m.status;
       const cls = m.status === 'confirmed' ? 'text-success'
         : m.status === 'blocked' ? 'text-warning' : 'text-secondary';
-      const route = methodRouteZh(m);
       return `<div class="small mb-1">
         <b>方法${num}：</b>${esc(m.name_zh || m.method)}
-        <span class="${cls}">（${statusZh}）</span>
-        ${route ? `<span class="text-muted d-block ps-4">${esc(route)}</span>` : ''}
+        <span class="${cls}">（${statusZh}${methodGateZh(m)}）</span>
       </div>`;
     }).join('');
   };
@@ -601,17 +567,22 @@ async function showDetail(host) {
       <div class="text-muted small mt-1">${esc(comparison.reason)}</div>
     </div>`;
   };
+  const primaryZh = (list, fallback) => {
+    const p = (list || []).find(m => m.status === 'confirmed');
+    return p ? p.name_zh : fallback;
+  };
   document.getElementById('modal-body').innerHTML = `
     <table class="table table-sm table-bordered align-middle">
       <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
       <tbody>
-        <tr><td>类型</td><td>${badge(s.login.flow_type)}<div class="small text-muted">${esc(s.login.route || '')}</div></td><td>${badge(s.signup.flow_type)}<div class="small text-muted">${esc(s.signup.route || '')}</div></td></tr>
+        <tr><td>类型</td><td>${badge(s.login.flow_type)} <span class="small text-muted">主方法：${esc(primaryZh(s.login.methods, '—'))}</span></td><td>${badge(s.signup.flow_type)} <span class="small text-muted">主方法：${esc(primaryZh(s.signup.methods, '—'))}</span></td></tr>
         <tr><td>方法清单</td><td>${methodsHtml(s.login.methods)}</td><td>${methodsHtml(s.signup.methods)}</td></tr>
         <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
         <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
         <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
       </tbody>
     </table>
+    <div class="text-muted small">方法说明：已确认=程序在安全边界内看到了该方法的全部要素（如手机号和验证码框都在）；需验证=完成该方法需要短信/人机/扫码等验证，程序遵守边界不越验证；仅观察到=只有弱证据。</div>
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
@@ -625,13 +596,7 @@ async function showDetail(host) {
     </div>
     <button class="btn btn-sm btn-outline-secondary" id="detail-history-btn">查看历史程序结果</button>
     <button class="btn btn-sm btn-outline-warning" id="detail-feedback-btn">反馈识别结果</button>
-    <div id="history-box" class="mt-2"></div>
-    <div class="step-tabs mt-3">
-      <button class="step-tab-btn active" data-pane="login" onclick="switchStepTab('login')">登录步骤</button>
-      <button class="step-tab-btn" data-pane="signup" onclick="switchStepTab('signup')">注册步骤</button>
-    </div>
-    <div id="t-login" style="margin-top:10px">${stepsHtml(s.login.steps)}</div>
-    <div id="t-signup" style="margin-top:10px; display:none">${stepsHtml(s.signup.steps)}</div>`;
+    <div id="history-box" class="mt-2"></div>`;
   showDetailModal();
   document.getElementById('detail-history-btn').onclick = () => showHistory(s.hostname);
   document.getElementById('detail-feedback-btn').onclick = () => showFeedback(s.hostname);

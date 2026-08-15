@@ -1,12 +1,13 @@
-"""v4 逐方法清单聚合回归测试。
+"""v4 组合式方法清单聚合回归测试。
 
-覆盖 aggregate_methods 的判定规则：
-1. 多方法并存时逐方法列出（china.com 账号密码+QQ+第三方）
-2. confirmed/blocked/observed 三态判定
-3. 口令路线存在时 phone/email/identifier 是账号标识，不单列方法
-4. 主方法状态与 flow_type 对齐（到达口令步骤即 confirmed，备选门槛不挂主方法）
-5. 字段反推方法（password 字段→账号密码、code 字段→短信验证码）
-6. no_web_signup 升级条件不误伤"点过入口但无信号"的波动站
+覆盖 aggregate_methods 的组合式判定规则（用户反馈 2026-08-15）：
+1. 字段组合成方法：手机号+验证码 是一个方法，不拆成"手机号"和"短信验证码"
+2. 密码/验证码 + 多个标识符：账号/邮箱/手机号+密码
+3. 短信验证码属于方法本身（软门槛），不因 sms_code 把方法标"需验证"
+4. 硬门槛（人机/滑块/扫码确认/App确认/协议）才使方法标"需验证"
+5. 第三方提供商合并为一个方法：第三方（微信、QQ）
+6. 主方法与 flow_type 对齐（到达口令步骤即 confirmed）
+7. 只有标识符无验证要素不算完整方法
 """
 import sys
 import os
@@ -31,77 +32,88 @@ def state(step, fields=None, methods=None, blockers=None, actions=None,
 
 def by_name(methods, name):
     for m in methods:
-        if m.name_zh == name or m.method == name:
+        if m.name_zh == name:
             return m
     return None
 
 
 class TestAggregateMethods(unittest.TestCase):
 
-    def test_multi_method_page_lists_each_method(self):
-        # china.com 实测：登录弹窗同时有账号密码 + QQ + 第三方
+    def test_phone_code_is_one_method_not_two(self):
+        # 36kr 实测：手机号+验证码是一个方法，不能拆成"手机号"+"短信验证码"
         states = [
-            state(2, fields=["identifier", "password"],
-                  methods=["sso", "qq"]),
-            state(3, fields=["identifier", "password"],
-                  methods=["sso", "qq"]),
+            state(1, fields=["phone", "code"], blockers=["sms_code"]),
+            state(2, fields=["phone", "password"]),
         ]
         ms = aggregate_methods(states, flow_type="direct_password")
-        names = {m.name_zh for m in ms}
-        self.assertEqual(names, {"账号密码", "QQ", "第三方登录"})
-        self.assertEqual(by_name(ms, "账号密码").status, "confirmed")
+        names = [m.name_zh for m in ms]
+        self.assertIn("手机号+验证码", names)
+        self.assertIn("手机号+密码", names)
+        self.assertNotIn("手机号", names)
+        self.assertNotIn("短信验证码", names)
+        # sms_code 是方法本身的要素，不使方法变"需验证"
+        self.assertEqual(by_name(ms, "手机号+验证码").status, "confirmed")
 
-    def test_soft_method_auto_signup_is_observed(self):
-        states = [state(1, methods=["phone", "auto_signup"], blockers=["sms_code"])]
-        ms = aggregate_methods(states)
-        self.assertEqual(by_name(ms, "手机号自动注册").status, "observed")
-        self.assertEqual(by_name(ms, "手机号").status, "blocked")
+    def test_sms_blocker_implies_code_step(self):
+        # zhihu 实测：只拍到手机号 + sms_code 门槛，仍应组合为 手机号+验证码
+        states = [state(1, fields=["phone"], blockers=["sms_code"])]
+        ms = aggregate_methods(states, flow_type="human_blocked")
+        self.assertIsNotNone(by_name(ms, "手机号+验证码"))
 
-    def test_identifier_fields_not_listed_when_password_present(self):
-        # 12306 实测：password+phone+email 同页，手机号/邮箱只是账号标识
+    def test_multi_identifier_joins_with_slash(self):
+        # 12306 实测：账号/邮箱/手机号 + 密码
         states = [state(1, fields=["identifier", "password", "email", "phone"])]
         ms = aggregate_methods(states, flow_type="direct_password")
-        names = {m.name_zh for m in ms}
-        self.assertEqual(names, {"账号密码"})
+        names = [m.name_zh for m in ms]
+        self.assertEqual(names, ["账号/邮箱/手机号+密码"])
 
-    def test_identifier_fields_listed_without_password(self):
-        states = [state(1, fields=["identifier", "email", "phone"])]
-        ms = aggregate_methods(states)
-        names = {m.name_zh for m in ms}
-        self.assertEqual(names, {"账号/邮箱", "邮箱", "手机号"})
-
-    def test_primary_method_confirmed_despite_page_gate(self):
-        # 整页有滑块/短信门槛，但主方法（密码）已到达 → confirmed，门槛不挂主方法
+    def test_sso_providers_grouped(self):
         states = [state(1, fields=["phone", "password"],
-                        blockers=["sms_code", "slide"],
-                        methods=["phone", "sms"])]
+                        methods=["sso", "wechat", "qq"])]
         ms = aggregate_methods(states, flow_type="direct_password")
-        pwd = by_name(ms, "账号密码")
-        self.assertEqual(pwd.status, "confirmed")
-        self.assertEqual(pwd.blockers, [])
-        self.assertNotIn("（门槛：", pwd.route)
-        self.assertEqual(by_name(ms, "短信验证码").status, "blocked")
+        sso = by_name(ms, "第三方（QQ、微信）")
+        self.assertIsNotNone(sso)
+        self.assertEqual(sso.status, "confirmed")
 
-    def test_all_blocked_when_only_gated(self):
-        states = [state(1, methods=["qr"], blockers=["captcha"])]
+    def test_hard_gate_marks_blocked(self):
+        states = [state(1, fields=["phone", "password"],
+                        blockers=["captcha"])]
         ms = aggregate_methods(states)
-        self.assertEqual(by_name(ms, "扫码").status, "blocked")
+        self.assertEqual(by_name(ms, "手机号+密码").status, "blocked")
 
-    def test_code_field_derives_sms_method(self):
+    def test_soft_gate_not_blocking(self):
         states = [state(1, fields=["phone", "code"], blockers=["sms_code"])]
         ms = aggregate_methods(states)
-        self.assertIsNotNone(by_name(ms, "短信验证码"))
+        self.assertEqual(by_name(ms, "手机号+验证码").status, "confirmed")
 
-    def test_confidence_high_with_submit_action(self):
-        states = [state(1, fields=["phone", "code"],
-                        available_actions=["send_code", "submit"])]
+    def test_primary_alignment_clears_gate(self):
+        # flow_type 已到达口令步骤，即使页面有滑块，主方法仍 confirmed
+        states = [state(1, fields=["phone", "password"], blockers=["slide"])]
+        ms = aggregate_methods(states, flow_type="direct_password")
+        pwd = by_name(ms, "手机号+密码")
+        self.assertEqual(pwd.status, "confirmed")
+        self.assertEqual(pwd.blockers, [])
+
+    def test_identifier_alone_not_a_method(self):
+        states = [state(1, fields=["phone"])]
         ms = aggregate_methods(states)
-        self.assertEqual(by_name(ms, "手机号").confidence, "high")
+        self.assertEqual(len(ms), 0)
 
-    def test_confirmed_method_without_gate(self):
-        states = [state(1, methods=["qr"])]
+    def test_qr_and_auto_signup(self):
+        states = [state(1, fields=["phone", "code"],
+                        methods=["qr", "auto_signup"])]
         ms = aggregate_methods(states)
         self.assertEqual(by_name(ms, "扫码").status, "confirmed")
+        self.assertEqual(by_name(ms, "登录即注册").status, "observed")
+
+    def test_borrowed_identifier_for_password_step(self):
+        # 先手机号，后密码（第二步无标识符）→ 借用 → 手机号+密码
+        states = [
+            state(1, fields=["phone"], blockers=["sms_code"]),
+            state(2, fields=["password"]),
+        ]
+        ms = aggregate_methods(states, flow_type="direct_password")
+        self.assertIsNotNone(by_name(ms, "手机号+密码"))
 
 
 if __name__ == "__main__":

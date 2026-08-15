@@ -22,43 +22,86 @@ UI_ZH = {
 
 HARD_BLOCKERS = {
     "captcha", "slide", "scan", "app_confirm", "tos",
-    "sms_code", "email_code", "verification_code",
 }
+# 软门槛属于方法本身（手机号+验证码里的验证码），不因它把方法标为"需验证"
+SOFT_BLOCKERS = {"sms_code", "email_code", "verification_code"}
 # 文案语义类方法：不是独立可选入口，只算弱观察证据
 SOFT_METHODS = {"auto_signup"}
+# 账号标识字段（展示顺序：账号类在前，手机号最后）
+IDENT_FIELDS = ("identifier", "username", "email", "phone")
+FIELD_ZH = {"phone": "手机号", "email": "邮箱", "identifier": "账号",
+            "username": "账号", "password": "密码", "code": "验证码"}
+SSO_PROVIDERS = {
+    "wechat", "qq", "weibo", "gitee", "google", "apple", "github",
+    "microsoft", "baidu", "dingtalk", "douyin", "xiaohongshu", "alipay",
+    "taobao", "xiaomi", "huawei", "solana",
+}
+
+
+def _combo_method(fields, seen_ids, blockers):
+    """字段组合 → (方法id, 中文名)。手机号+密码、邮箱+验证码、账号/邮箱+密码…
+
+    seen_ids 供"本步只有密码/验证码、标识符在之前步骤"的场景借用标识符；
+    软门槛（短信/邮箱验证码）证明验证码步骤存在，即使验证码框未拍到也算。
+    只有标识符没有任何验证要素不算完整方法。
+    """
+    f = set(fields or [])
+    idents = [x for x in IDENT_FIELDS if x in f]
+    if not idents:
+        idents = [x for x in seen_ids if x in IDENT_FIELDS][:2]
+    has_code = "code" in f or bool(set(blockers or []) & SOFT_BLOCKERS)
+    has_pwd = "password" in f
+    if not has_code and not has_pwd:
+        return None
+    id_parts = list(idents)
+    if has_code:
+        id_parts.append("code")
+    if has_pwd:
+        id_parts.append("password")
+    zh = ["/".join(FIELD_ZH[x] for x in idents)] if idents else []
+    if has_code:
+        zh.append("验证码")
+    if has_pwd:
+        zh.append("密码")
+    return "_".join(id_parts), "+".join(zh)
 
 
 def aggregate_methods(states: List[PageState], flow_type: str = "") -> List[MethodResult]:
-    """把散落在状态序列里的 methods 聚合成逐方法清单（v4）。
+    """把状态序列聚合成"登录/注册方式清单"（v4 组合式）。
 
-    字段与门槛也会反推方法（password 字段 → 账号密码、code 字段 → 短信验证码）。
+    一个方法 = 用户视角的完整登录方式：手机号+验证码、邮箱+密码、
+    第三方（微信、QQ）、扫码、登录即注册…字段组合成方法，不再把
+    手机号/验证码/密码拆成独立方法（36kr 实测：手机号+验证码是一个方法）。
+
     每个方法判定：
-      - confirmed：出现过且至少一步没有硬门槛（安全边界内可见可用）
-      - blocked：  只出现在有硬门槛的步骤里（存在但被门槛挡住）
-      - observed： 弱观察证据（auto_signup 等文案语义），不能算独立可用方法
-    flow_type 用于主方法状态对齐：分类器已安全到达口令步骤时，即使页面另有
-    滑块等门槛，主方法（password）也应标记 confirmed，与 flow_type 口径一致。
+      - confirmed：出现过的状态里至少一个没有硬门槛（人机/滑块/扫码确认/
+        App确认/协议），短信验证码属于方法本身不算门槛
+      - blocked：  只出现在有硬门槛的状态里 → 需验证后可用
+      - observed： 弱观察证据（登录即注册等文案语义）
+    flow_type 用于主方法状态对齐：分类器已安全到达口令/验证码步骤时，
+    主方法标记 confirmed，与 flow_type 口径一致。
     """
     by_method: dict = {}
+    seen_ids: List[str] = []
     for state in states:
-        methods = list(state.methods or [])
-        fields = set(state.fields or [])
-        if "password" in fields and "password" not in methods:
-            methods.append("password")
-        if "code" in fields:
-            if "sms" not in methods and ("phone" in fields or "sms_code" in (state.blockers or [])):
-                methods.append("sms")
-            elif "email_code" not in methods and "email_code" in (state.blockers or []):
-                methods.append("email_code")
-        # 口令路线存在时，phone/email/identifier 只是账号标识方式，不单列方法
-        if "password" in fields:
-            methods = [m for m in methods if m not in ("phone", "email", "identifier", "username")]
-        else:
-            for f in ("phone", "email", "identifier", "username"):
-                if f in fields and f not in methods:
-                    methods.append(f)
-        for m in methods:
-            by_method.setdefault(m, []).append(state)
+        fields = state.fields or []
+        for x in IDENT_FIELDS:
+            if x in fields and x not in seen_ids:
+                seen_ids.append(x)
+
+        combo = _combo_method(fields, seen_ids, state.blockers)
+        if combo is not None:
+            mid, _name = combo
+            by_method.setdefault(mid, []).append(state)
+
+        # 非字段类方法：第三方提供商 / 扫码 / 登录即注册
+        for m in (state.methods or []):
+            if m in SSO_PROVIDERS:
+                by_method.setdefault("sso_providers", []).append(state)
+            elif m == "qr":
+                by_method.setdefault("qr", []).append(state)
+            elif m in SOFT_METHODS:
+                by_method.setdefault("auto_signup", []).append(state)
 
     results: List[MethodResult] = []
     for m, mstates in by_method.items():
@@ -93,25 +136,53 @@ def aggregate_methods(states: List[PageState], flow_type: str = "") -> List[Meth
         route = "、".join(
             f"第{s.step}步({UI_ZH.get(s.ui_type, s.ui_type)})" for s in mstates[:4]
         )
-        if status == "blocked" and blockers:
-            route = f"{route}（门槛：{'、'.join(blockers)}）"
+
+        if m == "sso_providers":
+            providers = set()
+            for st in mstates:
+                providers.update(
+                    p for p in (st.methods or []) if p in SSO_PROVIDERS)
+            zhs = [METHOD_ZH.get(p, p) for p in sorted(providers)]
+            name = "第三方" + ("（" + "、".join(zhs) + "）" if zhs else "")
+            results.append(MethodResult(
+                method="sso", name_zh=name, status=status,
+                confidence=confidence, blockers=blockers, route=route, steps=steps,
+            ))
+            continue
+
+        name = {
+            "qr": "扫码",
+            "auto_signup": "登录即注册",
+        }.get(m, "")
+        if not name:
+            # 组合方法：从 id 还原中文名（phone_password → 手机号+密码）
+            tokens = m.split("_")
+            zh = []
+            idents = [t for t in tokens if t in FIELD_ZH and t != "password" and t != "code"]
+            if idents:
+                zh.append("/".join(FIELD_ZH[t] for t in idents))
+            if "code" in tokens:
+                zh.append("验证码")
+            if "password" in tokens:
+                zh.append("密码")
+            name = "+".join(zh)
 
         results.append(MethodResult(
-            method=m, name_zh=METHOD_ZH.get(m, m), status=status,
+            method=m, name_zh=name, status=status,
             confidence=confidence, blockers=blockers, route=route, steps=steps,
         ))
 
+    # 主方法状态对齐：flow_type 已确认到达口令/验证码步骤，主方法升为 confirmed
     if flow_type in ("direct_password", "identifier_then_password",
                      "verification_then_password", "otp_only", "email_only"):
-        primary = "password" if flow_type != "otp_only" and flow_type != "email_only" else (
-            "sms" if flow_type == "otp_only" else "email")
+        primary_token = "password" if flow_type not in ("otp_only", "email_only") else (
+            "code" if flow_type == "otp_only" else "email")
         for m in results:
-            if m.method == primary:
+            if m.method in ("sso", "qr", "auto_signup"):
+                continue
+            if primary_token in m.method.split("_"):
                 m.status = "confirmed"
-                # 页面级门槛（短信备选 tab 的验证码等）不属于主方法本身
                 m.blockers = []
-                if m.route and m.route.endswith("）") and "（门槛：" in m.route:
-                    m.route = m.route.split("（门槛：")[0]
 
     order = {"confirmed": 0, "blocked": 1, "observed": 2}
     results.sort(key=lambda x: (order.get(x.status, 3), x.name_zh))

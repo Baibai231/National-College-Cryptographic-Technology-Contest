@@ -27,10 +27,10 @@ FIELD_ZH = {
     "password": "口令", "code": "一次性验证码",
 }
 FLOW_ZH = {
-    "direct_password": "直接口令", "identifier_then_password": "先标识后口令",
-    "verification_then_password": "先验证后口令", "otp_only": "仅一次性验证码",
-    "email_only": "仅邮箱验证码", "multiple_methods": "多方式并存",
-    "sso_only": "仅第三方登录", "human_blocked": "人工阻断",
+    "direct_password": "密码直接可见", "identifier_then_password": "先账号后密码",
+    "verification_then_password": "先验证后密码", "otp_only": "仅验证码（无密码）",
+    "email_only": "仅邮箱", "multiple_methods": "多方式并存",
+    "sso_only": "仅第三方", "human_blocked": "需人工验证",
     "no_web_signup": "无网页注册", "unknown": "未确认", "error": "异常",
 }
 BLOCKER_ZH = {
