@@ -11,7 +11,7 @@ class ManualComparisonTests(unittest.TestCase):
             "direct_password", "手机号+验证码注册，无密码",
             "手机号、一次性验证码", "手机号、一次性验证码", "短信验证码")
         self.assertEqual(result["status"], "mismatch")
-        self.assertIn("差异", result["reason"])
+        self.assertIn("人工明确记录为无口令", result["reason"])
 
     def test_direct_password_positive_match_has_reason(self):
         result = _manual_comparison(
@@ -19,7 +19,8 @@ class ManualComparisonTests(unittest.TestCase):
             "手机号、口令", "手机号、口令", "—")
         self.assertEqual(result["status"], "match")
         self.assertIn("口令框", result["reason"])
-        self.assertIn("一致", result["reason"])
+        # 用户要求：reason 不带"一致："前缀（结论由徽标表达）
+        self.assertNotIn("一致", result["reason"])
 
     def test_unknown_is_not_automatically_correct(self):
         result = _manual_comparison(

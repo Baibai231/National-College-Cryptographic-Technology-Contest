@@ -329,8 +329,7 @@ def combo_methods(states: List[PageState], flow_type: str = "") -> List[MethodRe
                 by_method.setdefault("sso_providers", []).append(state)
             elif m == "qr":
                 by_method.setdefault("qr", []).append(state)
-            elif m in ("auto_signup",):
-                by_method.setdefault("auto_signup", []).append(state)
+            # auto_signup（登录即注册）是文案语义不是可选方法，展示层不单列
 
     results: List[MethodResult] = []
     for m, mstates in by_method.items():
@@ -371,8 +370,6 @@ def combo_methods(states: List[PageState], flow_type: str = "") -> List[MethodRe
             name = "第三方" + ("（" + "、".join(zhs) + "）" if zhs else "")
         elif m == "qr":
             name = "扫码"
-        elif m == "auto_signup":
-            name = "登录即注册"
         else:
             tokens = m.split("_")
             zh = []

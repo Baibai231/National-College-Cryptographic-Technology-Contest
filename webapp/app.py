@@ -653,8 +653,8 @@ def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
     def result(status, explanation):
         manual_reason = manual_text or "结构化选项（未填写补充文字）"
         prefix = {
-            "match": "一致：",
-            "mismatch": "差异：",
+            "match": "",
+            "mismatch": "",
             "inconclusive_program": "程序证据不足：",
             "inconclusive_manual": "人工证据不足：",
         }[status]
