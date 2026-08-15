@@ -940,6 +940,13 @@ def _validated_classify_url(raw_url: str, *, resolve: bool) -> tuple[str, str]:
     return url, host
 
 
+def _combo_methods_for(states, flow_type):
+    """展示层：从状态序列计算组合式方法清单（不落盘）。"""
+    from signup_flow_classifier.classifier import combo_methods
+    return [m.__dict__ for m in combo_methods(
+        _states_to_objects(states), flow_type=flow_type or "")]
+
+
 def _run_live_classification(url: str, kind: str) -> dict:
     """Run one live Chrome classification; caller owns the concurrency slot."""
     from utils.util_test_password import _get_new_driver
@@ -973,6 +980,8 @@ def _run_live_classification(url: str, kind: str) -> dict:
             "confidence": result.get("confidence"),
             "final_url": result.get("final_url"),
             "states": result.get("states", []),
+            "methods": _combo_methods_for(
+                result.get("states", []), result.get("flow_type")),
             "evidence": result.get("evidence", []),
             "policy": result.get("policy", {}),
             "error": result.get("error"),
@@ -1018,6 +1027,9 @@ def classify_site(req: ClassifyRequest):
                 "confidence": entry.get("confidence"),
                 "final_url": entry.get("final_url"),
                 "states": entry.get("raw_states") or entry.get("steps", []),
+                "methods": _combo_methods_for(
+                    entry.get("raw_states") or entry.get("steps", []),
+                    entry.get("flow_type")),
                 "evidence": entry.get("evidence", []),
                 "policy": entry.get("policy", {}),
                 "error": entry.get("error"),
