@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.793782+00:00",
+  "generated_at": "2026-08-15T12:51:12.603028+00:00",
   "report_title": "www.dingtalk.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:02:00.986303+00:00",
+            "measured_at": "2026-08-15T12:20:47.760388+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:01:51.835604+00:00",
+            "measured_at": "2026-08-15T12:20:40.692501+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

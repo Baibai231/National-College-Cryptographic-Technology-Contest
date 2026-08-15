@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.795059+00:00",
+  "generated_at": "2026-08-15T12:51:12.604281+00:00",
   "report_title": "www.douyin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,28 +20,140 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.douyin.com/",
-          "final_url": "https://www.douyin.com/",
-          "observed_route": "未确认具体方式",
-          "observed_routes": [],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
+          "start_url": "https://www.douyin.com/jingxuan",
+          "final_url": "https://www.douyin.com/jingxuan",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码；备选：手机号/账号/邮箱 → 短信验证码 → 口令",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号/账号/邮箱 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "identifier"
+              ],
+              "methods_observed": [
+                "phone",
+                "identifier",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号/账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "identifier",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "identifier",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "phone",
+            "identifier",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
           "password_state": "multiple_observed_routes",
-          "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [],
-          "steps": [],
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.douyin.com/jingxuan",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "identifier"
+              ],
+              "methods": [
+                "identifier",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.douyin.com/jingxuan",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:45:16.160485+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "measured_at": "2026-08-15T12:06:07.857581+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": ""
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
@@ -49,17 +161,23 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
-              "observed_methods": [],
-              "password_status": "not_determined",
-              "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
-              "identifier_observed": false,
-              "blocking_factors": []
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "phone"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "sms_code"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -70,28 +188,92 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.douyin.com/",
-          "final_url": "https://www.douyin.com/",
-          "observed_route": "未确认具体方式",
-          "observed_routes": [],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
-          "password_state": "multiple_observed_routes",
-          "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [],
-          "steps": [],
+          "start_url": "https://www.douyin.com/jingxuan",
+          "final_url": "https://www.douyin.com/jingxuan",
+          "observed_route": "手机号/账号/邮箱 → 短信验证码",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "手机号/账号/邮箱 → 短信验证码",
+              "fields_observed": [
+                "phone",
+                "identifier"
+              ],
+              "methods_observed": [
+                "phone",
+                "identifier",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            }
+          ],
+          "fields_observed": [
+            "phone",
+            "identifier"
+          ],
+          "methods_observed": [
+            "phone",
+            "identifier",
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.douyin.com/jingxuan",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "identifier"
+              ],
+              "methods": [
+                "identifier",
+                "phone"
+              ],
+              "blockers": [
+                "sms_code",
+                "captcha"
+              ],
+              "actions": [
+                "none"
+              ],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
+            }
+          ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T13:52:51.698296+00:00",
+            "measured_at": "2026-08-15T12:05:59.322140+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": ""
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
@@ -100,16 +282,22 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
-              "observed_methods": [],
+              "observed_methods": [
+                "sms_or_otp",
+                "phone"
+              ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
-              "identifier_observed": false,
-              "blocking_factors": []
+              "verification_observed": true,
+              "phone_observed": true,
+              "identifier_observed": true,
+              "blocking_factors": [
+                "captcha",
+                "sms_code"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

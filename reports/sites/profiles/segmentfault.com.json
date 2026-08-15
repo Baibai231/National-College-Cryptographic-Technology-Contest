@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.776293+00:00",
+  "generated_at": "2026-08-15T12:51:12.582674+00:00",
   "report_title": "segmentfault.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,16 +20,16 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://segmentfault.com/user/login",
-          "final_url": "https://segmentfault.com/user/login",
-          "observed_route": "手机号 → 短信验证码/一次性验证码",
+          "start_url": "https://segmentfault.com/",
+          "final_url": "https://segmentfault.com/",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号 → 短信验证码/一次性验证码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
@@ -37,19 +37,17 @@
               "methods_observed": [
                 "phone",
                 "sms",
-                "one_time_code",
                 "third_party",
                 "wechat"
               ],
               "verification_observed": [
-                "sms",
-                "one_time_code"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "standalone_page"
+                "modal"
               ],
-              "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -59,19 +57,17 @@
           "methods_observed": [
             "phone",
             "sms",
-            "one_time_code",
             "third_party",
             "wechat"
           ],
           "verification_observed": [
-            "sms",
-            "one_time_code"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "standalone_page"
+            "modal"
           ],
-          "safe_stop": "安全测量停在短信验证码、一次性验证码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
             "程序置信度为 medium"
@@ -79,8 +75,8 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://segmentfault.com/user/login",
-              "ui_type": "standalone_page",
+              "url": "https://segmentfault.com/",
+              "ui_type": "modal",
               "fields": [
                 "phone",
                 "code"
@@ -91,22 +87,20 @@
                 "wechat"
               ],
               "blockers": [
-                "sms_code",
-                "verification_code"
+                "sms_code"
               ],
               "actions": [
-                "none",
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "no_password_tab"
+              "note": "password_tab_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T14:33:16.694054+00:00",
+            "measured_at": "2026-08-15T11:54:42.612399+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -136,8 +130,7 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "sms_code",
-                "verification_code"
+                "sms_code"
               ]
             },
             "security": {
@@ -242,7 +235,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T10:15:29.220426+00:00",
+            "measured_at": "2026-08-15T11:54:42.207096+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

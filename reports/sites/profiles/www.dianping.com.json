@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.793396+00:00",
+  "generated_at": "2026-08-15T12:51:12.602674+00:00",
   "report_title": "www.dianping.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,14 +20,15 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://verify.meituan.com/v2/app/general_page?requestCode=cb19a09a9c0a420b8f70b9da11ba7cf1&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
-          "final_url": "https://verify.meituan.com/v2/app/general_page?requestCode=cb19a09a9c0a420b8f70b9da11ba7cf1&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+          "start_url": "https://www.dianping.com/",
+          "final_url": "https://account.dianping.com/pclogin?redir=https://m.dianping.com/dphome",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                0
+                1,
+                3
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -47,29 +48,63 @@
           "limitations": [],
           "steps": [
             {
-              "step": 0,
-              "url": "https://verify.meituan.com/v2/app/general_page?requestCode=cb19a09a9c0a420b8f70b9da11ba7cf1&adaptor=auto&action=spiderindefence&succCallbackUrl=https%3A%2F%2Foptimus-mtsi.meituan.com%2Foptimus%2FverifyResult%3ForiginUrl%3Dhttps%253A%252F%252Fwww.dianping.com%252F&theme=dianping",
+              "step": 1,
+              "url": "https://www.dianping.com/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://account.dianping.com/pclogin?redir=https://m.dianping.com/dphome",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "auto_signup"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 3,
+              "url": "https://account.dianping.com/pclogin?redir=https://m.dianping.com/dphome",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [
                 "captcha"
               ],
-              "actions": [],
+              "actions": [
+                "none"
+              ],
               "tabs": [],
-              "note": "full_page_human_challenge"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:57:49.571534+00:00",
+            "measured_at": "2026-08-15T12:17:57.548810+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": ""
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
@@ -146,7 +181,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:04:51.375633+00:00",
+            "measured_at": "2026-08-15T12:17:53.012269+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

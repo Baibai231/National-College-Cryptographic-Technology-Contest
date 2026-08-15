@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.800064+00:00",
+  "generated_at": "2026-08-15T12:51:12.609659+00:00",
   "report_title": "www.guazi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -89,7 +89,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:14:03.223832+00:00",
+            "measured_at": "2026-08-15T12:31:43.649961+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -177,9 +177,7 @@
             "inline_widget"
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [
-            "当前自动证据不足以确认完整路线"
-          ],
+          "limitations": [],
           "steps": [
             {
               "step": 1,
@@ -204,12 +202,12 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:14:03.215990+00:00",
-            "raw_flow_type": "unknown",
+            "measured_at": "2026-08-15T12:31:36.745217+00:00",
+            "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },
           "raw_result": {
-            "flow_type": "unknown",
+            "flow_type": "no_web_signup",
             "stop_reason": "no_signup_entry",
             "primary_method": ""
           },
@@ -217,7 +215,7 @@
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "unknown",
+              "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "no_signup_entry",
               "evidence_boundary": "pre_verification_only"

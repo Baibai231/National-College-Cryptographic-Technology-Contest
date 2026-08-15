@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.787199+00:00",
+  "generated_at": "2026-08-15T12:51:12.595416+00:00",
   "report_title": "www.bianlifeng.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.bianlifeng.com/",
-          "final_url": "https://www.bianlifeng.com/",
+          "start_url": "https://www.bianlifeng.com/#contact",
+          "final_url": "https://www.bianlifeng.com/#contact",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -34,9 +34,7 @@
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "modal"
-              ],
+              "ui_types": [],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -44,9 +42,7 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "modal"
-          ],
+          "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -55,21 +51,22 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.bianlifeng.com/",
-              "ui_type": "modal",
+              "url": "https://www.bianlifeng.com/#contact",
+              "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [],
-              "note": ""
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:08:08.861287+00:00",
+            "measured_at": "2026-08-15T12:25:24.940614+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -105,8 +102,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.bianlifeng.com/",
-          "final_url": "https://www.bianlifeng.com/",
+          "start_url": "https://www.bianlifeng.com/#contact",
+          "final_url": "https://www.bianlifeng.com/#contact",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -119,9 +116,7 @@
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "modal"
-              ],
+              "ui_types": [],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -129,9 +124,7 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "modal"
-          ],
+          "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -140,21 +133,22 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.bianlifeng.com/",
-              "ui_type": "modal",
+              "url": "https://www.bianlifeng.com/#contact",
+              "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
               "actions": [
+                "none",
                 "none"
               ],
               "tabs": [],
-              "note": ""
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:08:01.318546+00:00",
+            "measured_at": "2026-08-15T12:25:20.791703+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

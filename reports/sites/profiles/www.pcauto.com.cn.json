@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.813344+00:00",
+  "generated_at": "2026-08-15T12:51:12.623216+00:00",
   "report_title": "www.pcauto.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -116,15 +116,15 @@
                 "tos"
               ],
               "actions": [
-                "none"
+                "tab_click"
               ],
               "tabs": [],
-              "note": "no_password_tab"
+              "note": "password_tab_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:21:48.417790+00:00",
+            "measured_at": "2026-08-15T12:01:43.334618+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -264,7 +264,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:21:41.075100+00:00",
+            "measured_at": "2026-08-15T12:01:31.123744+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

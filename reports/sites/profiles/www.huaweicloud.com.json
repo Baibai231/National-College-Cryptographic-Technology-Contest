@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.800855+00:00",
+  "generated_at": "2026-08-15T12:51:12.610195+00:00",
   "report_title": "www.huaweicloud.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -147,7 +147,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.huaweicloud.com/",
-          "final_url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=8776bcf5b8f64b608cca26a6498e8b42&lang=zh-cn",
+          "final_url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=8d860bf5ab414b6aa6b390509ad284ac&lang=zh-cn",
           "observed_route": "手机号 → 短信验证码/一次性验证码",
           "observed_routes": [
             {
@@ -214,7 +214,7 @@
             },
             {
               "step": 2,
-              "url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=8776bcf5b8f64b608cca26a6498e8b42&lang=zh-cn",
+              "url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=8d860bf5ab414b6aa6b390509ad284ac&lang=zh-cn",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -236,7 +236,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T15:03:09.210168+00:00",
+            "measured_at": "2026-08-15T11:33:04.739238+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

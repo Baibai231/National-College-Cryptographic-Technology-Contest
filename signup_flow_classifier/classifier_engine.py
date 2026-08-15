@@ -182,10 +182,6 @@ class SignupFlowClassifierEngine:
         if (entry_kind == "signup"
                 and self._url_is_requested_entry(signup_url, "signup")):
             try:
-                from signup_flow_classifier.page_detector import (
-                    detect_fields_all_frames, detect_tabs_all_frames,
-                    detect_blockers,
-                )
                 shell = not (
                     detect_fields_all_frames(self.driver)
                     or detect_tabs_all_frames(self.driver)
@@ -200,7 +196,7 @@ class SignupFlowClassifierEngine:
                     record_evidence(
                         result,
                         "empty_signup_url_fallback_to_home:{}".format(home))
-                    self._wait_for_page_stable(timeout=6)
+                    self._wait_for_page_stable(self.driver, timeout=6)
                     signup_url = home
             except Exception:
                 pass
@@ -452,7 +448,7 @@ class SignupFlowClassifierEngine:
                     and "password" in state.fields):
                 result.primary_method = primary_method(result.states)
                 return self._done(
-                    result, "unknown", "high", StopReason.NO_SIGNUP_ENTRY.value
+                    result, "no_web_signup", "high", StopReason.NO_SIGNUP_ENTRY.value
                 )
 
             # ---- 出现口令字段 → 优先分类并停止 ----
@@ -572,11 +568,11 @@ class SignupFlowClassifierEngine:
                 return self._done(result, ft, conf, reason)
 
             # ---- 请求注册流程却只到达明确的登录页 ----
-            # 且没有可见注册入口：如实记为 no_signup_entry
+            # 且没有可见注册入口：如实记为 no_web_signup
             if login_page_during_signup and "password" in state.fields:
                 result.primary_method = primary_method(result.states)
                 return self._done(
-                    result, "unknown", "low", StopReason.NO_SIGNUP_ENTRY.value
+                    result, "no_web_signup", "low", StopReason.NO_SIGNUP_ENTRY.value
                 )
 
             # ---- 短信验证码视图（仅 login 测量时尝试切换） ----
@@ -781,7 +777,7 @@ class SignupFlowClassifierEngine:
             if (("password" in state.fields or login_only_url)
                     and ft != "unknown"):
                 return self._done(
-                    result, "unknown", "high",
+                    result, "no_web_signup", "high",
                     StopReason.NO_SIGNUP_ENTRY.value)
         # 对应 MyAutomaticPolicy L683-699
         if ft == "unknown":
@@ -790,7 +786,7 @@ class SignupFlowClassifierEngine:
             # 可能短暂空白，被误判为渲染故障。先等页面稳定再重查一次，
             # 仍空白才确认是故障。
             if blank_marker and parsed_url.scheme != "file":
-                self._wait_for_page_stable(timeout=4)
+                self._wait_for_page_stable(self.driver, timeout=4)
                 blank_marker = detect_blank_auth_page(self.driver)
             if blank_marker:
                 record_evidence(
@@ -805,6 +801,10 @@ class SignupFlowClassifierEngine:
               and any("entry_click" in getattr(s, "actions", [])
                       for s in result.states)):
             reason = StopReason.AUTH_ENTRY_NO_AUTH_STATE.value
+        # v4 曾加"无认证信号+未点入口 → no_web_signup"升级，实测无头模式下
+        # 大量站（aliyun/douban/ke 等 30+）弹窗不弹被误判为无入口，回退该升级。
+        # no_web_signup 只保留三处有明确证据的守卫（仅登录界面/登录页冒充注册/
+        # 展开后只露登录口令框），无信号一律保持 unknown 诚实记录。
         result.primary_method = primary_method(result.states)
         return self._done(result, ft, conf, reason)
 

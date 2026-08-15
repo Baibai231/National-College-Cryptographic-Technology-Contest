@@ -122,6 +122,7 @@ def _row_to_site(row):
             "primary_method": login_record.get("primary_method"),
             "evidence": login_record.get("evidence", []),
             "error": login_error or login_record.get("error"),
+            "methods": login_record.get("methods") or [],
             "program_reason": _program_reason(
                 lf, lr, lfields, lblockers, login_error, login_methods),
         },
@@ -137,6 +138,7 @@ def _row_to_site(row):
             "primary_method": signup_record.get("primary_method"),
             "evidence": signup_record.get("evidence", []),
             "error": signup_error or signup_record.get("error"),
+            "methods": signup_record.get("methods") or [],
             "program_reason": _program_reason(
                 sf, sr, sfields, sblockers, signup_error, signup_methods),
         },
@@ -152,11 +154,13 @@ def _row_to_site(row):
         lf, mlogin or "", lr or "", lfields or "", lblockers or "",
         verified=bool(mverified), methods=login_methods,
         structured=details.get("manual_structured", {}).get("login"),
+        method_results=login_record.get("methods") or [],
     )
     comparison = _manual_comparison(
         sf, msignup or "", sr or "", sfields or "", sblockers or "",
         verified=bool(mverified), methods=signup_methods,
         structured=details.get("manual_structured", {}).get("signup"),
+        method_results=signup_record.get("methods") or [],
     )
     site["login_match"] = login_comparison["status"]
     site["login_comparison"] = login_comparison
@@ -238,7 +242,7 @@ class AddSiteRequest(BaseModel):
     """现场分类结果 → 写入数据库。"""
     hostname: str = Field(max_length=253)
     url: str = Field("", max_length=2048)
-    version: Literal["v3"] = "v3"
+    version: Literal["v3", "v4"] = "v4"
     login: dict = Field(default_factory=dict)
     signup: dict = Field(default_factory=dict)
     admin_token: str = ""
@@ -591,8 +595,31 @@ def _manual_traits(manual_text, structured=None):
     return traits
 
 
+def _method_set_note(program_methods, structured):
+    """程序观察到的方法 vs 人工结构化勾选的方法，生成对照说明。"""
+    prog = [m.get("name_zh") or m.get("method") for m in (program_methods or [])]
+    man = set()
+    if isinstance(structured, dict):
+        for key, zh in (("password", "口令"), ("otp", "验证码"), ("scan", "扫码"),
+                        ("captcha", "人机"), ("tos", "协议"), ("sso", "第三方"),
+                        ("no_web", "无入口")):
+            if structured.get(key) is True:
+                man.add(zh)
+    if not prog and not man:
+        return ""
+    parts = []
+    if prog:
+        parts.append("程序观察到方法：" + ("、".join(prog)))
+    if man:
+        parts.append("人工勾选方法：" + "、".join(sorted(man)))
+    elif isinstance(structured, dict) and structured:
+        parts.append("人工结构化均未勾选")
+    return "；".join(parts) + "。"
+
+
 def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
-                       verified=True, methods="", structured=None):
+                       verified=True, methods="", structured=None,
+                       method_results=None):
     """Return match/mismatch/inconclusive status with auditable reasoning."""
     if not verified:
         return {"status": "pending", "reason": "尚无人工复核，当前只展示程序判断依据。"}
@@ -608,9 +635,13 @@ def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
             "inconclusive_program": "程序证据不足：",
             "inconclusive_manual": "人工证据不足：",
         }[status]
+        reason = f"{prefix}{explanation} 程序依据：{program_reason} 人工复核为“{manual_reason}”。"
+        note = _method_set_note(method_results, structured)
+        if note:
+            reason += f" {note}"
         return {
             "status": status,
-            "reason": f"{prefix}{explanation} 程序依据：{program_reason} 人工复核为“{manual_reason}”。",
+            "reason": reason,
         }
 
     if flow_type in (None, "", "unknown", "error"):

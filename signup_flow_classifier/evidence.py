@@ -33,11 +33,13 @@ def maybe_screenshot(driver: WebDriver, result: FlowResult, path: str, enabled: 
 
 def finalize(result: FlowResult, flow_type: str, confidence: str, stop_reason: str,
              error: Optional[str] = None) -> FlowResult:
-    """填充分类结论并返回（自动聚合 ui_type：取状态序列中最常见的非 unknown 样式）。"""
+    """填充分类结论并返回（自动聚合 ui_type 与 v4 逐方法清单）。"""
     result.flow_type = flow_type
     result.confidence = confidence
     result.stop_reason = stop_reason
     result.error = error
+    from signup_flow_classifier.classifier import aggregate_methods
+    result.methods = aggregate_methods(result.states, flow_type=flow_type)
     from signup_flow_classifier.policy import summarize_policy
     result.policy = summarize_policy(
         result.entry_kind, flow_type, confidence, stop_reason, result.states

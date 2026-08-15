@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.819959+00:00",
+  "generated_at": "2026-08-15T12:51:12.630541+00:00",
   "report_title": "www.vip.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,12 +22,35 @@
           "status": "observed",
           "start_url": "https://passport.vip.com/login?src=https%3A%2F%2Fwww.vip.com%2F%26st_name%3Dmst_tfs_punish_login",
           "final_url": "https://passport.vip.com/login?src=https%3A%2F%2Fwww.vip.com%2F%26st_name%3Dmst_tfs_punish_login",
-          "observed_route": "账号/邮箱 → 扫码 → 口令",
+          "observed_route": "扫码；备选：账号/邮箱 → 扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
+                1
+              ],
+              "summary": "扫码",
+              "fields_observed": [],
+              "methods_observed": [
+                "qr",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo",
+                "alipay"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
                 2
               ],
               "summary": "账号/邮箱 → 扫码 → 口令",
@@ -72,12 +95,14 @@
           "verification_observed": [
             "qr"
           ],
-          "password_state": "observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -96,7 +121,7 @@
                 "scan"
               ],
               "actions": [
-                "none",
+                "tab_click",
                 "auth_mode_click"
               ],
               "tabs": [
@@ -131,7 +156,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:41:07.835699+00:00",
+            "measured_at": "2026-08-15T12:02:48.929756+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -275,7 +300,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:40:53.304664+00:00",
+            "measured_at": "2026-08-15T12:02:32.521964+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

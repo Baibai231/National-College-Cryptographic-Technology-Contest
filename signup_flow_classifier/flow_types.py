@@ -75,6 +75,18 @@ class PageState:
 
 
 @dataclass
+class MethodResult:
+    """单个注册/登录方法（v4：逐方法呈现，替代把多方法压成一个 flow_type 的旧口径）"""
+    method: str = ""                                   # 方法标识: password/phone/sms/qr/wechat/qq/...
+    name_zh: str = ""                                  # 中文名
+    status: str = "observed"                           # confirmed 确认可用 / blocked 存在但被门槛挡住 / observed 仅观察到弱证据
+    confidence: str = "low"                            # high/medium/low
+    blockers: List[str] = field(default_factory=list)  # 该方法被哪些门槛挡住（blocked 时非空）
+    route: str = ""                                    # 证据路线：出现在第几步、什么页面形态
+    steps: List[int] = field(default_factory=list)     # 出现的 step 序号（证据）
+
+
+@dataclass
 class FlowResult:
     """单个网站的测量结果（JSON 输出结构）"""
     site: str = ""
@@ -86,6 +98,7 @@ class FlowResult:
     primary_method: str = ""                              # 主方式：password/email/phone/sms/sso/email_only/unknown
     confidence: str = "low"                               # high/medium/low
     states: List[PageState] = field(default_factory=list)
+    methods: List[MethodResult] = field(default_factory=list)  # v4 逐方法清单
     stop_reason: str = StopReason.MAX_STEPS_REACHED.value
     evidence: List[str] = field(default_factory=list)     # 证据（截图路径/说明）
     policy: Dict[str, object] = field(default_factory=dict)  # 标准化政策摘要（由 finalize 生成）

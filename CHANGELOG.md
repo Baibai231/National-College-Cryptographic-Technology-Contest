@@ -5,10 +5,93 @@
 
 ---
 
+## v4 进行中（2026-08-15）
+
+### 14. v4 逐方法呈现（MultiMethod）+ unknown 攻坚（进行中）
+
+背景：35% 记录（106/302）观察到≥2种注册/登录方法，但分类/存储/展示全链路
+只保留单个 flow_type，方法信息被压扁。v4 目标是逐方法呈现 + 攻坚 unknown。
+
+**关键决策（2026-08-15，用户拍板）：全量重跑采用有头 Chrome。**
+实测无头模式（SITES_HEADLESS=1）让 30+ 站点（阿里云/豆瓣/贝壳/链家/小红书/
+虎扑等）登录/注册弹窗不弹：v4 无头第 1 轮 145/302 条与 v3 不一致、40 条真实
+结果退化（human_blocked/direct_password → no_web_signup/unknown）；有头模式
+这些站全部恢复（douban→human_blocked 与 v3 一致）。因此：
+- 全量重跑（Mac）用**有头**，与 v3 官方数据同口径；
+- 服务器实时分类继续**无头**（SITES_HEADLESS=1 只影响服务器，实测正常）；
+- 无信号 unknown 的 no_web_signup 升级已**回退**（防无头误判），no_web_signup
+  只保留三处有明确证据的守卫（仅登录界面/登录页冒充注册/展开后只露登录口令框）。
+
+已完成的改动：
+- [x] `flow_types.py`：新增 `MethodResult`（method/name_zh/status/confidence/
+      blockers/route/steps），`FlowResult.methods` 数组；flow_type 保留为主方法口径。
+- [x] `classifier.py`：`aggregate_methods()` 聚合逻辑——从状态序列收集方法
+      （含字段反推：password 字段→账号密码、code 字段→短信验证码），逐方法判定
+      confirmed（出现过且无硬门槛）/blocked（只出现在有门槛的步骤）/observed
+      （auto_signup 等文案语义）；口令路线存在时 phone/email/identifier 视为
+      账号标识不单列方法；主方法状态与 flow_type 对齐（已到达口令步骤即 confirmed，
+      页面级备选门槛不挂在主方法上）。
+- [x] `evidence.py`：`finalize()` 统一接入聚合，所有分类路径自动带 methods。
+- [x] 真实浏览器单站验收：12306/zhihu/feishu/segmentfault/china.com 登录注册
+      双侧方法清单符合人工预期（china.com 正确呈现 账号密码+QQ+第三方 三方法并存）。
+- [x] unknown 攻坚 A 类（人工确认无网页入口 8 站）：三处 NO_SIGNUP_ENTRY 返回
+      从 unknown 改为 no_web_signup（仅登录界面守卫/登录页冒充注册/展开后只露
+      登录口令框）；最终 unknown 路径增加"页面正常加载+全程无认证信号+从未点过
+      入口 → no_web_signup"升级。实测 chinanews/coolapk/dewu/nbd/qunar/
+      xinhuanet/zhuanzhuan 7 站转正；meituan/imooc 因 entry_click 波动保持
+      unknown（防"弹窗没弹出来"误判）。
+- [x] A 类晚渲染保护：sina/2345 等重页面入口可能晚渲染，下结论前
+      `_wait_for_page_stable`（8s）后重新探测字段/tab/门槛，仍有信号则回 unknown，
+      避免"没加载完"误判成"没有"；同时修复 `_wait_for_page_stable` 漏传
+      driver 参数导致的 zhibo8 崩溃。
+- [x] 批量流水线 methods 补齐：`scripts/run_measurement.py` 与
+      `scripts/site_data_store.py::measurement_record` 白名单 schema 补
+      `methods` 字段（网页"加入数据库"与批量重跑均保留方法清单），
+      冒烟验证 12306/china.com 输出带方法；新增对应单元测试（108/108 通过）。
+- [x] B 类波动组 3 连跑（无头）：36kr→otp_only、meituan→human_blocked（整页
+      人机验证）、pan.baidu→direct_password 转正；anjuke 弹窗时开时不开；
+      sina/2345/zhibo8（zhibo8.com）无头环境认证入口不可达，报 no_web_signup
+      （"入口失效"语义，人工对照会如实显示差异，作为已知边界文档化）。
+- [x] B 类结构难点组诊断：zol 修复——`safe_click_tab` 文本匹配与 `detect_tabs`
+      统一为分词匹配（合并文本"短信登录 帐号登录"，zol 实测），tab 点击从
+      no_password_signup_tab 修复为 clicked_and_changed；但注册视图字段仍
+      检测不到（DOM 结构问题），zol 继续 unknown 如实记录。acfun 入口发现
+      失败（登录/注册入口未找到）；thepaper 登录弹窗手机号+密码可识别但
+      无独立注册入口（登录即注册语义）；v.qq/work.weixin 入口/切换问题；
+      均作为已知结构难点记录在报告。
+- [x] **v4 正式数据产出（有头，两轮全量+差异复测+仲裁）**：
+      - 第 1 轮 302 条 0 失败、第 2 轮 302 条 0 失败；两轮 282/302 语义一致
+        （93% 稳定），20 条差异项 15 站复测仲裁（多数投票/独立证据/回退 v3）。
+      - 修复两处 v3 时代潜伏 bug：`_wait_for_page_stable` 漏传 driver 参数
+        （空壳回退路径 line199 / 空白页检查路径 line789，全量跑才暴露，
+        music.163 渲染超时、huaweicloud 空壳回退崩溃），复测全部 0 失败。
+      - 正式数据 `reports/sites/sites_latest.jsonl` 302 条全 v4，151 站双侧
+        齐全；未知 unknown 从 v3 的 101 降到 83，direct_password 从 64 升到 91。
+      - 数据库重建：151 站 83 已核验，v3 旧记录进历史表；逐站档案/汇总表已重生成。
+      - 指标：登录正确率 72.7%→80.7%、注册 80.0%→78.9%，覆盖率登录
+        66.3%→68.7%、注册 60.2%→68.7%。
+      - 方法清单全覆盖：详情 API/网页方法表格展示逐方法 confirmed/blocked/observed。
+- [x] 回归测试 98/98 通过。
+- [x] webapp 接入：详情 API 返回 `login/signup.methods`（旧 v3 数据为空数组兼容）；
+      详情弹窗新增"方法清单"行（方法名+状态徽标+路线，confirmed/blocked/observed）；
+      人工对照 reason 追加"程序观察到方法 vs 人工勾选方法"对照说明。
+- [x] 人工提交表单改多行：登录/注册各一行一种方法输入，提交时解析行填充结构化
+      traits（显式勾选优先；修复"无密码"被"密码"子串误判的 bug）。
+- [x] 网页写入模型 v3/v4 双接受（默认 v4），前端"加入数据库"带 v4；
+      `misc/measure_version.txt` 升至 v4；测试契约同步更新（107/107 通过）。
+- [ ] unknown 攻坚 B 类（波动组 3 连跑取多数 + 结构难点组逐站诊断）
+- [ ] 数据库/API/前端接入 methods + 人工提交改多行 + 人工对照集合化
+- [ ] 升 v4 全量重跑 ×2（无头）+ 两轮对比仲裁
+- [ ] 推送 + 服务器部署 + 公网验收
+
+
+
 ## 变更速查表
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
+| 2026-08-15 | Kimi（Mac） | v4 正式数据（有头两轮全量+仲裁）：302 条全 v4，unknown 101→83、direct_password 64→91，覆盖率登录/注册均 68.7%，方法清单全链路呈现，修 2 处潜伏 bug | signup_flow_classifier/、scripts/、webapp/、reports/、tests/ | 本次提交 |
+| 2026-08-15 | Kimi（Mac） | v4 逐方法呈现（MultiMethod）进行中：MethodResult 聚合 + 三处 NO_SIGNUP_ENTRY 改 no_web_signup + unknown 无信号升级；A 类 7 站转正 | signup_flow_classifier/、CHANGELOG.md | 未推送 |
 | 2026-08-15 | Kimi（Mac） | 站点筛选按登录/注册双侧合并判定（识别不一致 10→18 站，此前登录侧错误被注册侧正确遮盖），新增"程序证据不足/人工证据不足"两个筛选；不动数据与版本 | webapp/static/index.html、HANDOFF.md | 本次提交 |
 | 2026-08-15 | Codex（Mac） | v3 保守运行时加固（进行中）：修复并发入库/同步竞态与导出历史覆盖当前版本；同步失败安全中止；限制实时分类资源及内网目标；匿名不再读取待审核详情 | webapp/、scripts/、tests/ | 已推送，待服务器部署验收 |
 | 2026-08-15 | Codex（Mac） | v3 数据闭环改进完成：网页持久化、结构化核验、双侧原因、诚实指标、unknown 优化、两轮全量回归及三端同步均完成并上线 | webapp/、scripts/、signup_flow_classifier/、tests/、reports/、HANDOFF.md | 已推送并于 00:00 定时部署验收 |

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.804956+00:00",
+  "generated_at": "2026-08-15T12:51:12.614342+00:00",
   "report_title": "www.jd.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,95 +20,115 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
-          "final_url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
-          "observed_route": "手机号",
+          "start_url": "https://www.jd.com/signup",
+          "final_url": "https://passport.jd.com/new/login.aspx?ReturnUrl=https%3A%2F%2Fwww.jd.com%2F&czLogin=1",
+          "observed_route": "账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号",
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
-                "phone"
+                "identifier",
+                "password"
               ],
               "methods_observed": [
-                "phone"
+                "password",
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq"
               ],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "已走完当前安全可达范围"
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
-            "phone"
+            "identifier",
+            "password"
           ],
           "methods_observed": [
-            "phone"
+            "password",
+            "identifier",
+            "sms",
+            "third_party",
+            "wechat",
+            "qq"
           ],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://reg.jd.com/reg/person?ReturnUrl=https%3A//www.jd.com/",
+              "url": "https://passport.jd.com/new/login.aspx?ReturnUrl=https%3A%2F%2Fwww.jd.com%2F&czLogin=1",
               "ui_type": "inline_widget",
               "fields": [
-                "phone"
+                "identifier",
+                "password"
               ],
               "methods": [
-                "phone"
+                "identifier",
+                "qq",
+                "sso",
+                "wechat"
               ],
               "blockers": [],
-              "actions": [
-                "none"
+              "actions": [],
+              "tabs": [
+                "password_tab",
+                "sms_tab",
+                "register_tab"
               ],
-              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-14T14:26:12.097917+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "no_safe_action"
+            "confidence": "high",
+            "measured_at": "2026-08-15T11:48:50.571244+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "no_safe_action",
-            "primary_method": "unknown"
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "no_safe_action",
+              "status": "classified",
+              "confidence": "high",
+              "stop_reason": "password_step_reached",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
+                "password",
                 "sms_or_otp",
-                "phone"
+                "third_party"
               ],
-              "password_status": "not_determined",
-              "password_observed": false,
+              "password_status": "password_observed",
+              "password_observed": true,
               "verification_observed": false,
-              "phone_observed": true,
-              "identifier_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
               "blocking_factors": []
             },
             "security": {
@@ -198,7 +218,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:26:02.050847+00:00",
+            "measured_at": "2026-08-15T11:48:45.652339+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

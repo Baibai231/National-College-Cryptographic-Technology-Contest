@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.791883+00:00",
+  "generated_at": "2026-08-15T12:51:12.600788+00:00",
   "report_title": "www.cyzone.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -79,10 +79,10 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
+                "hover_click"
               ],
               "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
+              "note": "hover_login_clicked_and_changed"
             },
             {
               "step": 2,
@@ -131,7 +131,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:09:33.764712+00:00",
+            "measured_at": "2026-08-15T12:27:11.942313+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -282,7 +282,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:09:03.211191+00:00",
+            "measured_at": "2026-08-15T12:26:37.428724+00:00",
             "raw_flow_type": "verification_then_password",
             "raw_stop_reason": "password_step_reached"
           },

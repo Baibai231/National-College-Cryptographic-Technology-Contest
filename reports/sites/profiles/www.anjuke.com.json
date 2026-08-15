@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.786151+00:00",
+  "generated_at": "2026-08-15T12:51:12.594066+00:00",
   "report_title": "www.anjuke.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -100,8 +100,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://tianjin.anjuke.com/",
-          "final_url": "https://tianjin.anjuke.com/",
+          "start_url": "https://callback.58.com/antibot/verifycode?serialId=dee7c579864b06e0d8a76cacdea3a882_8b139e72f0184297a747ee0476e8bd5d&code=300&sign=4e45375f7f2d12258b068cb0dc4cc04c&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_421f8bc8b3414f8b93215d654fe193e2%26callback%3Dshield%26from%3Dantispam",
+          "final_url": "https://callback.58.com/antibot/verifycode?serialId=dee7c579864b06e0d8a76cacdea3a882_8b139e72f0184297a747ee0476e8bd5d&code=300&sign=4e45375f7f2d12258b068cb0dc4cc04c&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_421f8bc8b3414f8b93215d654fe193e2%26callback%3Dshield%26from%3Dantispam",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
@@ -131,28 +131,28 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://tianjin.anjuke.com/",
+              "url": "https://callback.58.com/antibot/verifycode?serialId=dee7c579864b06e0d8a76cacdea3a882_8b139e72f0184297a747ee0476e8bd5d&code=300&sign=4e45375f7f2d12258b068cb0dc4cc04c&namespace=cloud_anjuke_gonggong_h5&url=https%3A%2F%2Fwww.anjuke.com%2Fesfcommon-captcha-wy%3Fhistory%3DaHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v%26namespace%3Dershoufang_fangjia_pc%26serialID%3D05a4fe1696a8b19304b3c8f9c99131b0_421f8bc8b3414f8b93215d654fe193e2%26callback%3Dshield%26from%3Dantispam",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click",
-                "entry_click"
+                "none",
+                "none"
               ],
               "tabs": [],
-              "note": "entry_clicked_no_change"
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:43:16.602030+00:00",
+            "measured_at": "2026-08-15T12:04:41.780326+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
+            "stop_reason": "unrecognized_page",
             "primary_method": "unknown"
           },
           "policy": {
@@ -161,7 +161,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.826126+00:00",
+  "generated_at": "2026-08-15T12:51:12.636605+00:00",
   "report_title": "you.163.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -27,8 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码/一次性验证码",
               "fields_observed": [
@@ -75,21 +74,6 @@
             {
               "step": 1,
               "url": "https://you.163.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [
-                "auto_signup"
-              ],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://you.163.com/",
               "ui_type": "inline_widget",
               "fields": [
                 "phone"
@@ -116,7 +100,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T15:00:15.679915+00:00",
+            "measured_at": "2026-08-15T12:19:34.372914+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -256,7 +240,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T14:59:49.243020+00:00",
+            "measured_at": "2026-08-15T12:19:30.100737+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

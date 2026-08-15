@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.817162+00:00",
+  "generated_at": "2026-08-15T12:51:12.627849+00:00",
   "report_title": "www.suning.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,15 +20,33 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
-          "final_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
-          "observed_route": "账号/邮箱 → 短信验证码/扫码 → 口令",
+          "start_url": "https://www.suning.com/",
+          "final_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
+          "observed_route": "扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
                 2
+              ],
+              "summary": "扫码",
+              "fields_observed": [],
+              "methods_observed": [
+                "qr"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
               ],
               "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
               "fields_observed": [
@@ -66,16 +84,31 @@
             "sms",
             "qr"
           ],
-          "password_state": "observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
+              "url": "https://www.suning.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
               "ui_type": "standalone_page",
               "fields": [],
               "methods": [
@@ -85,15 +118,15 @@
                 "scan"
               ],
               "actions": [
-                "none",
+                "tab_click",
                 "auth_mode_click"
               ],
               "tabs": [],
               "note": "auth_mode_text_clicked_and_changed"
             },
             {
-              "step": 2,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
+              "step": 3,
+              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
               "ui_type": "standalone_page",
               "fields": [
                 "identifier",
@@ -113,7 +146,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:41:47.571288+00:00",
+            "measured_at": "2026-08-15T12:03:19.305240+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -155,56 +188,83 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
-          "final_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
-          "observed_route": "扫码",
+          "start_url": "https://www.suning.com/",
+          "final_url": "https://reg.suning.com/person.do",
+          "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
-              "summary": "扫码",
-              "fields_observed": [],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password",
+                "code"
+              ],
               "methods_observed": [
-                "qr"
+                "password",
+                "phone",
+                "sms"
               ],
               "verification_observed": [
-                "qr"
+                "sms"
               ],
-              "password_state": "not_observed_before_verification",
+              "password_state": "observed_alongside_verification",
               "ui_types": [
-                "standalone_page"
+                "inline_widget"
               ],
-              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
-          "fields_observed": [],
+          "fields_observed": [
+            "phone",
+            "password",
+            "code"
+          ],
           "methods_observed": [
-            "qr"
+            "password",
+            "phone",
+            "sms"
           ],
           "verification_observed": [
-            "qr"
+            "sms"
           ],
-          "password_state": "not_observed_before_verification",
+          "password_state": "observed_alongside_verification",
           "ui_types": [
-            "standalone_page"
+            "inline_widget"
           ],
-          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问",
-          "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
-          ],
+          "safe_stop": "已到达口令输入界面，未提交表单",
+          "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Floginst.suning.com%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fmy.suning.com%252F%253Fsafp%253Dd488778a.homepagev8.P5ptt.1%2526safpn%253D10001&loginTheme=b2c&multipleActive=false",
-              "ui_type": "standalone_page",
+              "url": "https://www.suning.com/",
+              "ui_type": "unknown",
               "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://reg.suning.com/person.do",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password",
+                "code"
+              ],
               "methods": [
-                "qr"
+                "phone"
               ],
               "blockers": [
-                "scan"
+                "sms_code"
               ],
               "actions": [],
               "tabs": [],
@@ -213,14 +273,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:41:31.896461+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "measured_at": "2026-08-15T12:03:09.268616+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
@@ -228,20 +288,22 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
-                "qr_or_scan"
+                "password",
+                "sms_or_otp",
+                "phone"
               ],
-              "password_status": "not_determined",
-              "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
+              "password_status": "password_observed",
+              "password_observed": true,
+              "verification_observed": true,
+              "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "scan"
+                "sms_code"
               ]
             },
             "security": {

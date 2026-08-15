@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.805522+00:00",
+  "generated_at": "2026-08-15T12:51:12.615086+00:00",
   "report_title": "www.jianshu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -103,7 +103,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:28:48.092700+00:00",
+            "measured_at": "2026-08-15T11:50:36.483160+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -226,7 +226,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:28:39.862068+00:00",
+            "measured_at": "2026-08-15T11:50:35.692854+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

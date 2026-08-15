@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.796018+00:00",
+  "generated_at": "2026-08-15T12:51:12.605398+00:00",
   "report_title": "www.dxy.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -67,7 +67,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:04:29.495056+00:00",
+            "measured_at": "2026-08-15T12:22:59.984706+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -180,7 +180,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:04:29.414354+00:00",
+            "measured_at": "2026-08-15T12:22:49.440689+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

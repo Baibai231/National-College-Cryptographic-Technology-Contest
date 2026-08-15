@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.810418+00:00",
+  "generated_at": "2026-08-15T12:51:12.620208+00:00",
   "report_title": "www.maimai.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://maimai.cn/",
-          "final_url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2Fent%2Fv2%2Fcompany%2Fhome",
+          "final_url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2F",
           "observed_route": "手机号 → 短信验证码/扫码",
           "observed_routes": [
             {
@@ -86,11 +86,11 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "login_structural_semantics_clicked_and_changed"
+              "note": "login_combined_text_clicked_and_changed"
             },
             {
               "step": 2,
-              "url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2Fent%2Fv2%2Fcompany%2Fhome",
+              "url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -114,7 +114,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:44:32.971773+00:00",
+            "measured_at": "2026-08-15T12:05:22.972670+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -158,7 +158,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://maimai.cn/",
-          "final_url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2Fent%2Fv2%2Fcompany%2Fhome",
+          "final_url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2F",
           "observed_route": "手机号 → 短信验证码/扫码",
           "observed_routes": [
             {
@@ -223,11 +223,11 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "login_structural_semantics_clicked_and_changed"
+              "note": "register_combined_text_clicked_and_changed"
             },
             {
               "step": 2,
-              "url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2Fent%2Fv2%2Fcompany%2Fhome",
+              "url": "https://maimai.cn/platform/login?to=https%3A%2F%2Fmaimai.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -251,7 +251,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:44:32.786216+00:00",
+            "measured_at": "2026-08-15T12:05:21.866754+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

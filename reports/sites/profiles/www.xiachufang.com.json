@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.820431+00:00",
+  "generated_at": "2026-08-15T12:51:12.631043+00:00",
   "report_title": "www.xiachufang.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -104,15 +104,15 @@
                 "tos"
               ],
               "actions": [
-                "none"
+                "tab_click"
               ],
               "tabs": [],
-              "note": "no_password_tab"
+              "note": "password_tab_clicked_and_changed"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:49:56.366554+00:00",
+            "measured_at": "2026-08-15T12:23:18.977174+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -246,7 +246,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:49:39.351714+00:00",
+            "measured_at": "2026-08-15T12:23:01.245571+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

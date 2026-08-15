@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.825150+00:00",
+  "generated_at": "2026-08-15T12:51:12.635695+00:00",
   "report_title": "www.zol.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,12 +22,38 @@
           "status": "observed",
           "start_url": "https://www.zol.com.cn/",
           "final_url": "https://www.zol.com.cn/",
-          "observed_route": "未确认具体方式",
+          "observed_route": "未确认具体方式；备选：未确认具体方式；备选：未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            },
+            {
+              "route_id": "automatic_route_3",
+              "step_numbers": [
+                3
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -57,19 +83,50 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
+                "tab_click"
+              ],
+              "tabs": [
+                "password_signup_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.zol.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_signup_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.zol.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
                 "none"
               ],
               "tabs": [
                 "password_signup_tab",
                 "password_tab"
               ],
-              "note": "no_password_tab"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T13:48:25.249687+00:00",
+            "measured_at": "2026-08-15T12:02:07.662155+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -107,12 +164,25 @@
           "status": "observed",
           "start_url": "https://www.zol.com.cn/",
           "final_url": "https://www.zol.com.cn/",
-          "observed_route": "未确认具体方式",
+          "observed_route": "未确认具体方式；备选：未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -142,19 +212,34 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none",
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_signup_tab",
                 "password_tab"
               ],
-              "note": "no_password_signup_tab"
+              "note": "password_signup_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.zol.com.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "password_signup_tab",
+                "password_tab"
+              ],
+              "note": "password_signup_tab_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:39:27.859303+00:00",
+            "measured_at": "2026-08-15T12:01:47.320192+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

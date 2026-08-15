@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.816048+00:00",
+  "generated_at": "2026-08-15T12:51:12.625609+00:00",
   "report_title": "www.sina.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -114,7 +114,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:27:15.791961+00:00",
+            "measured_at": "2026-08-15T11:49:49.700424+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -211,8 +211,7 @@
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
           "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
+            "程序置信度为 low"
           ],
           "steps": [
             {
@@ -253,12 +252,12 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:27:14.213026+00:00",
-            "raw_flow_type": "unknown",
+            "measured_at": "2026-08-15T11:49:33.858636+00:00",
+            "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },
           "raw_result": {
-            "flow_type": "unknown",
+            "flow_type": "no_web_signup",
             "stop_reason": "no_signup_entry",
             "primary_method": "password"
           },
@@ -266,7 +265,7 @@
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "unknown",
+              "status": "classified",
               "confidence": "low",
               "stop_reason": "no_signup_entry",
               "evidence_boundary": "safely_reachable_ui"

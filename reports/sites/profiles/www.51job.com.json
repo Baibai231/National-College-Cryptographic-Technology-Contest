@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.782538+00:00",
+  "generated_at": "2026-08-15T12:51:12.590176+00:00",
   "report_title": "www.51job.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.51job.com/",
           "final_url": "https://www.51job.com/",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_route": "手机号 → 短信验证码/扫码；备选：手机号/账号/邮箱 → 短信验证码/扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -50,14 +50,49 @@
                 "modal"
               ],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "手机号/账号/邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "phone",
+                "identifier",
+                "password",
+                "code"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
+                "identifier",
+                "sms",
+                "qr",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_alongside_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
+            "identifier",
+            "password",
             "code"
           ],
           "methods_observed": [
+            "password",
             "phone",
+            "identifier",
             "sms",
             "qr",
             "third_party",
@@ -67,11 +102,11 @@
             "sms",
             "qr"
           ],
-          "password_state": "not_observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -92,29 +127,55 @@
                 "wechat"
               ],
               "blockers": [
-                "sms_code",
-                "captcha"
+                "sms_code"
               ],
               "actions": [
-                "none",
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "no_password_tab"
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.51job.com/",
+              "ui_type": "modal",
+              "fields": [
+                "phone",
+                "identifier",
+                "password",
+                "code"
+              ],
+              "methods": [
+                "auto_signup",
+                "identifier",
+                "phone",
+                "qr",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "sms_code"
+              ],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:44:15.616099+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "measured_at": "2026-08-15T12:05:08.916894+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": "sms"
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
@@ -122,23 +183,23 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "human_blocked",
+              "stop_reason": "password_step_reached",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
+                "password",
                 "sms_or_otp",
                 "qr_or_scan",
                 "third_party",
                 "phone"
               ],
-              "password_status": "not_determined",
-              "password_observed": false,
+              "password_status": "password_observed",
+              "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
-                "captcha",
                 "sms_code"
               ]
             },
@@ -264,7 +325,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:43:59.007428+00:00",
+            "measured_at": "2026-08-15T12:05:02.838184+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

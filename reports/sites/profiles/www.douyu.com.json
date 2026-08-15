@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.795402+00:00",
+  "generated_at": "2026-08-15T12:51:12.604734+00:00",
   "report_title": "www.douyu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -105,7 +105,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T13:55:14.199872+00:00",
+            "measured_at": "2026-08-15T12:07:39.823726+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -148,37 +148,31 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.douyu.com/?dyshid=0-",
-          "final_url": "https://passport.douyu.com/member/login?",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "final_url": "https://www.douyu.com/?dyshid=0-",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "qr",
-                "third_party",
-                "wechat",
-                "qq",
-                "weibo"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "standalone_page"
+                "inline_widget"
               ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -187,22 +181,16 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "qr",
-            "third_party",
-            "wechat",
-            "qq",
-            "weibo"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "standalone_page"
+            "inline_widget"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -218,24 +206,18 @@
                 "hover_click"
               ],
               "tabs": [],
-              "note": "hover_login_clicked_and_changed"
+              "note": "hover_register_clicked_and_changed"
             },
             {
               "step": 2,
-              "url": "https://passport.douyu.com/member/login?",
-              "ui_type": "standalone_page",
+              "url": "https://www.douyu.com/?dyshid=0-",
+              "ui_type": "inline_widget",
               "fields": [
                 "phone",
                 "code"
               ],
               "methods": [
-                "auto_signup",
-                "phone",
-                "qq",
-                "qr",
-                "sso",
-                "wechat",
-                "weibo"
+                "phone"
               ],
               "blockers": [
                 "sms_code",
@@ -244,16 +226,13 @@
               "actions": [
                 "none"
               ],
-              "tabs": [
-                "password_tab",
-                "sms_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:23:52.758204+00:00",
+            "measured_at": "2026-08-15T12:07:33.169365+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -274,8 +253,6 @@
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
-                "third_party",
                 "phone"
               ],
               "password_status": "not_determined",

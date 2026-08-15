@@ -1,7 +1,121 @@
 """根据可复核的页面状态序列对注册流程分类。"""
 from typing import List, Tuple
 
-from signup_flow_classifier.flow_types import FlowType, PageState, StopReason
+from signup_flow_classifier.flow_types import FlowType, MethodResult, PageState, StopReason
+
+METHOD_ZH = {
+    "phone": "手机号", "email": "邮箱", "identifier": "账号/邮箱", "username": "用户名",
+    "password": "账号密码", "code": "验证码", "sms": "短信验证码", "qr": "扫码",
+    "sso": "第三方登录", "wechat": "微信", "qq": "QQ", "weibo": "微博",
+    "google": "Google", "apple": "Apple", "github": "GitHub", "gitee": "Gitee",
+    "microsoft": "Microsoft", "baidu": "百度", "dingtalk": "钉钉", "douyin": "抖音",
+    "xiaohongshu": "小红书", "alipay": "支付宝", "taobao": "淘宝",
+    "xiaomi": "小米", "huawei": "华为", "solana": "Solana",
+    "auto_signup": "手机号自动注册",
+}
+
+UI_ZH = {
+    "standalone_page": "独立页", "modal": "弹窗", "drawer": "抽屉",
+    "multi_step_wizard": "分步表单", "inline_widget": "内嵌挂件",
+    "sso_iframe": "第三方iframe", "unknown": "未确认",
+}
+
+HARD_BLOCKERS = {
+    "captcha", "slide", "scan", "app_confirm", "tos",
+    "sms_code", "email_code", "verification_code",
+}
+# 文案语义类方法：不是独立可选入口，只算弱观察证据
+SOFT_METHODS = {"auto_signup"}
+
+
+def aggregate_methods(states: List[PageState], flow_type: str = "") -> List[MethodResult]:
+    """把散落在状态序列里的 methods 聚合成逐方法清单（v4）。
+
+    字段与门槛也会反推方法（password 字段 → 账号密码、code 字段 → 短信验证码）。
+    每个方法判定：
+      - confirmed：出现过且至少一步没有硬门槛（安全边界内可见可用）
+      - blocked：  只出现在有硬门槛的步骤里（存在但被门槛挡住）
+      - observed： 弱观察证据（auto_signup 等文案语义），不能算独立可用方法
+    flow_type 用于主方法状态对齐：分类器已安全到达口令步骤时，即使页面另有
+    滑块等门槛，主方法（password）也应标记 confirmed，与 flow_type 口径一致。
+    """
+    by_method: dict = {}
+    for state in states:
+        methods = list(state.methods or [])
+        fields = set(state.fields or [])
+        if "password" in fields and "password" not in methods:
+            methods.append("password")
+        if "code" in fields:
+            if "sms" not in methods and ("phone" in fields or "sms_code" in (state.blockers or [])):
+                methods.append("sms")
+            elif "email_code" not in methods and "email_code" in (state.blockers or []):
+                methods.append("email_code")
+        # 口令路线存在时，phone/email/identifier 只是账号标识方式，不单列方法
+        if "password" in fields:
+            methods = [m for m in methods if m not in ("phone", "email", "identifier", "username")]
+        else:
+            for f in ("phone", "email", "identifier", "username"):
+                if f in fields and f not in methods:
+                    methods.append(f)
+        for m in methods:
+            by_method.setdefault(m, []).append(state)
+
+    results: List[MethodResult] = []
+    for m, mstates in by_method.items():
+        steps = [s.step for s in mstates]
+        blockers: List[str] = []
+        hard_count = 0
+        for st in mstates:
+            st_blockers = set(st.blockers or [])
+            for b in st_blockers:
+                if b not in blockers:
+                    blockers.append(b)
+            if st_blockers & HARD_BLOCKERS:
+                hard_count += 1
+
+        if m in SOFT_METHODS:
+            status = "observed"
+        elif hard_count == len(mstates):
+            status = "blocked"
+        else:
+            status = "confirmed"
+
+        if len(mstates) >= 2 or any(
+            "submit" in (st.available_actions or []) or "next" in (st.actions or [])
+            for st in mstates
+        ):
+            confidence = "high"
+        elif len(mstates) == 1:
+            confidence = "medium"
+        else:
+            confidence = "low"
+
+        route = "、".join(
+            f"第{s.step}步({UI_ZH.get(s.ui_type, s.ui_type)})" for s in mstates[:4]
+        )
+        if status == "blocked" and blockers:
+            route = f"{route}（门槛：{'、'.join(blockers)}）"
+
+        results.append(MethodResult(
+            method=m, name_zh=METHOD_ZH.get(m, m), status=status,
+            confidence=confidence, blockers=blockers, route=route, steps=steps,
+        ))
+
+    if flow_type in ("direct_password", "identifier_then_password",
+                     "verification_then_password", "otp_only", "email_only"):
+        primary = "password" if flow_type != "otp_only" and flow_type != "email_only" else (
+            "sms" if flow_type == "otp_only" else "email")
+        for m in results:
+            if m.method == primary:
+                m.status = "confirmed"
+                # 页面级门槛（短信备选 tab 的验证码等）不属于主方法本身
+                m.blockers = []
+                if m.route and m.route.endswith("）") and "（门槛：" in m.route:
+                    m.route = m.route.split("（门槛：")[0]
+
+    order = {"confirmed": 0, "blocked": 1, "observed": 2}
+    results.sort(key=lambda x: (order.get(x.status, 3), x.name_zh))
+    return results
 
 
 def primary_method(states: List[PageState]) -> str:

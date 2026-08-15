@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.774898+00:00",
+  "generated_at": "2026-08-15T12:51:12.580553+00:00",
   "report_title": "juejin.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://juejin.cn/",
           "final_url": "https://juejin.cn/",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_route": "手机号 → 短信验证码/扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -48,14 +48,44 @@
                 "modal"
               ],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "qr"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "modal"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
+            "identifier",
+            "password",
             "code"
           ],
           "methods_observed": [
+            "password",
             "phone",
+            "identifier",
             "sms",
             "qr"
           ],
@@ -63,11 +93,11 @@
             "sms",
             "qr"
           ],
-          "password_state": "not_observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -85,29 +115,46 @@
                 "qr"
               ],
               "blockers": [
-                "sms_code",
-                "captcha"
+                "sms_code"
               ],
               "actions": [
-                "none",
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "no_password_tab"
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://juejin.cn/",
+              "ui_type": "modal",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "qr"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
+                "sms_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:30:02.038383+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "measured_at": "2026-08-15T11:51:23.423089+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": "sms"
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
@@ -115,22 +162,22 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "human_blocked",
+              "stop_reason": "password_step_reached",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
+                "password",
                 "sms_or_otp",
                 "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
-              "password_observed": false,
+              "password_status": "password_observed",
+              "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
-                "captcha",
                 "sms_code"
               ]
             },
@@ -246,7 +293,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:29:58.385792+00:00",
+            "measured_at": "2026-08-15T11:51:13.855287+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

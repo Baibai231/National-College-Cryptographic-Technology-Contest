@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.816400+00:00",
+  "generated_at": "2026-08-15T12:51:12.625963+00:00",
   "report_title": "www.smzdm.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -97,7 +97,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T14:30:24.905333+00:00",
+            "measured_at": "2026-08-15T11:51:45.639197+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -203,6 +203,19 @@
                 "sms_code"
               ],
               "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.smzdm.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
                 "none"
               ],
               "tabs": [],
@@ -211,7 +224,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-14T14:30:14.052829+00:00",
+            "measured_at": "2026-08-15T11:51:40.158210+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

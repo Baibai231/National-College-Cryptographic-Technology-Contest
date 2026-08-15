@@ -131,12 +131,12 @@
       <div id="review-pending-tip" class="mb-2"></div>
       <div class="mb-2">
         <label class="form-label">登录方式（人工看到的）</label>
-        <textarea id="review-login" class="form-control" rows="2" placeholder="如：手机号+验证码，可切密码登录"></textarea>
+        <textarea id="review-login" class="form-control" rows="5" placeholder="登录方法清单（每行一种，如：&#10;账号密码&#10;短信验证码&#10;微信扫码&#10;无网页入口"></textarea>
         <div id="review-login-traits" class="mt-2"></div>
       </div>
       <div class="mb-2">
         <label class="form-label">注册方式（人工看到的）</label>
-        <textarea id="review-signup" class="form-control" rows="2" placeholder="如：手机号+验证码注册，无密码"></textarea>
+        <textarea id="review-signup" class="form-control" rows="5" placeholder="注册方法清单（每行一种，如：&#10;手机号+验证码，无密码&#10;微信&#10;扫码&#10;无网页注册入口"></textarea>
         <div id="review-signup-traits" class="mt-2"></div>
       </div>
       <div class="mb-2">
@@ -419,6 +419,25 @@ function resetTraits(prefix) {
   ['otp','scan','captcha','tos','sso','no_web'].forEach(key =>
     document.getElementById(prefix + '-' + key).checked = false);
 }
+function parseMethodLines(text) {
+  const r = {};
+  const lines = (text || '').split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const has = (...words) => lines.some(l => words.some(w => l.includes(w)));
+  const negPhrases = ['无密码', '没有密码', '无需密码', '不需要密码', '无口令', '无需口令', '不需要口令'];
+  const neg = has(...negPhrases);
+  let stripped = (text || '');
+  for (const p of negPhrases) stripped = stripped.split(p).join('');
+  const pos = stripped.includes('密码') || stripped.includes('口令');
+  if (neg && !pos) r.password = false;
+  else if (pos && !neg) r.password = true;
+  if (has('验证码', '短信', '动态码', '手机验证')) r.otp = true;
+  if (has('扫码', '二维码', '扫一扫')) r.scan = true;
+  if (has('人机', '滑块', '图形验证', '安全验证')) r.captcha = true;
+  if (has('协议', '条款', '同意')) r.tos = true;
+  if (has('第三方', '微信', 'qq', '微博', 'gitee', '支付宝', 'google', 'apple', 'github', '钉钉', '抖音', '小红书')) r.sso = true;
+  if (has('无注册', '无登录', '无网页', '没有注册', '无独立注册', '仅登录界面', '无法登录', '无入口', '仅app', '仅App', 'app内', 'App内')) r.no_web = true;
+  return r;
+}
 function readTraits(prefix) {
   const result = {};
   const password = document.getElementById(prefix + '-password').value;
@@ -426,6 +445,10 @@ function readTraits(prefix) {
   ['otp','scan','captcha','tos','sso','no_web'].forEach(key => {
     if (document.getElementById(prefix + '-' + key).checked) result[key] = true;
   });
+  const parsed = parseMethodLines(document.getElementById(prefix).value);
+  for (const key in parsed) {
+    if (!(key in result)) result[key] = parsed[key];
+  }
   return result;
 }
 document.getElementById('review-login-traits').innerHTML = traitForm('review-login');
@@ -534,11 +557,22 @@ async function showDetail(host) {
       status === 'mismatch' ? '为什么错误' : '暂不能判定';
     return `<div class="mt-2 ${style}"><b>${label}${title}：</b>${esc(comparison.reason)}</div>`;
   };
+  const METHOD_STATUS_ZH = { confirmed: '确认', blocked: '被门槛挡', observed: '弱证据' };
+  const methodsHtml = (list) => {
+    if (!list || !list.length) return '<span class="text-muted">—</span>';
+    return list.map(m => `
+      <div class="small mb-1">
+        ${esc(m.name_zh || m.method)}
+        <span class="badge ${m.status === 'confirmed' ? 'text-bg-success' : m.status === 'blocked' ? 'text-bg-warning' : 'text-bg-secondary'}">${METHOD_STATUS_ZH[m.status] || esc(m.status)}</span>
+        <span class="text-muted d-block">${esc(m.route || '')}</span>
+      </div>`).join('');
+  };
   document.getElementById('modal-body').innerHTML = `
     <table class="table table-sm table-bordered align-middle">
       <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
       <tbody>
         <tr><td>类型</td><td>${badge(s.login.flow_type)}</td><td>${badge(s.signup.flow_type)}</td></tr>
+        <tr><td>方法清单</td><td>${methodsHtml(s.login.methods)}</td><td>${methodsHtml(s.signup.methods)}</td></tr>
         <tr><td>路线</td><td>${esc(s.login.route)}</td><td>${esc(s.signup.route)}</td></tr>
         <tr><td>字段</td><td>${esc(s.login.fields)}</td><td>${esc(s.signup.fields)}</td></tr>
         <tr><td>阻断</td><td>${esc(s.login.blockers)}</td><td>${esc(s.signup.blockers)}</td></tr>
@@ -778,7 +812,7 @@ async function addSiteToDb() {
   }
   const host = (url || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   const payload = {
-    hostname: host, url: url, version: 'v3',
+    hostname: host, url: url, version: 'v4',
     login: login, signup: signup, admin_token: token
   };
   const r = await fetch('/api/sites', {

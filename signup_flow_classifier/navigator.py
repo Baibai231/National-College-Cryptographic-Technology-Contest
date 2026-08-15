@@ -715,28 +715,28 @@ def safe_click_tab(driver: WebDriver, kind: str) -> NavigationOutcome:
     quoted = "[" + ",".join(json.dumps(h) for h in hints) + "]"
     js = (
         "const targets = " + quoted + ";" +
-        "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');"
+        "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');" +
         "const visible = e => { const r=e.getBoundingClientRect(),s=getComputedStyle(e);"
-        "  return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'; };"
+        "  return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'; };" +
+        "const tokenMatch = (text, tn) => {" +
+        "  const normed = norm(text);" +
+        "  if (normed === tn) return true;" +
+        "  if (normed.includes(tn)) return true;" +
+        "  const toks = text.split(/[\\s,，、/·|:：]+/).map(norm).filter(Boolean);" +
+        "  return toks.some(t => t === tn || t.includes(tn));" +
+        "};" +
         "const els = [...document.querySelectorAll("
-        "\"div, span, li, a, button, [role='tab'], [class*='tab'], [class*='Tab']\")];"
-        "for (const t of targets) {"
-        "  const tn = norm(t);"
-        "  // 先精确匹配；再对短文本（<=12 字，含短信登录+帐号登录合并文本，zol 实测）做包含匹配。"
-        "  // 可见性用 getBoundingClientRect（与 detect_tabs 一致）；offsetParent"
-        "  // 在部分 SPA（快手登录弹窗实测）为 null 但元素可见可点。"
-        "  const matches = els.filter(e => visible(e) && ("
-        "    norm(e.textContent.trim()) === tn"
-        "    || (tn.length <= 8 && norm(e.textContent.trim()).length <= 12"
-        "        && norm(e.textContent.trim()).includes(tn))"
-        "  ));"
-        "  if (matches.length) {"
-        "    const el = matches.sort((a,b) => a.children.length - b.children.length)[0];"
-        "    const target = el.closest(\"button, a, [role='tab'], [role='button'], li\") || el;"
-        "    target.scrollIntoView({block: 'center'});"
-        "    target.setAttribute('data-ap-tab-target', '1');"
-        "    return true;"
-        "  }"
+        "\"div, span, li, a, button, [role='tab'], [class*='tab'], [class*='Tab']\")];" +
+        "for (const t of targets) {" +
+        "  const tn = norm(t);" +
+        "  const matches = els.filter(e => visible(e) && tokenMatch(e.textContent.trim(), tn));" +
+        "  if (matches.length) {" +
+        "    const el = matches.sort((a,b) => a.children.length - b.children.length)[0];" +
+        "    const target = el.closest(\"button, a, [role='tab'], [role='button'], li\") || el;" +
+        "    target.scrollIntoView({block: 'center'});" +
+        "    target.setAttribute('data-ap-tab-target', '1');" +
+        "    return true;" +
+        "  }" +
         "}"
         "return false;"
     )

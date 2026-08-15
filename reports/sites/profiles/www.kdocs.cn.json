@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.806829+00:00",
+  "generated_at": "2026-08-15T12:51:12.616474+00:00",
   "report_title": "www.kdocs.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,7 +20,7 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=HheOm8CJuAa1KRXRTNW9coftchMCHbIAsrhdLOVZCSM&singlesignhost=account.kdocs.cn",
+          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=Cj-SJprPLTXA3MbUFj3tK0FQoySCJEwo60dZB5JrOTo&singlesignhost=account.kdocs.cn",
           "final_url": "https://www.kdocs.cn/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:01:49.800780+00:00",
+            "measured_at": "2026-08-15T12:20:34.175891+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -102,7 +102,7 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=TCRUh5b0uCLw9JCmN9C0rKbWpMVr_-6Cyp17mwORJjM&singlesignhost=account.kdocs.cn",
+          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=ZQ-CwuAvlLb9C28gcAhSmxIQUnge36EjW4yZjubh9mQ&singlesignhost=account.kdocs.cn",
           "final_url": "https://www.kdocs.cn/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:01:48.244997+00:00",
+            "measured_at": "2026-08-15T12:20:27.707952+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

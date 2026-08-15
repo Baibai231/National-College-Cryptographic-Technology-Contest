@@ -64,6 +64,7 @@ def classify_one(site: str, kind: str) -> dict:
         record["ui_type"] = result.get("ui_type")
         record["final_url"] = result.get("final_url")
         record["states"] = result.get("states", [])
+        record["methods"] = result.get("methods", [])
         record["policy"] = result.get("policy", {})
         record["evidence"] = result.get("evidence", [])
         record["start_url"] = result.get("start_url")

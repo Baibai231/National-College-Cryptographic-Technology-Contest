@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.798417+00:00",
+  "generated_at": "2026-08-15T12:51:12.608051+00:00",
   "report_title": "www.gaoding.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -34,7 +34,9 @@
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
+              "ui_types": [
+                "modal"
+              ],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -42,7 +44,9 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
+          "ui_types": [
+            "modal"
+          ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -52,21 +56,22 @@
             {
               "step": 1,
               "url": "https://www.gaoding.com/",
-              "ui_type": "unknown",
+              "ui_type": "modal",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
-                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:13:40.787709+00:00",
+            "measured_at": "2026-08-15T12:31:25.697786+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -116,7 +121,9 @@
               "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
+              "ui_types": [
+                "modal"
+              ],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
@@ -124,7 +131,9 @@
           "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
+          "ui_types": [
+            "modal"
+          ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
@@ -134,27 +143,29 @@
             {
               "step": 1,
               "url": "https://www.gaoding.com/",
-              "ui_type": "unknown",
+              "ui_type": "modal",
               "fields": [],
-              "methods": [],
+              "methods": [
+                "auto_signup"
+              ],
               "blockers": [],
               "actions": [
-                "none",
+                "entry_click",
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": "entry_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T15:13:40.095946+00:00",
+            "measured_at": "2026-08-15T12:31:20.466497+00:00",
             "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
             "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
+            "stop_reason": "auth_entry_no_auth_state",
             "primary_method": "unknown"
           },
           "policy": {
@@ -163,7 +174,7 @@
             "measurement": {
               "status": "unknown",
               "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {

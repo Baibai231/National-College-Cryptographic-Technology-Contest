@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.789847+00:00",
+  "generated_at": "2026-08-15T12:51:12.598628+00:00",
   "report_title": "www.chinanews.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -99,7 +99,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:52:00.473379+00:00",
+            "measured_at": "2026-08-15T12:12:16.608346+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "max_steps_reached"
           },
@@ -213,7 +213,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:51:51.942209+00:00",
+            "measured_at": "2026-08-15T12:12:04.240756+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "max_steps_reached"
           },

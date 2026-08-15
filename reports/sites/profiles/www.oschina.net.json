@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.813010+00:00",
+  "generated_at": "2026-08-15T12:51:12.622839+00:00",
   "report_title": "www.oschina.net 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.oschina.net/home/login",
-          "final_url": "https://www.oschina.net/home/login",
-          "observed_route": "手机号 → 短信验证码",
+          "start_url": "https://www.oschina.net/",
+          "final_url": "https://www.oschina.net/home/login?goto_page=https%3A%2F%2Fwww.oschina.net%2F",
+          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -48,14 +48,41 @@
                 "standalone_page"
               ],
               "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
+              ],
+              "summary": "账号/邮箱 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "third_party",
+                "gitee"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
             "phone",
+            "identifier",
+            "password",
             "code"
           ],
           "methods_observed": [
+            "password",
             "phone",
+            "identifier",
             "sms",
             "third_party",
             "gitee"
@@ -63,18 +90,31 @@
           "verification_observed": [
             "sms"
           ],
-          "password_state": "not_observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.oschina.net/home/login",
+              "url": "https://www.oschina.net/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.oschina.net/home/login?goto_page=https%3A%2F%2Fwww.oschina.net%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -91,24 +131,46 @@
                 "tos"
               ],
               "actions": [
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_tab"
               ],
-              "note": "no_password_tab"
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.oschina.net/home/login?goto_page=https%3A%2F%2Fwww.oschina.net%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "gitee",
+                "identifier",
+                "sso"
+              ],
+              "blockers": [
+                "tos"
+              ],
+              "actions": [],
+              "tabs": [
+                "password_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:29:57.591349+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "measured_at": "2026-08-15T11:51:10.905338+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": "sms"
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
@@ -116,20 +178,21 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "human_blocked",
+              "stop_reason": "password_step_reached",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
+                "password",
                 "sms_or_otp",
                 "third_party",
                 "phone"
               ],
-              "password_status": "not_determined",
-              "password_observed": false,
+              "password_status": "password_observed",
+              "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
                 "sms_code",
                 "tos"
@@ -249,7 +312,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:29:38.935635+00:00",
+            "measured_at": "2026-08-15T11:51:05.018286+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

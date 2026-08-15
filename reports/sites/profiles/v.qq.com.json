@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.777646+00:00",
+  "generated_at": "2026-08-15T12:51:12.584122+00:00",
   "report_title": "v.qq.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -148,12 +148,29 @@
           "status": "observed",
           "start_url": "https://v.qq.com/",
           "final_url": "https://v.qq.com/",
-          "observed_route": "短信验证码",
+          "observed_route": "短信验证码；备选：短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
+              ],
+              "summary": "短信验证码",
+              "fields_observed": [],
+              "methods_observed": [
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
               ],
               "summary": "短信验证码",
               "fields_observed": [],
@@ -204,13 +221,13 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "no_sms_tab"
+              "note": "sms_tab_clicked_and_changed"
             },
             {
               "step": 3,
@@ -220,18 +237,18 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "none"
+                "tab_click"
               ],
               "tabs": [
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "no_sms_tab"
+              "note": "sms_tab_clicked_and_changed"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-14T14:33:54.825300+00:00",
+            "measured_at": "2026-08-15T11:56:24.236672+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

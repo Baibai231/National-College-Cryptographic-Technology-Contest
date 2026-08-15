@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.784262+00:00",
+  "generated_at": "2026-08-15T12:51:12.591967+00:00",
   "report_title": "www.7k7k.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -76,7 +76,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:06:51.995846+00:00",
+            "measured_at": "2026-08-15T12:24:27.932966+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -172,7 +172,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T15:06:44.025864+00:00",
+            "measured_at": "2026-08-15T12:24:25.164239+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

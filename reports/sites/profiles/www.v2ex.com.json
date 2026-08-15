@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.819649+00:00",
+  "generated_at": "2026-08-15T12:51:12.630253+00:00",
   "report_title": "www.v2ex.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -80,7 +80,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:55:16.019057+00:00",
+            "measured_at": "2026-08-15T12:15:22.066214+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },
@@ -194,7 +194,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T14:54:50.675667+00:00",
+            "measured_at": "2026-08-15T12:14:59.341048+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },

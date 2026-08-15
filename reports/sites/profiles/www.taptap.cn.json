@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-14T15:34:35.818000+00:00",
+  "generated_at": "2026-08-15T12:51:12.628691+00:00",
   "report_title": "www.taptap.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -53,6 +53,7 @@
               "fields": [],
               "methods": [],
               "blockers": [
+                "captcha",
                 "app_confirm"
               ],
               "actions": [
@@ -64,7 +65,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:48:55.285148+00:00",
+            "measured_at": "2026-08-15T12:22:07.648003+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -90,7 +91,8 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "app_confirm"
+                "app_confirm",
+                "captcha"
               ]
             },
             "security": {
@@ -135,6 +137,7 @@
               "fields": [],
               "methods": [],
               "blockers": [
+                "captcha",
                 "app_confirm"
               ],
               "actions": [
@@ -146,7 +149,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-14T10:48:46.452142+00:00",
+            "measured_at": "2026-08-15T12:21:57.392305+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -172,7 +175,8 @@
               "phone_observed": false,
               "identifier_observed": false,
               "blocking_factors": [
-                "app_confirm"
+                "app_confirm",
+                "captcha"
               ]
             },
             "security": {

@@ -20,9 +20,30 @@ import webapp.app as web_app
 
 
 class SiteDataStoreTests(unittest.TestCase):
-    def test_v3_write_contract_rejects_accidental_v4(self):
+    def test_v4_write_contract_accepts_current_version(self):
+        # v4 起：网页写入模型接受 v3/v4（默认 v4），v5 及以上应拒绝
+        req = web_app.AddSiteRequest(hostname="example.com", version="v4")
+        self.assertEqual(req.version, "v4")
+        req3 = web_app.AddSiteRequest(hostname="example.com", version="v3")
+        self.assertEqual(req3.version, "v3")
         with self.assertRaises(ValidationError):
-            web_app.AddSiteRequest(hostname="example.com", version="v4")
+            web_app.AddSiteRequest(hostname="example.com", version="v5")
+
+    def test_measurement_record_preserves_v4_methods(self):
+        entry = {
+            "flow_type": "direct_password",
+            "raw_states": [{"step": 1, "fields": ["password"]}],
+            "methods": [
+                {"method": "password", "name_zh": "账号密码",
+                 "status": "confirmed", "confidence": "high",
+                 "blockers": [], "route": "第1步(弹窗)", "steps": [1]},
+            ],
+        }
+        rec = measurement_record("example.com", "https://example.com/", "v4",
+                                 "login", entry)
+        self.assertEqual(len(rec["methods"]), 1)
+        self.assertEqual(rec["methods"][0]["name_zh"], "账号密码")
+        self.assertEqual(rec["version"], "v4")
 
     def test_live_classify_rejects_private_and_nonstandard_targets(self):
         for url in (
