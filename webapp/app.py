@@ -92,6 +92,23 @@ def _serialized_data_transaction(func):
     return wrapped
 
 
+def _states_to_objects(states):
+    """把 JSON 化的状态列表转成 PageState 对象（展示层组合方法用）。"""
+    from signup_flow_classifier.flow_types import PageState as _PS
+    LIST_KEYS = ("fields", "actions", "blockers", "methods",
+                 "available_actions", "tabs")
+    out = []
+    for s in states or []:
+        if not isinstance(s, dict):
+            continue
+        kwargs = {k: s.get(k) for k in
+                  ("step", "url", "ui_type", "note")}
+        for k in LIST_KEYS:
+            kwargs[k] = s.get(k) or []
+        out.append(_PS(**kwargs))
+    return out
+
+
 def _row_to_site(row):
     (hostname, url, keywords, version, lf, lfzh, lr, lfields, lblockers,
      lfinal, lma, sf, sfzh, sr, sfields, sblockers, sfinal, sma,
@@ -105,6 +122,12 @@ def _row_to_site(row):
     signup_record = details.get("signup_record") or {}
     login_methods = _methods_from_states(login_states)
     signup_methods = _methods_from_states(signup_states)
+    # 展示层：组合式方法清单只在这里计算（数据层 reports/misc 保持原始格式）
+    from signup_flow_classifier.classifier import combo_methods
+    login_display_methods = combo_methods(
+        _states_to_objects(login_states), flow_type=lf or "")
+    signup_display_methods = combo_methods(
+        _states_to_objects(signup_states), flow_type=sf or "")
     site = {
         "hostname": hostname,
         "url": url,
@@ -122,7 +145,7 @@ def _row_to_site(row):
             "primary_method": login_record.get("primary_method"),
             "evidence": login_record.get("evidence", []),
             "error": login_error or login_record.get("error"),
-            "methods": login_record.get("methods") or [],
+            "methods": [m.__dict__ for m in login_display_methods],
             "program_reason": _program_reason(
                 lf, lr, lfields, lblockers, login_error, login_methods),
         },
@@ -138,7 +161,7 @@ def _row_to_site(row):
             "primary_method": signup_record.get("primary_method"),
             "evidence": signup_record.get("evidence", []),
             "error": signup_error or signup_record.get("error"),
-            "methods": signup_record.get("methods") or [],
+            "methods": [m.__dict__ for m in signup_display_methods],
             "program_reason": _program_reason(
                 sf, sr, sfields, sblockers, signup_error, signup_methods),
         },
@@ -154,13 +177,13 @@ def _row_to_site(row):
         lf, mlogin or "", lr or "", lfields or "", lblockers or "",
         verified=bool(mverified), methods=login_methods,
         structured=details.get("manual_structured", {}).get("login"),
-        method_results=login_record.get("methods") or [],
+        method_results=[m.__dict__ for m in login_display_methods],
     )
     comparison = _manual_comparison(
         sf, msignup or "", sr or "", sfields or "", sblockers or "",
         verified=bool(mverified), methods=signup_methods,
         structured=details.get("manual_structured", {}).get("signup"),
-        method_results=signup_record.get("methods") or [],
+        method_results=[m.__dict__ for m in signup_display_methods],
     )
     site["login_match"] = login_comparison["status"]
     site["login_comparison"] = login_comparison

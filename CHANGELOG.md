@@ -126,10 +126,24 @@
 6. 新增 `scripts/reaggregate_methods.py`：从 states 离线重算 methods，
    无需重跑浏览器全量（正式数据与三份轮次档案已全部重聚合）。
 
+### 17. 数据层/展示层分离整改（2026-08-15，用户铁律）
+
+用户明确：所有展示优化只针对服务器展示方式，**不改本地 reports/ 和 misc/
+数据格式**；网页测新网站展示优化后的分类，实际写入记录的仍是数据层原始格式。
+整改内容：
+- reports 数据回滚到组合式改版前的原始格式（git 7a5e9a2）：sites_latest.jsonl
+  方法按字段（账号密码/短信验证码…带 route），v3 官方存档不带 methods。
+- classifier.py 恢复数据层 `aggregate_methods()`（引擎记录用它）；
+  新增展示层 `combo_methods()`（组合式：手机号+验证码/第三方（微信、QQ）…），
+  仅由 webapp/app.py 在 API 响应时从 states 计算，不落盘。
+- 删除 `scripts/reaggregate_methods.py`（回写数据文件的脚本，违反铁律）。
+- HANDOFF.md 记录该铁律；测试 117/117 通过。
+
 ## 变更速查表
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
+| 2026-08-15 | Kimi（Mac） | 数据层/展示层分离：reports/misc 回滚原始格式、组合式方法只由 webapp 计算（combo_methods）、删除 reaggregate 回写脚本、HANDOFF 记录铁律 | signup_flow_classifier/、webapp/、scripts/、reports/、tests/、HANDOFF.md | 本次提交 |
 | 2026-08-15 | Kimi（Mac） | 方法清单组合式改版：手机号+验证码/邮箱+密码组合、删除步骤 tab、类型行加主方法、状态三态解释、reaggregate_methods 离线重聚合 | signup_flow_classifier/、scripts/、webapp/、tests/ | 本次提交 |
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
