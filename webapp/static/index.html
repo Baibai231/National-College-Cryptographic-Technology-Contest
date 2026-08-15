@@ -232,6 +232,35 @@ function fmtTime(t) {
   if (!t) return '—';
   return String(t).slice(0, 10);
 }
+const CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+function methodsHtml(list) {
+  if (!list || !list.length) return '<span class="text-muted">—</span>';
+  return list.map((m, i) => {
+    const num = CN_NUM[i] || (i + 1);
+    return `<div class="small mb-1"><b>方法${num}：</b>${esc(m.name_zh || m.method)}</div>`;
+  }).join('');
+}
+function reportTableHtml(login, signup, version) {
+  const side = (e, label) => ({
+    flow_type: (e && e.flow_type) || 'unknown',
+    methods: (e && e.methods) || [],
+    policy: (e && e.policy) || {},
+    measured_at: (e && e.measured_at) || '',
+    label: label,
+  });
+  const l = side(login, '登录');
+  const s = side(signup, '注册');
+  return `<table class="table table-sm table-bordered align-middle">
+    <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
+    <tbody>
+      <tr><td>类型</td><td>${badge(l.flow_type)}</td><td>${badge(s.flow_type)}</td></tr>
+      <tr><td>方法清单</td><td>${methodsHtml(l.methods)}</td><td>${methodsHtml(s.methods)}</td></tr>
+      <tr><td>口令政策</td><td>${policyText(l.policy)}</td><td>${policyText(s.policy)}</td></tr>
+      <tr><td>测量时间</td><td>${fmtTime(l.measured_at)}</td><td>${fmtTime(s.measured_at)}</td></tr>
+      <tr><td>程序版本</td><td colspan="2">${version || '?'}</td></tr>
+    </tbody>
+  </table>`;
+}
 function badge(flow) {
   return `<span class="flow-badge b-${flow || 'unknown'}">${FLOW_ZH[flow] || '未确认'}</span>`;
 }
@@ -519,14 +548,6 @@ async function showDetail(host) {
   const s = await r.json();
   document.getElementById('modal-title').innerHTML =
     `${esc(s.hostname)} ${matchBadge(s.match_status)}`;
-  const CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-  const methodsHtml = (list) => {
-    if (!list || !list.length) return '<span class="text-muted">—</span>';
-    return list.map((m, i) => {
-      const num = CN_NUM[i] || (i + 1);
-      return `<div class="small mb-1"><b>方法${num}：</b>${esc(m.name_zh || m.method)}</div>`;
-    }).join('');
-  };
   const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured) => {
     if (!comparison || status === 'pending') return '';
     const statusZh = status === 'match' ? '识别正确'
@@ -549,28 +570,14 @@ async function showDetail(host) {
       <table class="table table-sm table-bordered align-middle mt-1 mb-0">
         <thead><tr><th style="width:70px"></th><th>程序</th><th>人工</th></tr></thead>
         <tbody>
-          <tr><td>主类型</td><td>${esc(flowZh)}</td><td>${esc((manualText || '—').replace(/\n/g, '；'))}</td></tr>
-          <tr><td>方法</td><td>${esc(progMethods)}</td><td>${esc(manualTraits || '—')}</td></tr>
+          <tr><td>方法</td><td>${esc(progMethods)}</td><td>${esc((manualText || '').replace(/\n/g, '；') || manualTraits || '—')}</td></tr>
           <tr><td>结论</td><td colspan="2" class="${cls}">${conclusion}</td></tr>
         </tbody>
       </table>
     </div>`;
   };
-  const primaryZh = (list, fallback) => {
-    const p = (list || []).find(m => m.status === 'confirmed');
-    return p ? p.name_zh : fallback;
-  };
   document.getElementById('modal-body').innerHTML = `
-    <table class="table table-sm table-bordered align-middle">
-      <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
-      <tbody>
-        <tr><td>类型</td><td>${badge(s.login.flow_type)} <span class="small text-muted">主方法：${esc(primaryZh(s.login.methods, '—'))}</span></td><td>${badge(s.signup.flow_type)} <span class="small text-muted">主方法：${esc(primaryZh(s.signup.methods, '—'))}</span></td></tr>
-        <tr><td>方法清单</td><td>${methodsHtml(s.login.methods)}</td><td>${methodsHtml(s.signup.methods)}</td></tr>
-        <tr><td>口令政策</td><td>${policyText(s.login.policy)}</td><td>${policyText(s.signup.policy)}</td></tr>
-        <tr><td>测量时间</td><td>${fmtTime(s.login.measured_at)}</td><td>${fmtTime(s.signup.measured_at)}</td></tr>
-        <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
-      </tbody>
-    </table>
+    ${reportTableHtml(s.login, s.signup, s.version)}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
@@ -700,25 +707,23 @@ async function classifyOne(url, kind) {
   return await r.json();
 }
 function classifyBoxHtml(d, kindLabel) {
-  const ev = (d.evidence || []).slice(0, 5).map(e => `<div class="small text-muted">${e}</div>`).join('');
   const srcTag = d.from_database
     ? '<span class="badge text-bg-success">数据库已有该站结果</span>'
     : '<span class="badge text-bg-secondary">现场分类</span>';
-  const cnNum = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-  const methodsLines = (d.methods || []).map((m, i) =>
-    `<div class="small"><b>方法${cnNum[i] || (i + 1)}：</b>${esc(m.name_zh || m.method)}</div>`).join('');
+  const extra = [
+    d.confidence ? '置信度 ' + d.confidence : '',
+    d.route ? '路线：' + d.route : '',
+    d.stop_reason ? '停止原因：' + d.stop_reason : '',
+    d.final_url ? '最终页：' + d.final_url : '',
+  ].filter(Boolean).map(t => `<div class="small">${esc(t)}</div>`).join('');
+  const isLogin = d.entry_kind === 'login';
   return `
     <div class="alert alert-info py-2 mb-2">
       <div><b>${kindLabel}</b> ${srcTag}</div>
-      <div class="mt-1">→ ${badge(d.flow_type)}${d.confidence ? ' 置信度 ' + d.confidence : ''}</div>
-      ${methodsLines ? `<div class="mt-1">${methodsLines}</div>` : ''}
-      ${d.route ? `<div class="small mt-1">路线：${d.route}</div>` : ''}
-      ${d.stop_reason ? `<div class="small mt-1">停止原因：${d.stop_reason}</div>` : ''}
-      ${d.final_url ? `<div class="small text-muted">最终页：${d.final_url}</div>` : ''}
-      ${d.manual && d.manual.verified ? `<div class="small mt-1">人工复核：${d.manual.signup || d.manual.login || ''}</div>` : ''}
-    </div>
-    <div class="small text-muted">${ev}</div>
-  `;
+      <div class="mt-2">${reportTableHtml(
+        isLogin ? d : null, isLogin ? null : d, 'v4')}</div>
+      ${extra ? `<div class="mt-2">${extra}</div>` : ''}
+    </div>`;
 }
 function addSiteBarHtml(btnLabel, tip) {
   return `

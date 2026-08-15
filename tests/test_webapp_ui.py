@@ -24,11 +24,14 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("<th>人工</th>", self.html)
         self.assertIn("方法${num}", self.html)
         self.assertIn("有口令框", self.html)
-        self.assertIn("主方法：", self.html)
-        # 方法状态词与步骤展示已按用户要求删除
+        self.assertIn("reportTableHtml", self.html)
+        # 用户要求删除的：主类型行、主方法、方法状态词、步骤展示、长原因
+        self.assertNotIn("主类型", self.html)
+        self.assertNotIn("主方法：", self.html)
         self.assertNotIn("已确认", self.html)
         self.assertNotIn("需验证", self.html)
         self.assertNotIn("方法说明", self.html)
+        self.assertNotIn("comparison.reason}", self.html)
         self.assertNotIn("switchStepTab", self.html)
         self.assertNotIn("stepsHtml", self.html)
 
