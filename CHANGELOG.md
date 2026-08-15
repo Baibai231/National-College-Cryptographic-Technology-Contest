@@ -9,7 +9,7 @@
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
-| 2026-08-15 | Codex（Mac） | v3 保守运行时加固（进行中）：修复并发入库/同步竞态与导出历史覆盖当前版本；同步失败安全中止；限制实时分类资源及内网目标；匿名不再读取待审核详情 | webapp/、scripts/、tests/ | 待完整验证后推送 |
+| 2026-08-15 | Codex（Mac） | v3 保守运行时加固（进行中）：修复并发入库/同步竞态与导出历史覆盖当前版本；同步失败安全中止；限制实时分类资源及内网目标；匿名不再读取待审核详情 | webapp/、scripts/、tests/ | 已推送，待服务器部署验收 |
 | 2026-08-15 | Codex（Mac） | v3 数据闭环改进完成：网页持久化、结构化核验、双侧原因、诚实指标、unknown 优化、两轮全量回归及三端同步均完成并上线 | webapp/、scripts/、signup_flow_classifier/、tests/、reports/、HANDOFF.md | 已推送并于 00:00 定时部署验收 |
 | 2026-08-14 | Codex（Mac） | 修正正式汇总表输出位置与逐站档案相对链接，删除两个已被正式域名取代的旧别名档案 | scripts/generate_profiles.py、reports/sites/sites_summary.md、reports/sites/profiles/ | 本次提交 |
 | 2026-08-14 | Codex（Mac） | 保持 v3：修正扫码登录语义与第三方登录识别，新增两轮全量回归对比，并为网站正确/错误判断补充可读依据 | signup_flow_classifier/、scripts/run_measurement.py、scripts/compare_measurement_rounds.py、webapp/、tests/、reports/ | 本次提交 |
