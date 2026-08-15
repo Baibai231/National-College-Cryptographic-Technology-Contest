@@ -56,6 +56,13 @@ PROCEED_FLOW_TYPES = {
     FlowType.MULTIPLE_METHODS.value,  # 将尝试切换到密码视图后再决定
 }
 
+# 全视图探索的 tab 优先级：先看额外认证方式（短信/邮箱/注册），
+# 主口令 tab 最后访问（口令视图通常已是默认视图）
+_TAB_EXPLORE_PRIORITY = (
+    "sms_tab", "email_tab", "register_tab",
+    "password_signup_tab", "password_tab",
+)
+
 
 class SignupFlowClassifierEngine:
     """注册流程分类器引擎。
@@ -81,7 +88,7 @@ class SignupFlowClassifierEngine:
     # ------------------------------------------------------------------
 
     def classify(self, signup_url: str, entry_kind: str = "signup",
-                 max_steps: int = MAX_STEPS,
+                 max_steps: int = 6,
                  entry_already_clicked: bool = False) -> Dict:
         """分类注册流程。
 
@@ -215,7 +222,8 @@ class SignupFlowClassifierEngine:
             entry_clicks_left = MAX_ENTRY_CLICKS
             auth_entry_clicked = False
             signup_entry_clicked = False
-        tab_clicks_left = 2
+        tab_clicks_left = 5
+        visited_tabs = set()   # 全视图探索：已切换过的 tab 种类
         auth_mode_clicks_left = 2 if entry_kind == "login" else 0
         signup_mode_switches_left = 1 if entry_kind == "signup" else 0
         step_limit = effective_max_steps
@@ -382,6 +390,7 @@ class SignupFlowClassifierEngine:
                 except Exception:
                     pass
                 tab_outcome = safe_click_tab(self.driver, "register_tab")
+                visited_tabs.add("register_tab")
                 tab_clicks_left -= 1
                 state.note = tab_outcome.reason
                 state.actions.append(
@@ -423,6 +432,7 @@ class SignupFlowClassifierEngine:
                     and not state.fields
                     and "code" not in state.fields):
                 tab_outcome = safe_click_tab(self.driver, "sms_tab")
+                visited_tabs.add("sms_tab")
                 tab_clicks_left -= 1
                 state.note = tab_outcome.reason
                 state.actions.append(
@@ -470,6 +480,7 @@ class SignupFlowClassifierEngine:
                     and tab_clicks_left > 0
                     and "password" in state.fields):
                 tab_outcome = safe_click_tab(self.driver, "register_tab")
+                visited_tabs.add("register_tab")
                 tab_clicks_left -= 1
                 state.note = tab_outcome.reason
                 state.actions.append(
@@ -482,8 +493,62 @@ class SignupFlowClassifierEngine:
                     signup_reveal_pending = False
                     if self._wait_for_form_fields(self.driver, timeout=6):
                         continue
+            # ---- 全视图探索（v4.1 核心改进） ----
+            # 已到口令视图时不立即停止：像真人一样把其他 tab（短信/邮箱/注册）
+            # 也切一遍，把所有登录/注册方式都观察到（51.com 实测：账号登录
+            # 默认视图外还有"手机登录"视图的 手机号+验证码，程序以前看到
+            # 密码框就停，漏掉短信视图）。已访问过的 tab 不再重复切换。
             if ("password" in state.fields and not login_page_during_signup
                     and signup_context_confirmed):
+                if tab_clicks_left > 0:
+                    next_tab = None
+                    for cand in _TAB_EXPLORE_PRIORITY:
+                        if (cand in state.tabs and cand not in visited_tabs
+                                and cand not in ("password_tab",
+                                                "password_signup_tab")):
+                            next_tab = cand
+                            break
+                    if next_tab is None:
+                        # 只剩主口令 tab 未访问（罕见）：也切一次收集证据
+                        for cand in ("password_tab", "password_signup_tab"):
+                            if cand in state.tabs and cand not in visited_tabs:
+                                next_tab = cand
+                                break
+                    if next_tab is not None:
+                        tab_outcome = safe_click_tab(
+                            self.driver, next_tab)
+                        tab_clicks_left -= 1
+                        visited_tabs.add(next_tab)
+                        state.note = tab_outcome.reason
+                        state.actions.append(
+                            "tab_click" if tab_outcome.clicked else "none")
+                        record_evidence(
+                            result, "step={};explore_tab={}".format(
+                                step, tab_outcome.reason))
+                        if (tab_outcome.clicked
+                                and (self._wait_for_form_fields(
+                                    self.driver, timeout=6)
+                                    or tab_outcome.changed)):
+                            continue
+                        # 弹窗动画/渲染竞态：立即重试一次（51.com 手机登录
+                        # tab 实测：检测到但瞬间点不到）
+                        if not tab_outcome.clicked and tab_clicks_left > 0:
+                            import time as _t
+                            _t.sleep(1.5)
+                            tab_outcome = safe_click_tab(
+                                self.driver, next_tab)
+                            tab_clicks_left -= 1
+                            state.note = tab_outcome.reason
+                            state.actions.append(
+                                "tab_click" if tab_outcome.clicked else "none")
+                            record_evidence(
+                                result, "step={};explore_tab_retry={}".format(
+                                    step, tab_outcome.reason))
+                            if (tab_outcome.clicked
+                                    and (self._wait_for_form_fields(
+                                        self.driver, timeout=6)
+                                        or tab_outcome.changed)):
+                                continue
                 ft, conf, reason = classify(result.states)
                 result.primary_method = primary_method(result.states)
                 return self._done(result, ft, conf, reason)
@@ -519,6 +584,7 @@ class SignupFlowClassifierEngine:
                         and "sms_tab" in state.tabs
                         and "code" not in state.fields):
                     tab_outcome = safe_click_tab(self.driver, "sms_tab")
+                    visited_tabs.add("sms_tab")
                     tab_clicks_left -= 1
                     state.note = tab_outcome.reason
                     state.actions.append(

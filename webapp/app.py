@@ -63,10 +63,10 @@ except ValueError:
 _CLASSIFY_SEMAPHORE = threading.BoundedSemaphore(_CLASSIFY_CONCURRENCY)
 
 FLOW_ZH = {
-    "direct_password": "直接口令", "identifier_then_password": "先标识后口令",
-    "verification_then_password": "先验证后口令", "otp_only": "仅一次性验证码",
-    "email_only": "仅邮箱验证码", "multiple_methods": "多方式并存",
-    "sso_only": "仅第三方登录", "human_blocked": "人工阻断",
+    "direct_password": "有口令框", "identifier_then_password": "先账号后口令框",
+    "verification_then_password": "先验证后口令框", "otp_only": "仅验证码",
+    "email_only": "仅邮箱", "multiple_methods": "多方式并存",
+    "sso_only": "仅第三方", "human_blocked": "需人工验证",
     "no_web_signup": "无网页注册", "unknown": "未确认", "error": "异常",
 }
 

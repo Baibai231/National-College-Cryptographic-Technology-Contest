@@ -241,23 +241,23 @@ function methodsHtml(list) {
   }).join('');
 }
 function reportTableHtml(login, signup, version) {
-  const side = (e, label) => ({
-    flow_type: (e && e.flow_type) || 'unknown',
-    methods: (e && e.methods) || [],
-    policy: (e && e.policy) || {},
-    measured_at: (e && e.measured_at) || '',
-    label: label,
-  });
-  const l = side(login, '登录');
-  const s = side(signup, '注册');
+  const l = login || {};
+  const s = signup || {};
+  const only = !login && signup ? 'signup' : login && !signup ? 'login' : 'both';
+  const tds = (fn) => only === 'login'
+    ? `<td>${fn(l)}</td>`
+    : only === 'signup'
+      ? `<td>${fn(s)}</td>`
+      : `<td>${fn(l)}</td><td>${fn(s)}</td>`;
+  const badgeOf = (e) => badge((e && e.flow_type) || 'unknown');
   return `<table class="table table-sm table-bordered align-middle">
-    <thead><tr><th style="width:80px">维度</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
+    <thead><tr><th style="width:80px">维度</th>${only === 'signup' ? '<th>注册（程序）</th>' : '<th>登录（程序）</th>'}${only === 'both' ? '<th>注册（程序）</th>' : ''}</tr></thead>
     <tbody>
-      <tr><td>类型</td><td>${badge(l.flow_type)}</td><td>${badge(s.flow_type)}</td></tr>
-      <tr><td>方法清单</td><td>${methodsHtml(l.methods)}</td><td>${methodsHtml(s.methods)}</td></tr>
-      <tr><td>口令政策</td><td>${policyText(l.policy)}</td><td>${policyText(s.policy)}</td></tr>
-      <tr><td>测量时间</td><td>${fmtTime(l.measured_at)}</td><td>${fmtTime(s.measured_at)}</td></tr>
-      <tr><td>程序版本</td><td colspan="2">${version || '?'}</td></tr>
+      <tr><td>类型</td>${tds(badgeOf)}</tr>
+      <tr><td>方法清单</td>${tds(methodsHtml)}</tr>
+      <tr><td>口令政策</td>${tds(policyText)}</tr>
+      <tr><td>测量时间</td>${tds((e) => fmtTime((e || {}).measured_at))}</tr>
+      <tr><td>程序版本</td><td colspan="${only === 'both' ? 2 : 1}">${version || '?'}</td></tr>
     </tbody>
   </table>`;
 }
@@ -706,23 +706,26 @@ async function classifyOne(url, kind) {
   });
   return await r.json();
 }
-function classifyBoxHtml(d, kindLabel) {
-  const srcTag = d.from_database
-    ? '<span class="badge text-bg-success">数据库已有该站结果</span>'
-    : '<span class="badge text-bg-secondary">现场分类</span>';
+function extraLines(d, kindLabel) {
+  const srcTag = d && d.from_database
+    ? '（数据库已有该站结果）'
+    : '（现场分类）';
   const extra = [
-    d.confidence ? '置信度 ' + d.confidence : '',
-    d.route ? '路线：' + d.route : '',
-    d.stop_reason ? '停止原因：' + d.stop_reason : '',
-    d.final_url ? '最终页：' + d.final_url : '',
+    d && d.confidence ? '置信度 ' + d.confidence : '',
+    d && d.route ? '路线：' + d.route : '',
+    d && d.stop_reason ? '停止原因：' + d.stop_reason : '',
+    d && d.final_url ? '最终页：' + d.final_url : '',
   ].filter(Boolean).map(t => `<div class="small">${esc(t)}</div>`).join('');
+  return `<div class="small text-muted mt-1">${kindLabel}${srcTag}${extra ? '<br>' + extra : ''}</div>`;
+}
+function classifyBoxHtml(d, kindLabel) {
   const isLogin = d.entry_kind === 'login';
   return `
     <div class="alert alert-info py-2 mb-2">
-      <div><b>${kindLabel}</b> ${srcTag}</div>
+      <div><b>${kindLabel}</b></div>
       <div class="mt-2">${reportTableHtml(
         isLogin ? d : null, isLogin ? null : d, 'v4')}</div>
-      ${extra ? `<div class="mt-2">${extra}</div>` : ''}
+      <div class="mt-2">${extraLines(d, kindLabel)}</div>
     </div>`;
 }
 function addSiteBarHtml(btnLabel, tip) {
@@ -753,9 +756,12 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const d2 = await classifyOne(url, 'login');
       if (!d2.flow_type && d2.detail) { box.innerHTML = `<div class="alert alert-danger py-2">登录分类失败: ${d2.detail}</div>`; return; }
       lastClassify = { signup: d1, login: d2 };
-      box.innerHTML = `<h6 class="mb-2">注册</h6>${classifyBoxHtml(d1, '注册')}
-        <hr><h6 class="mb-2 mt-3">登录</h6>${classifyBoxHtml(d2, '登录')}
-        ${addSiteBarHtml('两侧一起加入数据库', '登录和注册结果一起入库')}`;
+      box.innerHTML = `<div class="alert alert-info py-2 mb-2">
+        <div><b>注册+登录分类</b></div>
+        <div class="mt-2">${reportTableHtml(d2, d1, 'v4')}</div>
+        <div class="mt-2">${extraLines(d1, '注册')}${extraLines(d2, '登录')}</div>
+      </div>
+      ${addSiteBarHtml('两侧一起加入数据库', '登录和注册结果一起入库')}`;
     } else {
       btn.textContent = '分类中（约 1-3 分钟）…';
       const d = await classifyOne(url, kind);
