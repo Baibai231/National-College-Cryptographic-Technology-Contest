@@ -3,11 +3,13 @@
 # SQLite 只作服务索引；权威数据是 reports JSONL + manual_review.json。
 
 set -euo pipefail
-cd ~/measure
+cd "$(dirname "$0")/.."
 
 RETRY=3
 DELAY=20
+GIT_TIMEOUT=120
 LOG=/tmp/server_sync.log
+DEPLOY_MARKER=webapp/.deployed-head
 AUTHORITATIVE_FILES=(
   reports/sites/sites_latest.jsonl
   misc/manual_review.json
@@ -45,8 +47,20 @@ generate_reports() {
     --summary reports/sites/sites_summary.md >> "$LOG" 2>&1
 }
 
+# Serialize the complete snapshot/pull/replay/rebuild transaction with all web
+# mutations.  The service keeps serving reads; only the brief write requests
+# wait until the authoritative files and SQLite index agree again.
+export SITES_DATA_LOCK="$(pwd)/webapp/.data-sync.lock"
+exec 8>> /tmp/measure-server-sync.lock
+if ! flock -n 8; then
+  log "已有同步任务运行，本次跳过"
+  exit 0
+fi
+exec 9>> "$SITES_DATA_LOCK"
+flock -x 9
+export SITES_SYNC_LOCK_HELD=1
+
 log "=== 开始同步 ==="
-OLD_HEAD=$(git rev-parse HEAD)
 LOCAL_DATA_CHANGES=$(git status --porcelain -- "${AUTHORITATIVE_FILES[@]}" | head -40)
 HAS_SNAPSHOT=0
 
@@ -74,7 +88,7 @@ else
 fi
 
 # 先以干净工作树拉取 Mac/GitHub；失败时立即回放快照，数据保持为本地未提交变更。
-if ! retry "git pull --rebase" git pull --rebase; then
+if ! retry "git pull --rebase" timeout "$GIT_TIMEOUT" git pull --rebase; then
   if [ "$HAS_SNAPSHOT" -eq 1 ]; then
     replay_snapshot
     log "拉取失败，权威网页数据已从快照恢复，留待下次同步"
@@ -98,16 +112,36 @@ if [ "$HAS_SNAPSHOT" -eq 1 ]; then
 fi
 
 NEW_HEAD=$(git rev-parse HEAD)
-if [ "$OLD_HEAD" != "$NEW_HEAD" ]; then
-  log "仓库更新: $OLD_HEAD -> $NEW_HEAD，重建 SQLite 并重启服务"
-  .venv/bin/python scripts/build_site_database.py >> "$LOG" 2>&1
-  sudo systemctl restart sites-webapp
-else
-  log "代码和数据均无变化，无需重启"
+DEPLOYED_HEAD=$(sed -n '1p' "$DEPLOY_MARKER" 2>/dev/null || true)
+NEEDS_DEPLOY=0
+if [ "$DEPLOYED_HEAD" != "$NEW_HEAD" ]; then
+  NEEDS_DEPLOY=1
+elif ! curl -fsS --max-time 5 -o /dev/null http://127.0.0.1:8000/api/stats; then
+  NEEDS_DEPLOY=1
+  log "部署标记匹配但 API 不健康，将重新部署"
 fi
 
+if [ "$NEEDS_DEPLOY" -eq 1 ]; then
+  log "部署未完成: ${DEPLOYED_HEAD:-无标记} -> $NEW_HEAD，重建 SQLite 并重启服务"
+  .venv/bin/python scripts/build_site_database.py >> "$LOG" 2>&1
+  sudo -n systemctl restart sites-webapp
+  retry "服务健康检查" curl -fsS --max-time 10 -o /dev/null \
+    http://127.0.0.1:8000/api/stats
+  printf '%s\n' "$NEW_HEAD" > "$DEPLOY_MARKER.tmp"
+  mv -- "$DEPLOY_MARKER.tmp" "$DEPLOY_MARKER"
+  log "部署及健康检查完成: $NEW_HEAD"
+else
+  log "当前提交已部署且 API 健康，无需重启"
+fi
+
+# Git push only publishes the already-created commit and does not touch the
+# working-tree authority. Release the data lock first so a slow network retry
+# does not stall web submissions; fd 8 still prevents overlapping sync jobs.
+flock -u 9
+unset SITES_SYNC_LOCK_HELD
+
 if [ "$(git rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)" -gt 0 ]; then
-  if retry "git push" git push; then
+  if retry "git push" timeout "$GIT_TIMEOUT" git push; then
     log "服务器数据已推送到 GitHub"
   else
     log "推送失败，本地提交保留，留待下次同步"

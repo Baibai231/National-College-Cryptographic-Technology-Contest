@@ -1,5 +1,7 @@
 import unittest
 
+from scripts.audit_program_vs_manual import markdown
+
 from webapp.app import _manual_comparison, _manual_traits, _program_reason
 
 
@@ -104,3 +106,21 @@ class ManualComparisonTests(unittest.TestCase):
         reason = _program_reason(
             "sso_only", "未确认", "—", "—", methods="Google、Solana")
         self.assertIn("Google、Solana", reason)
+
+    def test_offline_audit_lists_inconclusive_separately(self):
+        rows = [
+            {"hostname": "match.example", "status": "match",
+             "program_flow": "otp_only", "program_route": "验证码",
+             "manual_signup": "验证码", "reason": "一致"},
+            {"hostname": "wrong.example", "status": "mismatch",
+             "program_flow": "sso_only", "program_route": "第三方",
+             "manual_signup": "口令", "reason": "差异"},
+            {"hostname": "unknown.example", "status": "inconclusive_program",
+             "program_flow": "unknown", "program_route": "未确认",
+             "manual_signup": "验证码", "reason": "程序证据不足"},
+        ]
+        report = markdown(rows, "candidate.jsonl")
+        self.assertIn("明确不一致：1", report)
+        self.assertIn("证据不足：1", report)
+        self.assertIn("证据不足项（不计入正确率）", report)
+        self.assertIn("unknown.example", report)

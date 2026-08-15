@@ -46,12 +46,14 @@ def audit(results, manual):
 def markdown(rows, results):
     matched = [row for row in rows if row["status"] == "match"]
     mismatched = [row for row in rows if row["status"] == "mismatch"]
+    inconclusive = [row for row in rows if row["status"].startswith("inconclusive_")]
     lines = [
         "# v3 程序与人工逐站审计", "",
         f"- 最终结果：`{results}`",
         f"- 已人工核验：{len(rows)}",
         f"- 核心路线一致：{len(matched)}",
-        f"- 需要人工复核或程序修正：{len(mismatched)}", "",
+        f"- 明确不一致：{len(mismatched)}",
+        f"- 证据不足：{len(inconclusive)}", "",
         "## 不一致项", "",
         "| 网站 | 程序结论 | 程序路线 | 人工记录 | 差异原因 |",
         "|---|---|---|---|---|",
@@ -71,6 +73,17 @@ def markdown(rows, results):
     for row in matched:
         values = [row["hostname"], row["program_flow"], row["reason"]]
         lines.append("| " + " | ".join(str(value).replace("|", "\\|") for value in values) + " |")
+    lines += [
+        "", "## 证据不足项（不计入正确率）", "",
+        "| 网站 | 程序结论 | 人工记录 | 原因 |",
+        "|---|---|---|---|",
+    ]
+    for row in inconclusive:
+        values = [
+            row["hostname"], row["program_flow"] or "error",
+            row["manual_signup"] or "—", row["reason"],
+        ]
+        lines.append("| " + " | ".join(str(value).replace("|", "\\|") for value in values) + " |")
     return "\n".join(lines) + "\n"
 
 
@@ -89,7 +102,12 @@ def main():
         encoding="utf-8",
     )
     matched = sum(row["status"] == "match" for row in rows)
-    print(f"审计 {len(rows)} 个已核验网站：一致 {matched}，不一致 {len(rows) - matched}")
+    mismatched = sum(row["status"] == "mismatch" for row in rows)
+    inconclusive = sum(row["status"].startswith("inconclusive_") for row in rows)
+    print(
+        f"审计 {len(rows)} 个已核验网站：一致 {matched}，"
+        f"不一致 {mismatched}，证据不足 {inconclusive}"
+    )
 
 
 if __name__ == "__main__":

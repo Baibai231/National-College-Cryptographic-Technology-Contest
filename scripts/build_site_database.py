@@ -10,11 +10,17 @@ import argparse
 import json
 import os
 import sqlite3
+import sys
 from collections import defaultdict
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from scripts.site_data_store import coordinated_data_lock
 
 FIELD_ZH = {
     "phone": "手机号", "email": "邮箱", "identifier": "账号/邮箱",
@@ -250,17 +256,21 @@ def create_db(sites, db_path, history=None):
     pending_rows = []
     if os.path.exists(db_path):
         try:
-            old = sqlite3.connect(db_path)
-            old.row_factory = sqlite3.Row
-            table = old.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='reviews_pending'"
-            ).fetchone()
-            if table:
-                pending_rows = [dict(row) for row in old.execute(
-                    "SELECT * FROM reviews_pending ORDER BY id")]
-            old.close()
-        except sqlite3.DatabaseError:
-            pending_rows = []
+            with sqlite3.connect(db_path, timeout=15) as old:
+                old.row_factory = sqlite3.Row
+                table = old.execute(
+                    "SELECT 1 FROM sqlite_master "
+                    "WHERE type='table' AND name='reviews_pending'"
+                ).fetchone()
+                if table:
+                    pending_rows = [dict(row) for row in old.execute(
+                        "SELECT * FROM reviews_pending ORDER BY id")]
+        except sqlite3.DatabaseError as exc:
+            # Pending reviews exist only in SQLite.  If they cannot be read,
+            # fail closed and keep the old database for manual recovery.
+            raise RuntimeError(
+                f"无法备份旧数据库中的待审核记录，已取消重建: {exc}"
+            ) from exc
     # 始终在旁路文件中完整构建；只有全部 SQL 成功后才原子替换服务索引。
     # 构建异常时旧数据库仍可继续服务，下一次运行会清理残留 building 文件。
     build_path = os.fspath(db_path) + ".building"
@@ -380,16 +390,24 @@ def main():
     ap.add_argument("--output", default="webapp/sites.db")
     args = ap.parse_args()
 
-    inputs = args.input or ["reports/sites/sites_latest.jsonl"]
-    groups = load_records(inputs)
-    print(f"加载 {sum(len(k) for h in groups for k in groups[h].values())} 条测量记录（{len(inputs)} 个文件）")
-    sites = attach_manual(build_sites(groups), args.manual, args.keywords)
-    os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    history = build_history(groups, sites)
-    create_db(sites, args.output, history=history)
-    verified = sum(1 for s in sites if s["match_status"] == "manual_verified")
-    print(f"已写入 {args.output}: {len(sites)} 站，人工已核验 {verified} 站，"
-          f"历史版本 {len(history)} 条")
+    # server_sync.sh already owns this lock and advertises that via the env;
+    # direct/manual rebuilds take it here so pending submissions cannot arrive
+    # between the backup read and atomic database replacement.
+    lock_path = Path(os.environ.get(
+        "SITES_DATA_LOCK", str(_PROJECT_ROOT / "webapp" / ".data-sync.lock")))
+    lock = (nullcontext() if os.environ.get("SITES_SYNC_LOCK_HELD") == "1"
+            else coordinated_data_lock(lock_path))
+    with lock:
+        inputs = args.input or ["reports/sites/sites_latest.jsonl"]
+        groups = load_records(inputs)
+        print(f"加载 {sum(len(k) for h in groups for k in groups[h].values())} 条测量记录（{len(inputs)} 个文件）")
+        sites = attach_manual(build_sites(groups), args.manual, args.keywords)
+        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
+        history = build_history(groups, sites)
+        create_db(sites, args.output, history=history)
+        verified = sum(1 for s in sites if s["match_status"] == "manual_verified")
+        print(f"已写入 {args.output}: {len(sites)} 站，人工已核验 {verified} 站，"
+              f"历史版本 {len(history)} 条")
 
 
 if __name__ == "__main__":

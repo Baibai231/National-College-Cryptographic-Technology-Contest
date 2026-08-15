@@ -69,6 +69,8 @@ After=network.target
 [Service]
 WorkingDirectory=/home/USER/measure
 Environment=SITES_HEADLESS=1
+Environment=SITES_ADMIN_TOKEN=请替换为高强度随机口令
+Environment=SITES_CLASSIFY_CONCURRENCY=2
 ExecStart=/home/USER/measure/.venv/bin/python -m uvicorn webapp.app:app --host 0.0.0.0 --port 8000
 Restart=always
 
@@ -104,13 +106,11 @@ server {
 
 代码与正式数据经 GitHub 部署；`reports/sites/sites_latest.jsonl` 和
 `misc/manual_review.json` 是持久数据，`webapp/sites.db` 只是可重建索引。
-立即部署：
+立即部署（不要绕过网页增量快照直接 pull）：
 
 ```bash
 cd ~/measure
-git pull --rebase
-.venv/bin/python scripts/build_site_database.py   # 重建数据库
-sudo systemctl restart sites-webapp               # 或重启 run_server.sh
+./webapp/server_sync.sh
 curl -fsS http://127.0.0.1:8000/api/stats
 ```
 
@@ -118,7 +118,8 @@ curl -fsS http://127.0.0.1:8000/api/stats
 已审核人工条目，
 用干净工作树拉取远端，再按站点/入口原子回放并提交；即使 Mac 与服务器同时修改
 JSONL 也不会直接 rebase 冲突，未修改的服务器旧记录不会覆盖 Mac 新全量结果；拉取
-失败时快照也会恢复。reports 变化时会重新生成档案。
+失败时快照也会恢复。reports 变化时会重新生成档案。网页写请求与同步/数据库替换共享
+跨进程锁；部署标记和 API 健康检查确保建库或重启失败后下一轮仍会重试。
 
 ```bash
 chmod +x webapp/server_sync.sh
@@ -134,6 +135,9 @@ crontab -e
 
 ## 注意事项
 
-- 实时分类接口在服务器上跑 Chrome，**并发多时慢**（单次 1-3 分钟）。
-  若组员同时用可能排队，可后续加队列/限流。
+- 实时分类接口在服务器上跑 Chrome（单次约 1-3 分钟），默认最多同时 2 个；超出时
+  返回“稍后重试”，可用 `SITES_CLASSIFY_CONCURRENCY` 保守调整。接口拒绝本机、内网、
+  保留地址和非 80/443 端口，避免公网页面被用于访问服务器内部服务。
+- 当前公网地址仍是 HTTP；管理员口令会明文经过网络。正式长期使用应在域名备案后配置
+  HTTPS/Nginx，未启用 HTTPS 前不要在不可信网络中输入管理员口令。
 - 不提交任何真实身份信息：平台只观察和分类。

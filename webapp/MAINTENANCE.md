@@ -70,7 +70,8 @@ cd ~/measure
 `server_sync.sh` 的顺序固定为：快照网页相对旧 HEAD 的真实增量 → 恢复干净工作树 →
 pull --rebase → 按站点/入口原子回放增量 → 生成报告并提交 → 重建 SQLite → 重启 →
 push。未变化的旧服务器记录不会覆盖 Mac 新全量结果；拉取失败也会先
-恢复快照。完整解释见 `webapp/DATA_FLOW.md`。
+恢复快照。网页写入、同步和重建使用同一个数据锁；部署标记只有在 API 健康检查通过后
+才更新，所以建库/重启失败会在下一轮自动重试。完整解释见 `webapp/DATA_FLOW.md`。
 
 ### 方案 2：API 主动拉回（GitHub 暂未同步时）
 ```bash
@@ -86,6 +87,8 @@ cd "/Users/cjx_main/Desktop/2026 Chinacode/large-scale-web-measurement"
   前备份并在重建后恢复。
 - **网页新增站点何时可见**：写入成功后本浏览器立即可见，其他页面最多 30 秒刷新；
   GitHub/Mac 则等下一次同步（最多约 6 小时）。
+- **不要在服务器直接 `git pull` 覆盖脏数据**：立即部署也运行 `./webapp/server_sync.sh`，
+  它会先快照网页增量；脚本已有运行互斥，重复触发会安全跳过。
 
 ---
 
@@ -148,6 +151,7 @@ sudo systemctl restart sites-webapp
 ### 方案 3：防重复提交（已内置）
 - 提交弹窗打开时自动查询该站已有待审核份数，提示"已有 N 份待审核，请确认不重复"
 - 详情页人工复核区显示"（N 份待审核）"
+- 匿名只返回数量；完整待审核内容必须在管理窗口输入管理员口令后读取
 
 ### 常见问题
 - **组员重复提交**：已有提示。你审核时删除重复的即可。
@@ -163,7 +167,7 @@ sudo systemctl restart sites-webapp
 | 想做什么 | 命令 |
 |---|---|
 | 本地预览网站 | `./webapp/run_server.sh 8000` → http://127.0.0.1:8000 |
-| 更新服务器代码 | Mac push；服务器 `git pull --rebase`、重建数据库、重启服务 |
+| 更新服务器代码 | Mac push；服务器运行 `./webapp/server_sync.sh` |
 | 拉回网站数据 | `.venv/bin/python scripts/pull_web_data.py --host http://120.53.5.132:8000 --token 口令` |
 | 全量重测 | `./webapp/update_data.sh`（默认合并四份清单，共 151 站） |
 | 重建数据库 | `scripts/build_site_database.py` |

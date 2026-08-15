@@ -2,9 +2,10 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 from scripts.site_data_store import upsert_records
-from scripts.snapshot_data_changes import manual_delta, record_delta
+from scripts.snapshot_data_changes import git_text, manual_delta, record_delta
 
 
 def line(hostname, kind, flow):
@@ -44,6 +45,17 @@ class SnapshotDataChangesTests(unittest.TestCase):
         delta = manual_delta(current, base)
         self.assertEqual(set(delta["sites"]), {"changed.example", "new.example"})
         self.assertEqual(delta["updated_at"], "now")
+
+    def test_empty_manual_delta_omits_stale_timestamp(self):
+        current = {"sites": {"same.example": {"manual_login": "口令"}},
+                   "updated_at": "old-server-time"}
+        self.assertEqual(manual_delta(current, current), {"sites": {}})
+
+    @patch("scripts.snapshot_data_changes.subprocess.run")
+    def test_git_baseline_read_failure_aborts_instead_of_becoming_empty(self, run):
+        run.return_value = Mock(returncode=128, stdout="", stderr="bad ref")
+        with self.assertRaisesRegex(RuntimeError, "为避免全量误回放已中止"):
+            git_text(Path("/tmp/project"), "HEAD", "tracked.jsonl")
 
     def test_replay_delta_does_not_overwrite_unmodified_remote_updates(self):
         base = (

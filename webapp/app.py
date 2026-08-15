@@ -9,12 +9,18 @@
 启动:
   .venv/bin/python -m uvicorn webapp.app:app --host 0.0.0.0 --port 8000
 """
+import ipaddress
 import json
 import os
+import socket
 import sqlite3
 import sys
+import threading
 from datetime import datetime, timezone
+from functools import wraps
 from pathlib import Path
+from typing import Literal
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +29,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from scripts.site_data_store import (
-    measurement_record, upsert_manual_review, upsert_records,
+    coordinated_data_lock, measurement_record, upsert_manual_review,
+    upsert_records,
 )
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +43,8 @@ REPORTS_PATH = Path(os.environ.get(
     "SITES_REPORTS", str(_PROJECT_ROOT / "reports" / "sites" / "sites_latest.jsonl")))
 MANUAL_PATH = Path(os.environ.get(
     "SITES_MANUAL", str(_PROJECT_ROOT / "misc" / "manual_review.json")))
+DATA_LOCK_PATH = Path(os.environ.get(
+    "SITES_DATA_LOCK", str(_PROJECT_ROOT / "webapp" / ".data-sync.lock")))
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI(title="注册流程测量平台", version="1.0")
@@ -45,6 +54,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+try:
+    _CLASSIFY_CONCURRENCY = max(1, int(os.environ.get(
+        "SITES_CLASSIFY_CONCURRENCY", "2")))
+except ValueError:
+    _CLASSIFY_CONCURRENCY = 2
+_CLASSIFY_SEMAPHORE = threading.BoundedSemaphore(_CLASSIFY_CONCURRENCY)
 
 FLOW_ZH = {
     "direct_password": "直接口令", "identifier_then_password": "先标识后口令",
@@ -58,7 +74,22 @@ FLOW_ZH = {
 def _conn():
     if not os.path.isfile(DB_PATH):
         raise HTTPException(500, f"数据库不存在: {DB_PATH}（先运行 scripts/build_site_database.py）")
-    return sqlite3.connect(DB_PATH)
+    # A short busy timeout makes a request wait for another small SQLite
+    # transaction instead of surfacing a transient "database is locked" 500.
+    return sqlite3.connect(DB_PATH, timeout=15)
+
+
+def _serialized_data_transaction(func):
+    """Keep a multi-file data operation consistent across processes.
+
+    The same exact lock is held by ``server_sync.sh`` and standalone database
+    rebuilds, so a web mutation/export cannot cross pull/replay/replace halfway.
+    """
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        with coordinated_data_lock(DATA_LOCK_PATH):
+            return func(*args, **kwargs)
+    return wrapped
 
 
 def _row_to_site(row):
@@ -205,9 +236,9 @@ def site_history(host: str):
 
 class AddSiteRequest(BaseModel):
     """现场分类结果 → 写入数据库。"""
-    hostname: str
-    url: str = ""
-    version: str = "v3"
+    hostname: str = Field(max_length=253)
+    url: str = Field("", max_length=2048)
+    version: Literal["v3"] = "v3"
     login: dict = Field(default_factory=dict)
     signup: dict = Field(default_factory=dict)
     admin_token: str = ""
@@ -242,6 +273,7 @@ def _extract_states(states, key):
 
 
 @app.post("/api/sites")
+@_serialized_data_transaction
 def add_site(req: AddSiteRequest):
     """管理员把现场分类结果写入数据库（新增或更新站点）。
 
@@ -358,6 +390,7 @@ def add_site(req: AddSiteRequest):
 
 
 @app.get("/api/export")
+@_serialized_data_transaction
 def export_data(admin_token: str = Header("", alias="X-Admin-Token")):
     """导出全量站点数据（供 Mac 拉回合并，保持数据一致）。
 
@@ -371,61 +404,17 @@ def export_data(admin_token: str = Header("", alias="X-Admin-Token")):
     if admin_token != expected:
         raise HTTPException(403, "管理员口令错误")
 
-    records = []
-    conn = _conn()
     try:
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM sites ORDER BY hostname")
-        for row in cur.fetchall():
-            site = _row_to_site(row)
-            details = json.loads(row[-1] or "{}")
-            for kind in ("login", "signup"):
-                entry = site[kind]
-                if not entry.get("flow_type"):
-                    continue
-                rec = details.get(f"{kind}_record") or {
-                    "site": site.get("url") or "https://" + site["hostname"],
-                    "hostname": site["hostname"],
-                    "entry_kind": kind,
-                    "measured_at": entry.get("measured_at"),
-                    "version": site.get("version", "?"),
-                    "flow_type": entry.get("flow_type"),
-                    "confidence": None,
-                    "stop_reason": entry.get("stop_reason"),
-                    "primary_method": None,
-                    "final_url": entry.get("final_url"),
-                    "states": entry.get("raw_states") or entry.get("steps", []),
-                    "policy": entry.get("policy", {}),
-                    "evidence": [],
-                    "error": None,
-                }
-                records.append(rec)
-        # 历史版本
-        cur.execute("SELECT * FROM site_history")
-        for r in cur.fetchall():
-            details = json.loads(r[8] or "{}")
-            records.append({
-                "site": "https://" + r[1],
-                "hostname": r[1], "entry_kind": r[2],
-                "measured_at": r[7], "version": r[3],
-                "flow_type": r[4], "confidence": None,
-                "stop_reason": r[5], "primary_method": r[6],
-                "final_url": None,
-                "states": details.get("steps", []),
-                "policy": details.get("policy", {}),
-                "evidence": [], "error": None,
-            })
-    finally:
-        conn.close()
-    manual = {}
-    manual_path = MANUAL_PATH
-    if manual_path.is_file():
-        try:
-            import json as _json
-            with open(manual_path, encoding="utf-8") as f:
-                manual = _json.load(f)
-        except Exception:
-            pass
+        records = [
+            json.loads(line) for line in
+            REPORTS_PATH.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        manual = (json.loads(MANUAL_PATH.read_text(encoding="utf-8"))
+                  if MANUAL_PATH.is_file() else {"sites": {}})
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(
+            500, f"权威数据文件读取失败，导出已中止: {exc}") from exc
     return {"records": records, "manual": manual}
 
 
@@ -686,23 +675,28 @@ def _manual_match(flow_type, manual_text):
 
 
 class ClassifyRequest(BaseModel):
-    url: str
-    entry_kind: str = "signup"
+    url: str = Field(max_length=2048)
+    entry_kind: Literal["signup", "login"] = "signup"
 
 
 class ReviewRequest(BaseModel):
-    hostname: str
-    login: str = ""
-    signup: str = ""
-    note: str = ""
-    submitter: str = ""
-    review_type: str = "manual"  # manual=人工观察提交, feedback=识别结果反馈
+    hostname: str = Field(max_length=253)
+    login: str = Field("", max_length=4000)
+    signup: str = Field("", max_length=4000)
+    note: str = Field("", max_length=8000)
+    submitter: str = Field("", max_length=200)
+    review_type: Literal["manual", "feedback"] = "manual"
     structured: dict = Field(default_factory=dict)
 
 
 @app.get("/api/reviews/pending")
-def pending_reviews(hostname: str = Query("", max_length=100)):
-    """待审核的人工观察提交（管理员核验用）。可传 hostname 查单站。"""
+def pending_reviews(hostname: str = Query("", max_length=253),
+                    admin_token: str = Header("", alias="X-Admin-Token")):
+    """待审核提交；匿名只能查单站数量，完整内容仅管理员可读。"""
+    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
+    is_admin = bool(expected and admin_token == expected)
+    if not hostname and not is_admin:
+        raise HTTPException(403, "完整待审核列表仅管理员可查看")
     conn = _conn()
     try:
         cur = conn.cursor()
@@ -718,6 +712,8 @@ def pending_reviews(hostname: str = Query("", max_length=100)):
         rows = cur.fetchall()
     finally:
         conn.close()
+    if not is_admin:
+        return {"total": len(rows), "reviews": []}
     return {"total": len(rows), "reviews": [
         {"id": r[0], "hostname": r[1], "login": r[2], "signup": r[3],
          "note": r[4], "submitter": r[5], "review_type": r[6] or "manual",
@@ -727,6 +723,7 @@ def pending_reviews(hostname: str = Query("", max_length=100)):
 
 
 @app.post("/api/reviews")
+@_serialized_data_transaction
 def submit_review(req: ReviewRequest):
     """组员提交人工观察（进入待审核表，管理员核验后合并进 final）。"""
     host = req.hostname.strip()
@@ -752,6 +749,7 @@ def submit_review(req: ReviewRequest):
 
 
 @app.post("/api/reviews/{review_id}/approve")
+@_serialized_data_transaction
 def approve_review(review_id: int,
                    admin_token: str = Header("", alias="X-Admin-Token")):
     """管理员核验通过：合并人工观察进 sites 表 + manual_review.json。
@@ -818,6 +816,7 @@ def approve_review(review_id: int,
 
 
 @app.delete("/api/reviews/{review_id}")
+@_serialized_data_transaction
 def delete_review(review_id: int,
                   admin_token: str = Header("", alias="X-Admin-Token")):
     """管理员核验后删除待审核记录（拒绝该提交）。"""
@@ -836,20 +835,112 @@ def delete_review(review_id: int,
     return {"ok": True}
 
 
+def _validated_classify_url(raw_url: str, *, resolve: bool) -> tuple[str, str]:
+    """Accept only public HTTP(S) targets for the public browser endpoint."""
+    url = raw_url.strip()
+    if not url:
+        raise HTTPException(400, "url 不能为空")
+    if "://" not in url:
+        url = "https://" + url
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise HTTPException(400, "只支持有效的 http/https 网站地址")
+    if parsed.username or parsed.password:
+        raise HTTPException(400, "网站地址不能包含用户名或口令")
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise HTTPException(400, "网站端口格式无效") from exc
+    if port not in (None, 80, 443):
+        raise HTTPException(400, "实时分类只允许标准网页端口 80/443")
+
+    host = parsed.hostname.rstrip(".").lower()
+
+    def require_global(address: str):
+        address = address.split("%", 1)[0]
+        try:
+            ip = ipaddress.ip_address(address)
+        except ValueError:
+            return False
+        if not ip.is_global:
+            raise HTTPException(400, "实时分类不允许访问本机、内网或保留地址")
+        return True
+
+    if require_global(host):
+        return url, host
+    if host in ("localhost", "localhost.localdomain") or host.endswith(".local"):
+        raise HTTPException(400, "实时分类不允许访问本机或内网主机")
+    if resolve:
+        try:
+            addresses = {
+                item[4][0] for item in socket.getaddrinfo(
+                    host, port or (443 if parsed.scheme == "https" else 80),
+                    type=socket.SOCK_STREAM)
+            }
+        except socket.gaierror as exc:
+            raise HTTPException(400, "网站域名当前无法解析") from exc
+        if not addresses:
+            raise HTTPException(400, "网站域名当前无法解析")
+        for address in addresses:
+            require_global(address)
+    return url, host
+
+
+def _run_live_classification(url: str, kind: str) -> dict:
+    """Run one live Chrome classification; caller owns the concurrency slot."""
+    from utils.util_test_password import _get_new_driver
+    from utils.login_link_discovery import LoginLinkDiscovery
+    from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
+
+    driver = _get_new_driver()
+    try:
+        discovery = LoginLinkDiscovery(driver)
+        signup_url = discovery.navigate_to_signup(url)
+        engine = SignupFlowClassifierEngine(driver)
+        if not signup_url:
+            signup_url = driver.current_url
+        # Re-check the post-navigation target before the classifier performs
+        # any further safe clicks. This also blocks a public URL redirecting
+        # the browser onto a private host from being explored further.
+        signup_url, _redirect_host = _validated_classify_url(
+            signup_url, resolve=True)
+        entry_clicked = getattr(discovery, "_entry_clicked", False)
+        result = engine.classify(
+            signup_url, entry_kind=kind,
+            entry_already_clicked=bool(entry_clicked and kind == "signup"),
+        )
+        return {
+            "url": url,
+            "entry_kind": kind,
+            "flow_type": result.get("flow_type"),
+            "flow_zh": FLOW_ZH.get(result.get("flow_type"), "未确认"),
+            "stop_reason": result.get("stop_reason"),
+            "primary_method": result.get("primary_method"),
+            "confidence": result.get("confidence"),
+            "final_url": result.get("final_url"),
+            "states": result.get("states", []),
+            "evidence": result.get("evidence", []),
+            "policy": result.get("policy", {}),
+            "error": result.get("error"),
+            "measured_at": datetime.now(timezone.utc).isoformat(),
+        }
+    finally:
+        try:
+            driver.quit()
+        except Exception:
+            pass
+
+
 @app.post("/api/classify")
 def classify_site(req: ClassifyRequest):
     """输入网站主页 → 实时分类注册流程（复用测量工具，安全只读）。
 
     先查数据库：该域名已测过则直接返回库中结果，避免重复跑 Chrome。
     """
-    url = req.url.strip()
-    if not url.startswith(("http://", "https://")):
-        url = "https://" + url
-    kind = req.entry_kind if req.entry_kind in ("signup", "login") else "signup"
+    url, host = _validated_classify_url(req.url, resolve=False)
+    kind = req.entry_kind
 
     # 数据库命中：直接返回已有结果
-    from urllib.parse import urlparse
-    host = (urlparse(url).hostname or "").lower()
     if host:
         conn = _conn()
         try:
@@ -881,46 +972,22 @@ def classify_site(req: ClassifyRequest):
                 "manual": site.get("manual"),
             }
 
+    # Only live navigation needs DNS resolution. Cached public results remain
+    # available during a transient resolver outage. Reserve the bounded slot
+    # before DNS as well, so a burst of slow lookups cannot exhaust all API
+    # worker threads ahead of the Chrome concurrency guard.
+    if not _CLASSIFY_SEMAPHORE.acquire(blocking=False):
+        raise HTTPException(429, "服务器正在执行其他实时分类，请稍后重试")
     try:
-        from utils.util_test_password import _get_new_driver
-        from utils.login_link_discovery import LoginLinkDiscovery
-        from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
-
-        driver = _get_new_driver()
-        try:
-            discovery = LoginLinkDiscovery(driver)
-            signup_url = discovery.navigate_to_signup(url)
-            engine = SignupFlowClassifierEngine(driver)
-            if not signup_url:
-                signup_url = driver.current_url
-            entry_clicked = getattr(discovery, "_entry_clicked", False)
-            result = engine.classify(
-                signup_url, entry_kind=kind,
-                entry_already_clicked=bool(entry_clicked and kind == "signup"),
-            )
-            return {
-                "url": url,
-                "entry_kind": kind,
-                "flow_type": result.get("flow_type"),
-                "flow_zh": FLOW_ZH.get(result.get("flow_type"), "未确认"),
-                "stop_reason": result.get("stop_reason"),
-                "primary_method": result.get("primary_method"),
-                "confidence": result.get("confidence"),
-                "final_url": result.get("final_url"),
-                "states": result.get("states", []),
-                "evidence": result.get("evidence", []),
-                "policy": result.get("policy", {}),
-                "error": result.get("error"),
-                "measured_at": datetime.now(timezone.utc).isoformat(),
-            }
-        finally:
-            try:
-                driver.quit()
-            except Exception:
-                pass
+        _validated_classify_url(url, resolve=True)
+        return _run_live_classification(url, kind)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             500, "分类失败: {}: {}".format(type(exc).__name__, str(exc)[:200]))
+    finally:
+        _CLASSIFY_SEMAPHORE.release()
 
 
 # 静态前端

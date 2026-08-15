@@ -20,7 +20,9 @@
    的浏览器页面最多 30 秒自动刷新。
 3. 每 6 小时 `server_sync.sh` 只快照网页相对服务器旧 HEAD 真正修改的站点/入口与
    人工条目，用干净工作树拉取 GitHub，再原子回放这些增量；随后重新生成档案/汇总、提交、
-   重建数据库、重启服务并推送。拉取失败时也会先恢复快照，网页数据不会丢失。
+   重建数据库、重启服务并推送。网页写入与整个同步/重建临界区使用同一个跨进程锁；
+   拉取失败时也会先恢复快照，网页数据不会丢失。只有新 HEAD 建库、重启及 API 健康检查
+   都成功才写入本机部署标记，中途失败会在下一轮继续部署。
 4. Mac 执行 `git pull --rebase` 后即可在 `reports/sites/sites_latest.jsonl` 和逐站档案中
    得到该网站。若要主动从服务器 API 拉取，可使用 `scripts/pull_web_data.py`。
 
@@ -34,6 +36,10 @@
    而是证据不足。正确率分母仅含能比较的记录，覆盖率表示能比较记录占已核验记录的
    比例。
 4. 下一次服务器定时同步把已审核人工数据推送到 GitHub，Mac 拉取后即可获得。
+
+匿名访问只能查询某站有多少份待审核提交，提交人和人工观察详情只有管理员口令可读。
+`/api/export` 也需要管理员口令，并在同一一致性锁内直接原样导出上述两份权威文件；
+不会从 SQLite 历史表反向拼接或降级当前 v3。
 
 ## 三端关系
 
@@ -56,13 +62,11 @@ GitHub（唯一交换桥梁和历史版本）
 
 ## 常用命令
 
-服务器立即部署 Mac 已推送的更新：
+服务器立即部署 Mac 已推送的更新（也会安全处理尚未推送的网页增量）：
 
 ```bash
 cd ~/measure
-git pull --rebase
-.venv/bin/python scripts/build_site_database.py
-sudo systemctl restart sites-webapp
+./webapp/server_sync.sh
 curl -fsS http://127.0.0.1:8000/api/stats
 ```
 

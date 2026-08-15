@@ -61,4 +61,6 @@ htmlcov/
 webapp/browser-linux/
 webapp/sites.db
 *.jsonl.lock
+.data-sync.lock
+.deployed-head
 HANDOFF.md

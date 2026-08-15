@@ -344,8 +344,11 @@ async function loadPending() {
   const token = document.getElementById('admin-token').value;
   const box = document.getElementById('admin-list');
   box.innerHTML = '<div class="text-muted">加载中…</div>';
-  const r = await fetch('/api/reviews/pending');
+  const r = await fetch('/api/reviews/pending', {
+    headers: { 'X-Admin-Token': token }
+  });
   const d = await r.json();
+  if (!r.ok) { box.innerHTML = `<div class="alert alert-warning py-2">${esc(d.detail || '请输入正确的管理员口令')}</div>`; return; }
   if (!d.total) { box.innerHTML = '<div class="text-muted">暂无待审核提交</div>'; return; }
   box.innerHTML = d.reviews.map(rev => `
     <div class="border rounded p-2 mb-2">
@@ -623,9 +626,8 @@ document.addEventListener('click', e => {
       .then(r => r.json())
       .then(d => {
         if (d.total > 0) {
-          const names = [...new Set(d.reviews.map(x => x.submitter || '匿名'))].join('、');
           tip.innerHTML = `<div class="alert alert-warning py-2 small">
-            该站已有 <b>${d.total}</b> 份待审核提交（${esc(names)}），
+            该站已有 <b>${d.total}</b> 份待审核提交，
             请先确认内容是否已有，避免重复提交。</div>`;
         } else {
           tip.innerHTML = `<div class="alert alert-success py-2 small">该站暂无待审核提交，可以填写。</div>`;

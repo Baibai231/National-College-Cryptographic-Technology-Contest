@@ -29,14 +29,23 @@ def manual_delta(current, base):
     base_sites = base.get("sites") or {}
     changed = {hostname: entry for hostname, entry in current_sites.items()
                if base_sites.get(hostname) != entry}
-    return {"sites": changed, "updated_at": current.get("updated_at", "")}
+    delta = {"sites": changed}
+    if changed and current.get("updated_at"):
+        delta["updated_at"] = current["updated_at"]
+    return delta
 
 
 def git_text(project_root, ref, relative_path):
     result = subprocess.run(
         ["git", "show", f"{ref}:{relative_path}"], cwd=project_root,
         check=False, capture_output=True, text=True, encoding="utf-8")
-    return result.stdout if result.returncode == 0 else ""
+    if result.returncode != 0:
+        message = (result.stderr or "git show failed").strip()
+        raise RuntimeError(
+            f"无法读取同步基线 {ref}:{relative_path}，为避免全量误回放已中止: "
+            f"{message}"
+        )
+    return result.stdout
 
 
 def main():

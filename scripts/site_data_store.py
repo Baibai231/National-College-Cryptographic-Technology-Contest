@@ -16,11 +16,11 @@ from typing import Iterable
 
 
 @contextmanager
-def _exclusive_lock(path: Path):
-    """Serialize writers across web workers and the six-hour sync job."""
+def coordinated_data_lock(path: Path | str):
+    """Take an exact-path advisory lock shared by the web app and sync job."""
     import fcntl
 
-    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path = Path(path)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a+", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
@@ -28,6 +28,13 @@ def _exclusive_lock(path: Path):
             yield
         finally:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextmanager
+def _exclusive_lock(path: Path):
+    """Serialize writers to one authoritative JSON/JSONL file."""
+    with coordinated_data_lock(path.with_suffix(path.suffix + ".lock")):
+        yield
 
 
 def measurement_record(hostname: str, site_url: str, version: str,
@@ -65,8 +72,6 @@ def upsert_records(path: Path | str, records: Iterable[dict]) -> dict:
     """
     target = Path(path)
     incoming = list(records)
-    if not incoming:
-        return {"added": 0, "updated": 0, "total": 0}
     target.parent.mkdir(parents=True, exist_ok=True)
     with _exclusive_lock(target):
         current: dict[tuple[str, str], dict] = {}
@@ -83,6 +88,9 @@ def upsert_records(path: Path | str, records: Iterable[dict]) -> dict:
                     if key not in current:
                         order.append(key)
                     current[key] = record
+
+        if not incoming:
+            return {"added": 0, "updated": 0, "total": len(current)}
 
         added = updated = 0
         for record in incoming:
@@ -136,7 +144,11 @@ def upsert_manual_review(path: Path | str, hostname: str, *, login: str = "",
             entry["note"] = note
         entry["verified"] = True
         if structured:
-            entry["structured"] = structured
+            existing_structured = entry.get("structured")
+            if not isinstance(existing_structured, dict):
+                existing_structured = {}
+            existing_structured.update(structured)
+            entry["structured"] = existing_structured
         entry["reviewed_from"] = reviewed_from
         manual["updated_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -173,7 +185,14 @@ def merge_manual_reviews(path: Path | str, incoming: dict) -> dict:
             if current_sites.get(hostname) != entry:
                 current_sites[hostname] = entry
                 changed += 1
-        if incoming.get("updated_at"):
+        # updated_at describes the resulting document, not the source snapshot.
+        # Replaying an older server delta must never roll a newer Git timestamp
+        # backwards.  A no-op replay should not rewrite the file at all.
+        if not changed and target.is_file():
+            return {"updated": 0, "total": len(current_sites)}
+        if changed:
+            current["updated_at"] = datetime.now(timezone.utc).isoformat()
+        elif incoming.get("updated_at"):
             current["updated_at"] = incoming["updated_at"]
 
         fd, tmp_name = tempfile.mkstemp(
