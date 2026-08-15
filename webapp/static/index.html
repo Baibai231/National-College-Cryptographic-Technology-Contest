@@ -100,6 +100,8 @@
       <button class="btn btn-outline-secondary filter-btn" data-f="pending">待核验</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="match">识别基本正确</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="mismatch">识别不一致</button>
+      <button class="btn btn-outline-secondary filter-btn" data-f="incprog">程序证据不足</button>
+      <button class="btn btn-outline-secondary filter-btn" data-f="incmanual">人工证据不足</button>
     </div>
   </div>
   <div id="site-list" class="row g-3"></div>
@@ -273,8 +275,16 @@ function renderSites() {
   let list = allSites;
   if (currentFilter === 'verified') list = allSites.filter(s => s.match_status === 'manual_verified');
   if (currentFilter === 'pending') list = allSites.filter(s => s.match_status !== 'manual_verified');
-  if (currentFilter === 'match') list = allSites.filter(s => s.signup_match === 'match');
-  if (currentFilter === 'mismatch') list = allSites.filter(s => s.signup_match === 'mismatch');
+  // 登录/注册两侧合并判定：任一侧错误即不一致；有正确侧且无错误侧即基本正确。
+  if (currentFilter === 'match') list = allSites.filter(s =>
+    (s.login_match === 'match' || s.signup_match === 'match') &&
+    s.login_match !== 'mismatch' && s.signup_match !== 'mismatch');
+  if (currentFilter === 'mismatch') list = allSites.filter(s =>
+    s.login_match === 'mismatch' || s.signup_match === 'mismatch');
+  if (currentFilter === 'incprog') list = allSites.filter(s =>
+    s.login_match === 'inconclusive_program' || s.signup_match === 'inconclusive_program');
+  if (currentFilter === 'incmanual') list = allSites.filter(s =>
+    s.login_match === 'inconclusive_manual' || s.signup_match === 'inconclusive_manual');
   document.getElementById('list-count').textContent = list.length;
   const el = document.getElementById('site-list');
   el.innerHTML = list.length
