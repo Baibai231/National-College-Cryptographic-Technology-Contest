@@ -23,13 +23,14 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("<th>程序</th>", self.html)
         self.assertIn("<th>人工</th>", self.html)
         self.assertIn("方法${num}", self.html)
-        self.assertIn("需验证", self.html)
-        self.assertIn("已确认", self.html)
+        self.assertIn("有口令框", self.html)
         self.assertIn("主方法：", self.html)
-        # 登录/注册步骤 tabs 已删除
+        # 方法状态词与步骤展示已按用户要求删除
+        self.assertNotIn("已确认", self.html)
+        self.assertNotIn("需验证", self.html)
+        self.assertNotIn("方法说明", self.html)
         self.assertNotIn("switchStepTab", self.html)
         self.assertNotIn("stepsHtml", self.html)
-        self.assertNotIn("步骤2", self.html)
 
     def test_manual_review_has_structured_inputs(self):
         self.assertIn("结构化核验", self.html)

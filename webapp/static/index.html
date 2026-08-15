@@ -213,8 +213,8 @@
 
 <script>
 const FLOW_ZH = {
-  direct_password: "密码直接可见", identifier_then_password: "先账号后密码",
-  verification_then_password: "先验证后密码", otp_only: "仅验证码（无密码）",
+  direct_password: "有口令框", identifier_then_password: "先账号后口令框",
+  verification_then_password: "先验证后口令框", otp_only: "仅验证码",
   email_only: "仅邮箱", multiple_methods: "多方式并存",
   sso_only: "仅第三方", human_blocked: "需人工验证",
   no_web_signup: "无网页注册", unknown: "未确认", error: "异常"
@@ -519,24 +519,12 @@ async function showDetail(host) {
   const s = await r.json();
   document.getElementById('modal-title').innerHTML =
     `${esc(s.hostname)} ${matchBadge(s.match_status)}`;
-  const METHOD_STATUS_ZH = { confirmed: '已确认', blocked: '需验证', observed: '仅观察到' };
   const CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-  const methodGateZh = (m) => {
-    if (m.status !== 'blocked') return '';
-    const gate = (m.blockers || []).map(b => BLOCKER_ZH[b] || b).join('、');
-    return gate ? ' · 需' + gate : '';
-  };
   const methodsHtml = (list) => {
     if (!list || !list.length) return '<span class="text-muted">—</span>';
     return list.map((m, i) => {
       const num = CN_NUM[i] || (i + 1);
-      const statusZh = METHOD_STATUS_ZH[m.status] || m.status;
-      const cls = m.status === 'confirmed' ? 'text-success'
-        : m.status === 'blocked' ? 'text-warning' : 'text-secondary';
-      return `<div class="small mb-1">
-        <b>方法${num}：</b>${esc(m.name_zh || m.method)}
-        <span class="${cls}">（${statusZh}${methodGateZh(m)}）</span>
-      </div>`;
+      return `<div class="small mb-1"><b>方法${num}：</b>${esc(m.name_zh || m.method)}</div>`;
     }).join('');
   };
   const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured) => {
@@ -582,7 +570,6 @@ async function showDetail(host) {
         <tr><td>程序版本</td><td colspan="2">${s.version || '?'} ${s.manual.verified ? '' : ''}</td></tr>
       </tbody>
     </table>
-    <div class="text-muted small">方法说明：已确认=程序在安全边界内看到了该方法的全部要素（如手机号和验证码框都在）；需验证=完成该方法需要短信/人机/扫码等验证，程序遵守边界不越验证；仅观察到=只有弱证据。</div>
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>

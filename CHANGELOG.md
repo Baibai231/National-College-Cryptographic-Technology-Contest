@@ -139,10 +139,18 @@
 - 删除 `scripts/reaggregate_methods.py`（回写数据文件的脚本，违反铁律）。
 - HANDOFF.md 记录该铁律；测试 117/117 通过。
 
+### 18. 展示简化（2026-08-15，用户反馈第三轮 3 项）
+
+1. 类型名改直白：密码直接可见→**有口令框**、先账号后密码→先账号后口令框、
+   仅验证码（无密码）→仅验证码；DB 词表同步。
+2. 方法清单删除状态词（已确认/需验证/仅观察到），只显示"方法一：手机号+密码"。
+3. 删除详情页"方法说明"解释行。
+
 ## 变更速查表
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
+| 2026-08-15 | Kimi（Mac） | 展示简化：类型名直白化（有口令框）、方法清单去状态词、删方法说明 | webapp/static/index.html、scripts/build_site_database.py、tests/ | 本次提交 |
 | 2026-08-15 | Kimi（Mac） | 数据层/展示层分离：reports/misc 回滚原始格式、组合式方法只由 webapp 计算（combo_methods）、删除 reaggregate 回写脚本、HANDOFF 记录铁律 | signup_flow_classifier/、webapp/、scripts/、reports/、tests/、HANDOFF.md | 本次提交 |
 | 2026-08-15 | Kimi（Mac） | 方法清单组合式改版：手机号+验证码/邮箱+密码组合、删除步骤 tab、类型行加主方法、状态三态解释、reaggregate_methods 离线重聚合 | signup_flow_classifier/、scripts/、webapp/、tests/ | 本次提交 |
 
