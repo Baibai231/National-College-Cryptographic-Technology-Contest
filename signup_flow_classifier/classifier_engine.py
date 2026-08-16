@@ -358,57 +358,69 @@ class SignupFlowClassifierEngine:
                     and not signup_entry_clicked):
                 # 链接型注册 tab 优先直接导航（人民网"立即注册"是
                 # <a href="/u/reg">；点击在页面刚渲染时可能不触发导航）。
-                reg_href = ""
-                try:
-                    from urllib.parse import urljoin
-                    from signup_flow_classifier.navigator import (
-                        _same_site, _is_organizational_signup,
-                    )
-                    reg_href = self.driver.execute_script(
-                        "const t=[...document.querySelectorAll("
-                        "'a,button,[role=tab],[class*=tab]')]"
-                        ".find(e=>/立即注册|免费注册|注册账号|sign up|register/i"
-                        ".test((e.innerText||'').trim())"
-                        "&&(e.getAttribute('href')||e.getAttribute('data-href')||''));"
-                        "return t?(t.getAttribute('href')||t.getAttribute('data-href')||''):'';"
-                    ) or ""
-                    if reg_href:
-                        target_url = urljoin(
-                            self.driver.current_url, reg_href)
-                        if (_same_site(self.driver.current_url, target_url)
-                                and not _is_organizational_signup(target_url)):
-                            self.driver.get(target_url)
-                            record_evidence(
-                                result,
-                                "step={};register_href_nav={}".format(
-                                    step, target_url[:50]))
-                            signup_entry_clicked = True
-                            signup_reveal_pending = False
-                            if self._wait_for_form_fields(
-                                    self.driver, timeout=8):
-                                continue
-                except Exception:
-                    pass
-                tab_outcome = safe_click_tab(self.driver, "register_tab")
-                visited_tabs.add("register_tab")
-                tab_clicks_left -= 1
-                state.note = tab_outcome.reason
-                state.actions.append(
-                    "tab_click" if tab_outcome.clicked else "none")
-                record_evidence(
-                    result, "step={};register_tab={}".format(
-                        step, tab_outcome.reason))
-                if tab_outcome.clicked:
-                    signup_entry_clicked = True
-                    signup_reveal_pending = False
-                    if (self._wait_for_form_fields(self.driver, timeout=8)
-                            or tab_outcome.changed):
-                        continue
-                    # 点击没变化（页面刚渲染）时再等一轮观察：
-                    # 链接型注册 tab（人民网 /u/reg）点击后可能延迟导航。
-                    if self._wait_for_any_auth_signal(
-                            self.driver, timeout=6):
-                        continue
+                # cctv 实测：弹窗刚渲染时取 href 和点击都可能落空，
+                # 失败后等 1.5s 重试一次再放弃。
+                import time as _t
+                for _attempt in range(2):
+                    if tab_clicks_left <= 0:
+                        break
+                    reg_href = ""
+                    try:
+                        from urllib.parse import urljoin
+                        from signup_flow_classifier.navigator import (
+                            _same_site, _is_organizational_signup,
+                        )
+                        reg_href = self.driver.execute_script(
+                            "const t=[...document.querySelectorAll("
+                            "'a,button,[role=tab],[class*=tab]')]"
+                            ".find(e=>/立即注册|免费注册|注册账号|sign up|register/i"
+                            ".test((e.innerText||'').trim())"
+                            "&&(e.getAttribute('href')||e.getAttribute('data-href')||''));"
+                            "return t?(t.getAttribute('href')||t.getAttribute('data-href')||''):'';"
+                        ) or ""
+                        if reg_href:
+                            target_url = urljoin(
+                                self.driver.current_url, reg_href)
+                            # _same_site 按 eTLD+1 比较：reg.cctv.com 与
+                            # www.cctv.com 同属 cctv.com → 允许安全跟随
+                            if (_same_site(self.driver.current_url, target_url)
+                                    and not _is_organizational_signup(target_url)):
+                                self.driver.get(target_url)
+                                record_evidence(
+                                    result,
+                                    "step={};register_href_nav={}".format(
+                                        step, target_url[:50]))
+                                signup_entry_clicked = True
+                                signup_reveal_pending = False
+                                if self._wait_for_form_fields(
+                                        self.driver, timeout=8):
+                                    break
+                    except Exception:
+                        pass
+                    tab_outcome = safe_click_tab(self.driver, "register_tab")
+                    visited_tabs.add("register_tab")
+                    tab_clicks_left -= 1
+                    state.note = tab_outcome.reason
+                    state.actions.append(
+                        "tab_click" if tab_outcome.clicked else "none")
+                    record_evidence(
+                        result, "step={};register_tab={}".format(
+                            step, tab_outcome.reason))
+                    if tab_outcome.clicked:
+                        signup_entry_clicked = True
+                        signup_reveal_pending = False
+                        if (self._wait_for_form_fields(self.driver, timeout=8)
+                                or tab_outcome.changed):
+                            break
+                        # 点击没变化（页面刚渲染）时再等一轮观察：
+                        # 链接型注册 tab（人民网 /u/reg）点击后可能延迟导航。
+                        if self._wait_for_any_auth_signal(
+                                self.driver, timeout=6):
+                            break
+                    if _attempt == 0:
+                        _t.sleep(1.5)
+                if signup_entry_clicked:
+                    continue
             if (not login_page_during_signup and not signup_entry_failed
                     and "password" not in state.fields and tab_clicks_left > 0
                     and desired_password_tab in state.tabs):

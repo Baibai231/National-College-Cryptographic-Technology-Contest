@@ -425,6 +425,7 @@ def _sso_provider(driver: WebDriver, el) -> Optional[str]:
     semantic = " ".join((
         text, href, class_name, el.get_attribute("id") or "",
         el.get_attribute("aria-label") or "", el.get_attribute("title") or "",
+        el.get_attribute("alt") or "",
     ))
     provider = _provider_from_semantic(semantic)
     if not provider:
@@ -447,7 +448,13 @@ def _sso_provider(driver: WebDriver, el) -> Optional[str]:
         ) and 0 < len(text.strip()) <= 20
     except Exception:
         provider_only_button = False
-    icon_only = not text.strip() and bool(_provider_from_semantic(semantic))
+    # icon_only 用元素自身文本（textContent）判定：img 的 title/alt 会被
+    # _element_text 混入 text，导致纯图标误判为有文字（cctv/52pojie 实测）
+    try:
+        own_text = (el.text or "").strip()
+    except Exception:
+        own_text = ""
+    icon_only = not own_text and bool(_provider_from_semantic(semantic))
     if not (action_signal or auth_href or provider_only_button or icon_only):
         return None
     # 图标按钮常没有“登录/使用”等文字，只在 aria/title/class/id/href 中
@@ -530,7 +537,9 @@ def detect_methods(driver: WebDriver) -> List[str]:
             methods.append("auto_signup")
             break
 
-    for el in driver.find_elements(By.CSS_SELECTOR, "button, a, [role='button']"):
+    # img 也纳入扫描：微信/QQ/微博等第三方图标常是纯图片
+    # （<img alt="微信">，cctv/51 实测），文字为空的 A 标签带不出来。
+    for el in driver.find_elements(By.CSS_SELECTOR, "button, a, img, [role='button']"):
         if not _is_visible_enabled(el):
             continue
         if not _control_in_auth_scope(driver, el, fields):

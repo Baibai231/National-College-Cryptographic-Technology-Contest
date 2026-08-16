@@ -721,3 +721,30 @@ methodsHtml（对象无 length → 显示"—"），口令政策同样传错参�
 CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 代理（中文站直连更快且零代理流量；显式配置代理的行为不变）。
 验证：百度直连正常；119 项测试通过。
+
+### 27. 全站地面真值审计 + 图片型第三方识别修复（2026-08-16，用户强烈要求）
+
+用户随手查 cctv.com 即发现程序漏了图片型第三方/注册链接，质疑此前四轮全量
+回归的核对质量。深刻反思：前四轮只验证了"程序内部自洽"，没有"打开网站对照
+现实"。本次整改：
+
+**1. 全 152 站地面真值逐站核对**（亲自逐站完成）：
+- 新增 `scripts/ground_truth_probe.py`：自动化打开每个站点收集真实认证证据
+  （输入框/认证文本/第三方图标/注册链接/tab），证据 /tmp/gt_evidence.jsonl。
+- 审计报告 `reports/archive/v4_3_ground_truth_audit.md`：152 站逐站对照，
+  汇总：✅一致 53 站、⚠️缺方法 11 站、❓探测未复现弹窗 85 站（波动/App-first）、
+  🔀站点跳转/反爬 3 站。
+
+**2. 通用修复（不硬编码）**：
+- `page_detector.py`：SSO 扫描选择器加入 `img`；`_sso_provider` 语义加入
+  `alt` 属性；`icon_only` 改用元素自身 textContent 判定（img 的 title 会被
+  _element_text 混入 text 导致纯图标误判）。
+- `classifier_engine.py`：注册 tab 处理加重试（href 导航 + 点击各 2 次，
+  中间 1.5s，cctv 弹窗刚渲染时取不到链接）。
+- 端到端验证：52pojie 注册页 img alt=QQ登录/微信 → detect_methods 返回
+  sso+qq+wechat ✓（单元测试 3 项 + 实测）。
+- zhipin 重测改善（unknown → 手机号+验证码+微信）已合并进正式数据；
+  其余站保持四轮多数结果（防波动回退）。
+
+**3. 流程整改**：真值核对写入 HANDOFF 作为每轮全量的强制步骤——
+  不附带"真值核对报告"的回归不算完成。

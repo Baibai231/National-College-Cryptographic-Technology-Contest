@@ -295,3 +295,43 @@ class OrganizationalSignupExclusionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FakeImgElement:
+    """模拟 <img alt="微信"> 第三方图标元素。"""
+
+    def __init__(self, alt="", title=""):
+        self._alt = alt
+        self._title = title
+        self.tag_name = "img"
+
+    def get_attribute(self, name):
+        return {"alt": self._alt, "title": self._title}.get(name, "")
+
+
+from unittest.mock import patch, MagicMock
+
+
+class TestSsoProviderAltSemantic(unittest.TestCase):
+    """v4.3 核心：_sso_provider 读取 img alt/title（cctv/52pojie 实测）。"""
+
+    def _driver(self, url="https://www.cctv.com/"):
+        d = MagicMock()
+        d.current_url = url
+        return d
+
+    def test_alt_only_wechat_recognized(self):
+        from signup_flow_classifier.page_detector import _sso_provider
+        el = FakeImgElement(alt="微信")
+        self.assertEqual(_sso_provider(self._driver(), el), "wechat")
+
+    def test_title_only_qq_recognized(self):
+        from signup_flow_classifier.page_detector import _sso_provider
+        el = FakeImgElement(title="QQ")
+        self.assertEqual(_sso_provider(self._driver(), el), "qq")
+
+    def test_first_party_host_not_treated_as_sso(self):
+        from signup_flow_classifier.page_detector import _sso_provider
+        # gitee.com 上的 Gitee 登录不是第三方
+        el = FakeImgElement(alt="Gitee")
+        self.assertIsNone(_sso_provider(self._driver("https://gitee.com/"), el))
