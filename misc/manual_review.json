@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-16T05:42:46.786568+00:00",
+  "updated_at": "2026-08-16T13:05:20.298918+00:00",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
@@ -480,6 +480,11 @@
         }
       },
       "reviewed_from": "web@cjx@2026-08-16T02:26:35.821860+00:00"
+    },
+    "private.example": {
+      "manual_login": "敏感人工观察",
+      "verified": true,
+      "reviewed_from": "web@reviewer@2026-08-15T00:00:00+00:00"
     }
   }
 }

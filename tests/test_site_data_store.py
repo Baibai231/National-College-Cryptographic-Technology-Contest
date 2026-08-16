@@ -446,6 +446,11 @@ class SiteDataStoreTests(unittest.TestCase):
                 "(hostname, login, submitter, submitted_at) VALUES (?,?,?,?)",
                 ("private.example", "敏感人工观察", "reviewer",
                  "2026-08-15T00:00:00+00:00"))
+            conn.execute(
+                "INSERT INTO sites (hostname, url, keywords, version, "
+                "login_flow, signup_flow, details_json) VALUES (?,?,?,?,?,?,?)",
+                ("private.example", "https://private.example", "[]", "v4",
+                 "direct_password", "direct_password", "{}"))
             conn.commit()
             conn.close()
             old_db = web_app.DB_PATH
@@ -453,22 +458,26 @@ class SiteDataStoreTests(unittest.TestCase):
             web_app.DB_PATH = db_path
             os.environ["SITES_ADMIN_TOKEN"] = "test-token"
             try:
-                public = web_app.pending_reviews(
-                    hostname="private.example", admin_token="")
+                # 2026-08-16 规则：待审核列表所有人可见（含完整内容）
+                public = web_app.pending_reviews(hostname="private.example")
+                self.assertEqual(public["total"], 1)
+                self.assertIn("敏感人工观察", public["reviews"][0]["login"])
+                full = web_app.pending_reviews(hostname="")
+                self.assertEqual(full["total"], 1)
+                # 通过仍需管理员口令
                 with self.assertRaises(HTTPException) as denied:
-                    web_app.pending_reviews(hostname="", admin_token="")
-                admin = web_app.pending_reviews(
-                    hostname="", admin_token="test-token")
+                    web_app.approve_review(public["reviews"][0]["id"],
+                                           admin_token="")
+                self.assertEqual(denied.exception.status_code, 403)
+                ok = web_app.approve_review(public["reviews"][0]["id"],
+                                            admin_token="test-token")
+                self.assertTrue(ok["ok"])
             finally:
                 web_app.DB_PATH = old_db
                 if old_token is None:
                     os.environ.pop("SITES_ADMIN_TOKEN", None)
                 else:
                     os.environ["SITES_ADMIN_TOKEN"] = old_token
-
-            self.assertEqual(public, {"total": 1, "reviews": []})
-            self.assertEqual(denied.exception.status_code, 403)
-            self.assertEqual(admin["reviews"][0]["login"], "敏感人工观察")
 
     def test_export_reads_exact_authoritative_files_not_sqlite_history(self):
         with tempfile.TemporaryDirectory() as tmp:

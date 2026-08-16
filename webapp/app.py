@@ -824,13 +824,8 @@ class ReviewRequest(BaseModel):
 
 
 @app.get("/api/reviews/pending")
-def pending_reviews(hostname: str = Query("", max_length=253),
-                    admin_token: str = Header("", alias="X-Admin-Token")):
-    """待审核提交；匿名只能查单站数量，完整内容仅管理员可读。"""
-    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
-    is_admin = bool(expected and admin_token == expected)
-    if not hostname and not is_admin:
-        raise HTTPException(403, "完整待审核列表仅管理员可查看")
+def pending_reviews(hostname: str = Query("", max_length=253)):
+    """待审核列表（2026-08-16 起所有人可见；通过/删除仍需管理员）。"""
     conn = _conn()
     try:
         cur = conn.cursor()
@@ -846,8 +841,6 @@ def pending_reviews(hostname: str = Query("", max_length=253),
         rows = cur.fetchall()
     finally:
         conn.close()
-    if not is_admin:
-        return {"total": len(rows), "reviews": []}
     return {"total": len(rows), "reviews": [
         {"id": r[0], "hostname": r[1], "login": r[2], "signup": r[3],
          "note": r[4], "submitter": r[5], "review_type": r[6] or "manual",
@@ -882,6 +875,51 @@ def submit_review(req: ReviewRequest):
     return {"ok": True, "message": f"已提交 {host} 的{kind}，等待管理员核验"}
 
 
+def _approve_pending_row(cur, conn, row):
+    """单条待审核记录通过：合并人工观察进 sites 表 + manual_review.json。"""
+    _rid, host, login, signup, note, submitter, rtype, ts, structured_json = row
+    structured = json.loads(structured_json or "{}")
+    if rtype == "feedback":
+        # 识别反馈：不自动合并人工核验，只删除（管理员已人工判断处理）
+        cur.execute("DELETE FROM reviews_pending WHERE id = ?", (_rid,))
+        return {"id": _rid, "hostname": host, "ok": True,
+                "message": "已处理识别反馈（未写入人工核验）"}
+    # 1) 更新 sites 表（合并人工结果）
+    cur.execute("SELECT details_json FROM sites WHERE hostname = ?", (host,))
+    site_row = cur.fetchone()
+    if not site_row:
+        return {"id": _rid, "hostname": host, "ok": False,
+                "error": "站点不存在，无法合并人工核验"}
+    details = json.loads(site_row[0] or "{}")
+    previous_structured = details.get("manual_structured") or {}
+    for side in ("login", "signup"):
+        if isinstance(structured.get(side), dict) and structured[side]:
+            previous_structured[side] = structured[side]
+    details["manual_structured"] = previous_structured
+    # JSON 是人工核验权威数据。先原子写入；失败则不提交 SQLite 事务。
+    try:
+        upsert_manual_review(
+            MANUAL_PATH, host, login=login, signup=signup, note=note,
+            structured=previous_structured,
+            reviewed_from=f"web@{submitter or 'admin'}@{ts}",
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return {"id": _rid, "hostname": host, "ok": False,
+                "error": f"写入人工核验文件失败: {exc}"}
+    cur.execute("""
+        UPDATE sites SET manual_login = CASE WHEN ? != '' THEN ? ELSE manual_login END,
+                        manual_signup = CASE WHEN ? != '' THEN ? ELSE manual_signup END,
+                        manual_note = CASE WHEN ? != '' THEN ? ELSE manual_note END,
+                        manual_verified = 1,
+                        match_status = 'manual_verified', details_json = ?
+        WHERE hostname = ?
+    """, (login, login, signup, signup, note, note,
+          json.dumps(details, ensure_ascii=False), host))
+    # 2) 删除待审核记录
+    cur.execute("DELETE FROM reviews_pending WHERE id = ?", (_rid,))
+    return {"id": _rid, "hostname": host, "ok": True, "message": "已通过"}
+
+
 @app.post("/api/reviews/{review_id}/approve")
 @_serialized_data_transaction
 def approve_review(review_id: int,
@@ -904,49 +942,54 @@ def approve_review(review_id: int,
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, f"待审核记录不存在: {review_id}")
-        _rid, host, login, signup, note, submitter, rtype, ts, structured_json = row
-        structured = json.loads(structured_json or "{}")
-        if rtype == "feedback":
-            # 识别反馈：不自动合并人工核验，只删除（管理员已人工判断处理）
-            cur.execute("DELETE FROM reviews_pending WHERE id = ?", (review_id,))
-            conn.commit()
-            return {"ok": True, "message": f"已处理 {host} 的识别反馈（未写入人工核验）"}
-        # 1) 更新 sites 表（合并人工结果）
-        cur.execute("SELECT details_json FROM sites WHERE hostname = ?", (host,))
-        site_row = cur.fetchone()
-        if not site_row:
-            raise HTTPException(404, f"站点不存在，无法合并人工核验: {host}")
-        details = json.loads(site_row[0] or "{}")
-        previous_structured = details.get("manual_structured") or {}
-        for side in ("login", "signup"):
-            if isinstance(structured.get(side), dict) and structured[side]:
-                previous_structured[side] = structured[side]
-        details["manual_structured"] = previous_structured
-        # JSON 是人工核验权威数据。先原子写入；失败则不提交 SQLite 事务。
-        try:
-            upsert_manual_review(
-                MANUAL_PATH, host, login=login, signup=signup, note=note,
-                structured=previous_structured,
-                reviewed_from=f"web@{submitter or 'admin'}@{ts}",
-            )
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
-            raise HTTPException(
-                500, f"写入人工核验文件失败，审核未生效: {exc}") from exc
-        cur.execute("""
-            UPDATE sites SET manual_login = CASE WHEN ? != '' THEN ? ELSE manual_login END,
-                            manual_signup = CASE WHEN ? != '' THEN ? ELSE manual_signup END,
-                            manual_note = CASE WHEN ? != '' THEN ? ELSE manual_note END,
-                            manual_verified = 1,
-                            match_status = 'manual_verified', details_json = ?
-            WHERE hostname = ?
-        """, (login, login, signup, signup, note, note,
-              json.dumps(details, ensure_ascii=False), host))
-        # 2) 删除待审核记录
-        cur.execute("DELETE FROM reviews_pending WHERE id = ?", (review_id,))
+        outcome = _approve_pending_row(cur, conn, row)
+        if not outcome.get("ok"):
+            raise HTTPException(400, outcome.get("error", "审核失败"))
         conn.commit()
     finally:
         conn.close()
-    return {"ok": True, "message": f"已通过 {host} 的人工观察"}
+    return {"ok": True, "message": f"已通过 {outcome['hostname']} 的人工观察"}
+
+
+class BatchApproveRequest(BaseModel):
+    ids: list[int] = Field(default_factory=list)
+    all: bool = False
+
+
+@app.post("/api/reviews/batch-approve")
+@_serialized_data_transaction
+def batch_approve_reviews(req: BatchApproveRequest,
+                          admin_token: str = Header("", alias="X-Admin-Token")):
+    """管理员批量通过：按 id 列表或全部通过（2026-08-16 新增）。"""
+    expected = os.environ.get("SITES_ADMIN_TOKEN", "")
+    if not expected:
+        raise HTTPException(403, "服务器未设置 SITES_ADMIN_TOKEN，无法审核")
+    if admin_token != expected:
+        raise HTTPException(403, "管理员口令错误")
+    conn = _conn()
+    outcomes = []
+    try:
+        cur = conn.cursor()
+        if req.all:
+            cur.execute(
+                "SELECT id, hostname, login, signup, note, submitter, review_type, submitted_at, structured_json "
+                "FROM reviews_pending ORDER BY id")
+        else:
+            placeholders = ",".join("?" for _ in req.ids)
+            cur.execute(
+                f"SELECT id, hostname, login, signup, note, submitter, review_type, submitted_at, structured_json "
+                f"FROM reviews_pending WHERE id IN ({placeholders}) ORDER BY id",
+                req.ids)
+        rows = cur.fetchall()
+        for row in rows:
+            outcomes.append(_approve_pending_row(cur, conn, row))
+        conn.commit()
+    finally:
+        conn.close()
+    ok_count = sum(1 for o in outcomes if o.get("ok"))
+    return {"ok": True, "total": len(outcomes), "approved": ok_count,
+            "failed": len(outcomes) - ok_count,
+            "results": outcomes}
 
 
 @app.delete("/api/reviews/{review_id}")

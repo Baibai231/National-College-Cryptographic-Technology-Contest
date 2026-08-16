@@ -385,31 +385,54 @@ function showAdminModal() {
 }
 function hideAdmin() { document.getElementById('adminModal').style.display = 'none'; }
 async function loadPending() {
-  const token = document.getElementById('admin-token').value;
+  // 2026-08-16：待审核列表所有人可见（通过/删除仍需管理员口令）
   const box = document.getElementById('admin-list');
   box.innerHTML = '<div class="text-muted">加载中…</div>';
-  const r = await fetch('/api/reviews/pending', {
-    headers: { 'X-Admin-Token': token }
-  });
+  const r = await fetch('/api/reviews/pending');
   const d = await r.json();
-  if (!r.ok) { box.innerHTML = `<div class="alert alert-warning py-2">${esc(d.detail || '请输入正确的管理员口令')}</div>`; return; }
+  if (!r.ok) { box.innerHTML = `<div class="alert alert-warning py-2">${esc(d.detail || '加载失败')}</div>`; return; }
   if (!d.total) { box.innerHTML = '<div class="text-muted">暂无待审核提交</div>'; return; }
-  box.innerHTML = d.reviews.map(rev => `
+  box.innerHTML = `
+    <div class="mb-2">
+      <button class="btn btn-sm btn-primary" onclick="batchApprove()">批量通过选中</button>
+      <span class="text-muted small">勾选后点击；通过需在下方输入管理员口令</span>
+    </div>
+    ${d.reviews.map(rev => `
     <div class="border rounded p-2 mb-2">
-      <div><b>${esc(rev.hostname)}</b>
-        ${rev.review_type === 'feedback'
-          ? '<span class="badge text-bg-warning">识别反馈</span>'
-          : '<span class="badge text-bg-info">人工观察</span>'}
-        <span class="text-muted small">提交人：${esc(rev.submitter || '匿名')} ${esc((rev.submitted_at || '').slice(0, 16).replace('T', ' '))}</span>
+      <div class="d-flex align-items-start">
+        <input type="checkbox" class="form-check-input me-2 mt-1 batch-check" value="${rev.id}">
+        <div>
+          <b>${esc(rev.hostname)}</b>
+          ${rev.review_type === 'feedback'
+            ? '<span class="badge text-bg-warning">识别反馈</span>'
+            : '<span class="badge text-bg-info">人工观察</span>'}
+          <span class="text-muted small">提交人：${esc(rev.submitter || '匿名')} ${esc((rev.submitted_at || '').slice(0, 16).replace('T', ' '))}</span>
+        </div>
       </div>
-      ${rev.login ? `<div class="small">登录：${esc(rev.login)}</div>` : ''}
+      ${rev.login ? `<div class="small mt-1">登录：${esc(rev.login)}</div>` : ''}
       ${rev.signup ? `<div class="small">注册：${esc(rev.signup)}</div>` : ''}
       ${rev.note ? `<div class="small text-muted">${esc(rev.note)}</div>` : ''}
-      <div class="mt-1">
+      <div class="mt-1 ms-4">
         <button class="btn btn-sm btn-success" onclick="approveReview(${rev.id})">${rev.review_type === 'feedback' ? '已处理' : '通过'}</button>
         <button class="btn btn-sm btn-outline-danger" onclick="denyReview(${rev.id})">删除</button>
       </div>
-    </div>`).join('');
+    </div>`).join('')}`;
+}
+function batchApprove() {
+  const token = document.getElementById('admin-token').value;
+  if (!token) { alert('请先输入管理员口令'); return; }
+  const ids = [...document.querySelectorAll('.batch-check:checked')].map(el => parseInt(el.value));
+  if (!ids.length) { alert('请先勾选要通过的记录'); return; }
+  fetch('/api/reviews/batch-approve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token },
+    body: JSON.stringify({ ids })
+  }).then(r => r.json()).then(d => {
+    if (!d.ok) { alert(d.detail || '批量通过失败'); return; }
+    alert(`已通过 ${d.approved} 条，失败 ${d.failed} 条`);
+    loadPending(); loadStats();
+    search(document.getElementById('search-input').value);
+  });
 }
 async function approveReview(id) {
   const token = document.getElementById('admin-token').value;
