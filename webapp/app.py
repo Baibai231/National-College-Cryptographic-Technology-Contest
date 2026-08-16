@@ -474,7 +474,11 @@ def stats():
                     "manual": (site["manual"][side] or "")[:100],
                     "status": comparison["status"],
                     "reason": comparison["reason"],
+                    "methods": site[side].get("methods") or [],
+                    "manual_structured": (site["manual"].get("structured") or {}).get(side) or {},
                 })
+
+        method_cover_impl = method_coverage
 
         def summarize(items):
             buckets = {
@@ -502,6 +506,10 @@ def stats():
 
         login_accuracy = summarize(side_items["login"])
         signup_accuracy = summarize(side_items["signup"])
+        method_cover = {
+            "login": method_coverage(side_items["login"]),
+            "signup": method_coverage(side_items["signup"]),
+        }
         cur.execute("SELECT COUNT(*) FROM reviews_pending")
         pending = cur.fetchone()[0]
     finally:
@@ -515,6 +523,7 @@ def stats():
         "program_accuracy": {
             **signup_accuracy, "total": signup_accuracy["evaluated"]},
         "accuracy": {"login": login_accuracy, "signup": signup_accuracy},
+        "method_coverage": method_cover,
         "signup_distribution": signup_dist,
         "login_distribution": login_dist,
         "flow_zh": FLOW_ZH,
@@ -640,6 +649,41 @@ def _method_set_note(program_methods, structured):
     elif isinstance(structured, dict) and structured:
         parts.append("人工结构化均未勾选")
     return "；".join(parts) + "。"
+
+
+def method_coverage(items):
+    """方法覆盖度：人工确认的方法里，程序识别出的比例（按方法数加权）。
+
+    人工确认方法 = manual_structured 勾选的要素（口令/验证码/扫码/
+    第三方/无入口）；程序方法 = 组合式方法清单。无界面（no_web）
+    视为双方一致确认，计入分母与分子。
+    """
+    total_manual = 0
+    total_found = 0
+    samples = 0
+    for item in items:
+        ms = item.get("manual_structured") or {}
+        confirmed = {k for k, v in ms.items() if v is True}
+        if not confirmed:
+            continue
+        samples += 1
+        prog = "".join(m.get("name_zh") or ""
+                       for m in item.get("methods") or [])
+        for key, zh in (("password", ("密码", "口令")),
+                        ("otp", ("验证码",)), ("scan", ("扫码",)),
+                        ("sso", ("第三方",))):
+            if key in confirmed:
+                total_manual += 1
+                if any(z in prog for z in zh):
+                    total_found += 1
+        if "no_web" in confirmed:
+            total_manual += 1
+            total_found += 1
+    if not total_manual:
+        return {"samples": 0, "rate": None, "found": 0, "total": 0}
+    return {"samples": samples,
+            "rate": round(total_found / total_manual * 100, 1),
+            "found": total_found, "total": total_manual}
 
 
 def _missing_methods(method_results, structured):

@@ -92,6 +92,8 @@ def main():
     ap.add_argument("--overwrite", action="store_true",
                     help="开始前清空输出文件；与 --resume 互斥")
     ap.add_argument("--only", default="", help="只跑逗号分隔的主机名子集")
+    ap.add_argument("--retry-unknown", type=int, default=0,
+                    help="主跑后对 unknown/error 记录自动重跑 N 轮并多数投票取稳定结果")
     args = ap.parse_args()
 
     if args.resume and args.overwrite:
@@ -160,6 +162,88 @@ def main():
     elapsed = time.time() - t0
     print(f"\n完成。失败 {fail}/{len(pending)}，耗时 {elapsed:.0f} 秒。"
           f"\n结果已写入 {args.output}")
+
+    # ---- 自动稳定（2026-08-16）：unknown/error 记录多轮重跑取多数 ----
+    if args.retry_unknown > 0:
+        _stabilize_unknown(args, sites, kinds)
+
+
+def _stabilize_unknown(args, sites, kinds):
+    """对输出里的 unknown/error 记录自动重跑 N 轮，多数投票取稳定结果。"""
+    from collections import Counter
+
+    def load_records():
+        recs = []
+        with open(args.output, encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    recs.append(json.loads(line))
+        return recs
+
+    def is_bad(rec):
+        return bool(rec.get("error")) or rec.get("flow_type") in (None, "unknown", "error")
+
+    all_keys = {(urlparse(s).hostname or s, k) for s in sites for k in kinds}
+    votes = {}   # key -> list of records
+
+    def collect_votes():
+        for rec in load_records():
+            key = (rec.get("hostname"), rec.get("entry_kind"))
+            if key in all_keys:
+                votes.setdefault(key, []).append(rec)
+
+    collect_votes()
+    unstable = [k for k in all_keys if is_bad(votes.get(k, [{}])[-1])]
+    print(f"\n[稳定] 初始 unknown/error {len(unstable)} 条，自动重跑 {args.retry_unknown} 轮…")
+    t1 = time.time()
+    for round_idx in range(1, args.retry_unknown + 1):
+        if not unstable:
+            break
+        tasks = unstable
+        new_recs = {}
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            futures = {pool.submit(classify_one, "https://" + h + "/", k): (h, k)
+                       for h, k in tasks}
+            for future in as_completed(futures):
+                h, k = futures[future]
+                try:
+                    new_recs[(h, k)] = future.result()
+                except Exception as exc:
+                    new_recs[(h, k)] = {"hostname": h, "entry_kind": k,
+                                        "error": str(exc)[:120]}
+        for key, rec in new_recs.items():
+            votes.setdefault(key, []).append(rec)
+        # 每轮后对仍不稳定的键做多数判定
+        still = []
+        for key in tasks:
+            recs = votes[key]
+            valid = [r for r in recs if not is_bad(r)]
+            if valid:
+                flows = Counter(r.get("flow_type") for r in valid)
+                top = max(flows.values())
+                best = [f for f, n in flows.items() if n == top]
+                if len(best) == 1 and top >= 2:
+                    winner = next(r for r in reversed(valid)
+                                  if r.get("flow_type") == best[0])
+                    votes[key] = [winner]          # 稳定，只保留胜出记录
+                    print(f"  [稳定] 第{round_idx}轮 {key[0]} {key[1]} "
+                          f"-> {best[0]} ({top}/{len(valid)})")
+                    continue
+            still.append(key)
+        unstable = still
+    # 重写输出：仍不稳定的保留最新记录
+    final_keys = set()
+    with open(args.output, "w", encoding="utf-8") as f:
+        for rec in load_records():
+            key = (rec.get("hostname"), rec.get("entry_kind"))
+            if key in votes and key not in final_keys:
+                chosen = votes[key][-1]
+                f.write(json.dumps(chosen, ensure_ascii=False) + "\n")
+                final_keys.add(key)
+            elif key not in votes:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    print(f"[稳定] 结束，剩余不稳定 {len(unstable)} 条，"
+          f"共耗时 {time.time() - t1:.0f} 秒")
 
 
 if __name__ == "__main__":

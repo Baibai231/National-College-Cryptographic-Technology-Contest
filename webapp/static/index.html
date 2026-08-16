@@ -70,6 +70,7 @@
     共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站；
     注册正确率 <span id="stat-accuracy">-</span>，覆盖率 <span id="stat-coverage">-</span>；
     登录正确率 <span id="stat-login-accuracy">-</span>，覆盖率 <span id="stat-login-coverage">-</span>
+    <span class="ms-2">方法覆盖度 登录 <span id="stat-login-mc">-</span> / 注册 <span id="stat-signup-mc">-</span></span>
     <span id="stat-pending" class="ms-2"></span>
   </p>
 
@@ -335,6 +336,12 @@ async function loadStats() {
       login.rate + '%（' + login.match + '/' + login.evaluated + '）';
     document.getElementById('stat-login-coverage').textContent =
       login.coverage_rate + '%（可判定 ' + login.evaluated + '/' + login.verified + '）';
+  }
+  if (d.method_coverage) {
+    const mc = d.method_coverage;
+    const fmt = (x) => x.rate == null ? '—' : x.rate + '%（' + x.found + '/' + x.total + '）';
+    document.getElementById('stat-login-mc').textContent = fmt(mc.login);
+    document.getElementById('stat-signup-mc').textContent = fmt(mc.signup);
   }
   const pend = document.getElementById('stat-pending');
   const adminBtn = document.getElementById('admin-btn');

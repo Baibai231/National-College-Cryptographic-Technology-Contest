@@ -29,7 +29,7 @@ AUTH_KEYWORDS = ("登录", "注册", "验证码", "短信", "微信", "QQ", "微
                  "忘记", "签约", "入驻", "app", "App", "下载", "验证")
 
 
-def probe_site(driver, site_url: str) -> dict:
+def probe_site(driver, site_url: str, deep: bool = False) -> dict:
     ev = {"site": site_url, "url": "", "title": "", "inputs": [],
           "auth_texts": [], "sso_imgs": [], "register_links": [],
           "tabs": [], "note": ""}
@@ -39,6 +39,20 @@ def probe_site(driver, site_url: str) -> dict:
             discovery.navigate_to_signup(site_url)
         except Exception as exc:
             ev["note"] = "navigate_err:{}".format(str(exc)[:80])
+        if deep:
+            # 深度模式：hover 菜单展开 + 多轮重试
+            from signup_flow_classifier.navigator import (
+                detect_entry_button, safe_hover_menu)
+            for attempt in range(2):
+                try:
+                    detect_entry_button(driver, "login")
+                    hover_outcome = safe_hover_menu(driver, "login")
+                    if hover_outcome and hover_outcome.changed:
+                        ev["note"] = "hover_expanded"
+                        break
+                except Exception:
+                    pass
+                time.sleep(2.5)
         time.sleep(3)
         ev["url"] = driver.current_url
         try:
@@ -103,6 +117,7 @@ def main():
     ap.add_argument("input", help="站点清单文件（每行一个 URL）")
     ap.add_argument("--output", default="/tmp/gt_evidence.jsonl")
     ap.add_argument("--start", type=int, default=0, help="从第 N 个站点开始（断点续跑）")
+    ap.add_argument("--deep", action="store_true", help="深度模式：hover/多轮/长等待")
     args = ap.parse_args()
     sites = [l.strip() for l in
              Path(args.input).read_text(encoding="utf-8").splitlines()
@@ -124,7 +139,7 @@ def main():
                 print(f"[{idx+1}/{len(sites)}] 跳过(已完成) {site}")
                 continue
             print(f"[{idx+1}/{len(sites)}] 探测 {site}", flush=True)
-            ev = probe_site(_get_new_driver(), site)
+            ev = probe_site(_get_new_driver(), site, deep=args.deep)
             out.write(json.dumps(ev, ensure_ascii=False) + "\n")
             out.flush()
             time.sleep(1)

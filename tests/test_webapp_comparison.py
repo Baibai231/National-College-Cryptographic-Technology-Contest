@@ -146,3 +146,42 @@ class ManualComparisonTests(unittest.TestCase):
                             {"name_zh": "账号+密码"},
                             {"name_zh": "第三方（微信）"}])
         self.assertEqual(result["status"], "match")
+
+
+class MethodCoverageTests(unittest.TestCase):
+    def test_partial_coverage_counts(self):
+        # 程序缺第三方 → 覆盖度 2/3
+        from webapp.app import method_coverage
+        items = [{
+            "manual_structured": {"password": True, "otp": True, "sso": True},
+            "methods": [{"name_zh": "手机号+验证码"}, {"name_zh": "账号+密码"}],
+        }]
+        r = method_coverage(items)
+        self.assertEqual(r["total"], 3)
+        self.assertEqual(r["found"], 2)
+        self.assertEqual(r["rate"], 66.7)
+
+    def test_full_coverage(self):
+        from webapp.app import method_coverage
+        items = [{
+            "manual_structured": {"password": True, "otp": True, "sso": True},
+            "methods": [{"name_zh": "手机号+验证码"}, {"name_zh": "账号+密码"},
+                        {"name_zh": "第三方（微信）"}],
+        }]
+        r = method_coverage(items)
+        self.assertEqual(r["rate"], 100.0)
+
+    def test_no_web_counts_as_agreed(self):
+        from webapp.app import method_coverage
+        items = [{
+            "manual_structured": {"no_web": True},
+            "methods": [],
+        }]
+        r = method_coverage(items)
+        self.assertEqual(r["rate"], 100.0)
+
+    def test_empty_manual_skipped(self):
+        from webapp.app import method_coverage
+        r = method_coverage([{"manual_structured": {}, "methods": []}])
+        self.assertEqual(r["samples"], 0)
+        self.assertIsNone(r["rate"])
