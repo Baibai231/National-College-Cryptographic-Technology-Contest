@@ -126,8 +126,10 @@ def _row_to_site(row):
     from signup_flow_classifier.classifier import combo_methods
     login_display_methods = combo_methods(
         _states_to_objects(login_states), flow_type=lf or "")
-    signup_display_methods = combo_methods(
-        _states_to_objects(signup_states), flow_type=sf or "")
+    # signup=无注册界面时方法清单为空：观察到的字段来自登录弹窗，
+    # 列在注册栏会自相矛盾（2345 实测：注册侧不再显示登录弹窗方法）
+    signup_display_methods = ([] if sf == "no_web_signup" else combo_methods(
+        _states_to_objects(signup_states), flow_type=sf or ""))
     site = {
         "hostname": hostname,
         "url": url,
@@ -195,6 +197,8 @@ def _row_to_site(row):
         site["comparison_status"] = "mismatch"
     elif statuses == {"match"}:
         site["comparison_status"] = "match"
+    elif "partial" in statuses:
+        site["comparison_status"] = "partial"
     elif "pending" in statuses:
         site["comparison_status"] = "pending"
     else:
@@ -477,13 +481,15 @@ def stats():
         def summarize(items):
             buckets = {
                 status: [item for item in items if item["status"] == status]
-                for status in ("match", "mismatch", "inconclusive_program",
-                               "inconclusive_manual")
+                for status in ("match", "mismatch", "partial",
+                               "inconclusive_program", "inconclusive_manual")
             }
-            evaluated = len(buckets["match"]) + len(buckets["mismatch"])
+            evaluated = (len(buckets["match"]) + len(buckets["mismatch"])
+                         + len(buckets["partial"]))
             return {
                 "match": len(buckets["match"]),
                 "mismatch": len(buckets["mismatch"]),
+                "partial": len(buckets["partial"]),
                 "evaluated": evaluated,
                 "verified": verified,
                 "rate": round(len(buckets["match"]) / evaluated * 100, 1)
@@ -494,6 +500,7 @@ def stats():
                 "inconclusive_manual": len(buckets["inconclusive_manual"]),
                 "correct_sites": buckets["match"],
                 "wrong_sites": buckets["mismatch"],
+                "partial_sites": buckets["partial"],
                 "inconclusive_sites": (
                     buckets["inconclusive_program"] + buckets["inconclusive_manual"]),
             }
@@ -640,10 +647,33 @@ def _method_set_note(program_methods, structured):
     return "；".join(parts) + "。"
 
 
+def _missing_methods(method_results, structured):
+    """人工确认但程序方法清单缺失的方法（用于"部分一致"判定）。"""
+    if not method_results or not isinstance(structured, dict):
+        return []
+    joined = "".join(m.get("name_zh") or m.get("method")
+                     for m in method_results)
+    missing = []
+    if structured.get("password") is True and "密码" not in joined \
+            and "口令" not in joined:
+        missing.append("口令")
+    if structured.get("otp") is True and "验证码" not in joined:
+        missing.append("验证码")
+    if structured.get("scan") is True and "扫码" not in joined:
+        missing.append("扫码")
+    if structured.get("sso") is True and "第三方" not in joined:
+        missing.append("第三方")
+    return missing
+
+
 def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
                        verified=True, methods="", structured=None,
                        method_results=None):
-    """Return match/mismatch/inconclusive status with auditable reasoning."""
+    """Return match/mismatch/inconclusive status with auditable reasoning.
+
+    v4.2：方法级对照——流程判断 match 但人工确认的方法程序缺失时，
+    降级为 partial（部分一致），避免"少识别方法也算对"。
+    """
     if not verified:
         return {"status": "pending", "reason": "尚无人工复核，当前只展示程序判断依据。"}
     traits = _manual_traits(manual_text, structured)
@@ -655,6 +685,7 @@ def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
         prefix = {
             "match": "",
             "mismatch": "",
+            "partial": "部分一致：",
             "inconclusive_program": "程序证据不足：",
             "inconclusive_manual": "人工证据不足：",
         }[status]
@@ -662,6 +693,16 @@ def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
         note = _method_set_note(method_results, structured)
         if note:
             reason += f" {note}"
+        if status == "match":
+            missing = _missing_methods(method_results, structured)
+            if missing:
+                status = "partial"
+                reason = ("部分一致：程序流程判断与人工一致，但方法识别不全，"
+                          "人工确认的方法中程序缺失：{}。 程序依据：{}"
+                          " 人工复核为“{}”。").format(
+                    "、".join(missing), program_reason, manual_reason)
+                if note:
+                    reason += f" {note}"
         return {
             "status": status,
             "reason": reason,
@@ -940,8 +981,13 @@ def _validated_classify_url(raw_url: str, *, resolve: bool) -> tuple[str, str]:
     return url, host
 
 
-def _combo_methods_for(states, flow_type):
-    """展示层：从状态序列计算组合式方法清单（不落盘）。"""
+def _combo_methods_for(states, flow_type, entry_kind=""):
+    """展示层：从状态序列计算组合式方法清单（不落盘）。
+
+    signup=无注册界面时返回空清单（观察到的字段来自登录弹窗，2345 实测）。
+    """
+    if entry_kind == "signup" and flow_type == "no_web_signup":
+        return []
     from signup_flow_classifier.classifier import combo_methods
     return [m.__dict__ for m in combo_methods(
         _states_to_objects(states), flow_type=flow_type or "")]
@@ -981,7 +1027,7 @@ def _run_live_classification(url: str, kind: str) -> dict:
             "final_url": result.get("final_url"),
             "states": result.get("states", []),
             "methods": _combo_methods_for(
-                result.get("states", []), result.get("flow_type")),
+                result.get("states", []), result.get("flow_type"), kind),
             "evidence": result.get("evidence", []),
             "policy": result.get("policy", {}),
             "error": result.get("error"),
@@ -1029,7 +1075,7 @@ def classify_site(req: ClassifyRequest):
                 "states": entry.get("raw_states") or entry.get("steps", []),
                 "methods": _combo_methods_for(
                     entry.get("raw_states") or entry.get("steps", []),
-                    entry.get("flow_type")),
+                    entry.get("flow_type"), kind),
                 "evidence": entry.get("evidence", []),
                 "policy": entry.get("policy", {}),
                 "error": entry.get("error"),

@@ -61,7 +61,9 @@ flock -x 9
 export SITES_SYNC_LOCK_HELD=1
 
 log "=== 开始同步 ==="
-LOCAL_DATA_CHANGES=$(git status --porcelain -- "${AUTHORITATIVE_FILES[@]}" | head -40)
+# head 提前退出会让 git status 收到 SIGPIPE（改动文件多时），
+# pipefail 下脚本会以 141 中止——用 || true 吞掉该退出码
+LOCAL_DATA_CHANGES=$(git status --porcelain -- "${AUTHORITATIVE_FILES[@]}" | head -40) || true
 HAS_SNAPSHOT=0
 
 if [ -n "$LOCAL_DATA_CHANGES" ]; then
@@ -101,7 +103,7 @@ fi
 if [ "$HAS_SNAPSHOT" -eq 1 ]; then
   replay_snapshot
   generate_reports
-  CHANGED=$(git status --porcelain -- "${DATA_FILES[@]}" | head -40)
+  CHANGED=$(git status --porcelain -- "${DATA_FILES[@]}" | head -40) || true
   if [ -n "$CHANGED" ]; then
     git add -- "${DATA_FILES[@]}"
     git commit -m "data: 服务器数据同步 $(date '+%F %H:%M')" >> "$LOG" 2>&1

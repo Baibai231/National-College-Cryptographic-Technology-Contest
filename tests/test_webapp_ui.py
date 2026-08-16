@@ -35,10 +35,18 @@ class WebAppUiTests(unittest.TestCase):
         self.assertNotIn("switchStepTab", self.html)
         self.assertNotIn("stepsHtml", self.html)
 
-    def test_manual_review_has_structured_inputs(self):
-        self.assertIn("结构化核验", self.html)
-        self.assertIn("traitForm('review-signup')", self.html)
-        self.assertIn('${prefix}-password', self.html)
+    def test_manual_review_has_structured_method_builder(self):
+        # v4.2：人工提交改为结构化方法填词（勾选要素自动 + 连接）
+        self.assertIn("addMethodRow('review-login')", self.html)
+        self.assertIn("addMethodRow('review-signup')", self.html)
+        self.assertIn("readMethodRows('review-login')", self.html)
+        self.assertIn("METHOD_ELEMENTS", self.html)
+        self.assertIn("手机号", self.html)
+        self.assertIn("无注册界面", self.html)
+        # 自由文本输入与旧结构化核验已删除
+        self.assertNotIn("traitForm", self.html)
+        self.assertNotIn("parseMethodLines", self.html)
+        self.assertNotIn("review-login\").value", self.html)
 
     def test_page_periodically_refreshes_without_interrupting_modals(self):
         self.assertIn("setInterval", self.html)
