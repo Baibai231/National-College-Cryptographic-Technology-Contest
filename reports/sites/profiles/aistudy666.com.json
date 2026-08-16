@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.708994+00:00",
-  "report_title": "www.suning.com 登录/注册认证档案",
+  "generated_at": "2026-08-16T13:06:10.593906+00:00",
+  "report_title": "aistudy666.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
   ],
@@ -14,54 +14,33 @@
   },
   "sites": [
     {
-      "id": "www.suning.com",
-      "name": "www.suning.com",
+      "id": "aistudy666.com",
+      "name": "aistudy666.com",
       "category": "待补充",
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.suning.com/",
-          "final_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
-          "observed_route": "扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令；备选：手机号 → 短信验证码/扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令",
+          "start_url": "https://aistudy666.com",
+          "final_url": "https://aistudy666.com/login",
+          "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
               ],
-              "summary": "扫码",
-              "fields_observed": [],
-              "methods_observed": [
-                "qr"
-              ],
-              "verification_observed": [
-                "qr"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "standalone_page"
-              ],
-              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
+              "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
-                "identifier",
+                "phone",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "identifier",
-                "sms",
-                "qr"
+                "phone",
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "observed_before_verification",
               "ui_types": [
@@ -70,49 +49,45 @@
               "safe_stop": "已到达口令输入界面，未提交表单"
             },
             {
-              "route_id": "automatic_route_3",
+              "route_id": "automatic_route_2",
               "step_numbers": [
-                4
+                3
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "standalone_page"
               ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             },
             {
-              "route_id": "automatic_route_4",
+              "route_id": "automatic_route_3",
               "step_numbers": [
-                5
+                4
               ],
-              "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
+              "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
-                "identifier",
+                "phone",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "identifier",
-                "sms",
-                "qr"
+                "phone",
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "observed_before_verification",
               "ui_types": [
@@ -123,33 +98,29 @@
           ],
           "fields_observed": [
             "phone",
-            "identifier",
             "password",
             "code"
           ],
           "methods_observed": [
             "password",
             "phone",
-            "identifier",
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "multiple_observed_routes",
           "ui_types": [
             "standalone_page"
           ],
-          "safe_stop": "安全测量停在扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单；安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "已到达口令输入界面，未提交表单；安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.suning.com/",
+              "url": "https://aistudy666.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -162,89 +133,82 @@
             },
             {
               "step": 2,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
-              "ui_type": "standalone_page",
-              "fields": [],
-              "methods": [
-                "qr"
-              ],
-              "blockers": [
-                "scan"
-              ],
-              "actions": [
-                "tab_click",
-                "auth_mode_click"
-              ],
-              "tabs": [],
-              "note": "auth_mode_text_clicked_and_changed"
-            },
-            {
-              "step": 3,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
+              "url": "https://aistudy666.com/login",
               "ui_type": "standalone_page",
               "fields": [
-                "identifier",
+                "phone",
                 "password"
               ],
               "methods": [
-                "identifier",
-                "qr"
+                "phone"
               ],
-              "blockers": [],
+              "blockers": [
+                "tos"
+              ],
               "actions": [
                 "tab_click"
               ],
               "tabs": [
-                "sms_tab"
+                "password_tab",
+                "sms_tab",
+                "register_tab"
               ],
               "note": "sms_tab_clicked_and_changed"
             },
             {
-              "step": 4,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
+              "step": 3,
+              "url": "https://aistudy666.com/login",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
                 "code"
               ],
               "methods": [
-                "phone",
-                "qr"
+                "phone"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "tos"
               ],
               "actions": [
                 "tab_click"
               ],
               "tabs": [
-                "password_tab"
+                "password_tab",
+                "sms_tab",
+                "register_tab"
               ],
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 5,
-              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
+              "step": 4,
+              "url": "https://aistudy666.com/login",
               "ui_type": "standalone_page",
               "fields": [
-                "identifier",
+                "phone",
                 "password"
               ],
               "methods": [
-                "identifier",
-                "qr"
+                "phone"
               ],
-              "blockers": [],
-              "actions": [],
+              "blockers": [
+                "tos"
+              ],
+              "actions": [
+                "none",
+                "none"
+              ],
               "tabs": [
-                "sms_tab"
+                "password_tab",
+                "sms_tab",
+                "register_tab"
               ],
-              "note": ""
+              "note": "no_register_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:29:23.263106+00:00",
+            "measured_at": "2026-08-16T12:48:49.531390+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -266,17 +230,16 @@
               "observed_methods": [
                 "password",
                 "sms_or_otp",
-                "qr_or_scan",
                 "phone"
               ],
               "password_status": "password_observed",
               "password_observed": true,
               "verification_observed": true,
               "phone_observed": true,
-              "identifier_observed": true,
+              "identifier_observed": false,
               "blocking_factors": [
-                "scan",
-                "sms_code"
+                "sms_code",
+                "tos"
               ]
             },
             "security": {
@@ -288,8 +251,8 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.suning.com/",
-          "final_url": "https://reg.suning.com/person.do",
+          "start_url": "https://aistudy666.com",
+          "final_url": "https://aistudy666.com/register",
           "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
@@ -313,7 +276,7 @@
               ],
               "password_state": "observed_alongside_verification",
               "ui_types": [
-                "inline_widget"
+                "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
             }
@@ -333,14 +296,14 @@
           ],
           "password_state": "observed_alongside_verification",
           "ui_types": [
-            "inline_widget"
+            "standalone_page"
           ],
           "safe_stop": "已到达口令输入界面，未提交表单",
           "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.suning.com/",
+              "url": "https://aistudy666.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -353,8 +316,8 @@
             },
             {
               "step": 2,
-              "url": "https://reg.suning.com/person.do",
-              "ui_type": "inline_widget",
+              "url": "https://aistudy666.com/register",
+              "ui_type": "standalone_page",
               "fields": [
                 "phone",
                 "password",
@@ -364,7 +327,8 @@
                 "phone"
               ],
               "blockers": [
-                "sms_code"
+                "sms_code",
+                "tos"
               ],
               "actions": [],
               "tabs": [],
@@ -373,7 +337,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:29:17.871302+00:00",
+            "measured_at": "2026-08-16T12:48:36.273491+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -403,7 +367,8 @@
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "sms_code"
+                "sms_code",
+                "tos"
               ]
             },
             "security": {
