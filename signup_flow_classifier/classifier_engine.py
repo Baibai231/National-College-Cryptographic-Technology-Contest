@@ -56,10 +56,10 @@ PROCEED_FLOW_TYPES = {
     FlowType.MULTIPLE_METHODS.value,  # 将尝试切换到密码视图后再决定
 }
 
-# 全视图探索的 tab 优先级：先看额外认证方式（短信/邮箱/注册），
+# 全视图探索的 tab 优先级：先看额外认证方式（短信/邮箱/注册/扫码），
 # 主口令 tab 最后访问（口令视图通常已是默认视图）
 _TAB_EXPLORE_PRIORITY = (
-    "sms_tab", "email_tab", "register_tab",
+    "sms_tab", "email_tab", "register_tab", "qr_tab",
     "password_signup_tab", "password_tab",
 )
 

@@ -823,3 +823,13 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
    权威数据仍在 misc/manual_review.json。
 4. **方法覆盖度改名**：登录方法覆盖度/注册方法覆盖度。
 5. **搜索防御**：输入 trim + 空结果提示。
+
+### 36. v5 回归流程 + 稳定逻辑 bug 修复（2026-08-17）
+
+用户要求两遍全量+逐站比对优化分类器。
+- 启动 v5 第 1 轮（--retry-unknown 2 自动稳定）。
+- **修复 --retry-unknown 数据清空 bug**：稳定阶段重写文件时先以 "w"
+  截断再读旧内容，导致第 1 轮 304 条记录被清空（2026-08-17 实测）。
+  改为先读后写，并抽出 `_write_stabilized` + 回归测试（127/127 通过）。
+- 通用修复：`_TAB_KINDS` 新增 `qr_tab`（扫码登录/二维码登录）并加入
+  全视图探索优先级（bilibili/zcool/zhipin/3dmgame 等扫码 tab 可切换）。

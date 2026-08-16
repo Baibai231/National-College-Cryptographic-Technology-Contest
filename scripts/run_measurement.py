@@ -232,9 +232,27 @@ def _stabilize_unknown(args, sites, kinds):
             still.append(key)
         unstable = still
     # 重写输出：仍不稳定的保留最新记录
+    _write_stabilized(args.output, votes, unstable, elapsed_sec=time.time() - t1)
+
+
+def _write_stabilized(output, votes, unstable, elapsed_sec=0.0):
+    """按 votes 重写输出文件（保留每个 key 的选定记录）。
+
+    必须先读旧内容再以 "w" 打开（"w" 会截断文件——2026-08-17 实测 bug：
+    稳定阶段曾把第 1 轮 304 条数据清空）。
+    """
+    def load_records():
+        recs = []
+        with open(output, encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    recs.append(json.loads(line))
+        return recs
+
+    all_recs = load_records()
     final_keys = set()
-    with open(args.output, "w", encoding="utf-8") as f:
-        for rec in load_records():
+    with open(output, "w", encoding="utf-8") as f:
+        for rec in all_recs:
             key = (rec.get("hostname"), rec.get("entry_kind"))
             if key in votes and key not in final_keys:
                 chosen = votes[key][-1]
@@ -243,7 +261,7 @@ def _stabilize_unknown(args, sites, kinds):
             elif key not in votes:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     print(f"[稳定] 结束，剩余不稳定 {len(unstable)} 条，"
-          f"共耗时 {time.time() - t1:.0f} 秒")
+          f"共耗时 {elapsed_sec:.0f} 秒")
 
 
 if __name__ == "__main__":

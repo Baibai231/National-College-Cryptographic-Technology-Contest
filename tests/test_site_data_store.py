@@ -528,3 +528,49 @@ class SiteDataStoreTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RetryUnknownStabilityTests(unittest.TestCase):
+    """--retry-unknown 自动稳定逻辑：防止重写时截断清空数据（2026-08-17 bug）。"""
+
+    def test_stabilize_rewrite_preserves_all_records(self):
+        import tempfile
+        from scripts import run_measurement as rm
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "round.jsonl"
+            recs = [
+                {"hostname": "a.com", "entry_kind": "login",
+                 "flow_type": "direct_password"},
+                {"hostname": "a.com", "entry_kind": "signup",
+                 "flow_type": "unknown"},
+                {"hostname": "b.com", "entry_kind": "login",
+                 "flow_type": "human_blocked"},
+            ]
+            out.write_text("\n".join(
+                json.dumps(r, ensure_ascii=False) for r in recs) + "\n",
+                encoding="utf-8")
+            class Args:
+                output = str(out)
+                retry_unknown = 2
+                workers = 1
+            args = Args()
+            # 模拟稳定阶段已选出的 votes：unknown 那条升级为 otp_only
+            votes = {
+                ("a.com", "login"): [recs[0]],
+                ("a.com", "signup"): [{"hostname": "a.com",
+                                       "entry_kind": "signup",
+                                       "flow_type": "otp_only"}],
+                ("b.com", "login"): [recs[2]],
+            }
+            rm._write_stabilized(args.output, votes, set())
+            lines = [json.loads(l) for l in
+                     out.read_text(encoding="utf-8").splitlines() if l.strip()]
+            self.assertEqual(len(lines), 3)
+            by_key = {(r["hostname"], r["entry_kind"]): r for r in lines}
+            self.assertEqual(by_key[("a.com", "signup")]["flow_type"],
+                             "otp_only")
+            self.assertEqual(by_key[("a.com", "login")]["flow_type"],
+                             "direct_password")
+            self.assertEqual(by_key[("b.com", "login")]["flow_type"],
+                             "human_blocked")
