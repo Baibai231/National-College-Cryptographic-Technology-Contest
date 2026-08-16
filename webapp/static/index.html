@@ -103,7 +103,6 @@
       <button class="btn btn-outline-secondary filter-btn" data-f="verified">已核验</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="pending">待核验</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="match">识别基本正确</button>
-      <button class="btn btn-outline-secondary filter-btn" data-f="partial">识别部分一致</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="mismatch">识别不一致</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="incprog">程序证据不足</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="incmanual">人工证据不足</button>
@@ -275,7 +274,6 @@ function siteCard(s) {
   const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
   const sideBadge = (label, status) => {
     const config = status === 'match' ? ['识别正确', 'badge-ok']
-      : status === 'partial' ? ['识别部分一致', 'badge-warn']
       : status === 'mismatch' ? ['识别错误', 'badge-bad']
       : status === 'pending' ? ['待核验', 'badge-wait']
       : ['证据不足', 'badge-wait'];
@@ -307,10 +305,7 @@ function renderSites() {
   // 登录/注册两侧合并判定：任一侧错误即不一致；有正确侧且无错误侧即基本正确。
   if (currentFilter === 'match') list = allSites.filter(s =>
     (s.login_match === 'match' || s.signup_match === 'match') &&
-    s.login_match !== 'mismatch' && s.signup_match !== 'mismatch' &&
-    s.login_match !== 'partial' && s.signup_match !== 'partial');
-  if (currentFilter === 'partial') list = allSites.filter(s =>
-    s.login_match === 'partial' || s.signup_match === 'partial');
+    s.login_match !== 'mismatch' && s.signup_match !== 'mismatch');
   if (currentFilter === 'mismatch') list = allSites.filter(s =>
     s.login_match === 'mismatch' || s.signup_match === 'mismatch');
   if (currentFilter === 'incprog') list = allSites.filter(s =>
@@ -556,12 +551,10 @@ async function showDetail(host) {
   const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured) => {
     if (!comparison || status === 'pending') return '';
     const statusZh = status === 'match' ? '识别正确'
-      : status === 'partial' ? '识别部分一致'
       : status === 'mismatch' ? '识别错误'
       : status === 'inconclusive_program' ? '程序证据不足'
       : '人工证据不足';
     const cls = status === 'match' ? 'text-success'
-      : status === 'partial' ? 'text-warning'
       : status === 'mismatch' ? 'text-danger' : 'text-secondary';
     const progMethods = (methods || []).map(m => m.name_zh || m.method).join('、') || '—';
     const MANUAL_TRAIT_ZH = { password: '口令', otp: '验证码', scan: '扫码',
@@ -570,7 +563,6 @@ async function showDetail(host) {
       .filter(k => manualStructured[k] === true && MANUAL_TRAIT_ZH[k])
       .map(k => MANUAL_TRAIT_ZH[k]).join('、');
     const conclusion = status === 'match' ? '程序与人工结论一致'
-      : status === 'partial' ? '程序与人工部分一致（方法识别不全）'
       : status === 'mismatch' ? '程序与人工结论不一致'
       : '证据不足，暂不判定';
     return `<div class="mt-3">

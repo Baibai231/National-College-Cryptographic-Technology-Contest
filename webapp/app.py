@@ -197,8 +197,6 @@ def _row_to_site(row):
         site["comparison_status"] = "mismatch"
     elif statuses == {"match"}:
         site["comparison_status"] = "match"
-    elif "partial" in statuses:
-        site["comparison_status"] = "partial"
     elif "pending" in statuses:
         site["comparison_status"] = "pending"
     else:
@@ -481,15 +479,13 @@ def stats():
         def summarize(items):
             buckets = {
                 status: [item for item in items if item["status"] == status]
-                for status in ("match", "mismatch", "partial",
+                for status in ("match", "mismatch",
                                "inconclusive_program", "inconclusive_manual")
             }
-            evaluated = (len(buckets["match"]) + len(buckets["mismatch"])
-                         + len(buckets["partial"]))
+            evaluated = len(buckets["match"]) + len(buckets["mismatch"])
             return {
                 "match": len(buckets["match"]),
                 "mismatch": len(buckets["mismatch"]),
-                "partial": len(buckets["partial"]),
                 "evaluated": evaluated,
                 "verified": verified,
                 "rate": round(len(buckets["match"]) / evaluated * 100, 1)
@@ -500,7 +496,6 @@ def stats():
                 "inconclusive_manual": len(buckets["inconclusive_manual"]),
                 "correct_sites": buckets["match"],
                 "wrong_sites": buckets["mismatch"],
-                "partial_sites": buckets["partial"],
                 "inconclusive_sites": (
                     buckets["inconclusive_program"] + buckets["inconclusive_manual"]),
             }
@@ -693,13 +688,13 @@ def _manual_comparison(flow_type, manual_text, route="", fields="", blockers="",
         note = _method_set_note(method_results, structured)
         if note:
             reason += f" {note}"
+        # 分类口径（2026-08-16 规则）：方法缺失不单列"部分一致"，
+        # 并入 match（识别基本一致），缺失方法以文字注明保留信息
         if status == "match":
             missing = _missing_methods(method_results, structured)
             if missing:
-                status = "partial"
-                reason = ("部分一致：程序流程判断与人工一致，但方法识别不全，"
-                          "人工确认的方法中程序缺失：{}。 程序依据：{}"
-                          " 人工复核为“{}”。").format(
+                reason = ("程序与人工结论一致，但方法识别不全，人工确认的方法中"
+                          "程序缺失：{}。 程序依据：{} 人工复核为“{}”。").format(
                     "、".join(missing), program_reason, manual_reason)
                 if note:
                     reason += f" {note}"

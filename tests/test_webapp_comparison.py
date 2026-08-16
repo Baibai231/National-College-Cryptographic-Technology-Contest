@@ -126,15 +126,16 @@ class ManualComparisonTests(unittest.TestCase):
         self.assertIn("证据不足项（不计入正确率）", report)
         self.assertIn("unknown.example", report)
 
-    def test_missing_methods_downgrades_match_to_partial(self):
-        # 2345 实测：流程对但程序少识别第三方 → 部分一致，不再算"对"
+    def test_missing_methods_noted_in_match_reason(self):
+        # 分类口径（2026-08-16）：方法缺失并入 match，缺失方法以文字注明
         result = _manual_comparison(
             "direct_password", "手机号+验证码\n账号+密码\n第三方",
             "手机号、口令", "手机号、口令", "—",
             verified=True, structured={"password": True, "otp": True, "sso": True},
             method_results=[{"name_zh": "手机号+验证码"}, {"name_zh": "账号+密码"}])
-        self.assertEqual(result["status"], "partial")
+        self.assertEqual(result["status"], "match")
         self.assertIn("第三方", result["reason"])
+        self.assertIn("方法识别不全", result["reason"])
 
     def test_complete_methods_stay_match(self):
         result = _manual_comparison(
