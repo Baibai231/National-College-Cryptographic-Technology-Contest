@@ -788,3 +788,14 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 
 **第1项进行中**：85 个"未复现弹窗"站深度探测（hover 展开 + 多轮重试，
 3 路并行）。
+
+### 33. 深度探测完成，审计升级（2026-08-16）
+
+- 85 个"未复现弹窗"站第二轮深度探测（hover 展开 + 多轮重试，3 路并行）：
+  72 站补到新认证证据。
+- 审计报告更新（v4_3_ground_truth_audit.md 两轮版）：✅一致 53→83 站、
+  ⚠️缺方法 12 站（baidu/qq/tieba/mafengwo/pan.baidu/taptap/aliyun/cctv/
+  51.com/dxy/v.qq/eastmoney）、❓深度探测仍无证据 37 站（App-first/无认证
+  界面/反爬，如实记录）、🔀跳转/反爬 3 站。
+- 缺方法站已用修复代码重测（zhipin 改善合并）；cctv/51/qq 等弹窗波动站
+  的第三方/验证码方法需等弹窗打开的轮次才能体现，列入下轮全量验证目标。
