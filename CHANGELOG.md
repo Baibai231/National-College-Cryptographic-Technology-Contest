@@ -683,3 +683,10 @@ git add -A && git commit -m "data: v4 全量重测" && git push
 - deeix.gaoxiaobei.top 只有登录页：登录=有口令框、注册=无网页注册（判断正确，
   此前是旧呈现造成的误读）；已加入 misc/sites_extra.txt 后续一并测量。
 - 各站"更多方式"折叠里的第三方入口部分仍不可达（安全边界内不点隐藏折叠）。
+
+### 24. 修复方法清单消失（2026-08-15 深夜，用户报告）
+
+`reportTableHtml` 里 `tds(methodsHtml)` 把整个站点对象传给期望数组的
+methodsHtml（对象无 length → 显示"—"），口令政策同样传错参数。改为
+`tds((e) => methodsHtml((e || {}).methods))`。用无头浏览器实测详情弹窗
+渲染验证：36kr 登录 3 方法/注册 1 方法、口令政策正常显示。

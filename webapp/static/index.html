@@ -254,8 +254,8 @@ function reportTableHtml(login, signup, version) {
     <thead><tr><th style="width:80px">维度</th>${only === 'signup' ? '<th>注册（程序）</th>' : '<th>登录（程序）</th>'}${only === 'both' ? '<th>注册（程序）</th>' : ''}</tr></thead>
     <tbody>
       <tr><td>类型</td>${tds(badgeOf)}</tr>
-      <tr><td>方法清单</td>${tds(methodsHtml)}</tr>
-      <tr><td>口令政策</td>${tds(policyText)}</tr>
+      <tr><td>方法清单</td>${tds((e) => methodsHtml((e || {}).methods))}</tr>
+      <tr><td>口令政策</td>${tds((e) => policyText((e || {}).policy))}</tr>
       <tr><td>测量时间</td>${tds((e) => fmtTime((e || {}).measured_at))}</tr>
       <tr><td>程序版本</td><td colspan="${only === 'both' ? 2 : 1}">${version || '?'}</td></tr>
     </tbody>
