@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-14T05:30:37.182179+00:00",
+  "updated_at": "2026-08-16T02:30:10.386680+00:00",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
@@ -429,6 +429,20 @@
       "note": "注册有8s广告弹窗",
       "verified": true,
       "reviewed_from": "web@cjx@2026-08-14T05:29:55.510960+00:00"
+    },
+    "deeix.gaoxiaobei.top": {
+      "manual_login": "账号+密码",
+      "manual_signup": "无注册界面",
+      "verified": true,
+      "structured": {
+        "login": {
+          "password": true
+        },
+        "signup": {
+          "no_web": true
+        }
+      },
+      "reviewed_from": "web@cjx@2026-08-16T02:26:35.821860+00:00"
     }
   }
 }
