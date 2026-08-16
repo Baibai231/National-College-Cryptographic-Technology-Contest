@@ -216,6 +216,7 @@ def attach_manual(sites, manual_path, keywords_path=None):
                 "note": m.get("note", ""),
                 "verified": bool(m.get("verified")),
                 "structured": m.get("structured", {}),
+                "pwd_testability": m.get("pwd_testability", {}),
             }
             # 程序 vs 人工 匹配状态
             site["match_status"] = _match_status(site)
@@ -223,6 +224,7 @@ def attach_manual(sites, manual_path, keywords_path=None):
             site["manual"] = {
                 "login": "", "signup": "", "note": "", "verified": False,
                 "structured": {},
+                "pwd_testability": {},
             }
             site["match_status"] = "pending_manual"
         # 中文关键词：hostname 去掉 www. 前缀匹配
@@ -312,6 +314,7 @@ def create_db(sites, db_path, history=None):
             signup_measured_at TEXT,
             manual_login TEXT, manual_signup TEXT, manual_note TEXT,
             manual_verified INTEGER, match_status TEXT,
+            login_pwd_test TEXT, signup_pwd_test TEXT, overall_pwd_test TEXT,
             details_json TEXT
         )
     """)
@@ -357,7 +360,7 @@ def create_db(sites, db_path, history=None):
         }
         cur.execute("""
             INSERT INTO sites VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )
         """, (
             s["hostname"], s["url"], json.dumps(s["keywords"], ensure_ascii=False),
@@ -370,6 +373,9 @@ def create_db(sites, db_path, history=None):
             s["signup"]["measured_at"],
             s["manual"]["login"], s["manual"]["signup"], s["manual"]["note"],
             int(s["manual"]["verified"]), s["match_status"],
+            s["manual"]["pwd_testability"].get("login", ""),
+            s["manual"]["pwd_testability"].get("signup", ""),
+            s["manual"]["pwd_testability"].get("overall", ""),
             json.dumps(details, ensure_ascii=False),
         ))
     cur.execute(

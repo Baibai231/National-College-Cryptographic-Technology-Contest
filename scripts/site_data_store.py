@@ -126,6 +126,7 @@ def upsert_records(path: Path | str, records: Iterable[dict]) -> dict:
 def upsert_manual_review(path: Path | str, hostname: str, *, login: str = "",
                          signup: str = "", note: str = "",
                          structured: dict | None = None,
+                         pwd_testability: dict | None = None,
                          reviewed_from: str = "web@admin") -> dict:
     """Atomically persist one approved manual review without losing peers."""
     target = Path(path)
@@ -150,6 +151,8 @@ def upsert_manual_review(path: Path | str, hostname: str, *, login: str = "",
                 existing_structured = {}
             existing_structured.update(structured)
             entry["structured"] = existing_structured
+        if pwd_testability:
+            entry["pwd_testability"] = pwd_testability
         entry["reviewed_from"] = reviewed_from
         manual["updated_at"] = datetime.now(timezone.utc).isoformat()
 

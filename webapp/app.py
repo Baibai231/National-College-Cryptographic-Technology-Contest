@@ -112,7 +112,8 @@ def _states_to_objects(states):
 def _row_to_site(row):
     (hostname, url, keywords, version, lf, lfzh, lr, lfields, lblockers,
      lfinal, lma, sf, sfzh, sr, sfields, sblockers, sfinal, sma,
-     mlogin, msignup, mnote, mverified, match, details_json) = row
+     mlogin, msignup, mnote, mverified, match,
+     lpwd_test, spwd_test, overall_pwd_test, details_json) = row
     details = json.loads(details_json or "{}")
     login_error = details.get("login_error") or ""
     signup_error = details.get("signup_error") or ""
@@ -171,6 +172,11 @@ def _row_to_site(row):
             "login": mlogin, "signup": msignup,
             "note": mnote, "verified": bool(mverified),
             "structured": details.get("manual_structured", {}),
+            "pwd_testability": {
+                "login": lpwd_test or "",
+                "signup": spwd_test or "",
+                "overall": overall_pwd_test or "",
+            },
         },
         "match_status": match,
         # 注册侧程序vs人工匹配：match/mismatch/pending（供筛选）
@@ -821,6 +827,11 @@ class ReviewRequest(BaseModel):
     submitter: str = Field("", max_length=200)
     review_type: Literal["manual", "feedback"] = "manual"
     structured: dict = Field(default_factory=dict)
+    # 口令框可测性（2026-08-16）：inline 不提交即可判断 / full 需提交 /
+    # none 无口令框；登录、注册、总判定各一个
+    login_pwd: Literal["", "inline", "full", "none"] = ""
+    signup_pwd: Literal["", "inline", "full", "none"] = ""
+    pwd_overall: Literal["", "inline", "full", "none"] = ""
 
 
 @app.get("/api/reviews/pending")
@@ -859,6 +870,11 @@ def submit_review(req: ReviewRequest):
     conn = _conn()
     try:
         cur = conn.cursor()
+        pwd_test = {"login": req.login_pwd, "signup": req.signup_pwd,
+                    "overall": req.pwd_overall}
+        structured = dict(req.structured or {})
+        if any(pwd_test.values()):
+            structured["pwd_testability"] = pwd_test
         cur.execute(
             "INSERT INTO reviews_pending (hostname, login, signup, note, "
             "submitter, review_type, submitted_at, structured_json) VALUES (?,?,?,?,?,?,?,?)",
@@ -866,7 +882,7 @@ def submit_review(req: ReviewRequest):
              req.submitter.strip(),
              req.review_type if req.review_type in ("manual", "feedback") else "manual",
              datetime.now(timezone.utc).isoformat(),
-             json.dumps(req.structured or {}, ensure_ascii=False)),
+             json.dumps(structured, ensure_ascii=False)),
         )
         conn.commit()
     finally:
@@ -898,9 +914,11 @@ def _approve_pending_row(cur, conn, row):
     details["manual_structured"] = previous_structured
     # JSON 是人工核验权威数据。先原子写入；失败则不提交 SQLite 事务。
     try:
+        pwd_test = (structured or {}).get("pwd_testability")
         upsert_manual_review(
             MANUAL_PATH, host, login=login, signup=signup, note=note,
             structured=previous_structured,
+            pwd_testability=(pwd_test if isinstance(pwd_test, dict) else None),
             reviewed_from=f"web@{submitter or 'admin'}@{ts}",
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:

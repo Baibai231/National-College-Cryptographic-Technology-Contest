@@ -70,7 +70,7 @@
     共 <span id="stat-total">-</span> 站，人工已核验 <span id="stat-verified">-</span> 站；
     注册正确率 <span id="stat-accuracy">-</span>，覆盖率 <span id="stat-coverage">-</span>；
     登录正确率 <span id="stat-login-accuracy">-</span>，覆盖率 <span id="stat-login-coverage">-</span>
-    <span class="ms-2">方法覆盖度 登录 <span id="stat-login-mc">-</span> / 注册 <span id="stat-signup-mc">-</span></span>
+    <span class="ms-2">登录方法覆盖度 <span id="stat-login-mc">-</span> / 注册方法覆盖度 <span id="stat-signup-mc">-</span></span>
     <span id="stat-pending" class="ms-2"></span>
   </p>
 
@@ -138,11 +138,29 @@
         <label class="form-label">登录方式（勾选每种方法的要素，自动用 + 连接）</label>
         <div id="review-login-methods"></div>
         <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addMethodRow('review-login')">+ 添加一种方法</button>
+        <div class="mt-2 small">
+          <b>登录口令框判定：</b>
+          <label class="me-2"><input type="radio" name="login-pwd" value="inline" class="form-check-input me-1">inline（不提交就能判断口令对不对）</label>
+          <label class="me-2"><input type="radio" name="login-pwd" value="full" class="form-check-input me-1">full（提交后才能判断）</label>
+          <label><input type="radio" name="login-pwd" value="none" class="form-check-input me-1">none（无口令框）</label>
+        </div>
       </div>
       <div class="mb-2">
         <label class="form-label">注册方式（勾选每种方法的要素，自动用 + 连接）</label>
         <div id="review-signup-methods"></div>
         <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addMethodRow('review-signup')">+ 添加一种方法</button>
+        <div class="mt-2 small">
+          <b>注册口令框判定：</b>
+          <label class="me-2"><input type="radio" name="signup-pwd" value="inline" class="form-check-input me-1">inline</label>
+          <label class="me-2"><input type="radio" name="signup-pwd" value="full" class="form-check-input me-1">full</label>
+          <label><input type="radio" name="signup-pwd" value="none" class="form-check-input me-1">none</label>
+        </div>
+      </div>
+      <div class="mb-2 small">
+        <b>总口令框判定（整站）：</b>
+        <label class="me-2"><input type="radio" name="overall-pwd" value="inline" class="form-check-input me-1">inline</label>
+        <label class="me-2"><input type="radio" name="overall-pwd" value="full" class="form-check-input me-1">full</label>
+        <label><input type="radio" name="overall-pwd" value="none" class="form-check-input me-1">none</label>
       </div>
       <div class="mb-2">
         <label class="form-label">备注（可选）</label>
@@ -252,11 +270,16 @@ function reportTableHtml(login, signup, version) {
       ? `<td>${fn(s)}</td>`
       : `<td>${fn(l)}</td><td>${fn(s)}</td>`;
   const badgeOf = (e) => badge((e && e.flow_type) || 'unknown');
+  const pwdTd = (side) => {
+    const p = (side.manual_pwd) || '';
+    return p ? `<td>${pwdBadge(p)}</td>` : `<td class="text-muted">—</td>`;
+  };
   return `<table class="table table-sm table-bordered align-middle">
     <thead><tr><th style="width:80px">维度</th>${only === 'signup' ? '<th>注册（程序）</th>' : '<th>登录（程序）</th>'}${only === 'both' ? '<th>注册（程序）</th>' : ''}</tr></thead>
     <tbody>
       <tr><td>类型</td>${tds(badgeOf)}</tr>
       <tr><td>方法清单</td>${tds((e) => methodsHtml((e || {}).methods))}</tr>
+      <tr><td>口令判定（人工）</td>${only === 'login' ? pwdTd(l) : only === 'signup' ? pwdTd(s) : pwdTd(l) + pwdTd(s)}</tr>
       <tr><td>口令政策</td>${tds((e) => policyText((e || {}).policy))}</tr>
       <tr><td>测量时间</td>${tds((e) => fmtTime((e || {}).measured_at))}</tr>
       <tr><td>程序版本</td><td colspan="${only === 'both' ? 2 : 1}">${version || '?'}</td></tr>
@@ -271,6 +294,13 @@ function matchBadge(status) {
     ? '<span class="match-badge badge verified">已人工核验</span>'
     : '<span class="match-badge badge pending">待人工复核</span>';
 }
+const PWD_TEST_ZH = { inline: 'inline', full: 'full', none: 'none' };
+function pwdBadge(value) {
+  if (!value) return '';
+  const cls = value === 'inline' ? 'badge-ok'
+    : value === 'full' ? 'badge-warn' : 'badge-wait';
+  return `<span class="side-badge ${cls}">口令${PWD_TEST_ZH[value] || value}</span>`;
+}
 function siteCard(s) {
   const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
   const sideBadge = (label, status) => {
@@ -280,6 +310,7 @@ function siteCard(s) {
       : ['证据不足', 'badge-wait'];
     return `<span class="side-badge ${config[1]}">${label}${config[0]}</span>`;
   };
+  const pwd = (s.manual && s.manual.pwd_testability) || {};
   return `
   <div class="col-md-6 col-lg-4">
     <div class="card h-100 p-3">
@@ -291,6 +322,7 @@ function siteCard(s) {
       <div class="mt-2 small">
         <div>登录 ${badge(s.login.flow_type)} ${sideBadge('登录', s.login_match)}</div>
         <div class="mt-1">注册 ${badge(s.signup.flow_type)} ${sideBadge('注册', s.signup_match)}</div>
+        ${pwd.overall ? `<div class="mt-1">口令判定 ${pwdBadge(pwd.overall)}</div>` : ''}
       </div>
       <div class="mt-2">
         <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${esc(s.hostname)}">详情</button>
@@ -362,9 +394,9 @@ async function search(q) {
   renderSites();
 }
 document.getElementById('search-btn').addEventListener('click', () =>
-  search(document.getElementById('search-input').value));
+  search(document.getElementById('search-input').value.trim()));
 document.getElementById('search-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') search(e.target.value);
+  if (e.key === 'Enter') search(e.target.value.trim());
 });
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -611,8 +643,11 @@ async function showDetail(host) {
       </table>
     </div>`;
   };
+  const pwd = (s.manual && s.manual.pwd_testability) || {};
+  const loginWithPwd = Object.assign({}, s.login, { manual_pwd: pwd.login });
+  const signupWithPwd = Object.assign({}, s.signup, { manual_pwd: pwd.signup });
   document.getElementById('modal-body').innerHTML = `
-    ${reportTableHtml(s.login, s.signup, s.version)}
+    ${reportTableHtml(loginWithPwd, signupWithPwd, s.version)}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
@@ -686,6 +721,10 @@ document.addEventListener('click', e => {
     document.getElementById('review-host').textContent = reviewHost;
     initMethodRows('review-login');
     initMethodRows('review-signup');
+    ['login-pwd', 'signup-pwd', 'overall-pwd'].forEach(n => {
+      const el = document.querySelector('input[name="' + n + '"]:checked');
+      if (el) el.checked = false;
+    });
     document.getElementById('review-note').value = '';
     document.getElementById('review-submitter').value = '';
     // 查询该站已有的待审核提交，防止组员重复提交
@@ -709,6 +748,10 @@ document.addEventListener('click', e => {
 document.getElementById('review-submit-btn').addEventListener('click', async () => {
   const login = readMethodRows('review-login');
   const signup = readMethodRows('review-signup');
+  const radioVal = (name) => {
+    const el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : '';
+  };
   const payload = {
     hostname: reviewHost,
     login: login.text,
@@ -718,7 +761,10 @@ document.getElementById('review-submit-btn').addEventListener('click', async () 
     structured: {
       login: login.traits,
       signup: signup.traits
-    }
+    },
+    login_pwd: radioVal('login-pwd'),
+    signup_pwd: radioVal('signup-pwd'),
+    pwd_overall: radioVal('overall-pwd')
   };
   if (!payload.login && !payload.signup) { alert('请至少填写登录或注册方法'); return; }
   const r = await fetch('/api/reviews', {

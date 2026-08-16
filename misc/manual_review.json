@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-16T13:05:20.298918+00:00",
+  "updated_at": "2026-08-16T14:29:16.247889+00:00",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
@@ -485,6 +485,486 @@
       "manual_login": "敏感人工观察",
       "verified": true,
       "reviewed_from": "web@reviewer@2026-08-15T00:00:00+00:00"
+    },
+    "www.dongqiudi.com": {
+      "manual_login": "需下载 App",
+      "manual_signup": "需下载 App",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：需下载 App"
+    },
+    "www.douban.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.douyin.com": {
+      "manual_login": "账号/手机号+密码、账号/手机号+验证码",
+      "manual_signup": "账号/手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.douyu.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.dxy.cn": {
+      "manual_login": "第三方登录",
+      "manual_signup": "第三方登录",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：第三方登录"
+    },
+    "www.eastmoney.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.ele.me": {
+      "manual_login": "需下载 App",
+      "manual_signup": "需下载 App",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：需下载 App"
+    },
+    "www.feishu.cn": {
+      "manual_login": "手机号+验证码、扫码",
+      "manual_signup": "手机号+验证码、扫码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.fliggy.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.gamersky.com": {
+      "manual_login": "手机号+验证码、账号+密码",
+      "manual_signup": "手机号+验证码+密码、第三方（QQ、微信）",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.gitee.com": {
+      "manual_login": "账号/手机号+密码、第三方（华为）",
+      "manual_signup": "账号/手机号+密码、第三方（华为）",
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：inline"
+    },
+    "www.gmw.cn": {
+      "manual_login": "无注册界面",
+      "manual_signup": "无注册界面",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：无注册界面"
+    },
+    "www.goofish.com": {
+      "manual_login": "验证码",
+      "manual_signup": "验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.guancha.cn": {
+      "manual_login": "手机号+验证码+密码、手机号+验证码",
+      "manual_signup": "手机号+验证码+密码、手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.guokr.com": {
+      "manual_login": "无注册界面",
+      "manual_signup": "无注册界面",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：无注册界面"
+    },
+    "www.huaweicloud.com": {
+      "manual_login": "手机号+密码、手机号+验证码、第三方（支付宝、微信）",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：full"
+    },
+    "www.hupu.com": {
+      "manual_login": "账号+密码、第三方（QQ）、账号/手机号+验证码",
+      "manual_signup": "第三方（QQ、微信）、账号/手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.huxiu.com": {
+      "manual_login": "无注册界面",
+      "manual_signup": "无注册界面",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：无注册界面"
+    },
+    "www.huya.com": {
+      "manual_login": "手机号+密码、手机号+验证码",
+      "manual_signup": "手机号+密码、手机号+验证码+密码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.ifeng.com": {
+      "manual_login": "",
+      "manual_signup": "手机号+验证码+密码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：inline"
+    },
+    "www.imooc.com": {
+      "manual_login": "手机号+验证码、邮箱+密码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.infzm.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.iqiyi.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.ithome.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.ixigua.com": {
+      "manual_login": "需下载 App",
+      "manual_signup": "需下载 App",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：需下载 App"
+    },
+    "www.jd.com": {
+      "manual_login": "手机号+验证码、第三方（QQ、微信）、账号+密码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.jianshu.com": {
+      "manual_login": "第三方（QQ、微信）、邮箱+密码",
+      "manual_signup": "手机号+密码、第三方（QQ、微信）",
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：full"
+    },
+    "www.jiemian.com": {
+      "manual_login": "手机号+验证码、第三方（QQ、微博）、账号+密码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.kanxue.com": {
+      "manual_login": "手机号+验证码、第三方（GitHub、微信）",
+      "manual_signup": "手机号+验证码、第三方（GitHub、微信）",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.kdocs.cn": {
+      "manual_login": "需下载 App",
+      "manual_signup": "需下载 App",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：需下载 App"
+    },
+    "www.ke.com": {
+      "manual_login": "手机号+验证码+密码",
+      "manual_signup": "手机号+验证码+密码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：full"
+    },
+    "www.kuaishou.com": {
+      "manual_login": "手机号+验证码、第三方（QQ、微信）",
+      "manual_signup": "手机号+验证码、第三方（QQ、微信）",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.kugou.com": {
+      "manual_login": "扫码",
+      "manual_signup": "扫码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：扫码登录"
+    },
+    "www.kuwo.cn": {
+      "manual_login": "账号+验证码+密码",
+      "manual_signup": "账号+验证码+密码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：full"
+    },
+    "www.lagou.com": {
+      "manual_login": "手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.lianjia.com": {
+      "manual_login": "手机号+验证码+密码",
+      "manual_signup": "手机号+验证码+密码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：full"
+    },
+    "www.liepin.com": {
+      "manual_login": "账号+密码、手机号+验证码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.ly.com": {
+      "manual_login": "账号+密码、账号+验证码+密码、第三方（支付宝、QQ、微信）",
+      "manual_signup": "手机号+密码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：inline"
+    },
+    "www.mafengwo.cn": {
+      "manual_login": "账号+密码",
+      "manual_signup": "手机号+验证码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "www.maimai.cn": {
+      "manual_login": "手机号+验证码、扫码",
+      "manual_signup": "手机号+验证码、扫码",
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12",
+      "note": "组员人工核验（41-80 表）：手机号+验证码"
     }
   }
 }

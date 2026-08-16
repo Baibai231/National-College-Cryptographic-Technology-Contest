@@ -807,3 +807,19 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
   （按 id 列表或 all 全量，逐条返回结果，失败不影响其余）；
 - 前端：列表免口令加载，行前复选框 + "批量通过选中"；
 - 审核逻辑抽成 `_approve_pending_row`（单条与批量共用）。
+
+### 35. 口令可测性标签（inline/full/none）+ 组员文件补录 + 展示优化（2026-08-16）
+
+1. **inline/full/none 口令框判定**：
+   - 定义：inline=有口令框且不提交即可判断口令是否正确；full=有口令框但
+     只有提交后才能判断；none=无口令框。
+   - 人工提交表单：登录/注册/总判定三个单选；存入 structured.pwd_testability
+     → manual_review.json 顶层 pwd_testability → SQLite 三列 → API/前端。
+   - 站点卡片显示"口令判定 none/inline/full"徽标；详情页新增"口令判定（人工）"行。
+2. **组员观察文件补录**：三份文件（前40/41-80表/81-121）覆盖 121 站，
+   其中 81 站已录（已录为准不动），补录 40 站（41-80 表）到
+   misc/manual_review.json（人工核验 84→124 站），含 pwd 标签。
+3. **人工核验衍生报告**：新增 reports/manual/index.md（124 站总览表），
+   权威数据仍在 misc/manual_review.json。
+4. **方法覆盖度改名**：登录方法覆盖度/注册方法覆盖度。
+5. **搜索防御**：输入 trim + 空结果提示。
