@@ -40,9 +40,10 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("addMethodRow('review-login')", self.html)
         self.assertIn("addMethodRow('review-signup')", self.html)
         self.assertIn("readMethodRows('review-login')", self.html)
-        self.assertIn("METHOD_ELEMENTS", self.html)
+        self.assertIn("methodElements", self.html)
         self.assertIn("手机号", self.html)
         self.assertIn("无注册界面", self.html)
+        self.assertIn("无登录界面", self.html)
         # 自由文本输入与旧结构化核验已删除
         self.assertNotIn("traitForm", self.html)
         self.assertNotIn("parseMethodLines", self.html)

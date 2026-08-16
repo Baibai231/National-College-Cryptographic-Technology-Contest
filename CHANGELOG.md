@@ -768,3 +768,8 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 未指定用户（默认 root 运行），网页写入的文件变 root 属主，ubuntu 的同步
 无法读取。修复：sites-webapp.service 增加 User=ubuntu/Group=ubuntu 并
 重启，网页与服务文件属主一致，同步不再被权限阻塞。
+
+### 31. 人工提交：登录侧"无登录界面"/注册侧"无注册界面"（2026-08-16）
+
+结构化方法填词按侧区分"无界面"选项：登录审核勾"无登录界面"、注册审核勾
+"无注册界面"，勾选即表示该站没有对应入口（同一 no_web 语义，数据层不变）。

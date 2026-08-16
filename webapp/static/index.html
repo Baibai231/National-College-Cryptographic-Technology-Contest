@@ -427,13 +427,17 @@ async function denyReview(id) {
 function showReviewModal() { document.getElementById('reviewModal').style.display = 'flex'; }
 function hideReview() { document.getElementById('reviewModal').style.display = 'none'; }
 // ---- 结构化方法填词（v4.2：代替自由文本，勾选要素自动 + 连接） ----
-const METHOD_ELEMENTS = [
-  ['phone', '手机号'], ['email', '邮箱'], ['account', '账号'],
-  ['password', '口令'], ['code', '验证码'], ['captcha', '人机验证'],
-  ['scan', '扫码'], ['sso', '第三方'], ['tos', '协议'], ['no_web', '无注册界面']
-];
+function methodElements(prefix) {
+  // 登录侧勾"无登录界面"，注册侧勾"无注册界面"（同一 no_web 语义）
+  const noUiLabel = prefix.indexOf('login') >= 0 ? '无登录界面' : '无注册界面';
+  return [
+    ['phone', '手机号'], ['email', '邮箱'], ['account', '账号'],
+    ['password', '口令'], ['code', '验证码'], ['captcha', '人机验证'],
+    ['scan', '扫码'], ['sso', '第三方'], ['tos', '协议'], ['no_web', noUiLabel]
+  ];
+}
 function methodRowHtml(prefix, index) {
-  const boxes = METHOD_ELEMENTS.map(([val, label]) =>
+  const boxes = methodElements(prefix).map(([val, label]) =>
     `<label class="me-2"><input type="checkbox" class="form-check-input me-1 method-el" data-el="${val}" onchange="updateMethodPreview('${prefix}')">${label}</label>`).join('');
   return `<div class="border rounded p-2 mb-1 method-row" data-prefix="${prefix}">
     <b>方法${['一','二','三','四','五','六','七','八','九','十'][index] || (index + 1)}：</b>${boxes}
@@ -447,9 +451,10 @@ function addMethodRow(prefix) {
 }
 function updateMethodPreview(prefix) {
   const box = document.getElementById(prefix + '-methods');
+  const elements = methodElements(prefix);
   box.querySelectorAll('.method-row').forEach(row => {
     const labels = [...row.querySelectorAll('.method-el:checked')]
-      .map(el => METHOD_ELEMENTS.find(([v]) => v === el.dataset.el)[1]);
+      .map(el => elements.find(([v]) => v === el.dataset.el)[1]);
     row.querySelector('.method-preview').textContent =
       labels.length ? '＝ ' + labels.join('+') : '';
   });
@@ -464,7 +469,7 @@ function readMethodRows(prefix) {
   const traits = {};
   box.querySelectorAll('.method-row').forEach(row => {
     const labels = [...row.querySelectorAll('.method-el:checked')]
-      .map(el => METHOD_ELEMENTS.find(([v]) => v === el.dataset.el)[1]);
+      .map(el => methodElements(prefix).find(([v]) => v === el.dataset.el)[1]);
     if (labels.length) lines.push(labels.join('+'));
     [...row.querySelectorAll('.method-el:checked')].forEach(el => {
       const v = el.dataset.el;
