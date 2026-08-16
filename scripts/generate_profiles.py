@@ -80,7 +80,7 @@ FLOW_ZH = {
     "multiple_methods": "多方式并存",
     "sso_only": "仅第三方登录",
     "human_blocked": "人工阻断",
-    "no_web_signup": "无网页注册",
+    "no_web_signup": "无注册界面",
     "unknown": "未确认",
 }
 

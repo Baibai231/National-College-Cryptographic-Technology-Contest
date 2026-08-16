@@ -67,7 +67,7 @@ FLOW_ZH = {
     "verification_then_password": "先验证后口令框", "otp_only": "仅验证码",
     "email_only": "仅邮箱", "multiple_methods": "多方式并存",
     "sso_only": "仅第三方", "human_blocked": "需人工验证",
-    "no_web_signup": "无网页注册", "unknown": "未确认", "error": "异常",
+    "no_web_signup": "无注册界面", "unknown": "未确认", "error": "异常",
 }
 
 
