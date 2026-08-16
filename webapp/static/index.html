@@ -103,7 +103,7 @@
       <button class="btn btn-outline-secondary filter-btn" data-f="verified">已核验</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="pending">待核验</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="match">识别基本正确</button>
-      <button class="btn btn-outline-secondary filter-btn" data-f="partial">部分一致</button>
+      <button class="btn btn-outline-secondary filter-btn" data-f="partial">识别部分一致</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="mismatch">识别不一致</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="incprog">程序证据不足</button>
       <button class="btn btn-outline-secondary filter-btn" data-f="incmanual">人工证据不足</button>
@@ -275,7 +275,7 @@ function siteCard(s) {
   const kw = (s.keywords || []).filter(k => k !== s.hostname).slice(0, 2).join(' / ');
   const sideBadge = (label, status) => {
     const config = status === 'match' ? ['识别正确', 'badge-ok']
-      : status === 'partial' ? ['部分一致', 'badge-warn']
+      : status === 'partial' ? ['识别部分一致', 'badge-warn']
       : status === 'mismatch' ? ['识别错误', 'badge-bad']
       : status === 'pending' ? ['待核验', 'badge-wait']
       : ['证据不足', 'badge-wait'];
@@ -556,7 +556,7 @@ async function showDetail(host) {
   const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured) => {
     if (!comparison || status === 'pending') return '';
     const statusZh = status === 'match' ? '识别正确'
-      : status === 'partial' ? '部分一致'
+      : status === 'partial' ? '识别部分一致'
       : status === 'mismatch' ? '识别错误'
       : status === 'inconclusive_program' ? '程序证据不足'
       : '人工证据不足';
