@@ -710,3 +710,14 @@ methodsHtml（对象无 length → 显示"—"），口令政策同样传错参�
 4. **修复服务器同步 SIGPIPE 中止**：`git status | head -40` 在改动文件多时
    head 提前退出致 git 收 SIGPIPE，pipefail 下脚本以 141 中止（提交步骤跳过，
    残留未提交文件挡住下次 rebase）。加 `|| true` 吞掉该退出码。
+
+### 26. 修复测量流量误走系统代理（2026-08-16，用户发现 Clash 流量 2 天烧 200G）
+
+根因：macOS 系统代理（Clash Verge 1082 端口）开启时，Chrome 默认读取系统
+代理，测量脚本只在显式配置环境变量代理时才传 --proxy-server，导致全部测量
+流量经 Clash 境外节点转发——4 轮全量回归 + 波动组 + 结构难点诊断约 2000+
+次中文站页面访问，单页几十 MB，2 天烧掉 200G 代理流量。
+修复：`utils/util_test_password.py` 两个 driver 创建点——未显式配置
+CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
+代理（中文站直连更快且零代理流量；显式配置代理的行为不变）。
+验证：百度直连正常；119 项测试通过。

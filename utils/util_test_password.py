@@ -281,12 +281,17 @@ def _get_shared_driver():
     #   excludeSwitches: enable-automation
     #   useAutomationExtension: false
 
-    # 代理支持
+    # 代理支持：仅显式配置 CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时走代理；
+    # 否则强制绕过系统代理（macOS Clash Verge 等系统代理会把测量流量
+    # 经境外节点转发——中文站直连更快且不耗代理流量，2026-08-16 实测
+    # 4 轮全量经系统代理烧掉 200G 代理流量）
     proxy_url = _get_proxy_config()
     if proxy_url:
         masked = proxy_url.split("@")[-1] if "@" in proxy_url else proxy_url
         logger.info(f"Chrome 使用代理: {masked}")
         options.add_argument(f"--proxy-server={proxy_url}")
+    else:
+        options.add_argument("--no-proxy-server")
 
     if _CHROMEDRIVER_BIN:
         _SHARED_DRIVER = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN, version_main=150)
@@ -327,6 +332,9 @@ def _get_new_driver():
         masked = proxy_url.split("@")[-1] if "@" in proxy_url else proxy_url
         logger.info(f"Chrome (new) 使用代理: {masked}")
         options.add_argument(f"--proxy-server={proxy_url}")
+    else:
+        # 绕过系统代理（同 _get_shared_driver 注释：中文站直连）
+        options.add_argument("--no-proxy-server")
 
     # 服务器无显示器环境：SITES_HEADLESS=1 启用无头模式
     if os.environ.get("SITES_HEADLESS"):
