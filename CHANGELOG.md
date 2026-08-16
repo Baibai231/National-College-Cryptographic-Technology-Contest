@@ -761,3 +761,10 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 - 前端：删除"部分一致"筛选按钮、徽标、结论分支。
 - 效果：登录正确率 80.7→81.7%、覆盖率 68.7→71.4%；注册 76.3→77.0%、
   71.1→72.6%（原本 partial 的并入正确）。
+
+### 30. 服务器权限根因修复（2026-08-16）
+
+反复出现的"同步 PermissionError: manual_review.json"根因：systemd 服务
+未指定用户（默认 root 运行），网页写入的文件变 root 属主，ubuntu 的同步
+无法读取。修复：sites-webapp.service 增加 User=ubuntu/Group=ubuntu 并
+重启，网页与服务文件属主一致，同步不再被权限阻塞。
