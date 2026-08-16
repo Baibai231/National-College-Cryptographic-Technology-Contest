@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.658264+00:00",
+  "generated_at": "2026-08-16T20:43:42.862444+00:00",
   "report_title": "www.feishu.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -90,14 +90,15 @@
                 "none"
               ],
               "tabs": [
-                "sms_tab"
+                "sms_tab",
+                "qr_tab"
               ],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:47:43.994554+00:00",
+            "measured_at": "2026-08-16T19:48:29.760778+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -210,7 +211,8 @@
                 "entry_click"
               ],
               "tabs": [
-                "sms_tab"
+                "sms_tab",
+                "qr_tab"
               ],
               "note": "register_combined_text_clicked_and_changed"
             },
@@ -234,14 +236,15 @@
                 "none"
               ],
               "tabs": [
-                "sms_tab"
+                "sms_tab",
+                "qr_tab"
               ],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:47:43.950127+00:00",
+            "measured_at": "2026-08-16T19:48:29.164899+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

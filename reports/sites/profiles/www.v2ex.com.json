@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.714985+00:00",
+  "generated_at": "2026-08-16T20:43:42.887991+00:00",
   "report_title": "www.v2ex.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,89 +20,73 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.v2ex.com/signup",
-          "final_url": "https://www.v2ex.com/signup",
-          "observed_route": "第三方认证 → Google → Solana",
+          "start_url": "https://www.v2ex.com/",
+          "final_url": "https://www.v2ex.com/",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "第三方认证 → Google → Solana",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "third_party",
-                "google",
-                "solana"
-              ],
+              "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "standalone_page"
-              ],
+              "ui_types": [],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "third_party",
-            "google",
-            "solana"
-          ],
+          "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "standalone_page"
-          ],
+          "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
-          "limitations": [],
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
-              "url": "https://www.v2ex.com/signup",
-              "ui_type": "standalone_page",
+              "url": "https://www.v2ex.com/",
+              "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "google",
-                "solana",
-                "sso"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
+                "none",
                 "none"
               ],
-              "tabs": [
-                "register_tab"
-              ],
-              "note": ""
+              "tabs": [],
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-15T18:42:24.374513+00:00",
-            "raw_flow_type": "sso_only",
-            "raw_stop_reason": "external_idp_detected"
+            "confidence": "low",
+            "measured_at": "2026-08-16T20:27:52.480019+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
-            "flow_type": "sso_only",
-            "stop_reason": "external_idp_detected",
-            "primary_method": "sso"
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "classified",
-              "confidence": "high",
-              "stop_reason": "external_idp_detected",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "third_party"
-              ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "observed_methods": [],
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
@@ -118,44 +102,34 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.v2ex.com/signup",
-          "final_url": "https://www.v2ex.com/signup",
-          "observed_route": "第三方认证 → Google → Solana",
+          "start_url": "https://www.v2ex.com/",
+          "final_url": "https://www.v2ex.com/",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
-              "summary": "第三方认证 → Google → Solana",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "third_party",
-                "google",
-                "solana"
-              ],
+              "methods_observed": [],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [
-                "standalone_page"
-              ],
+              "ui_types": [],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "third_party",
-            "google",
-            "solana"
-          ],
+          "methods_observed": [],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [
-            "standalone_page"
-          ],
+          "ui_types": [],
           "safe_stop": "已走完当前安全可达范围",
-          "limitations": [],
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
               "step": 1,
@@ -165,58 +139,36 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [
-                "register_tab"
-              ],
-              "note": "register_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.v2ex.com/signup",
-              "ui_type": "standalone_page",
-              "fields": [],
-              "methods": [
-                "google",
-                "solana",
-                "sso"
-              ],
-              "blockers": [],
-              "actions": [
+                "none",
                 "none"
               ],
-              "tabs": [
-                "register_tab"
-              ],
-              "note": ""
+              "tabs": [],
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-15T18:41:57.819111+00:00",
-            "raw_flow_type": "sso_only",
-            "raw_stop_reason": "external_idp_detected"
+            "confidence": "low",
+            "measured_at": "2026-08-16T20:33:34.863580+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
           },
           "raw_result": {
-            "flow_type": "sso_only",
-            "stop_reason": "external_idp_detected",
-            "primary_method": "sso"
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "classified",
-              "confidence": "high",
-              "stop_reason": "external_idp_detected",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "third_party"
-              ],
-              "password_status": "no_password_in_safely_reachable_flow",
+              "observed_methods": [],
+              "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,

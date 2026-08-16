@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.602189+00:00",
+  "generated_at": "2026-08-16T20:43:42.837224+00:00",
   "report_title": "shimo.im 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -94,7 +94,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:47:17.427431+00:00",
+            "measured_at": "2026-08-16T19:48:04.131905+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -208,7 +208,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T18:47:14.788797+00:00",
+            "measured_at": "2026-08-16T19:47:52.995831+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.643357+00:00",
+  "generated_at": "2026-08-16T20:43:42.855719+00:00",
   "report_title": "www.ctrip.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -94,7 +94,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:45:11.632421+00:00",
+            "measured_at": "2026-08-16T19:46:06.246220+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -221,7 +221,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:45:08.114012+00:00",
+            "measured_at": "2026-08-16T19:45:58.035210+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

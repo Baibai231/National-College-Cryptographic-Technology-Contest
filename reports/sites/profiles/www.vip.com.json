@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.715801+00:00",
+  "generated_at": "2026-08-16T20:43:42.888263+00:00",
   "report_title": "www.vip.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://passport.vip.com/login?src=https%3A%2F%2Fwww.vip.com%2F%26st_name%3Dmst_tfs_punish_login",
           "final_url": "https://passport.vip.com/login?src=https%3A%2F%2Fwww.vip.com%2F%26st_name%3Dmst_tfs_punish_login",
-          "observed_route": "扫码；备选：账号/邮箱 → 扫码 → 口令；备选：账号/邮箱 → 扫码 → 口令",
+          "observed_route": "扫码；备选：账号/邮箱 → 扫码 → 口令；备选：账号/邮箱 → 扫码 → 口令；备选：扫码；备选：账号/邮箱 → 扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -105,6 +105,59 @@
                 "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                4
+              ],
+              "summary": "扫码",
+              "fields_observed": [],
+              "methods_observed": [
+                "qr",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo",
+                "alipay"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_5",
+              "step_numbers": [
+                5
+              ],
+              "summary": "账号/邮箱 → 扫码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "qr",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo",
+                "alipay"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
@@ -154,6 +207,7 @@
                 "auth_mode_click"
               ],
               "tabs": [
+                "qr_tab",
                 "register_tab"
               ],
               "note": "auth_mode_text_clicked_and_changed"
@@ -180,6 +234,7 @@
                 "tab_click"
               ],
               "tabs": [
+                "qr_tab",
                 "register_tab"
               ],
               "note": "register_tab_clicked_no_change"
@@ -202,8 +257,62 @@
                 "weibo"
               ],
               "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "qr_tab",
+                "register_tab"
+              ],
+              "note": "qr_tab_clicked_and_changed"
+            },
+            {
+              "step": 4,
+              "url": "https://passport.vip.com/login?src=https%3A%2F%2Fwww.vip.com%2F%26st_name%3Dmst_tfs_punish_login",
+              "ui_type": "standalone_page",
+              "fields": [],
+              "methods": [
+                "alipay",
+                "qq",
+                "qr",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [
+                "tab_click",
+                "auth_mode_click"
+              ],
+              "tabs": [
+                "qr_tab",
+                "register_tab"
+              ],
+              "note": "auth_mode_text_clicked_and_changed"
+            },
+            {
+              "step": 5,
+              "url": "https://passport.vip.com/login?src=https%3A%2F%2Fwww.vip.com%2F%26st_name%3Dmst_tfs_punish_login",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "alipay",
+                "identifier",
+                "qq",
+                "qr",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
+                "qr_tab",
                 "register_tab"
               ],
               "note": ""
@@ -211,7 +320,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:28:58.866738+00:00",
+            "measured_at": "2026-08-16T19:23:09.156529+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -351,6 +460,7 @@
               ],
               "actions": [],
               "tabs": [
+                "qr_tab",
                 "register_tab"
               ],
               "note": ""
@@ -396,7 +506,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:28:53.831233+00:00",
+            "measured_at": "2026-08-16T19:23:01.553447+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.659787+00:00",
+  "generated_at": "2026-08-16T20:43:42.863158+00:00",
   "report_title": "www.fliggy.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -96,7 +96,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:45:31.627512+00:00",
+            "measured_at": "2026-08-16T19:46:26.825724+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -232,7 +232,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:45:28.513868+00:00",
+            "measured_at": "2026-08-16T19:46:20.434464+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.677826+00:00",
+  "generated_at": "2026-08-16T20:43:42.871754+00:00",
   "report_title": "www.jd.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,7 +20,7 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://cfe.m.jd.com/privatedomain/risk_handler/03101900/?evtype=3&returnurl=https%3A%2F%2Fwww.jd.com%2F&rqhost=api.m.jd.com&source=3&rpid=rp-105783534-10093-1786817662269&evapi=color_qryCompositeMaterials&lgid=2193&lgt=3",
+          "start_url": "https://cfe.m.jd.com/privatedomain/risk_handler/03101900/?evtype=3&returnurl=https%3A%2F%2Fwww.jd.com%2F&rqhost=api.m.jd.com&source=3&rpid=rp-188546240-10352-1786907315231&evapi=color_qryCompositeMaterials&lgid=2193&lgt=3",
           "final_url": "https://passport.jd.com/new/login.aspx?ReturnUrl=https%3A%2F%2Fwww.jd.com%2F&czLogin=1",
           "observed_route": "账号/邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
@@ -314,7 +314,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:14:17.605983+00:00",
+            "measured_at": "2026-08-16T19:08:30.251813+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -435,7 +435,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T18:14:16.207250+00:00",
+            "measured_at": "2026-08-16T20:25:39.461749+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

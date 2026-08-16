@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.623269+00:00",
+  "generated_at": "2026-08-16T20:43:42.846182+00:00",
   "report_title": "www.acfun.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -198,7 +198,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:32:52.567304+00:00",
+            "measured_at": "2026-08-16T19:29:01.503954+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -326,7 +326,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T18:32:50.309096+00:00",
+            "measured_at": "2026-08-16T19:28:49.410961+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

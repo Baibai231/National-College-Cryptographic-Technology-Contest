@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.636344+00:00",
+  "generated_at": "2026-08-16T20:43:42.852059+00:00",
   "report_title": "www.china.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -147,7 +147,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:26:18.654930+00:00",
+            "measured_at": "2026-08-16T19:19:32.266361+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -313,7 +313,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:26:14.774245+00:00",
+            "measured_at": "2026-08-16T19:19:26.474433+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

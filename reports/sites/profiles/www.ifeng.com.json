@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.672436+00:00",
+  "generated_at": "2026-08-16T20:43:42.869149+00:00",
   "report_title": "www.ifeng.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -90,7 +90,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:19:13.453788+00:00",
+            "measured_at": "2026-08-16T19:14:10.065488+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -213,7 +213,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:19:09.149207+00:00",
+            "measured_at": "2026-08-16T19:14:03.979906+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

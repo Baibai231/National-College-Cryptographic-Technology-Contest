@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.700632+00:00",
+  "generated_at": "2026-08-16T20:43:42.881402+00:00",
   "report_title": "www.pconline.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -292,7 +292,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:28:38.451885+00:00",
+            "measured_at": "2026-08-16T19:22:59.407574+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -428,7 +428,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:28:36.692136+00:00",
+            "measured_at": "2026-08-16T19:22:52.021480+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

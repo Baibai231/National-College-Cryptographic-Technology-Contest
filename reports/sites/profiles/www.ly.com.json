@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.690736+00:00",
+  "generated_at": "2026-08-16T20:43:42.877220+00:00",
   "report_title": "www.ly.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -235,7 +235,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:45:24.844976+00:00",
+            "measured_at": "2026-08-16T19:46:14.729377+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -354,7 +354,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:45:12.793116+00:00",
+            "measured_at": "2026-08-16T19:46:06.902107+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

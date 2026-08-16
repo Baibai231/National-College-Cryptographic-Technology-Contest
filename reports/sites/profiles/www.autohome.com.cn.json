@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.627748+00:00",
+  "generated_at": "2026-08-16T20:43:42.848249+00:00",
   "report_title": "www.autohome.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.autohome.com.cn/tianjin/",
           "final_url": "https://www.autohome.com.cn/tianjin/",
-          "observed_route": "短信验证码/扫码；备选：账号/邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令",
+          "observed_route": "短信验证码/扫码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -44,124 +44,13 @@
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "multi_step_wizard"
+                "modal"
               ],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                2
-              ],
-              "summary": "账号/邮箱 → 短信验证码 → 口令",
-              "fields_observed": [
-                "identifier",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "identifier",
-                "sms",
-                "third_party",
-                "qq"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "multi_step_wizard"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
-            },
-            {
-              "route_id": "automatic_route_3",
-              "step_numbers": [
-                3
-              ],
-              "summary": "手机号 → 短信验证码",
-              "fields_observed": [
-                "phone",
-                "code"
-              ],
-              "methods_observed": [
-                "phone",
-                "sms",
-                "third_party",
-                "qq"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "not_observed_before_verification",
-              "ui_types": [
-                "multi_step_wizard"
-              ],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
-            },
-            {
-              "route_id": "automatic_route_4",
-              "step_numbers": [
-                4
-              ],
-              "summary": "账号/邮箱 → 短信验证码 → 口令",
-              "fields_observed": [
-                "identifier",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "identifier",
-                "sms",
-                "third_party",
-                "qq"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "multi_step_wizard"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
-            },
-            {
-              "route_id": "automatic_route_5",
-              "step_numbers": [
-                5
-              ],
-              "summary": "账号/邮箱 → 短信验证码 → 口令",
-              "fields_observed": [
-                "identifier",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "identifier",
-                "sms",
-                "third_party",
-                "qq"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_before_verification",
-              "ui_types": [
-                "multi_step_wizard"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
-          "fields_observed": [
-            "phone",
-            "identifier",
-            "password",
-            "code"
-          ],
+          "fields_observed": [],
           "methods_observed": [
-            "password",
-            "phone",
-            "identifier",
             "sms",
             "qr",
             "third_party",
@@ -172,11 +61,11 @@
             "sms",
             "qr"
           ],
-          "password_state": "multiple_observed_routes",
+          "password_state": "not_observed_before_verification",
           "ui_types": [
-            "multi_step_wizard"
+            "modal"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问；已到达口令输入界面，未提交表单；安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
             "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
           ],
@@ -184,7 +73,7 @@
             {
               "step": 1,
               "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
+              "ui_type": "modal",
               "fields": [],
               "methods": [
                 "qq",
@@ -196,128 +85,76 @@
                 "scan"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "password_tab_clicked_in_iframe_and_changed"
+              "note": "no_sms_tab"
             },
             {
               "step": 2,
               "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
-              "fields": [
-                "identifier",
-                "password"
-              ],
+              "ui_type": "modal",
+              "fields": [],
               "methods": [
-                "identifier",
                 "qq",
-                "sso"
+                "qr",
+                "sso",
+                "wechat"
               ],
               "blockers": [
-                "slide",
-                "tos"
+                "scan"
               ],
               "actions": [
-                "tab_click"
+                "none",
+                "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "sms_tab_clicked_in_iframe_and_changed"
+              "note": "no_sms_tab"
             },
             {
               "step": 3,
               "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
-              "fields": [
-                "phone",
-                "code"
-              ],
+              "ui_type": "modal",
+              "fields": [],
               "methods": [
-                "phone",
                 "qq",
-                "sso"
+                "qr",
+                "sso",
+                "wechat"
               ],
               "blockers": [
-                "sms_code",
-                "slide",
-                "tos"
+                "scan"
               ],
               "actions": [
-                "tab_click"
+                "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
-              "note": "password_tab_clicked_in_iframe_and_changed"
-            },
-            {
-              "step": 4,
-              "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
-              "fields": [
-                "identifier",
-                "password"
-              ],
-              "methods": [
-                "identifier",
-                "qq",
-                "sso"
-              ],
-              "blockers": [
-                "slide",
-                "tos"
-              ],
-              "actions": [
-                "tab_click"
-              ],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": "password_tab_clicked_in_iframe_no_change"
-            },
-            {
-              "step": 5,
-              "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
-              "fields": [
-                "identifier",
-                "password"
-              ],
-              "methods": [
-                "identifier",
-                "qq",
-                "sso"
-              ],
-              "blockers": [
-                "slide",
-                "tos"
-              ],
-              "actions": [],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
-              "note": ""
+              "note": "no_password_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:27:36.478915+00:00",
-            "raw_flow_type": "direct_password",
-            "raw_stop_reason": "password_step_reached"
+            "measured_at": "2026-08-16T19:20:56.807210+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
-            "flow_type": "direct_password",
-            "stop_reason": "password_step_reached",
-            "primary_method": "password"
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": "sso"
           },
           "policy": {
             "schema_version": "1.0",
@@ -325,27 +162,22 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "password_step_reached",
-              "evidence_boundary": "pre_verification_only"
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "password",
                 "sms_or_otp",
                 "qr_or_scan",
-                "third_party",
-                "phone"
+                "third_party"
               ],
-              "password_status": "password_observed",
-              "password_observed": true,
-              "verification_observed": true,
-              "phone_observed": true,
-              "identifier_observed": true,
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
               "blocking_factors": [
-                "scan",
-                "slide",
-                "sms_code",
-                "tos"
+                "scan"
               ]
             },
             "security": {
@@ -428,6 +260,7 @@
                 "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
@@ -451,6 +284,7 @@
                 "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
@@ -474,6 +308,7 @@
                 "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
@@ -497,6 +332,7 @@
                 "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
@@ -520,6 +356,7 @@
                 "none"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
@@ -541,6 +378,7 @@
               ],
               "actions": [],
               "tabs": [
+                "qr_tab",
                 "sms_tab",
                 "password_tab"
               ],
@@ -549,7 +387,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:26:40.798905+00:00",
+            "measured_at": "2026-08-16T19:20:24.825239+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

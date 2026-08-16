@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.637441+00:00",
+  "generated_at": "2026-08-16T20:43:42.852548+00:00",
   "report_title": "www.chinaacc.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -194,7 +194,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:53:29.689056+00:00",
+            "measured_at": "2026-08-16T19:54:08.121751+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -308,7 +308,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:53:23.455283+00:00",
+            "measured_at": "2026-08-16T19:54:01.201634+00:00",
             "raw_flow_type": "sso_only",
             "raw_stop_reason": "external_idp_detected"
           },

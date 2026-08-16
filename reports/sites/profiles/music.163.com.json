@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.599508+00:00",
+  "generated_at": "2026-08-16T20:43:42.835866+00:00",
   "report_title": "music.163.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -74,13 +74,15 @@
               "actions": [
                 "none"
               ],
-              "tabs": [],
+              "tabs": [
+                "qr_tab"
+              ],
               "note": "no_password_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:34:42.977089+00:00",
+            "measured_at": "2026-08-16T17:38:04.695741+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -174,13 +176,15 @@
               "actions": [
                 "none"
               ],
-              "tabs": [],
+              "tabs": [
+                "qr_tab"
+              ],
               "note": "no_password_signup_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T11:21:30.665220+00:00",
+            "measured_at": "2026-08-16T17:37:54.834914+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

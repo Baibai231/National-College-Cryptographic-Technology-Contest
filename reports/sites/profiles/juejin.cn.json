@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.597010+00:00",
+  "generated_at": "2026-08-16T20:43:42.834344+00:00",
   "report_title": "juejin.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -242,7 +242,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:17:19.891502+00:00",
+            "measured_at": "2026-08-16T19:12:00.498605+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -388,7 +388,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:17:16.452119+00:00",
+            "measured_at": "2026-08-16T19:11:56.361969+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

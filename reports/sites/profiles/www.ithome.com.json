@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.676493+00:00",
+  "generated_at": "2026-08-16T20:43:42.870981+00:00",
   "report_title": "www.ithome.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -65,7 +65,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:19:06.583559+00:00",
+            "measured_at": "2026-08-16T19:14:00.826972+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:19:02.981319+00:00",
+            "measured_at": "2026-08-16T19:13:59.279991+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

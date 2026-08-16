@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.683188+00:00",
+  "generated_at": "2026-08-16T20:43:42.874032+00:00",
   "report_title": "www.kdocs.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,7 +20,7 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=AZPDll-D1CWB7doRV1Avnj_gTzP5XrBLM-nl2P82TO4&singlesignhost=account.kdocs.cn",
+          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=VT4BfvMmaxsa7E1dCKtrHx25yNuhfZsXjjnr13QT_Kc&singlesignhost=account.kdocs.cn",
           "final_url": "https://www.kdocs.cn/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T18:47:24.547426+00:00",
+            "measured_at": "2026-08-16T20:27:26.665157+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -102,7 +102,7 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=Tb1Gg09BFhma40ztjlq7sZjqOOM8i2JWODPcQECYy40&singlesignhost=account.kdocs.cn",
+          "start_url": "https://www.kdocs.cn/",
           "final_url": "https://www.kdocs.cn/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T18:47:23.728295+00:00",
+            "measured_at": "2026-08-16T20:40:09.178212+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

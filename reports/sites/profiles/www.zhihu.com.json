@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.726305+00:00",
+  "generated_at": "2026-08-16T20:43:42.892673+00:00",
   "report_title": "www.zhihu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -313,7 +313,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:13:15.802179+00:00",
+            "measured_at": "2026-08-16T19:07:30.854386+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -441,7 +441,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:13:15.801872+00:00",
+            "measured_at": "2026-08-16T19:07:30.854072+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

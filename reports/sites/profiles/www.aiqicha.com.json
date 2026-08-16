@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.624359+00:00",
+  "generated_at": "2026-08-16T20:43:42.846697+00:00",
   "report_title": "www.aiqicha.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,56 +20,145 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819952&signature=6998c0c4fb0f37d2f64875e089b18f04",
-          "final_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819952&signature=6998c0c4fb0f37d2f64875e089b18f04",
-          "observed_route": "未确认具体方式",
+          "start_url": "https://www.aiqicha.com/",
+          "final_url": "https://www.aiqicha.com/",
+          "observed_route": "短信验证码；备选：账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                0
+                1
               ],
-              "summary": "未确认具体方式",
+              "summary": "短信验证码",
               "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
+              "methods_observed": [
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                2
+              ],
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "third_party",
+                "baidu"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
-          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "fields_observed": [
+            "identifier",
+            "password"
+          ],
+          "methods_observed": [
+            "password",
+            "identifier",
+            "sms",
+            "third_party",
+            "baidu"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "multiple_observed_routes",
+          "ui_types": [
+            "inline_widget"
+          ],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单",
           "limitations": [],
           "steps": [
             {
-              "step": 0,
-              "url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819952&signature=6998c0c4fb0f37d2f64875e089b18f04",
+              "step": 1,
+              "url": "https://www.aiqicha.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "captcha"
+              "blockers": [],
+              "actions": [
+                "tab_click"
               ],
-              "actions": [],
+              "tabs": [
+                "qr_tab",
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.aiqicha.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "baidu",
+                "identifier",
+                "sso"
+              ],
+              "blockers": [
+                "tos"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "qr_tab",
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "sms_tab_clicked_and_changed"
+            },
+            {
+              "step": 3,
+              "url": "https://www.aiqicha.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
               "tabs": [],
-              "note": "full_page_human_challenge"
+              "note": "no_entry_button"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:52:30.227247+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "measured_at": "2026-08-16T19:53:01.742103+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": ""
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
@@ -77,18 +166,22 @@
             "measurement": {
               "status": "blocked_or_partial",
               "confidence": "high",
-              "stop_reason": "human_blocked",
+              "stop_reason": "password_step_reached",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [],
-              "password_status": "not_determined",
-              "password_observed": false,
+              "observed_methods": [
+                "password",
+                "sms_or_otp",
+                "third_party"
+              ],
+              "password_status": "password_observed",
+              "password_observed": true,
               "verification_observed": false,
               "phone_observed": false,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": [
-                "captcha"
+                "tos"
               ]
             },
             "security": {
@@ -100,76 +193,105 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819960&signature=4d27c5fb9c5cf6f1a194525737d14b30",
-          "final_url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819960&signature=4d27c5fb9c5cf6f1a194525737d14b30",
-          "observed_route": "未确认具体方式",
+          "start_url": "https://www.aiqicha.com/",
+          "final_url": "about:blank",
+          "observed_route": "短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                0
+                1
               ],
-              "summary": "未确认具体方式",
+              "summary": "短信验证码",
               "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
+              "methods_observed": [
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
+          "methods_observed": [
+            "sms"
+          ],
+          "verification_observed": [
+            "sms"
+          ],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "已记录页面阻断因素，未继续交互",
-          "limitations": [],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
           "steps": [
             {
-              "step": 0,
-              "url": "https://wappass.baidu.com/static/captcha/tuxing_v2.html?ak=uvErNgFVAw2s19CYSdl6FLj1U3ACoUjB&backurl=http%3A%2F%2Fwww.aiqicha.com%3Fp_type%3D1&timestamp=1786819960&signature=4d27c5fb9c5cf6f1a194525737d14b30",
+              "step": 1,
+              "url": "https://www.aiqicha.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
-              "blockers": [
-                "captcha"
+              "blockers": [],
+              "actions": [
+                "entry_click"
               ],
-              "actions": [],
+              "tabs": [
+                "qr_tab",
+                "password_tab",
+                "sms_tab",
+                "register_tab"
+              ],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "about:blank",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
               "tabs": [],
-              "note": "full_page_human_challenge"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-15T18:52:29.155060+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "low",
+            "measured_at": "2026-08-16T20:32:37.694455+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "auth_entry_no_auth_state"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
-            "primary_method": ""
+            "flow_type": "unknown",
+            "stop_reason": "auth_entry_no_auth_state",
+            "primary_method": "unknown"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "auth_entry_no_auth_state",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [],
+              "observed_methods": [
+                "sms_or_otp"
+              ],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": false,
-              "blocking_factors": [
-                "captcha"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

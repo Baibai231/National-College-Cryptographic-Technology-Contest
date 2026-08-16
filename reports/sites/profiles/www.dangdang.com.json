@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.646601+00:00",
+  "generated_at": "2026-08-16T20:43:42.857124+00:00",
   "report_title": "www.dangdang.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.dangdang.com/",
-          "final_url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fshopping.dangdang.com%2Fshoppingcart%2Fshopping_cart.aspx%3Fproduct_ids%3D0%26referer%3Dhttps%3A%2F%2Fwww.dangdang.com%2F%26prev_referer%3D#",
+          "final_url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fwww.dangdang.com%2F#",
           "observed_route": "短信验证码 → 口令；备选：短信验证码/一次性验证码；备选：短信验证码 → 口令；备选：一次性验证码",
           "observed_routes": [
             {
@@ -159,7 +159,7 @@
             },
             {
               "step": 2,
-              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fshopping.dangdang.com%2Fshoppingcart%2Fshopping_cart.aspx%3Fproduct_ids%3D0%26referer%3Dhttps%3A%2F%2Fwww.dangdang.com%2F%26prev_referer%3D",
+              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fwww.dangdang.com%2F",
               "ui_type": "inline_widget",
               "fields": [
                 "password"
@@ -185,7 +185,7 @@
             },
             {
               "step": 3,
-              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fshopping.dangdang.com%2Fshoppingcart%2Fshopping_cart.aspx%3Fproduct_ids%3D0%26referer%3Dhttps%3A%2F%2Fwww.dangdang.com%2F%26prev_referer%3D#",
+              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fwww.dangdang.com%2F#",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -204,7 +204,7 @@
             },
             {
               "step": 4,
-              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fshopping.dangdang.com%2Fshoppingcart%2Fshopping_cart.aspx%3Fproduct_ids%3D0%26referer%3Dhttps%3A%2F%2Fwww.dangdang.com%2F%26prev_referer%3D#",
+              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fwww.dangdang.com%2F#",
               "ui_type": "inline_widget",
               "fields": [
                 "password"
@@ -230,7 +230,7 @@
             },
             {
               "step": 5,
-              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fshopping.dangdang.com%2Fshoppingcart%2Fshopping_cart.aspx%3Fproduct_ids%3D0%26referer%3Dhttps%3A%2F%2Fwww.dangdang.com%2F%26prev_referer%3D#",
+              "url": "https://login.dangdang.com/?returnurl=https%3A%2F%2Fwww.dangdang.com%2F#",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -248,7 +248,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:29:30.783332+00:00",
+            "measured_at": "2026-08-16T19:23:48.163204+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -291,7 +291,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.dangdang.com/",
-          "final_url": "https://book.dangdang.com/20260625_duce",
+          "final_url": "https://login.dangdang.com/?type=2&returnurl=https%3A%2F%2Fwww.dangdang.com%2F",
           "observed_route": "一次性验证码",
           "observed_routes": [
             {
@@ -350,30 +350,17 @@
                 "verification_code"
               ],
               "actions": [
-                "entry_click"
+                "none"
               ],
               "tabs": [
                 "register_tab"
               ],
-              "note": "register_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 3,
-              "url": "https://book.dangdang.com/20260625_duce",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:29:28.090195+00:00",
+            "measured_at": "2026-08-16T19:23:40.450533+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

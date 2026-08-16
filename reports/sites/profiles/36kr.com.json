@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.592407+00:00",
+  "generated_at": "2026-08-16T20:43:42.831211+00:00",
   "report_title": "36kr.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,12 +22,12 @@
           "status": "observed",
           "start_url": "https://36kr.com/",
           "final_url": "https://36kr.com/",
-          "observed_route": "手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令；备选：邮箱 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：手机号 → 短信验证码 → 口令；备选：邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -50,7 +50,7 @@
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
-                3
+                2
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -74,7 +74,7 @@
             {
               "route_id": "automatic_route_3",
               "step_numbers": [
-                4
+                3
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -97,7 +97,7 @@
             {
               "route_id": "automatic_route_4",
               "step_numbers": [
-                5
+                4
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -121,7 +121,7 @@
             {
               "route_id": "automatic_route_5",
               "step_numbers": [
-                6
+                5
               ],
               "summary": "邮箱 → 短信验证码 → 口令",
               "fields_observed": [
@@ -131,6 +131,30 @@
               "methods_observed": [
                 "password",
                 "email",
+                "sms"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_6",
+              "step_numbers": [
+                6
+              ],
+              "summary": "手机号 → 短信验证码 → 口令",
+              "fields_observed": [
+                "phone",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "phone",
                 "sms"
               ],
               "verification_observed": [
@@ -170,19 +194,6 @@
             {
               "step": 1,
               "url": "https://36kr.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://36kr.com/",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -203,7 +214,7 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 3,
+              "step": 2,
               "url": "https://36kr.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -224,7 +235,7 @@
               "note": "sms_tab_clicked_and_changed"
             },
             {
-              "step": 4,
+              "step": 3,
               "url": "https://36kr.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -246,7 +257,7 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 5,
+              "step": 4,
               "url": "https://36kr.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -267,7 +278,7 @@
               "note": "email_tab_clicked_and_changed"
             },
             {
-              "step": 6,
+              "step": 5,
               "url": "https://36kr.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -286,11 +297,30 @@
                 "password_tab"
               ],
               "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 6,
+              "url": "https://36kr.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone",
+                "password"
+              ],
+              "methods": [
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "email_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:15:58.873198+00:00",
+            "measured_at": "2026-08-16T19:10:31.770499+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -340,7 +370,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "手机号 → 短信验证码/一次性验证码",
               "fields_observed": [
@@ -389,6 +419,19 @@
             {
               "step": 1,
               "url": "https://36kr.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://36kr.com/",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -412,7 +455,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:15:49.704414+00:00",
+            "measured_at": "2026-08-16T19:10:14.201384+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

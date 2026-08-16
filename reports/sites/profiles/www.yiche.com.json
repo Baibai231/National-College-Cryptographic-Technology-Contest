@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.721127+00:00",
+  "generated_at": "2026-08-16T20:43:42.890663+00:00",
   "report_title": "www.yiche.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -318,7 +318,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:45:49.281165+00:00",
+            "measured_at": "2026-08-16T19:46:45.142289+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -448,7 +448,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:45:48.375684+00:00",
+            "measured_at": "2026-08-16T19:46:44.677336+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

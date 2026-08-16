@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.598230+00:00",
+  "generated_at": "2026-08-16T20:43:42.835079+00:00",
   "report_title": "leetcode.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -276,7 +276,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:16:58.160193+00:00",
+            "measured_at": "2026-08-16T19:11:35.501357+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -442,7 +442,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:16:52.562785+00:00",
+            "measured_at": "2026-08-16T19:11:22.478491+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

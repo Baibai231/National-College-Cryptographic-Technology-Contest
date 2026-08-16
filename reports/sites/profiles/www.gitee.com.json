@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.662699+00:00",
+  "generated_at": "2026-08-16T20:43:42.864519+00:00",
   "report_title": "www.gitee.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:20:50.093843+00:00",
+            "measured_at": "2026-08-16T19:15:10.842525+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -191,34 +191,28 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.gitee.com/signup",
-          "final_url": "https://gitee.com/signup",
-          "observed_route": "手机号/账号/邮箱 → 口令；备选：手机号/账号/邮箱 → 口令",
+          "start_url": "https://gitee.com/",
+          "final_url": "https://gitee.com/signup?redirect_to_url=%2F",
+          "observed_route": "手机号；备选：手机号/账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号/账号/邮箱 → 口令",
+              "summary": "手机号",
               "fields_observed": [
-                "phone",
-                "identifier",
-                "password"
+                "phone"
               ],
               "methods_observed": [
-                "password",
-                "phone",
-                "identifier",
-                "third_party",
-                "huawei"
+                "phone"
               ],
               "verification_observed": [],
-              "password_state": "observed_before_verification",
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [
-                "standalone_page"
+                "inline_widget"
               ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
+              "safe_stop": "已走完当前安全可达范围"
             },
             {
               "route_id": "automatic_route_2",
@@ -259,42 +253,39 @@
             "huawei"
           ],
           "verification_observed": [],
-          "password_state": "observed_before_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
+            "inline_widget",
             "standalone_page"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
+          "safe_stop": "已走完当前安全可达范围；已到达口令输入界面，未提交表单",
           "limitations": [],
           "steps": [
             {
               "step": 1,
-              "url": "https://gitee.com/signup",
-              "ui_type": "standalone_page",
+              "url": "https://gitee.com/",
+              "ui_type": "inline_widget",
               "fields": [
-                "phone",
-                "identifier",
-                "password"
+                "phone"
               ],
               "methods": [
-                "huawei",
-                "identifier",
-                "phone",
-                "sso"
+                "phone"
               ],
-              "blockers": [
-                "tos"
-              ],
+              "blockers": [],
               "actions": [
+                "none",
                 "tab_click"
               ],
               "tabs": [
-                "register_tab"
+                "register_tab",
+                "password_signup_tab",
+                "password_tab"
               ],
               "note": "register_tab_clicked_no_change"
             },
             {
               "step": 2,
-              "url": "https://gitee.com/signup",
+              "url": "https://gitee.com/signup?redirect_to_url=%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -319,7 +310,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:20:34.887454+00:00",
+            "measured_at": "2026-08-16T19:14:59.836379+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.639529+00:00",
+  "generated_at": "2026-08-16T20:43:42.854085+00:00",
   "report_title": "www.cnblogs.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -248,7 +248,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:21:20.133903+00:00",
+            "measured_at": "2026-08-16T19:16:11.619704+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -292,7 +292,7 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.cnblogs.com/join",
+          "start_url": "https://www.cnblogs.com/",
           "final_url": "https://account.cnblogs.com/signup",
           "observed_route": "手机号 → 口令",
           "observed_routes": [
@@ -336,7 +336,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.cnblogs.com/join",
+              "url": "https://www.cnblogs.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -368,7 +368,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:21:11.797675+00:00",
+            "measured_at": "2026-08-16T19:16:07.665623+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

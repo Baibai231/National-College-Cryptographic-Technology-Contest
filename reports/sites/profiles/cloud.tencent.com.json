@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.595051+00:00",
+  "generated_at": "2026-08-16T20:43:42.832743+00:00",
   "report_title": "cloud.tencent.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,8 +20,8 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
-          "final_url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+          "start_url": "https://cloud.tencent.com/register",
+          "final_url": "https://cloud.tencent.com/register",
           "observed_route": "手机号 → 短信验证码 → 口令；备选：手机号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
@@ -110,7 +110,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+              "url": "https://cloud.tencent.com/register",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -137,7 +137,7 @@
             },
             {
               "step": 2,
-              "url": "https://cloud.tencent.com/register?s_url=https%3A%2F%2Fcloud.tencent.com%2F",
+              "url": "https://cloud.tencent.com/register",
               "ui_type": "standalone_page",
               "fields": [
                 "phone",
@@ -165,7 +165,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:48:20.350001+00:00",
+            "measured_at": "2026-08-16T19:49:19.744924+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -355,7 +355,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:48:14.632699+00:00",
+            "measured_at": "2026-08-16T19:49:10.393424+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

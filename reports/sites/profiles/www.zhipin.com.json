@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.727508+00:00",
+  "generated_at": "2026-08-16T20:43:42.893128+00:00",
   "report_title": "www.zhipin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -99,7 +99,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T04:47:56.435989+00:00",
+            "measured_at": "2026-08-16T20:40:00.285927+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -143,14 +143,13 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.zhipin.com/web/user/?ka=header-login",
-          "final_url": "https://www.zhipin.com/tianjin/?seoRefer=index",
+          "final_url": "chrome://new-tab-page/",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -221,12 +220,10 @@
             },
             {
               "step": 2,
-              "url": "https://www.zhipin.com/tianjin/?seoRefer=index",
+              "url": "chrome://new-tab-page/",
               "ui_type": "unknown",
               "fields": [],
-              "methods": [
-                "auto_signup"
-              ],
+              "methods": [],
               "blockers": [],
               "actions": [
                 "none"
@@ -237,7 +234,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T04:47:53.961858+00:00",
+            "measured_at": "2026-08-16T19:26:18.674714+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

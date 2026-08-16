@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.691793+00:00",
+  "generated_at": "2026-08-16T20:43:42.877637+00:00",
   "report_title": "www.mafengwo.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.mafengwo.cn/",
           "final_url": "https://passport.mafengwo.cn/",
-          "observed_route": "未确认具体方式；备选：账号/邮箱 → 口令；备选：账号/邮箱 → 口令",
+          "observed_route": "未确认具体方式；备选：账号/邮箱 → 口令；备选：未确认具体方式；备选：账号/邮箱 → 口令；备选：账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -62,6 +62,40 @@
               "route_id": "automatic_route_3",
               "step_numbers": [
                 4
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            },
+            {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                5
+              ],
+              "summary": "账号/邮箱 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_5",
+              "step_numbers": [
+                6
               ],
               "summary": "账号/邮箱 → 口令",
               "fields_observed": [
@@ -120,6 +154,7 @@
                 "tab_click"
               ],
               "tabs": [
+                "qr_tab",
                 "password_tab"
               ],
               "note": "password_tab_clicked_and_changed"
@@ -142,12 +177,52 @@
                 "tab_click"
               ],
               "tabs": [
+                "qr_tab",
+                "password_tab"
+              ],
+              "note": "qr_tab_clicked_and_changed"
+            },
+            {
+              "step": 4,
+              "url": "https://passport.mafengwo.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "qr_tab",
+                "password_tab"
+              ],
+              "note": "password_tab_clicked_and_changed"
+            },
+            {
+              "step": 5,
+              "url": "https://passport.mafengwo.cn/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier"
+              ],
+              "blockers": [
+                "tos"
+              ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "qr_tab",
                 "password_tab"
               ],
               "note": "password_tab_clicked_no_change"
             },
             {
-              "step": 4,
+              "step": 6,
               "url": "https://passport.mafengwo.cn/",
               "ui_type": "inline_widget",
               "fields": [
@@ -162,6 +237,7 @@
               ],
               "actions": [],
               "tabs": [
+                "qr_tab",
                 "password_tab"
               ],
               "note": ""
@@ -169,7 +245,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:30:27.400859+00:00",
+            "measured_at": "2026-08-16T19:24:24.675284+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -319,7 +395,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:30:22.201967+00:00",
+            "measured_at": "2026-08-16T19:24:20.809694+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

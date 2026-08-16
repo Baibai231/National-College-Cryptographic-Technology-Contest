@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.706476+00:00",
+  "generated_at": "2026-08-16T20:43:42.883896+00:00",
   "report_title": "www.sina.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -175,7 +175,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:15:44.847544+00:00",
+            "measured_at": "2026-08-16T19:09:46.678496+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -316,7 +316,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-15T18:15:20.192430+00:00",
+            "measured_at": "2026-08-16T19:09:34.756280+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.625128+00:00",
+  "generated_at": "2026-08-16T20:43:42.847095+00:00",
   "report_title": "www.aliyun.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.aliyun.com/",
-          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aoB2U6m&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "final_url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154ayLMgjz&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
           "observed_route": "账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码/一次性验证码",
           "observed_routes": [
             {
@@ -113,7 +113,7 @@
             },
             {
               "step": 2,
-              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aoB2U6m&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154ayLMgjz&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "identifier",
@@ -133,7 +133,7 @@
             },
             {
               "step": 3,
-              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154aoB2U6m&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/login/login.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_login.e939154ayLMgjz&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "identifier",
@@ -156,7 +156,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:47:59.703878+00:00",
+            "measured_at": "2026-08-16T19:48:59.244050+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -198,7 +198,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.aliyun.com/",
-          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154a0LEpni&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+          "final_url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154akxZIFD&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
@@ -258,7 +258,7 @@
             },
             {
               "step": 2,
-              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154a0LEpni&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
+              "url": "https://account.aliyun.com/register/qr_register.htm?spm=5176.42028462.J_4VYgf18xNlTAyFFbOuOQe.d_register.e939154akxZIFD&oauth_callback=https%3A%2F%2Fwww.aliyun.com%2F",
               "ui_type": "standalone_page",
               "fields": [
                 "phone"
@@ -281,7 +281,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:47:57.271755+00:00",
+            "measured_at": "2026-08-16T19:48:42.688128+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

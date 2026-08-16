@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.723488+00:00",
+  "generated_at": "2026-08-16T20:43:42.891567+00:00",
   "report_title": "www.zcool.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -337,7 +337,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:20:32.630288+00:00",
+            "measured_at": "2026-08-16T19:14:40.144126+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -466,7 +466,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:20:16.732359+00:00",
+            "measured_at": "2026-08-16T19:14:36.415058+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

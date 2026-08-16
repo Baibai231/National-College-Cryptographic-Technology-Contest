@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.698649+00:00",
+  "generated_at": "2026-08-16T20:43:42.880654+00:00",
   "report_title": "www.oschina.net 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -197,7 +197,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:17:16.382391+00:00",
+            "measured_at": "2026-08-16T19:11:47.414966+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -346,7 +346,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:16:59.691485+00:00",
+            "measured_at": "2026-08-16T19:11:39.400429+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

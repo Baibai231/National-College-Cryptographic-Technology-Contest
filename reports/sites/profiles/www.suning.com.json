@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.708994+00:00",
+  "generated_at": "2026-08-16T20:43:42.885099+00:00",
   "report_title": "www.suning.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,7 +22,7 @@
           "status": "observed",
           "start_url": "https://www.suning.com/",
           "final_url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
-          "observed_route": "扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令；备选：手机号 → 短信验证码/扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令",
+          "observed_route": "扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令；备选：手机号 → 短信验证码/扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令；备选：扫码；备选：账号/邮箱 → 短信验证码/扫码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -119,6 +119,51 @@
                 "standalone_page"
               ],
               "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_5",
+              "step_numbers": [
+                6
+              ],
+              "summary": "扫码",
+              "fields_observed": [],
+              "methods_observed": [
+                "qr"
+              ],
+              "verification_observed": [
+                "qr"
+              ],
+              "password_state": "not_observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "安全测量停在扫码步骤，验证后页面未访问"
+            },
+            {
+              "route_id": "automatic_route_6",
+              "step_numbers": [
+                7
+              ],
+              "summary": "账号/邮箱 → 短信验证码/扫码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "qr"
+              ],
+              "verification_observed": [
+                "sms",
+                "qr"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
             }
           ],
           "fields_observed": [
@@ -175,7 +220,9 @@
                 "tab_click",
                 "auth_mode_click"
               ],
-              "tabs": [],
+              "tabs": [
+                "qr_tab"
+              ],
               "note": "auth_mode_text_clicked_and_changed"
             },
             {
@@ -195,6 +242,7 @@
                 "tab_click"
               ],
               "tabs": [
+                "qr_tab",
                 "sms_tab"
               ],
               "note": "sms_tab_clicked_and_changed"
@@ -218,6 +266,7 @@
                 "tab_click"
               ],
               "tabs": [
+                "qr_tab",
                 "password_tab"
               ],
               "note": "password_tab_clicked_and_changed"
@@ -235,8 +284,51 @@
                 "qr"
               ],
               "blockers": [],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "qr_tab",
+                "sms_tab"
+              ],
+              "note": "qr_tab_clicked_and_changed"
+            },
+            {
+              "step": 6,
+              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
+              "ui_type": "standalone_page",
+              "fields": [],
+              "methods": [
+                "qr"
+              ],
+              "blockers": [
+                "scan"
+              ],
+              "actions": [
+                "tab_click",
+                "auth_mode_click"
+              ],
+              "tabs": [
+                "qr_tab"
+              ],
+              "note": "auth_mode_text_clicked_and_changed"
+            },
+            {
+              "step": 7,
+              "url": "https://passport.suning.com/ids/login?service=https%3A%2F%2Fssl.suning.com%2F%2Fwebapp%2Fwcs%2Fstores%2Fauth%3FtargetUrl%3Dhttps%253A%252F%252Fwww.suning.com%252F&method=GET&loginTheme=b2c",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "qr"
+              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
+                "qr_tab",
                 "sms_tab"
               ],
               "note": ""
@@ -244,7 +336,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:29:23.263106+00:00",
+            "measured_at": "2026-08-16T19:23:39.981245+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -373,7 +465,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:29:17.871302+00:00",
+            "measured_at": "2026-08-16T19:23:38.684775+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

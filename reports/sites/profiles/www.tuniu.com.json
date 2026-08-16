@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.714163+00:00",
+  "generated_at": "2026-08-16T20:43:42.887642+00:00",
   "report_title": "www.tuniu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,12 +22,35 @@
           "status": "observed",
           "start_url": "https://www.tuniu.com/",
           "final_url": "https://passport.tuniu.com/login?origin=https://www.tuniu.com/ssoConnect",
-          "observed_route": "账号/邮箱 → 口令",
+          "observed_route": "账号/邮箱 → 口令；备选：账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 2
+              ],
+              "summary": "账号/邮箱 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "third_party",
+                "wechat"
+              ],
+              "verification_observed": [],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_2",
+              "step_numbers": [
+                3
               ],
               "summary": "账号/邮箱 → 口令",
               "fields_observed": [
@@ -95,14 +118,40 @@
               "blockers": [
                 "tos"
               ],
+              "actions": [
+                "tab_click"
+              ],
+              "tabs": [
+                "qr_tab"
+              ],
+              "note": "qr_tab_clicked_no_change"
+            },
+            {
+              "step": 3,
+              "url": "https://passport.tuniu.com/login?origin=https://www.tuniu.com/ssoConnect",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "sso",
+                "wechat"
+              ],
+              "blockers": [
+                "tos"
+              ],
               "actions": [],
-              "tabs": [],
+              "tabs": [
+                "qr_tab"
+              ],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:50:21.601037+00:00",
+            "measured_at": "2026-08-16T19:51:21.007633+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -230,7 +279,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:50:21.557230+00:00",
+            "measured_at": "2026-08-16T19:51:13.611043+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

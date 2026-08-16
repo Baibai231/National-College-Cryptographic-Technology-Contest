@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.710166+00:00",
+  "generated_at": "2026-08-16T20:43:42.885594+00:00",
   "report_title": "www.taobao.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -96,7 +96,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:14:15.393166+00:00",
+            "measured_at": "2026-08-16T19:08:28.960102+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -226,15 +226,13 @@
               "actions": [
                 "none"
               ],
-              "tabs": [
-                "register_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-15T18:13:57.075705+00:00",
+            "measured_at": "2026-08-16T19:08:12.421558+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

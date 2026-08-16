@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.699730+00:00",
+  "generated_at": "2026-08-16T20:43:42.881054+00:00",
   "report_title": "www.pcauto.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.pcauto.com.cn/",
-          "final_url": "https://my.pcauto.com.cn/login.jsp?return=https%3A%2F%2Fwww.pcauto.com.cn%2F",
+          "final_url": "https://my.pcauto.com.cn/login.jsp?return=",
           "observed_route": "手机号/账号/邮箱 → 短信验证码",
           "observed_routes": [
             {
@@ -95,7 +95,7 @@
             },
             {
               "step": 2,
-              "url": "https://my.pcauto.com.cn/login.jsp?return=https%3A%2F%2Fwww.pcauto.com.cn%2F",
+              "url": "https://my.pcauto.com.cn/login.jsp?return=",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -119,12 +119,12 @@
                 "tab_click"
               ],
               "tabs": [],
-              "note": "password_tab_clicked_and_changed"
+              "note": "password_tab_clicked_no_change"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:27:59.266777+00:00",
+            "measured_at": "2026-08-16T19:21:49.334236+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -264,7 +264,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:27:54.056608+00:00",
+            "measured_at": "2026-08-16T19:21:40.169162+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

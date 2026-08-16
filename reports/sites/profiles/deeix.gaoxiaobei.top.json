@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.596154+00:00",
+  "generated_at": "2026-08-16T20:43:42.833494+00:00",
   "report_title": "deeix.gaoxiaobei.top 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,7 +20,7 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://deeix.gaoxiaobei.top/",
+          "start_url": "https://deeix.gaoxiaobei.top/chat",
           "final_url": "https://deeix.gaoxiaobei.top/login?next=%2Fchat",
           "observed_route": "账号/邮箱 → 口令",
           "observed_routes": [
@@ -81,7 +81,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T02:23:28.925909+00:00",
+            "measured_at": "2026-08-16T19:59:40.866485+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -119,14 +119,14 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://deeix.gaoxiaobei.top/",
+          "start_url": "https://deeix.gaoxiaobei.top/chat",
           "final_url": "https://deeix.gaoxiaobei.top/login?next=%2Fchat",
           "observed_route": "账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "账号/邮箱 → 口令",
               "fields_observed": [
@@ -167,17 +167,6 @@
               "step": 1,
               "url": "https://deeix.gaoxiaobei.top/login?next=%2Fchat",
               "ui_type": "standalone_page",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [],
-              "tabs": [],
-              "note": ""
-            },
-            {
-              "step": 2,
-              "url": "https://deeix.gaoxiaobei.top/login?next=%2Fchat",
-              "ui_type": "standalone_page",
               "fields": [
                 "identifier",
                 "password"
@@ -193,7 +182,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T02:23:22.081125+00:00",
+            "measured_at": "2026-08-16T19:59:35.462806+00:00",
             "raw_flow_type": "no_web_signup",
             "raw_stop_reason": "no_signup_entry"
           },

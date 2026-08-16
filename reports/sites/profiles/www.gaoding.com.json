@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T13:06:10.661833+00:00",
+  "generated_at": "2026-08-16T20:43:42.864168+00:00",
   "report_title": "www.gaoding.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -109,7 +109,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T18:06:44.604544+00:00",
+            "measured_at": "2026-08-16T20:20:20.679353+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -159,8 +159,7 @@
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1,
-                2,
-                3
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -229,27 +228,6 @@
                 "phone"
               ],
               "blockers": [
-                "sms_code"
-              ],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "entry_clicked_no_change"
-            },
-            {
-              "step": 3,
-              "url": "https://ums.gaoding.com/ums/cgi/sso?login_type=blank&prompt=null&source=%E5%88%9B%E4%BD%9C%E9%A1%B5&source_location=%E9%A1%B6%E9%83%A8%E5%AF%BC%E8%88%AA-%E7%99%BB%E5%BD%95&redirect_url=https%3A%2F%2Fwww.gaoding.com%2F",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "auto_signup",
-                "phone"
-              ],
-              "blockers": [
                 "sms_code",
                 "captcha"
               ],
@@ -262,7 +240,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-15T16:19:36.002637+00:00",
+            "measured_at": "2026-08-16T19:57:03.612638+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

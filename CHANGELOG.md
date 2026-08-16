@@ -833,3 +833,23 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
   改为先读后写，并抽出 `_write_stabilized` + 回归测试（127/127 通过）。
 - 通用修复：`_TAB_KINDS` 新增 `qr_tab`（扫码登录/二维码登录）并加入
   全视图探索优先级（bilibili/zcool/zhipin/3dmgame 等扫码 tab 可切换）。
+
+### 37. v5 两遍全量回归 + 逐站比对完成（2026-08-17）
+
+用户要求：每个网站程序测一遍、我核一遍，两者比对优化分类器。
+- **两遍全量**（有头 + --retry-unknown 2 自动稳定）：第 1 轮 304 条
+  （修复稳定 bug 后重跑，文件完整）、第 2 轮 304 条；两轮 flow 一致率
+  292/304（96%）。
+- **逐站比对**（124 个已核验站）：程序方法清单 vs 人工核验描述，
+  检查器含否定语义（无密码/无二维码不误判）。
+- **通用修复**：qr_tab（扫码登录/二维码登录）纳入 tab 词表与全视图探索
+  优先级（bilibili/zcool/zhipin/3dmgame 等扫码 tab 可切换）；
+  **修复 --retry-unknown 重写清空数据的 bug**（先截断后读 → 先读后写，
+  _write_stabilized + 回归测试）。
+- **最终数据**：两轮仲裁（一致取第 2 轮；不一致按人工核验支持度，
+  平票取第 2 轮；全失败保留旧证据——anjuke login 超时回退）。
+  分布：direct_password 94、unknown 84、human_blocked 79、otp_only 28、
+  no_web_signup 7、sso_only 5、email_only 3、verification_then_password 2。
+- **残余差异（如实记录，不过拟合）**：约 35 站非空程序仍缺方法——多为
+  隐藏折叠里的第三方（zhaopin 左上角微信等）、验证后口令（yicai/yiche/
+  you.163/y.qq signup，安全边界不可达）、App-first/波动空程序 44 站。
