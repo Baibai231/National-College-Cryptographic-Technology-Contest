@@ -557,10 +557,10 @@ class SignupFlowClassifierEngine:
                         record_evidence(
                             result, "step={};explore_tab={}".format(
                                 step, tab_outcome.reason))
-                        if (tab_outcome.clicked
-                                and (self._wait_for_form_fields(
-                                    self.driver, timeout=6)
-                                    or tab_outcome.changed)):
+                        # 点击成功即再观察一轮：React 视图切换可能延迟
+                        # （icourse163 手机号登录/邮箱登录/爱课程登录 tab 实测，
+                        # clicked 但 2 秒指纹窗口内视图未变，下一轮才能看到字段）
+                        if tab_outcome.clicked:
                             continue
                         # 弹窗动画/渲染竞态：立即重试一次（51.com 手机登录
                         # tab 实测：检测到但瞬间点不到）

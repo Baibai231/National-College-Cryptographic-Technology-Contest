@@ -884,3 +884,12 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 pwd_testability（明确标注直接映射；"危险模式/仅登录界面"→登录 full、注册
 none；未提密码框按 none），不覆盖原有方法与描述字段（已录为准）。
 现有 121 站全部带 pwd 标签，reports/manual/index.md 已重新生成。
+
+### 41. 探索点击后再观察一轮 + icourse163 诊断（2026-08-17）
+
+- 通用改进：全视图探索时 tab 点击成功即再观察一轮（React 视图切换可能
+  延迟，icourse163 手机号登录/邮箱登录/爱课程登录 tab 实测 clicked 但
+  2 秒指纹窗口内视图未变）；回归验证 zhihu/bilibili 无退化、127 测试全过。
+- icourse163 诊断：登录/注册均判"有口令框"（爱课程账号+密码），检测到
+  短信/邮箱 tab 但因 React 渲染时序点击瞬间元素消失（与 cctv/51 同类
+  已记录边界），短信验证码/邮箱视图方法未抓到——分类正确，方法不全。
