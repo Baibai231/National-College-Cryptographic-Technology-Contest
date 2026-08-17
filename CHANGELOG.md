@@ -876,3 +876,11 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 3. 人工复核对比表新增"口令政策"行：程序列显示"未测试"（TestPassword
    暂未接入，仅历史手工测过 GitHub）；人工列显示 inline/full/none
    （优先侧判定，否则用整站总判定）。
+
+### 40. 补全 121 站 pwd 标签（2026-08-17）
+
+此前补录只给 40 个未录入站加了 inline/full/none；文件 1/3 覆盖的 81 个
+已录站在当时没有 pwd 字段所以看不到标签。本次按组员文件为这 81 站补充
+pwd_testability（明确标注直接映射；"危险模式/仅登录界面"→登录 full、注册
+none；未提密码框按 none），不覆盖原有方法与描述字段（已录为准）。
+现有 121 站全部带 pwd 标签，reports/manual/index.md 已重新生成。

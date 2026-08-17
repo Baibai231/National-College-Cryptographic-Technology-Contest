@@ -1,94 +1,196 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-17T05:53:06.032631+00:00",
+  "updated_at": "2026-08-17",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
       "manual_login": "登录后直接手机号验证码，无密码框",
       "manual_signup": "手机号+短信验证码注册，无密码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "cloud.tencent.com": {
       "manual_login": "手机号/邮箱+密码登录",
       "manual_signup": "手机号+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "juejin.cn": {
       "manual_login": "手机号+验证码，可切密码登录",
       "manual_signup": "手机号+验证码注册，无密码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "leetcode.cn": {
       "manual_login": "手机号+验证码，可切密码",
       "manual_signup": "手机号+验证码注册，无密码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "music.163.com": {
       "manual_login": "扫码登录",
       "manual_signup": "扫码/手机验证注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "pan.baidu.com": {
       "manual_login": "扫码/手机验证码登录",
       "manual_signup": "百度账号注册，手机+密码",
       "verified": true,
-      "note": "注册入口藏在登录界面，需点立即注册"
+      "note": "注册入口藏在登录界面，需点立即注册",
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "segmentfault.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码注册，无密码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "shimo.im": {
       "manual_login": "账号邮箱+密码",
       "manual_signup": "无独立注册表单，仅登录界面",
       "verified": true,
-      "note": "登录界面密码框不能作为注册证据"
+      "note": "登录界面密码框不能作为注册证据",
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "tieba.baidu.com": {
       "manual_login": "扫码登录",
       "manual_signup": "百度安全验证+扫码，注册按钮藏在登录里",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "v.qq.com": {
       "manual_login": "扫码+手机验证码",
       "manual_signup": "扫码/手机验证注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "web.okjike.com": {
       "manual_login": "扫码登录注册",
       "manual_signup": "扫码登录注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "weibo.com": {
       "manual_login": "手机号+验证码，可密码",
       "manual_signup": "手机号+验证码注册，无密码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "work.weixin.qq.com": {
       "manual_login": "扫码登录",
       "manual_signup": "仅企业微信，第三方登录",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.10jqka.com.cn": {
       "manual_login": "手机号+验证码，可密码",
       "manual_signup": "手机号+验证码+密码注册（先验证后口令）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.12306.cn": {
       "manual_login": "账号+密码",
       "manual_signup": "账号+密码注册（首页点注册或登录页点注册12306账号）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.163.com": {
       "manual_login": "邮箱/手机+密码",
       "manual_signup": "手机号+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.51cto.com": {
       "manual_login": "手机号+验证码，可密码",
       "manual_signup": "手机号+验证码注册，无密码（危险模式：仅登录）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.51job.com": {
       "manual_login": "扫码\n手机号+验证码+协议\n手机号+口令+协议",
@@ -106,39 +208,80 @@
           "password": true
         }
       },
-      "reviewed_from": "web@cjx@2026-08-16T05:36:06.080615+00:00"
+      "reviewed_from": "web@cjx@2026-08-16T05:36:06.080615+00:00",
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      }
     },
     "www.52pojie.cn": {
       "manual_login": "邮箱+密码",
       "manual_signup": "邮箱+密码注册（需勾选用户须知）",
       "verified": true,
-      "note": "注册界面与登录界面分开，代码只识别到登录界面"
+      "note": "注册界面与登录界面分开，代码只识别到登录界面",
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.58.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.acfun.cn": {
       "manual_login": "账号+密码",
       "manual_signup": "注册表单藏在登录界面，手机+验证码+密码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.aliyun.com": {
       "manual_login": "账号+密码",
       "manual_signup": "手机号+验证码注册，还有其他第三方验证方式",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.amap.com": {
       "manual_login": "扫码+手机号验证码",
       "manual_signup": "手机号+验证码注册",
       "verified": true,
-      "note": "登录注册方式识别错误，漏掉手机号+验证码方式"
+      "note": "登录注册方式识别错误，漏掉手机号+验证码方式",
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.anjuke.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码注册（有验证块）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.autohome.com.cn": {
       "manual_login": "第三方\n扫码\n手机号+验证码+人机验证+协议\n手机号+口令+人机验证+协议",
@@ -157,292 +300,633 @@
           "no_web": true
         }
       },
-      "reviewed_from": "web@cjx@2026-08-16T05:39:26.702285+00:00"
+      "reviewed_from": "web@cjx@2026-08-16T05:39:26.702285+00:00",
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      }
     },
     "www.baidu.com": {
       "manual_login": "账号+密码/短信",
       "manual_signup": "百度账号注册，手机+密码（危险模式：仅登录界面）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.bilibili.com": {
       "manual_login": "账号+密码/扫码",
       "manual_signup": "手机号+验证码注册，无密码（危险模式：仅登录）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.caixin.com": {
       "manual_login": "手机号+密码",
       "manual_signup": "手机号+密码注册（危险模式）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.cctv.com": {
       "manual_login": "账号+密码",
       "manual_signup": "注册表单藏在登录界面",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.china.com": {
       "manual_login": "账号+密码",
       "manual_signup": "注册表单藏在登录界面",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.chinanews.com": {
       "manual_login": "无登录注册表单",
       "manual_signup": "无登录注册表单",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.cnblogs.com": {
       "manual_login": "邮箱+密码",
       "manual_signup": "手机号+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.coolapk.com": {
       "manual_login": "无登录注册表单，扫码下载误判",
       "manual_signup": "无登录注册表单",
       "verified": true,
-      "note": "误将扫码下载当作登录和注册"
+      "note": "误将扫码下载当作登录和注册",
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.csdn.net": {
       "manual_login": "扫码登录",
       "manual_signup": "扫码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.ctrip.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码注册（B类，解决手机号后有测政策机会）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dangdang.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dewu.com": {
       "manual_login": "无登录注册表单，扫码下载误判",
       "manual_signup": "无登录注册表单",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dianping.com": {
       "manual_login": "手机号+验证码（有验证块）",
       "manual_signup": "手机号+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dingtalk.com": {
       "manual_login": "手机号",
       "manual_signup": "手机号+验证码（B类未正确识别）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dongchedi.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码注册（危险模式：仅登录）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "none",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.meituan.com": {
       "manual_login": "无登录注册界面",
       "manual_signup": "无登录注册界面",
       "verified": true,
-      "note": "点击加入我们进入美团招聘；社交关注二维码不是登录"
+      "note": "点击加入我们进入美团招聘；社交关注二维码不是登录",
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.mgtv.com": {
       "manual_login": "需点同意用户协议弹窗，右上头像登录/注册",
       "manual_signup": "短信登录后自动注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.miguvideo.com": {
       "manual_login": "右上头像登录，微博/短信/密码",
       "manual_signup": "密码登录内点注册，需短信验证",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.nbd.com.cn": {
       "manual_login": "无登录注册界面",
       "manual_signup": "无登录注册界面",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.nowcoder.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "邮箱-人机验证-口令（备选）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.oschina.net": {
       "manual_login": "手机号+验证码，可密码",
       "manual_signup": "手机号+验证码注册，有第三方(Gitee)",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.pcauto.com.cn": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机+密码注册，除滑块还需手机验证码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.pconline.com.cn": {
       "manual_login": "手机号+验证码，有第三方",
       "manual_signup": "手机号+验证码注册，有第三方",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.people.com.cn": {
       "manual_login": "账号+密码",
       "manual_signup": "手机号+短信验证码+设置密码注册",
       "verified": true,
-      "note": "跳转注册界面需点击两次"
+      "note": "跳转注册界面需点击两次",
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.pinduoduo.com": {
       "manual_login": "无直接登录界面，仅商家入驻",
       "manual_signup": "商家入驻注册需手机+密码+验证码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.qq.com": {
       "manual_login": "扫码+手机验证码+第三方",
       "manual_signup": "扫码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.qunar.com": {
       "manual_login": "无登录注册选项",
       "manual_signup": "无登录注册选项",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.qyer.com": {
       "manual_login": "手机+密码",
       "manual_signup": "手机+验证码+用户名+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.sina.com.cn": {
       "manual_login": "邮箱/手机+密码",
       "manual_signup": "第三方/app扫码/手机+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.smzdm.com": {
       "manual_login": "登录有密码框",
       "manual_signup": "注册仅手机+验证码，有第三方",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.sohu.com": {
       "manual_login": "手机号+验证码，有第三方",
       "manual_signup": "手机号+验证码注册，有第三方",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.suning.com": {
       "manual_login": "账号+密码",
       "manual_signup": "注册需跳转+同意注册协议",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.taobao.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码注册，另有企业注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.taptap.cn": {
       "manual_login": "右上头像登录，需人机验证+有效手机号",
       "manual_signup": "手机号+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.thepaper.cn": {
       "manual_login": "登录有密码框",
       "manual_signup": "仅手机+验证码注册，无二维码界面",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.tianya.cn": {
       "manual_login": "无法登录",
       "manual_signup": "无法登录",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.toutiao.com": {
       "manual_login": "手机号+验证码+第三方",
       "manual_signup": "手机号+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.tuniu.com": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机验证后出现密码框，还有动态验证码",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.v2ex.com": {
       "manual_login": "google/solana 第三方登录",
       "manual_signup": "google/solana 注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.vip.com": {
       "manual_login": "手机号+密码",
       "manual_signup": "先进入登录界面再点注册进入注册界面，密码框直接表明密码政策",
       "verified": true,
-      "note": "无扫码"
+      "note": "无扫码",
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.xiachufang.com": {
       "manual_login": "仅扫码登录",
       "manual_signup": "仅扫码登录",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.xiaohongshu.com": {
       "manual_login": "手机号+验证码+第三方扫码",
       "manual_signup": "手机号+验证码注册，+第三方(小红书/微信)",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.xinhuanet.com": {
       "manual_login": "无登录注册界面",
       "manual_signup": "无登录注册界面",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.yicai.com": {
       "manual_login": "手机号+密码",
       "manual_signup": "手机号+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.yiche.com": {
       "manual_login": "手机号+密码",
       "manual_signup": "手机号+密码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.youku.com": {
       "manual_login": "手机号+密码/验证码",
       "manual_signup": "仅登录界面，第三方(淘宝/支付宝/微信)或手机+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zcool.com.cn": {
       "manual_login": "扫码登录",
       "manual_signup": "注册+第三方，手机注册需滑块",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zhaopin.com": {
       "manual_login": "手机号+验证码+微信sso(藏左上角)",
       "manual_signup": "手机号+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zhibo8.cc": {
       "manual_login": "手机号+验证码",
       "manual_signup": "手机号+验证码注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zhihu.com": {
       "manual_login": "账号邮箱+密码，可扫码/第三方",
       "manual_signup": "扫码/第三方注册（扫码后无需口令）",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zhipin.com": {
       "manual_login": "手机+验证码或微信sso，可扫码",
       "manual_signup": "手机+验证码或微信sso注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zhuanzhuan.com": {
       "manual_login": "无登录注册界面",
       "manual_signup": "无登录注册界面",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "none",
+        "signup": "none",
+        "overall": "none"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.zol.com.cn": {
       "manual_login": "右上角登录，账号登录里藏注册",
       "manual_signup": "手机+密码+人机+短信验证码注册",
       "verified": true,
-      "note": "登录可sso，手机+人机+短信，账号+密码+人机"
+      "note": "登录可sso，手机+人机+短信，账号+密码+人机",
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "xueqiu.com": {
       "manual_login": "微信sso+账密登录",
       "manual_signup": "无注册界面，手机+验证码自动注册",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "full",
+        "signup": "full",
+        "overall": "full"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "y.qq.com": {
       "manual_login": "第三方扫码/邮箱手机+密码",
       "manual_signup": "注册藏在qq登录里，手机+短信+昵称+密码+协议",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "you.163.com": {
       "manual_login": "扫码/手机短信/手机密码/邮箱密码/第三方sso",
       "manual_signup": "注册在邮箱登录里，邮箱+密码+协议",
-      "verified": true
+      "verified": true,
+      "pwd_testability": {
+        "login": "inline",
+        "signup": "inline",
+        "overall": "inline"
+      },
+      "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.2345.com": {
       "manual_login": "手机+验证码\n用户名（账号）+密码\n第三方",
