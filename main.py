@@ -36,6 +36,7 @@ if _PROJECT_ROOT not in sys.path:
 os.makedirs(os.path.join(_PROJECT_ROOT, "logs"), exist_ok=True)
 
 from utils.util_test_password import _get_new_driver
+from utils.util_basic import get_logger
 from utils.site_agnostic_tester import SitePasswordPolicyTester
 from utils.login_link_discovery import LoginLinkDiscovery
 from full_form_tester import FullFormPolicyTester
@@ -240,6 +241,8 @@ def _apply_classification_to_result(result: dict, classification: dict) -> None:
     result["confidence"] = classification.get("confidence", "low")
     result["stop_reason"] = classification.get("stop_reason", "")
     result["primary_method"] = classification.get("primary_method", "")
+    # v4 逐方法清单（aggregate_methods 数据层）：method/name_zh/status/blockers/route/steps
+    result["methods"] = classification.get("methods", [])
 
 
 # ================================================================
@@ -259,6 +262,10 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
     """
     result = {"url": site_url, "policy": {}, "error": None, "method_used": method,
               "flow_type": None}
+    # 尽早建立本站点的日志文件 sink 并绑定线程，让分类/重走/测量全程日志
+    # 都落进 logs/<host>/，且并发下各站点日志互不串台（见 util_basic.get_logger）。
+    _site_host = urlparse(site_url).hostname or "unknown"
+    get_logger(_site_host)
     driver = None
     try:
         driver = _get_new_driver()
@@ -329,56 +336,41 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         # 统一将分类信息写入 result
         _apply_classification_to_result(result, classification)
 
-        # 不需要继续测量的类型（C/D/F/G/H/I）→ 输出分类结果
-        if not classification["should_proceed"]:
-            # 例外：分类器 low-confidence unknown → 放行，尝试测量
-            is_uncertain = (
-                classification["confidence"] == "low"
-                and classification["flow_type"] == "unknown"
+        # ── 测量门槛：注册上下文中是否真实出现口令框 ──
+        # 不再用 flow_type（A/B/E）判断，改用 signup_password_reached。
+        # 注意：不能用 password_reached——它含登录表单的口令框，会误放行
+        # "仅登录站"（shimo/百度等）。
+        if not classification.get("signup_password_reached"):
+            logger.info(
+                "注册流程分类: {} (类型{} confidence={} stop_reason={}), 无注册口令框，跳过密码政策测量".format(
+                    classification["flow_type"],
+                    result.get("class_letter", "?"),
+                    classification["confidence"],
+                    classification.get("stop_reason", ""),
+                )
             )
-            if is_uncertain:
-                logger.info(
-                    "分类器 low-confidence ({}), 不阻止测量，继续尝试".format(
-                        classification.get("stop_reason", "")
-                    )
-                )
-            else:
-                logger.info(
-                    "注册流程分类: {} (类型{} confidence={} stop_reason={}), 跳过密码政策测量".format(
-                        classification["flow_type"],
-                        result.get("class_letter", "?"),
-                        classification["confidence"],
-                        classification.get("stop_reason", ""),
-                    )
-                )
-                result["policy"] = classification.get("policy", {})
-                result["method_used"] = "classified_only"
-                return result
+            result["policy"] = classification.get("policy", {})
+            result["method_used"] = "classified_only"
+            return result
 
-        # ── A/B/E 类：应尝试密码政策测量 ──
+        # ── 有注册口令框：继续密码政策测量 ──
         logger.info(
-            "流程类型 {}/{} ({}), 继续密码政策测量".format(
+            "流程类型 {}/{} ({})，注册上下文中确认口令框，继续密码政策测量".format(
                 result.get("class_letter", "?"),
                 classification["flow_type"],
                 classification.get("primary_method", ""),
             )
         )
 
-        # 类型 E 补救：尝试 tab 切换到密码视图
-        if classification["flow_type"] == "multiple_methods":
-            logger.info("类型 E 检测，尝试切换到密码注册视图...")
-            if not engine.try_switch_to_password_view():
-                logger.info(
-                    "E类网站，无法切换到密码视图，输出分类结果（类型E/multiple_methods）"
-                )
-                result["policy"] = classification.get("policy", {})
-                result["method_used"] = "classified_only"
-                result["note"] = (
-                    "E类（multiple_methods）— 同时提供多种注册方式，"
-                    "当前无法切换至密码注册视图，密码政策未能测量"
-                )
-                return result
-            logger.info("成功切换到密码视图，继续测量")
+        # ── 重走定位口令框 ──
+        # 全视图探索（classify 内）会把浏览器切到随机 tab（短信/邮箱/注册），
+        # 返回时不一定停在口令视图。若当前拿不到口令字段，就复用完整分类
+        # 流程重走一次（不传 entry_already_clicked，从入口发现重新开始），
+        # 带 stop_at_password=True，让 classify 一直运行到口令框出现就停。
+        if not engine.get_current_password_field_xpath():
+            logger.info("有口令框但当前不在口令视图，重走分类流程定位口令框")
+            engine.classify(
+                signup_url, entry_kind="signup", stop_at_password=True)
 
         # ================================================================
         # Phase 3: 确定 inline/full 方法
@@ -388,28 +380,15 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         if not discovery.ensure_form_visible():
             logger.debug("无法恢复模态框，使用当前页面状态继续")
 
-        if method == "auto":
-            # auto 模式：先尝试 inline（填密码→点空白→读反馈），
-            # 2 轮无反馈则自动切换到 full 方法（完整表单提交）
-            phase1_email_xpath, phase1_password_xpath = discovery.find_signup_fields()
-            method_used, _, email_xpath, password_xpath = \
-                _detect_method(driver, site_url, signup_url,
-                               phase1_email_xpath, phase1_password_xpath)
-        else:
-            method_used = method
-            email_xpath, password_xpath = discovery.find_signup_fields()
+        email_xpath, password_xpath = discovery.find_signup_fields()
+        # 重走已把浏览器停在口令视图：优先用引擎的当前口令字段 XPath，
+        # 避免 find_signup_fields 返回全视图探索后失效的旧 XPath 缓存。
+        if engine is not None:
+            eng_pwd = engine.get_current_password_field_xpath()
+            if eng_pwd:
+                password_xpath = eng_pwd
 
-        result["method_used"] = method_used
-
-        # 重新检测字段（分类器可能已导航到新页面，XPath 可能失效）
-        if not email_xpath or not password_xpath:
-            email_xpath, password_xpath = discovery.find_signup_fields()
-        # 若字段仍缺失，尝试从分类器引擎获取当前密码字段
-        if not password_xpath and engine is not None:
-            password_xpath = engine.get_current_password_field_xpath()
-
-        # 所有方法均未找到密码字段 → 无法执行后续密码政策测量
-        # 如果有已完成的有效分类（A/B/E/I 类），输出分类结果而不标记为失败
+        # 兜底：重走定位后仍无口令字段 → 输出分类结果（classified_only）
         if not password_xpath:
             class_letter = result.get("class_letter", "?")
             flow_type = result.get("flow_type", "unknown")
@@ -421,10 +400,23 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             result["method_used"] = "classified_only"
             result["policy"] = classification.get("policy", {}) if classification else {}
             result["note"] = (
-                "已分类（类型{}/{}），但注册表单未发现密码输入字段，"
-                "密码政策未能测量。".format(class_letter, flow_type)
+                "注册上下文中确认有口令框，但重走分类流程后仍无法定位"
+                "口令输入字段，密码政策未能测量（类型{}/{}）。".format(
+                    class_letter, flow_type
+                )
             )
             return result
+
+        if method == "auto":
+            # auto 模式：先尝试 inline（填密码→点空白→读反馈），
+            # 2 轮无反馈则自动切换到 full 方法（完整表单提交）
+            method_used, _, email_xpath, password_xpath = \
+                _detect_method(driver, site_url, signup_url,
+                               email_xpath, password_xpath)
+        else:
+            method_used = method
+
+        result["method_used"] = method_used
 
         # ================================================================
         # Phase 4: 执行密码政策测量
@@ -586,6 +578,11 @@ def save_result(site_url: str, result: dict):
         "hostname": hostname,
         "method_used": result.get("method_used", "?"),
         "flow_type": result.get("flow_type"),
+        "class_letter": result.get("class_letter", "?"),
+        "primary_method": result.get("primary_method", ""),
+        "confidence": result.get("confidence", "low"),
+        "stop_reason": result.get("stop_reason", ""),
+        "methods": result.get("methods", []),
         "error": result.get("error"),
         "policy": result.get("policy", {}),
     }

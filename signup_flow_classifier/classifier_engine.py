@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from loguru import logger
 
 from signup_flow_classifier.flow_types import FlowResult, FlowType, StopReason
 from signup_flow_classifier.page_detector import (
@@ -89,7 +90,8 @@ class SignupFlowClassifierEngine:
 
     def classify(self, signup_url: str, entry_kind: str = "signup",
                  max_steps: int = 6,
-                 entry_already_clicked: bool = False) -> Dict:
+                 entry_already_clicked: bool = False,
+                 stop_at_password: bool = False) -> Dict:
         """分类注册流程。
 
         导航到注册页 → 安全探索多步流程 → 分类 → 返回结构化结果。
@@ -100,6 +102,8 @@ class SignupFlowClassifierEngine:
             max_steps: 最大探索步数
             entry_already_clicked: 上游（navigate_to_signup）已经点击过入口链接并打开了弹窗，
                                    分类器跳过首轮入口点击阶段，直接从当前页面状态分类
+            stop_at_password: True 时一旦在注册上下文中确认口令框就立即返回，
+                              浏览器停在口令视图（用于重走定位口令框），跳过全视图探索
 
         Returns:
             dict 包含以下关键字段：
@@ -110,6 +114,9 @@ class SignupFlowClassifierEngine:
             - ui_type:        页面样式（modal / standalone_page / ...）
             - should_proceed: bool, 是否应继续密码政策测量
             - password_reached: bool, 是否已到达密码字段页面
+            - signup_password_reached: bool, 注册上下文中确认出现口令框
+                                        （推荐作为密码测量门槛，区别于
+                                        password_reached 含登录框口令框）
             - policy:         标准化政策摘要（v1.0 schema）
             - states:         页面状态序列（调试用）
             - error:          错误信息（如有）
@@ -512,6 +519,19 @@ class SignupFlowClassifierEngine:
             # 密码框就停，漏掉短信视图）。已访问过的 tab 不再重复切换。
             if ("password" in state.fields and not login_page_during_signup
                     and signup_context_confirmed):
+                # 注册上下文中确认出现口令框：记录为可测量门槛，
+                # 供 main.py 以 signup_password_reached 判断是否继续测量。
+                result.signup_password_reached = True
+                logger.info(
+                    "全视图探索入口: fields={} tabs={} signup_ctx={} login_page={} clicks_left={}".format(
+                        state.fields, state.tabs, signup_context_confirmed,
+                        login_page_during_signup, tab_clicks_left))
+                # stop_at_password 模式：重走定位口令框时就地停在口令视图，
+                # 不再做全视图探索（否则浏览器又被切到短信/邮箱 tab）。
+                if stop_at_password:
+                    ft, conf, reason = classify(result.states)
+                    result.primary_method = primary_method(result.states)
+                    return self._done(result, ft, conf, reason)
                 if tab_clicks_left > 0:
                     next_tab = None
                     for cand in _TAB_EXPLORE_PRIORITY:
@@ -561,6 +581,13 @@ class SignupFlowClassifierEngine:
                                         self.driver, timeout=6)
                                         or tab_outcome.changed)):
                                 continue
+                # 全视图探索结束：把浏览器切回注册口令视图再返回，避免
+                # main.py 拿不到口令框触发"重走"而丢失注册 tab 状态。
+                if entry_kind == "signup":
+                    logger.info(
+                        "全视图探索结束，准备切回注册口令视图 (clicks_left={}, visited={})".format(
+                            tab_clicks_left, sorted(visited_tabs)))
+                    self._return_to_signup_password_view(result)
                 ft, conf, reason = classify(result.states)
                 result.primary_method = primary_method(result.states)
                 return self._done(result, ft, conf, reason)
@@ -886,6 +913,153 @@ class SignupFlowClassifierEngine:
         result.primary_method = primary_method(result.states)
         return self._done(result, ft, conf, reason)
 
+    def _click_register_tab_via_cdp(self) -> bool:
+        """用 CDP + Selenium 可信点击切到"注册"tab。
+
+        safe_click_tab 只扫主文档的 div/span/li/a/button，且 register_tab
+        的关键词里没有裸"注册"；而 icourse163 的"去注册"藏在 <span
+        class="goReg"> 里、xuetangx 的"手机注册"也常是 label 容器。这里复用
+        login_link_discovery._try_switch_to_signup_tab 的深度优先遍历 + 打分
+        机制（已被 icourse163/xuetangx 实测证明能找到），找到后标记
+        data-ap-signup-tab 再交给 Selenium 原生 click（可信事件）。
+        """
+        js = r"""
+(function() {
+    var KEYWORDS = [
+        '注册', '去注册', '立即注册', '免费注册', '新用户注册',
+        '註冊', '手机注册', '邮箱注册', '注册账号', '注册帐号',
+        'sign up', 'signup', 'register', 'create account',
+        'new account', 'create new account', 'get started'
+    ];
+    var EXCLUDE = [
+        '同意', '协议', '政策', '隐私', '条款', '即表示', '视为',
+        'agree', 'terms', 'policy', 'privacy', 'by clicking',
+        'by registering', 'you agree', 'i agree', 'i have read'
+    ];
+    var TAGS = ['a', 'button', 'span', 'div', 'li', 'label'];
+    function txt(el) { return (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim(); }
+    function vis(el) {
+        var r = el.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) return false;
+        var s = getComputedStyle(el);
+        if (s.display === 'none' || s.visibility === 'hidden') return false;
+        if (parseFloat(s.opacity) === 0) return false;
+        return true;
+    }
+    var candidates = [];
+    function walk(node) {
+        if (!node || !node.tagName) return;
+        var tag = node.tagName.toLowerCase();
+        if (TAGS.indexOf(tag) === -1) {
+            if (node.children) for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+            return;
+        }
+        if (!vis(node)) {
+            if (node.children) for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+            return;
+        }
+        if (node.children && node.children.length > 0)
+            for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+        var t = txt(node).toLowerCase();
+        if (t.length > 80) return;
+        var excluded = false;
+        for (var e = 0; e < EXCLUDE.length; e++) {
+            if (t.indexOf(EXCLUDE[e].toLowerCase()) !== -1) { excluded = true; break; }
+        }
+        if (excluded) return;
+        for (var k = 0; k < KEYWORDS.length; k++) {
+            var kw = KEYWORDS[k].toLowerCase();
+            if (t === kw || t.indexOf(kw) !== -1) {
+                var rect = node.getBoundingClientRect();
+                var area = rect.width * rect.height;
+                var quality = (t === kw) ? 2 : 1;
+                var shortBonus = (30 - Math.min(t.length, 30)) * 200;
+                candidates.push({
+                    el: node,
+                    score: quality * 500000 + shortBonus - area - rect.top,
+                    text: txt(node).substring(0, 50)
+                });
+                break;
+            }
+        }
+    }
+    var roots = [];
+    var modals = document.querySelectorAll(
+        '[class*=modal i],[class*=dialog i],[class*=popup i],[class*=overlay i],'
+        + '[class*=panel i],[role=dialog],[role=alertdialog],[aria-modal=true]');
+    for (var m = 0; m < modals.length; m++) if (vis(modals[m])) roots.push(modals[m]);
+    if (roots.length === 0) roots.push(document.body);
+    for (var r = 0; r < roots.length; r++) walk(roots[r]);
+    if (candidates.length === 0) return {found: false};
+    candidates.sort(function(a, b) { return b.score - a.score; });
+    var best = candidates[0];
+    best.el.setAttribute('data-ap-signup-tab', '1');
+    return {found: true, text: best.text};
+})();
+"""
+        try:
+            val = self.driver.execute_cdp_cmd('Runtime.evaluate', {
+                'expression': js, 'returnByValue': True, 'awaitPromise': True})
+            value = (val.get('result') or {}).get('value') or {}
+            if not value.get('found'):
+                logger.info("切回注册 tab: 未找到注册入口元素")
+                return False
+            logger.info("切回注册 tab: \"{}\"".format(value.get('text', '')))
+            try:
+                el = self.driver.find_element(
+                    By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
+                el.click()
+            except Exception as e:
+                logger.warning("切回注册 tab 可信点击失败: {}".format(e))
+                return False
+            return True
+        except Exception as e:
+            logger.warning("切回注册 tab CDP 异常: {}: {}".format(type(e).__name__, e))
+            return False
+
+    def _return_to_signup_password_view(self, result) -> bool:
+        """全视图探索结束后，把浏览器切回注册口令视图再返回。
+
+        探索会把浏览器切到短信/邮箱/二维码等 tab。若不切回，
+        main.py 的 get_current_password_field_xpath() 会拿到 None 或登录口令框，
+        触发"重走"重新导航而丢失注册 tab 状态（icourse163"去注册"、
+        xuetangx"手机注册"等"注册藏登录弹窗"站实测）。
+
+        只切注册语义的 tab（密码注册 → 注册入口），不碰 password_tab
+        （那是登录口令视图，切过去会让 get_current_password_field_xpath
+        误拿登录口令框）。
+        """
+        # 探索若从未真正切走（safe_click_tab 扫不到短信/邮箱 tab 时），浏览器
+        # 仍停在注册口令视图，此时口令框（含 iframe 里）早已可见，无需再点。
+        if self._wait_for_field(self.driver, "password", timeout=1.0):
+            logger.info("全视图探索结束，浏览器已在注册口令视图，无需切回")
+            return True
+        # 首选：复用 _try_switch_to_signup_tab 的 CDP 深搜机制（safe_click_tab
+        # 扫不到裸"注册"/label 里的注册入口，icourse163/xuetangx 实测失败）。
+        if self._click_register_tab_via_cdp():
+            time.sleep(1.5)
+            if self._wait_for_field(self.driver, "password", timeout=5):
+                record_evidence(result, "return_to_signup_password_view:cdp")
+                logger.info("全视图探索结束，切回注册口令视图: cdp_register_tab")
+                return True
+        # 兜底：仍走 safe_click_tab（兼容把注册 tab 渲染成标准 tab 的站）。
+        for tab in ("password_signup_tab", "register_tab"):
+            outcome = safe_click_tab(self.driver, tab)
+            logger.info("切回注册口令视图尝试: tab={} clicked={} reason={}".format(
+                tab, outcome.clicked, outcome.reason))
+            if outcome.clicked:
+                time.sleep(1.5)
+                if self._wait_for_field(self.driver, "password", timeout=5):
+                    record_evidence(
+                        result,
+                        "return_to_signup_password_view:{}".format(tab),
+                    )
+                    logger.info("全视图探索结束，切回注册口令视图: {}".format(tab))
+                    return True
+        logger.warning(
+            "切回注册口令视图失败：CDP 注册 tab 与 password_signup_tab/register_tab 均未切到口令视图")
+        return False
+
     def try_switch_to_password_view(self) -> bool:
         """类型 E 补救：尝试从多方式页面切换到邮箱+密码注册视图。
 
@@ -933,6 +1107,11 @@ class SignupFlowClassifierEngine:
         """获取当前页面第一个可见密码字段的 XPath。
 
         分类器已导航到密码页面后，可用此方法获取 XPath 给 form filler 使用。
+
+        注意：不少站点的注册口令框藏在跨域 iframe 里（icourse163 的
+        reg.icourse163.org/index_reg2_new.html 实测），主文档里只有隐藏的
+        登录口令框。这里先查主文档可见口令框，查不到再逐个进入可见 iframe
+        查，避免 main.py 误判"不在口令视图"而触发无谓的重走。
         """
         try:
             pwds = self.driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
@@ -941,6 +1120,23 @@ class SignupFlowClassifierEngine:
                     return self._make_xpath(el)
         except Exception:
             pass
+        # 跨域注册 iframe 兜底（163 等）：逐个进入可见 iframe 找口令框。
+        try:
+            for frame in self.driver.find_elements(By.TAG_NAME, "iframe"):
+                try:
+                    self.driver.switch_to.frame(frame)
+                    pwds = self.driver.find_elements(
+                        By.CSS_SELECTOR, "input[type='password']")
+                    for el in pwds:
+                        if el.is_displayed() and el.is_enabled():
+                            return self._make_xpath(el)
+                finally:
+                    self.driver.switch_to.default_content()
+        except Exception:
+            try:
+                self.driver.switch_to.default_content()
+            except Exception:
+                pass
         return None
 
     # ------------------------------------------------------------------
@@ -1215,4 +1411,5 @@ class SignupFlowClassifierEngine:
             "password" in (s.get("fields", []) if isinstance(s, dict) else getattr(s, "fields", []))
             for s in result.states
         )
+        d["signup_password_reached"] = getattr(result, "signup_password_reached", False)
         return d
