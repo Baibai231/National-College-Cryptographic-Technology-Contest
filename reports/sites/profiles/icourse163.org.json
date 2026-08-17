@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-17T16:00:08.246486+00:00",
-  "report_title": "www.thepaper.cn 登录/注册认证档案",
+  "generated_at": "2026-08-17T16:00:08.133042+00:00",
+  "report_title": "icourse163.org 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
   ],
@@ -14,55 +14,34 @@
   },
   "sites": [
     {
-      "id": "www.thepaper.cn",
-      "name": "www.thepaper.cn",
+      "id": "icourse163.org",
+      "name": "icourse163.org",
       "category": "待补充",
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.thepaper.cn/",
-          "final_url": "https://www.thepaper.cn/",
-          "observed_route": "手机号 → 短信验证码 → 口令；备选：账号/邮箱 → 口令",
+          "start_url": "https://icourse163.org",
+          "final_url": "https://www.icourse163.org/",
+          "observed_route": "账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
-              "summary": "手机号 → 短信验证码 → 口令",
-              "fields_observed": [
-                "phone",
-                "password"
-              ],
-              "methods_observed": [
-                "password",
-                "phone",
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
-              "password_state": "observed_alongside_verification",
-              "ui_types": [
-                "modal"
-              ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
-            },
-            {
-              "route_id": "automatic_route_2",
-              "step_numbers": [
-                3
-              ],
-              "summary": "账号/邮箱 → 口令",
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "identifier",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "identifier"
+                "identifier",
+                "sms"
               ],
-              "verification_observed": [],
+              "verification_observed": [
+                "sms"
+              ],
               "password_state": "observed_before_verification",
               "ui_types": [
                 "modal"
@@ -71,20 +50,18 @@
             }
           ],
           "fields_observed": [
-            "phone",
             "identifier",
             "password"
           ],
           "methods_observed": [
             "password",
-            "phone",
             "identifier",
             "sms"
           ],
           "verification_observed": [
             "sms"
           ],
-          "password_state": "multiple_observed_routes",
+          "password_state": "observed_before_verification",
           "ui_types": [
             "modal"
           ],
@@ -93,61 +70,33 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.thepaper.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.thepaper.cn/",
-              "ui_type": "modal",
-              "fields": [
-                "phone",
-                "password"
-              ],
-              "methods": [
-                "phone"
-              ],
-              "blockers": [
-                "sms_code"
-              ],
-              "actions": [
-                "tab_click"
-              ],
-              "tabs": [
-                "password_tab"
-              ],
-              "note": "password_tab_clicked_and_changed"
-            },
-            {
-              "step": 3,
-              "url": "https://www.thepaper.cn/",
+              "url": "https://www.icourse163.org/",
               "ui_type": "modal",
               "fields": [
                 "identifier",
                 "password"
               ],
               "methods": [
-                "identifier"
+                "auto_signup",
+                "identifier",
+                "phone"
               ],
               "blockers": [],
-              "actions": [],
-              "tabs": [
-                "password_tab"
+              "actions": [
+                "none",
+                "none"
               ],
-              "note": ""
+              "tabs": [
+                "sms_tab",
+                "email_tab",
+                "register_tab"
+              ],
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-17T01:44:07.781683+00:00",
+            "measured_at": "2026-08-17T13:13:03.885688+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -160,25 +109,22 @@
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "blocked_or_partial",
+              "status": "classified",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "pre_verification_only"
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
                 "password",
-                "sms_or_otp",
-                "phone"
+                "sms_or_otp"
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": true,
-              "phone_observed": true,
+              "verification_observed": false,
+              "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": [
-                "sms_code"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -189,31 +135,29 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.thepaper.cn/",
-          "final_url": "https://www.thepaper.cn/",
-          "observed_route": "手机号 → 短信验证码/一次性验证码 → 口令",
+          "start_url": "https://icourse163.org",
+          "final_url": "https://www.icourse163.org/",
+          "observed_route": "账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
-              "summary": "手机号 → 短信验证码/一次性验证码 → 口令",
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
-                "phone",
+                "identifier",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "phone",
-                "sms",
-                "one_time_code"
+                "identifier",
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "one_time_code"
+                "sms"
               ],
-              "password_state": "observed_alongside_verification",
+              "password_state": "observed_before_verification",
               "ui_types": [
                 "modal"
               ],
@@ -221,20 +165,18 @@
             }
           ],
           "fields_observed": [
-            "phone",
+            "identifier",
             "password"
           ],
           "methods_observed": [
             "password",
-            "phone",
-            "sms",
-            "one_time_code"
+            "identifier",
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "one_time_code"
+            "sms"
           ],
-          "password_state": "observed_alongside_verification",
+          "password_state": "observed_before_verification",
           "ui_types": [
             "modal"
           ],
@@ -243,76 +185,85 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.thepaper.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.thepaper.cn/",
+              "url": "https://www.icourse163.org/",
               "ui_type": "modal",
               "fields": [
-                "phone",
+                "identifier",
                 "password"
               ],
               "methods": [
+                "auto_signup",
+                "identifier",
                 "phone"
               ],
-              "blockers": [
-                "sms_code",
-                "verification_code"
-              ],
+              "blockers": [],
               "actions": [
+                "entry_click"
+              ],
+              "tabs": [
+                "sms_tab",
+                "email_tab",
+                "register_tab"
+              ],
+              "note": "entry_clicked_no_change"
+            },
+            {
+              "step": 2,
+              "url": "https://www.icourse163.org/",
+              "ui_type": "modal",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "auto_signup",
+                "identifier",
+                "phone"
+              ],
+              "blockers": [],
+              "actions": [
+                "none",
                 "none"
               ],
               "tabs": [
-                "password_tab"
+                "sms_tab",
+                "email_tab",
+                "register_tab"
               ],
-              "note": ""
+              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-17T01:43:51.757739+00:00",
-            "raw_flow_type": "no_web_signup",
-            "raw_stop_reason": "no_signup_entry"
+            "measured_at": "2026-08-17T13:12:36.124982+00:00",
+            "raw_flow_type": "direct_password",
+            "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "no_web_signup",
-            "stop_reason": "no_signup_entry",
-            "primary_method": ""
+            "flow_type": "direct_password",
+            "stop_reason": "password_step_reached",
+            "primary_method": "password"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
+              "status": "classified",
               "confidence": "high",
-              "stop_reason": "no_signup_entry",
-              "evidence_boundary": "pre_verification_only"
+              "stop_reason": "password_step_reached",
+              "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
                 "password",
-                "sms_or_otp",
-                "phone"
+                "sms_or_otp"
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": true,
-              "phone_observed": true,
-              "identifier_observed": false,
-              "blocking_factors": [
-                "sms_code",
-                "verification_code"
-              ]
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": true,
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
