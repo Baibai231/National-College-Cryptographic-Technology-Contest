@@ -828,9 +828,7 @@ class ReviewRequest(BaseModel):
     review_type: Literal["manual", "feedback"] = "manual"
     structured: dict = Field(default_factory=dict)
     # 口令框可测性（2026-08-16）：inline 不提交即可判断 / full 需提交 /
-    # none 无口令框；登录、注册、总判定各一个
-    login_pwd: Literal["", "inline", "full", "none"] = ""
-    signup_pwd: Literal["", "inline", "full", "none"] = ""
+    # none 无口令框；整站总判定（2026-08-17 起只保留总判定）
     pwd_overall: Literal["", "inline", "full", "none"] = ""
 
 
@@ -870,7 +868,7 @@ def submit_review(req: ReviewRequest):
     conn = _conn()
     try:
         cur = conn.cursor()
-        pwd_test = {"login": req.login_pwd, "signup": req.signup_pwd,
+        pwd_test = {"login": "", "signup": "",
                     "overall": req.pwd_overall}
         structured = dict(req.structured or {})
         if any(pwd_test.values()):

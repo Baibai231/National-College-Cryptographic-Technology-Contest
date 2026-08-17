@@ -866,3 +866,13 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
   reports/archive/v5_final_decisions.md。
 - 逐站比对残余差异与上轮相同性质：隐藏第三方/验证后口令/App-first 空程序
   （如实记录，不过拟合）。
+
+### 39. 人工提交与展示调整（2026-08-17）
+
+1. 人工提交只保留"总口令框判定（整站）"单选（inline/full/none），
+   删除登录/注册单独判定；后端 ReviewRequest 同步清理。
+2. 站点卡片删除"口令判定（人工）"徽标（卡片顶部只放程序测试结果）；
+   详情页顶部报告表同步删除该行。
+3. 人工复核对比表新增"口令政策"行：程序列显示"未测试"（TestPassword
+   暂未接入，仅历史手工测过 GitHub）；人工列显示 inline/full/none
+   （优先侧判定，否则用整站总判定）。

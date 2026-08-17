@@ -138,29 +138,17 @@
         <label class="form-label">登录方式（勾选每种方法的要素，自动用 + 连接）</label>
         <div id="review-login-methods"></div>
         <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addMethodRow('review-login')">+ 添加一种方法</button>
-        <div class="mt-2 small">
-          <b>登录口令框判定：</b>
-          <label class="me-2"><input type="radio" name="login-pwd" value="inline" class="form-check-input me-1">inline（不提交就能判断口令对不对）</label>
-          <label class="me-2"><input type="radio" name="login-pwd" value="full" class="form-check-input me-1">full（提交后才能判断）</label>
-          <label><input type="radio" name="login-pwd" value="none" class="form-check-input me-1">none（无口令框）</label>
-        </div>
       </div>
       <div class="mb-2">
         <label class="form-label">注册方式（勾选每种方法的要素，自动用 + 连接）</label>
         <div id="review-signup-methods"></div>
         <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addMethodRow('review-signup')">+ 添加一种方法</button>
-        <div class="mt-2 small">
-          <b>注册口令框判定：</b>
-          <label class="me-2"><input type="radio" name="signup-pwd" value="inline" class="form-check-input me-1">inline</label>
-          <label class="me-2"><input type="radio" name="signup-pwd" value="full" class="form-check-input me-1">full</label>
-          <label><input type="radio" name="signup-pwd" value="none" class="form-check-input me-1">none</label>
-        </div>
       </div>
       <div class="mb-2 small">
         <b>总口令框判定（整站）：</b>
-        <label class="me-2"><input type="radio" name="overall-pwd" value="inline" class="form-check-input me-1">inline</label>
-        <label class="me-2"><input type="radio" name="overall-pwd" value="full" class="form-check-input me-1">full</label>
-        <label><input type="radio" name="overall-pwd" value="none" class="form-check-input me-1">none</label>
+        <label class="me-2"><input type="radio" name="overall-pwd" value="inline" class="form-check-input me-1">inline（不提交就能判断口令对不对）</label>
+        <label class="me-2"><input type="radio" name="overall-pwd" value="full" class="form-check-input me-1">full（提交后才能判断）</label>
+        <label><input type="radio" name="overall-pwd" value="none" class="form-check-input me-1">none（无口令框）</label>
       </div>
       <div class="mb-2">
         <label class="form-label">备注（可选）</label>
@@ -270,16 +258,11 @@ function reportTableHtml(login, signup, version) {
       ? `<td>${fn(s)}</td>`
       : `<td>${fn(l)}</td><td>${fn(s)}</td>`;
   const badgeOf = (e) => badge((e && e.flow_type) || 'unknown');
-  const pwdTd = (side) => {
-    const p = (side.manual_pwd) || '';
-    return p ? `<td>${pwdBadge(p)}</td>` : `<td class="text-muted">—</td>`;
-  };
   return `<table class="table table-sm table-bordered align-middle">
     <thead><tr><th style="width:80px">维度</th>${only === 'signup' ? '<th>注册（程序）</th>' : '<th>登录（程序）</th>'}${only === 'both' ? '<th>注册（程序）</th>' : ''}</tr></thead>
     <tbody>
       <tr><td>类型</td>${tds(badgeOf)}</tr>
       <tr><td>方法清单</td>${tds((e) => methodsHtml((e || {}).methods))}</tr>
-      <tr><td>口令判定（人工）</td>${only === 'login' ? pwdTd(l) : only === 'signup' ? pwdTd(s) : pwdTd(l) + pwdTd(s)}</tr>
       <tr><td>口令政策</td>${tds((e) => policyText((e || {}).policy))}</tr>
       <tr><td>测量时间</td>${tds((e) => fmtTime((e || {}).measured_at))}</tr>
       <tr><td>程序版本</td><td colspan="${only === 'both' ? 2 : 1}">${version || '?'}</td></tr>
@@ -322,7 +305,6 @@ function siteCard(s) {
       <div class="mt-2 small">
         <div>登录 ${badge(s.login.flow_type)} ${sideBadge('登录', s.login_match)}</div>
         <div class="mt-1">注册 ${badge(s.signup.flow_type)} ${sideBadge('注册', s.signup_match)}</div>
-        ${pwd.overall ? `<div class="mt-1">口令判定 ${pwdBadge(pwd.overall)}</div>` : ''}
       </div>
       <div class="mt-2">
         <button class="btn btn-sm btn-outline-secondary detail-btn" data-host="${esc(s.hostname)}">详情</button>
@@ -615,7 +597,7 @@ async function showDetail(host) {
   const s = await r.json();
   document.getElementById('modal-title').innerHTML =
     `${esc(s.hostname)} ${matchBadge(s.match_status)}`;
-  const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured) => {
+  const compRow = (label, status, comparison, flowZh, methods, manualText, manualStructured, pwdTest) => {
     if (!comparison || status === 'pending') return '';
     const statusZh = status === 'match' ? '识别正确'
       : status === 'mismatch' ? '识别错误'
@@ -638,6 +620,7 @@ async function showDetail(host) {
         <thead><tr><th style="width:70px"></th><th>程序</th><th>人工</th></tr></thead>
         <tbody>
           <tr><td>方法</td><td>${esc(progMethods)}</td><td>${esc((manualText || '').replace(/\n/g, '；') || manualTraits || '—')}</td></tr>
+          <tr><td>口令政策</td><td>未测试</td><td>${pwdTest ? pwdBadge(pwdTest) : '<span class="text-muted">—</span>'}</td></tr>
           <tr><td>结论</td><td colspan="2" class="${cls}">${conclusion}</td></tr>
         </tbody>
       </table>
@@ -646,6 +629,8 @@ async function showDetail(host) {
   const pwd = (s.manual && s.manual.pwd_testability) || {};
   const loginWithPwd = Object.assign({}, s.login, { manual_pwd: pwd.login });
   const signupWithPwd = Object.assign({}, s.signup, { manual_pwd: pwd.signup });
+  // 口令政策人工列：优先侧判定（旧数据），否则用整站总判定
+  const pwdSide = (side) => pwd[side] || pwd.overall || '';
   document.getElementById('modal-body').innerHTML = `
     ${reportTableHtml(loginWithPwd, signupWithPwd, s.version)}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
@@ -653,10 +638,10 @@ async function showDetail(host) {
       <span id="review-count-badge" class="small"></span>
       ${compRow('登录', s.login_match, s.login_comparison, s.login.flow_zh,
         s.login.methods, s.manual.login,
-        (s.manual.structured || {}).login)}
+        (s.manual.structured || {}).login, pwdSide('login'))}
       ${compRow('注册', s.signup_match, s.signup_comparison || s.comparison, s.signup.flow_zh,
         s.signup.methods, s.manual.signup,
-        (s.manual.structured || {}).signup)}
+        (s.manual.structured || {}).signup, pwdSide('signup'))}
       ${s.manual.note ? `<div class="text-muted small mt-1">备注：${esc(s.manual.note)}</div>` : ''}
     </div>
     <button class="btn btn-sm btn-outline-secondary" id="detail-history-btn">查看历史程序结果</button>
@@ -721,10 +706,10 @@ document.addEventListener('click', e => {
     document.getElementById('review-host').textContent = reviewHost;
     initMethodRows('review-login');
     initMethodRows('review-signup');
-    ['login-pwd', 'signup-pwd', 'overall-pwd'].forEach(n => {
-      const el = document.querySelector('input[name="' + n + '"]:checked');
+    {
+      const el = document.querySelector('input[name="overall-pwd"]:checked');
       if (el) el.checked = false;
-    });
+    }
     document.getElementById('review-note').value = '';
     document.getElementById('review-submitter').value = '';
     // 查询该站已有的待审核提交，防止组员重复提交
@@ -762,8 +747,6 @@ document.getElementById('review-submit-btn').addEventListener('click', async () 
       login: login.traits,
       signup: signup.traits
     },
-    login_pwd: radioVal('login-pwd'),
-    signup_pwd: radioVal('signup-pwd'),
     pwd_overall: radioVal('overall-pwd')
   };
   if (!payload.login && !payload.signup) { alert('请至少填写登录或注册方法'); return; }
