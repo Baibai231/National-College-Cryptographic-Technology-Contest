@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.863516+00:00",
+  "generated_at": "2026-08-17T03:12:44.182472+00:00",
   "report_title": "www.gamersky.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -268,7 +268,7 @@
                 "password_tab",
                 "register_tab"
               ],
-              "note": "register_tab_clicked_and_changed"
+              "note": "register_tab_clicked_no_change"
             },
             {
               "step": 6,
@@ -295,7 +295,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:50:16.984481+00:00",
+            "measured_at": "2026-08-17T02:12:54.321753+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -428,7 +428,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:50:06.305613+00:00",
+            "measured_at": "2026-08-17T02:12:43.527324+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

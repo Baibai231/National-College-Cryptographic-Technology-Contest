@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.874775+00:00",
+  "generated_at": "2026-08-17T03:12:44.192896+00:00",
   "report_title": "www.kuaishou.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -143,7 +143,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:28:35.378861+00:00",
+            "measured_at": "2026-08-17T01:53:30.958481+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -336,7 +336,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:28:33.246742+00:00",
+            "measured_at": "2026-08-17T01:53:28.234567+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

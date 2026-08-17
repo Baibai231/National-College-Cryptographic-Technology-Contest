@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.887278+00:00",
+  "generated_at": "2026-08-17T03:12:44.206518+00:00",
   "report_title": "www.toutiao.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -21,7 +21,7 @@
         "login": {
           "status": "observed",
           "start_url": "https://www.toutiao.com/",
-          "final_url": "https://www.toutiao.com/?wid=1786908503776",
+          "final_url": "https://www.toutiao.com/?wid=1786931589315",
           "observed_route": "手机号/账号/邮箱 → 短信验证码/扫码",
           "observed_routes": [
             {
@@ -84,7 +84,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.toutiao.com/?wid=1786908503776",
+              "url": "https://www.toutiao.com/?wid=1786931589315",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -97,7 +97,7 @@
             },
             {
               "step": 2,
-              "url": "https://www.toutiao.com/?wid=1786908503776",
+              "url": "https://www.toutiao.com/?wid=1786931589315",
               "ui_type": "modal",
               "fields": [
                 "phone",
@@ -128,7 +128,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:28:21.986475+00:00",
+            "measured_at": "2026-08-17T01:53:07.709252+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -173,7 +173,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.toutiao.com/",
-          "final_url": "https://www.toutiao.com/?wid=1786908493042",
+          "final_url": "https://www.toutiao.com/?wid=1786931577717",
           "observed_route": "手机号/账号/邮箱 → 短信验证码/扫码",
           "observed_routes": [
             {
@@ -236,7 +236,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.toutiao.com/?wid=1786908493042",
+              "url": "https://www.toutiao.com/?wid=1786931577717",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -249,7 +249,7 @@
             },
             {
               "step": 2,
-              "url": "https://www.toutiao.com/?wid=1786908493042",
+              "url": "https://www.toutiao.com/?wid=1786931577717",
               "ui_type": "modal",
               "fields": [
                 "phone",
@@ -280,7 +280,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:28:11.423722+00:00",
+            "measured_at": "2026-08-17T01:52:55.959350+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

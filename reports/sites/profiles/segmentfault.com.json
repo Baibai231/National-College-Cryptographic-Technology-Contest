@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.836758+00:00",
+  "generated_at": "2026-08-17T03:12:44.155120+00:00",
   "report_title": "segmentfault.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -100,7 +100,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:15:59.442516+00:00",
+            "measured_at": "2026-08-17T01:41:11.946447+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -235,7 +235,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:15:27.815544+00:00",
+            "measured_at": "2026-08-17T01:41:01.444729+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

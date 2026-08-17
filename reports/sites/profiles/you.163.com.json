@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.895667+00:00",
+  "generated_at": "2026-08-17T03:12:44.214657+00:00",
   "report_title": "you.163.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -100,7 +100,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:47:17.005369+00:00",
+            "measured_at": "2026-08-17T02:10:07.579666+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -240,7 +240,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:46:57.068882+00:00",
+            "measured_at": "2026-08-17T02:09:46.061051+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.872899+00:00",
+  "generated_at": "2026-08-17T03:12:44.190945+00:00",
   "report_title": "www.jiemian.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -238,7 +238,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:18:52.894828+00:00",
+            "measured_at": "2026-08-17T01:44:32.823857+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -387,7 +387,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:18:43.693016+00:00",
+            "measured_at": "2026-08-17T01:44:23.457423+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

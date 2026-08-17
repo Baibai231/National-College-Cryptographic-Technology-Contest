@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.849829+00:00",
+  "generated_at": "2026-08-17T03:12:44.168987+00:00",
   "report_title": "www.bilibili.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -152,10 +152,10 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "hover_click"
+                "entry_click"
               ],
               "tabs": [],
-              "note": "hover_login_clicked_and_changed"
+              "note": "login_accessible_text_clicked_and_changed"
             },
             {
               "step": 2,
@@ -221,7 +221,7 @@
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "password_tab_clicked_no_change"
+              "note": "password_tab_clicked_and_changed"
             },
             {
               "step": 5,
@@ -245,7 +245,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:08:07.365514+00:00",
+            "measured_at": "2026-08-17T01:33:41.699796+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -425,7 +425,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:07:52.904270+00:00",
+            "measured_at": "2026-08-17T01:33:40.261194+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.848793+00:00",
+  "generated_at": "2026-08-17T03:12:44.167977+00:00",
   "report_title": "www.baidu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -242,7 +242,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:28:02.531554+00:00",
+            "measured_at": "2026-08-17T01:52:47.142153+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -531,7 +531,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:27:46.559646+00:00",
+            "measured_at": "2026-08-17T01:52:31.330192+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

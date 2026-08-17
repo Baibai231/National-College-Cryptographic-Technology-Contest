@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.869895+00:00",
+  "generated_at": "2026-08-17T03:12:44.188141+00:00",
   "report_title": "www.imooc.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -244,7 +244,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T18:06:04.729075+00:00",
+            "measured_at": "2026-08-17T02:23:11.521254+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -346,7 +346,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:39:29.260510+00:00",
+            "measured_at": "2026-08-17T02:46:47.199048+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

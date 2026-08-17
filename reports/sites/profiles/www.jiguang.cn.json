@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.873356+00:00",
+  "generated_at": "2026-08-17T03:12:44.191404+00:00",
   "report_title": "www.jiguang.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -67,7 +67,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:23:21.742680+00:00",
+            "measured_at": "2026-08-17T02:48:22.262787+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -181,7 +181,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:57:58.624814+00:00",
+            "measured_at": "2026-08-17T02:21:31.608455+00:00",
             "raw_flow_type": "email_only",
             "raw_stop_reason": "no_password_observed"
           },

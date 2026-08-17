@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.835079+00:00",
+  "generated_at": "2026-08-17T03:12:44.153664+00:00",
   "report_title": "leetcode.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://leetcode.cn/accounts/login/?next=%2F",
+          "start_url": "https://leetcode.cn/",
           "final_url": "https://leetcode.cn/accounts/login/?next=%2F",
           "observed_route": "手机号 → 短信验证码/扫码；备选：邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码/扫码；备选：邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "手机号 → 短信验证码/扫码",
               "fields_observed": [
@@ -56,7 +56,7 @@
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
-                2
+                3
               ],
               "summary": "邮箱 → 短信验证码 → 口令",
               "fields_observed": [
@@ -84,7 +84,7 @@
             {
               "route_id": "automatic_route_3",
               "step_numbers": [
-                3
+                4
               ],
               "summary": "手机号 → 短信验证码/扫码",
               "fields_observed": [
@@ -113,7 +113,7 @@
             {
               "route_id": "automatic_route_4",
               "step_numbers": [
-                4
+                5
               ],
               "summary": "邮箱 → 短信验证码 → 口令",
               "fields_observed": [
@@ -171,6 +171,19 @@
           "steps": [
             {
               "step": 1,
+              "url": "https://leetcode.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
               "url": "https://leetcode.cn/accounts/login/?next=%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -198,7 +211,7 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 2,
+              "step": 3,
               "url": "https://leetcode.cn/accounts/login/?next=%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -223,7 +236,7 @@
               "note": "sms_tab_clicked_and_changed"
             },
             {
-              "step": 3,
+              "step": 4,
               "url": "https://leetcode.cn/accounts/login/?next=%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -251,7 +264,7 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 4,
+              "step": 5,
               "url": "https://leetcode.cn/accounts/login/?next=%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -276,7 +289,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:11:35.501357+00:00",
+            "measured_at": "2026-08-17T01:37:18.114094+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -442,7 +455,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:11:22.478491+00:00",
+            "measured_at": "2026-08-17T01:37:07.209069+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

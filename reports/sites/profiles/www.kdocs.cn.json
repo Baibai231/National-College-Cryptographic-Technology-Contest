@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.874032+00:00",
+  "generated_at": "2026-08-17T03:12:44.192041+00:00",
   "report_title": "www.kdocs.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -19,88 +19,6 @@
       "category": "待补充",
       "automatic": {
         "login": {
-          "status": "observed",
-          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=VT4BfvMmaxsa7E1dCKtrHx25yNuhfZsXjjnr13QT_Kc&singlesignhost=account.kdocs.cn",
-          "final_url": "https://www.kdocs.cn/",
-          "observed_route": "未确认具体方式",
-          "observed_routes": [
-            {
-              "route_id": "automatic_route_1",
-              "step_numbers": [
-                1
-              ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
-            }
-          ],
-          "fields_observed": [],
-          "methods_observed": [],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
-          "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
-          ],
-          "steps": [
-            {
-              "step": 1,
-              "url": "https://www.kdocs.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none",
-                "none"
-              ],
-              "tabs": [],
-              "note": "no_entry_button"
-            }
-          ],
-          "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-16T20:27:26.665157+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
-          },
-          "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
-            "primary_method": "unknown"
-          },
-          "policy": {
-            "schema_version": "1.0",
-            "scope": "login",
-            "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
-              "evidence_boundary": "safely_reachable_ui"
-            },
-            "authentication": {
-              "observed_methods": [],
-              "password_status": "not_determined",
-              "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
-              "identifier_observed": false,
-              "blocking_factors": []
-            },
-            "security": {
-              "status": "not_observed_by_flow_classifier",
-              "note": "use login_policy_observer for passive transport and input checks"
-            }
-          },
-          "error": null
-        },
-        "signup": {
           "status": "observed",
           "start_url": "https://www.kdocs.cn/",
           "final_url": "https://www.kdocs.cn/",
@@ -148,7 +66,89 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:40:09.178212+00:00",
+            "measured_at": "2026-08-17T02:51:52.956983+00:00",
+            "raw_flow_type": "unknown",
+            "raw_stop_reason": "unrecognized_page"
+          },
+          "raw_result": {
+            "flow_type": "unknown",
+            "stop_reason": "unrecognized_page",
+            "primary_method": "unknown"
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "unknown",
+              "confidence": "low",
+              "stop_reason": "unrecognized_page",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": []
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
+        },
+        "signup": {
+          "status": "observed",
+          "start_url": "https://account.wps.cn/passport/singlesso?cb=https%3A%2F%2Fwww.kdocs.cn%2F&form=kdocs&codechallenge=G5xiEp2wIkexp-iZxAZ4ZOUUkg1m0V6bzupfN3MaW4E&singlesignhost=account.kdocs.cn",
+          "final_url": "https://www.kdocs.cn/",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                1
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            }
+          ],
+          "fields_observed": [],
+          "methods_observed": [],
+          "verification_observed": [],
+          "password_state": "not_observed_in_safely_reachable_flow",
+          "ui_types": [],
+          "safe_stop": "已走完当前安全可达范围",
+          "limitations": [
+            "程序置信度为 low",
+            "当前自动证据不足以确认完整路线"
+          ],
+          "steps": [
+            {
+              "step": 1,
+              "url": "https://www.kdocs.cn/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none",
+                "none"
+              ],
+              "tabs": [],
+              "note": "no_entry_button"
+            }
+          ],
+          "measurement": {
+            "confidence": "low",
+            "measured_at": "2026-08-17T02:54:20.480191+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

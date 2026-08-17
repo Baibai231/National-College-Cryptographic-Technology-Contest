@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.848249+00:00",
+  "generated_at": "2026-08-17T03:12:44.167539+00:00",
   "report_title": "www.autohome.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -147,7 +147,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:20:56.807210+00:00",
+            "measured_at": "2026-08-17T01:46:26.864839+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -196,8 +196,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
               "summary": "短信验证码/扫码",
               "fields_observed": [],
@@ -214,8 +213,7 @@
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
-                "modal",
-                "multi_step_wizard"
+                "modal"
               ],
               "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
             }
@@ -234,8 +232,7 @@
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
-            "modal",
-            "multi_step_wizard"
+            "modal"
           ],
           "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
           "limitations": [
@@ -245,7 +242,7 @@
             {
               "step": 1,
               "url": "https://www.autohome.com.cn/tianjin/",
-              "ui_type": "multi_step_wizard",
+              "ui_type": "modal",
               "fields": [],
               "methods": [
                 "qq",
@@ -387,7 +384,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:20:24.825239+00:00",
+            "measured_at": "2026-08-17T01:45:42.204282+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

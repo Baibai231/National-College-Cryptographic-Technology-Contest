@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.865238+00:00",
+  "generated_at": "2026-08-17T03:12:44.184067+00:00",
   "report_title": "www.goofish.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -34,7 +34,9 @@
                 "code"
               ],
               "methods_observed": [
-                "one_time_code"
+                "one_time_code",
+                "third_party",
+                "xiaomi"
               ],
               "verification_observed": [
                 "one_time_code"
@@ -50,7 +52,9 @@
             "code"
           ],
           "methods_observed": [
-            "one_time_code"
+            "one_time_code",
+            "third_party",
+            "xiaomi"
           ],
           "verification_observed": [
             "one_time_code"
@@ -71,7 +75,10 @@
               "fields": [
                 "code"
               ],
-              "methods": [],
+              "methods": [
+                "sso",
+                "xiaomi"
+              ],
               "blockers": [
                 "verification_code",
                 "captcha"
@@ -85,7 +92,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:47:40.847913+00:00",
+            "measured_at": "2026-08-17T02:10:31.414673+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -105,7 +112,8 @@
             },
             "authentication": {
               "observed_methods": [
-                "one_time_code"
+                "one_time_code",
+                "third_party"
               ],
               "password_status": "not_determined",
               "password_observed": false,
@@ -191,7 +199,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:47:28.311539+00:00",
+            "measured_at": "2026-08-17T02:10:18.618927+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

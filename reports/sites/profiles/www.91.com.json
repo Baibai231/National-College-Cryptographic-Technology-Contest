@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.845710+00:00",
+  "generated_at": "2026-08-17T03:12:44.164595+00:00",
   "report_title": "www.91.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,77 +20,91 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://m.hao123.com/",
-          "final_url": "https://m.hao123.com/",
-          "observed_route": "未确认具体方式",
+          "start_url": "https://wappass.baidu.com/passport/?login&u=https%3A%2F%2Fm.hao123.com%2F&tpl=hao123#/insert_account",
+          "final_url": "https://wappass.baidu.com/passport/?login&u=https%3A%2F%2Fm.hao123.com%2F&tpl=hao123#/insert_account",
+          "observed_route": "账号/邮箱",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
+              "summary": "账号/邮箱",
+              "fields_observed": [
+                "identifier"
+              ],
+              "methods_observed": [
+                "identifier"
+              ],
               "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
+              "ui_types": [
+                "inline_widget"
+              ],
               "safe_stop": "已走完当前安全可达范围"
             }
           ],
-          "fields_observed": [],
-          "methods_observed": [],
+          "fields_observed": [
+            "identifier"
+          ],
+          "methods_observed": [
+            "identifier"
+          ],
           "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
-          "ui_types": [],
+          "ui_types": [
+            "inline_widget"
+          ],
           "safe_stop": "已走完当前安全可达范围",
           "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
+            "程序置信度为 medium"
           ],
           "steps": [
             {
               "step": 1,
-              "url": "https://m.hao123.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
+              "url": "https://wappass.baidu.com/passport/?login&u=https%3A%2F%2Fm.hao123.com%2F&tpl=hao123#/insert_account",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier"
+              ],
+              "methods": [
+                "identifier"
+              ],
               "blockers": [],
               "actions": [
-                "none",
                 "none"
               ],
               "tabs": [],
-              "note": "no_entry_button"
+              "note": ""
             }
           ],
           "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-16T20:20:20.679001+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "unrecognized_page"
+            "confidence": "medium",
+            "measured_at": "2026-08-17T02:46:36.375425+00:00",
+            "raw_flow_type": "email_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "unrecognized_page",
-            "primary_method": "unknown"
+            "flow_type": "email_only",
+            "stop_reason": "no_password_observed",
+            "primary_method": "email_only"
           },
           "policy": {
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "unrecognized_page",
+              "status": "classified",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": false,
               "phone_observed": false,
-              "identifier_observed": false,
+              "identifier_observed": true,
               "blocking_factors": []
             },
             "security": {
@@ -179,7 +193,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:52:39.074092+00:00",
+            "measured_at": "2026-08-17T02:16:13.548298+00:00",
             "raw_flow_type": "email_only",
             "raw_stop_reason": "no_password_observed"
           },

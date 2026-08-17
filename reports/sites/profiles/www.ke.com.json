@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.874372+00:00",
+  "generated_at": "2026-08-17T03:12:44.192473+00:00",
   "report_title": "www.ke.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -142,7 +142,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:24:56.384747+00:00",
+            "measured_at": "2026-08-17T01:50:10.296288+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -329,7 +329,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:24:39.485494+00:00",
+            "measured_at": "2026-08-17T01:49:54.056209+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

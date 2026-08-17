@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.836384+00:00",
+  "generated_at": "2026-08-17T03:12:44.154817+00:00",
   "report_title": "pan.baidu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -117,7 +117,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:49:48.138745+00:00",
+            "measured_at": "2026-08-17T02:51:35.179977+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -159,36 +159,28 @@
           "status": "observed",
           "start_url": "https://pan.baidu.com/",
           "final_url": "https://pan.baidu.com/",
-          "observed_route": "短信验证码",
+          "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "短信验证码",
+              "summary": "未确认具体方式",
               "fields_observed": [],
-              "methods_observed": [
-                "sms"
-              ],
-              "verification_observed": [
-                "sms"
-              ],
+              "methods_observed": [],
+              "verification_observed": [],
               "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [],
-              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
+              "safe_stop": "已走完当前安全可达范围"
             }
           ],
           "fields_observed": [],
-          "methods_observed": [
-            "sms"
-          ],
-          "verification_observed": [
-            "sms"
-          ],
+          "methods_observed": [],
+          "verification_observed": [],
           "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "safe_stop": "已走完当前安全可达范围",
           "limitations": [
             "程序置信度为 low",
             "当前自动证据不足以确认完整路线"
@@ -204,108 +196,13 @@
               "actions": [
                 "entry_click"
               ],
-              "tabs": [
-                "qr_tab",
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
+              "tabs": [],
               "note": "entry_clicked_no_change"
-            },
-            {
-              "step": 2,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "qr_tab",
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 3,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "qr_tab",
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 4,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "qr_tab",
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 5,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "qr_tab",
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": "no_sms_tab"
-            },
-            {
-              "step": 6,
-              "url": "https://pan.baidu.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "none"
-              ],
-              "tabs": [
-                "qr_tab",
-                "password_tab",
-                "sms_tab",
-                "register_tab"
-              ],
-              "note": "no_sms_tab"
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:27:59.679294+00:00",
+            "measured_at": "2026-08-17T02:53:49.228206+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },
@@ -324,9 +221,7 @@
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
-              "observed_methods": [
-                "sms_or_otp"
-              ],
+              "observed_methods": [],
               "password_status": "not_determined",
               "password_observed": false,
               "verification_observed": false,

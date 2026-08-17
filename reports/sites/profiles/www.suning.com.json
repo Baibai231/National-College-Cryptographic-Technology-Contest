@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.885099+00:00",
+  "generated_at": "2026-08-17T03:12:44.204666+00:00",
   "report_title": "www.suning.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -336,7 +336,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:23:39.981245+00:00",
+            "measured_at": "2026-08-17T01:48:39.311164+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -465,7 +465,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:23:38.684775+00:00",
+            "measured_at": "2026-08-17T01:48:38.953834+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.850309+00:00",
+  "generated_at": "2026-08-17T03:12:44.169548+00:00",
   "report_title": "www.bitauto.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -318,7 +318,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:53:40.237276+00:00",
+            "measured_at": "2026-08-17T02:17:18.980180+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -472,7 +472,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:53:19.858536+00:00",
+            "measured_at": "2026-08-17T02:16:49.714236+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.858463+00:00",
+  "generated_at": "2026-08-17T03:12:44.177291+00:00",
   "report_title": "www.dongchedi.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -253,7 +253,7 @@
                 "password_tab",
                 "sms_tab"
               ],
-              "note": "password_tab_clicked_and_changed"
+              "note": "password_tab_clicked_no_change"
             },
             {
               "step": 5,
@@ -277,7 +277,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:21:36.284100+00:00",
+            "measured_at": "2026-08-17T01:46:40.596897+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -425,7 +425,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:20:56.989016+00:00",
+            "measured_at": "2026-08-17T01:46:26.947678+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

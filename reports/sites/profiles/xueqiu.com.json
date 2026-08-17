@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.894683+00:00",
+  "generated_at": "2026-08-17T03:12:44.214064+00:00",
   "report_title": "xueqiu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -109,7 +109,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:13:51.181073+00:00",
+            "measured_at": "2026-08-17T01:39:31.278787+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -241,7 +241,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:13:50.725759+00:00",
+            "measured_at": "2026-08-17T01:39:22.878697+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

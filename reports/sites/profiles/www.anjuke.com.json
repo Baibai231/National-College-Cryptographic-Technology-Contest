@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.848021+00:00",
+  "generated_at": "2026-08-17T03:12:44.167239+00:00",
   "report_title": "www.anjuke.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -19,26 +19,84 @@
       "category": "待补充",
       "automatic": {
         "login": {
-          "status": "error",
-          "observed_route": "本次测量异常",
-          "observed_routes": [],
+          "status": "observed",
+          "start_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_76a3273794a840599c408382f7c2f898&callback=shield&from=antispam",
+          "final_url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_76a3273794a840599c408382f7c2f898&callback=shield&from=antispam",
+          "observed_route": "未确认具体方式",
+          "observed_routes": [
+            {
+              "route_id": "automatic_route_1",
+              "step_numbers": [
+                0
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已记录页面阻断因素，未继续交互"
+            }
+          ],
           "fields_observed": [],
           "methods_observed": [],
           "verification_observed": [],
-          "password_state": "not_determined",
+          "password_state": "not_observed_in_safely_reachable_flow",
           "ui_types": [],
-          "safe_stop": "错误: TimeoutException:Message: timeout: Timed out receiving message from renderer: 29.918\n  (Session info: chrome=151.0.7922.",
-          "limitations": [
-            "测量异常，证据不完整"
+          "safe_stop": "已记录页面阻断因素，未继续交互",
+          "limitations": [],
+          "steps": [
+            {
+              "step": 0,
+              "url": "https://www.anjuke.com/esfcommon-captcha-wy?history=aHR0cHM6Ly90aWFuamluLmFuanVrZS5jb20v&namespace=ershoufang_fangjia_pc&serialID=05a4fe1696a8b19304b3c8f9c99131b0_76a3273794a840599c408382f7c2f898&callback=shield&from=antispam",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [
+                "captcha"
+              ],
+              "actions": [],
+              "tabs": [],
+              "note": "full_page_human_challenge"
+            }
           ],
-          "steps": [],
-          "raw_result": {
-            "flow_type": null,
-            "stop_reason": null,
-            "error": "TimeoutException:Message: timeout: Timed out receiving message from renderer: 29.918\n  (Session info: chrome=151.0.7922.138)\nStacktrace:\n0   chromedriver                        0x0000000104ff4e84 chromedriver + 342797"
+          "measurement": {
+            "confidence": "high",
+            "measured_at": "2026-08-15T18:30:58.422443+00:00",
+            "raw_flow_type": "human_blocked",
+            "raw_stop_reason": "human_blocked"
           },
-          "policy": {},
-          "error": "TimeoutException:Message: timeout: Timed out receiving message from renderer: 29.918\n  (Session info: chrome=151.0.7922.138)\nStacktrace:\n0   chromedriver                        0x0000000104ff4e84 chromedriver + 342797"
+          "raw_result": {
+            "flow_type": "human_blocked",
+            "stop_reason": "human_blocked",
+            "primary_method": ""
+          },
+          "policy": {
+            "schema_version": "1.0",
+            "scope": "login",
+            "measurement": {
+              "status": "blocked_or_partial",
+              "confidence": "high",
+              "stop_reason": "human_blocked",
+              "evidence_boundary": "safely_reachable_ui"
+            },
+            "authentication": {
+              "observed_methods": [],
+              "password_status": "not_determined",
+              "password_observed": false,
+              "verification_observed": false,
+              "phone_observed": false,
+              "identifier_observed": false,
+              "blocking_factors": [
+                "captcha"
+              ]
+            },
+            "security": {
+              "status": "not_observed_by_flow_classifier",
+              "note": "use login_policy_observer for passive transport and input checks"
+            }
+          },
+          "error": null
         },
         "signup": {
           "status": "observed",
@@ -88,7 +146,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:25:04.729021+00:00",
+            "measured_at": "2026-08-17T01:50:18.832302+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

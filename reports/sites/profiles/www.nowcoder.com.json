@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.880241+00:00",
+  "generated_at": "2026-08-17T03:12:44.199033+00:00",
   "report_title": "www.nowcoder.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -226,7 +226,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:10:57.661177+00:00",
+            "measured_at": "2026-08-16T23:58:54.206356+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -271,7 +271,7 @@
           "status": "observed",
           "start_url": "https://www.nowcoder.com/",
           "final_url": "https://www.nowcoder.com/",
-          "observed_route": "手机号 → 短信验证码/扫码",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
@@ -279,25 +279,23 @@
                 1,
                 2
               ],
-              "summary": "手机号 → 短信验证码/扫码",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone",
                 "code"
               ],
               "methods_observed": [
                 "phone",
-                "sms",
-                "qr"
+                "sms"
               ],
               "verification_observed": [
-                "sms",
-                "qr"
+                "sms"
               ],
               "password_state": "not_observed_before_verification",
               "ui_types": [
                 "modal"
               ],
-              "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
@@ -306,20 +304,19 @@
           ],
           "methods_observed": [
             "phone",
-            "sms",
-            "qr"
+            "sms"
           ],
           "verification_observed": [
-            "sms",
-            "qr"
+            "sms"
           ],
           "password_state": "not_observed_before_verification",
           "ui_types": [
             "modal"
           ],
-          "safe_stop": "安全测量停在短信验证码、扫码步骤，验证后页面未访问",
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
           "limitations": [
-            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策",
+            "程序置信度为 medium"
           ],
           "steps": [
             {
@@ -332,8 +329,7 @@
               ],
               "methods": [
                 "auto_signup",
-                "phone",
-                "qr"
+                "phone"
               ],
               "blockers": [
                 "sms_code"
@@ -350,39 +346,28 @@
             {
               "step": 2,
               "url": "https://www.nowcoder.com/",
-              "ui_type": "modal",
-              "fields": [
-                "phone",
-                "code"
-              ],
+              "ui_type": "unknown",
+              "fields": [],
               "methods": [
-                "auto_signup",
-                "phone",
-                "qr"
+                "auto_signup"
               ],
-              "blockers": [
-                "sms_code",
-                "captcha"
-              ],
+              "blockers": [],
               "actions": [
                 "none"
               ],
-              "tabs": [
-                "password_tab",
-                "qr_tab"
-              ],
+              "tabs": [],
               "note": ""
             }
           ],
           "measurement": {
-            "confidence": "high",
-            "measured_at": "2026-08-16T19:10:47.176020+00:00",
-            "raw_flow_type": "human_blocked",
-            "raw_stop_reason": "human_blocked"
+            "confidence": "medium",
+            "measured_at": "2026-08-17T01:36:34.792674+00:00",
+            "raw_flow_type": "otp_only",
+            "raw_stop_reason": "no_password_observed"
           },
           "raw_result": {
-            "flow_type": "human_blocked",
-            "stop_reason": "human_blocked",
+            "flow_type": "otp_only",
+            "stop_reason": "no_password_observed",
             "primary_method": "sms"
           },
           "policy": {
@@ -390,23 +375,21 @@
             "scope": "signup",
             "measurement": {
               "status": "blocked_or_partial",
-              "confidence": "high",
-              "stop_reason": "human_blocked",
+              "confidence": "medium",
+              "stop_reason": "no_password_observed",
               "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
-                "qr_or_scan",
                 "phone"
               ],
-              "password_status": "not_determined",
+              "password_status": "no_password_in_safely_reachable_flow",
               "password_observed": false,
               "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "captcha",
                 "sms_code"
               ]
             },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.867738+00:00",
+  "generated_at": "2026-08-17T03:12:44.186294+00:00",
   "report_title": "www.hupu.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -269,7 +269,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:14:22.478452+00:00",
+            "measured_at": "2026-08-17T01:40:08.450009+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -411,7 +411,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:14:22.133900+00:00",
+            "measured_at": "2026-08-17T01:40:02.615055+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

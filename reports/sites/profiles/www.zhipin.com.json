@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.893128+00:00",
+  "generated_at": "2026-08-17T03:12:44.212689+00:00",
   "report_title": "www.zhipin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -99,7 +99,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T20:40:00.285927+00:00",
+            "measured_at": "2026-08-17T01:51:41.978090+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -142,14 +142,16 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.zhipin.com/web/user/?ka=header-login",
-          "final_url": "chrome://new-tab-page/",
+          "start_url": "https://www.zhipin.com/tianjin/?seoRefer=index",
+          "final_url": "https://www.zhipin.com/join",
           "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2,
+                3
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -197,6 +199,21 @@
           "steps": [
             {
               "step": 1,
+              "url": "https://www.zhipin.com/tianjin/?seoRefer=index",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "auto_signup"
+              ],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_combined_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
               "url": "https://www.zhipin.com/web/user/?ka=header-login",
               "ui_type": "inline_widget",
               "fields": [
@@ -219,8 +236,21 @@
               "note": "register_combined_text_clicked_and_changed"
             },
             {
-              "step": 2,
-              "url": "chrome://new-tab-page/",
+              "step": 3,
+              "url": "https://www.zhipin.com/tianjin/?seoRefer=index",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "auto_signup"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [],
+              "note": ""
+            },
+            {
+              "step": 4,
+              "url": "https://www.zhipin.com/join",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -234,7 +264,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:26:18.674714+00:00",
+            "measured_at": "2026-08-17T01:51:39.857244+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

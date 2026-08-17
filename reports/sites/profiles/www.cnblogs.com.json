@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.854085+00:00",
+  "generated_at": "2026-08-17T03:12:44.173197+00:00",
   "report_title": "www.cnblogs.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -248,7 +248,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:16:11.619704+00:00",
+            "measured_at": "2026-08-17T01:41:33.281457+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -358,9 +358,7 @@
               "methods": [
                 "phone"
               ],
-              "blockers": [
-                "captcha"
-              ],
+              "blockers": [],
               "actions": [],
               "tabs": [],
               "note": ""
@@ -368,7 +366,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:16:07.665623+00:00",
+            "measured_at": "2026-08-17T01:41:24.515287+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -381,7 +379,7 @@
             "schema_version": "1.0",
             "scope": "signup",
             "measurement": {
-              "status": "blocked_or_partial",
+              "status": "classified",
               "confidence": "high",
               "stop_reason": "password_step_reached",
               "evidence_boundary": "safely_reachable_ui"
@@ -397,9 +395,7 @@
               "verification_observed": false,
               "phone_observed": true,
               "identifier_observed": false,
-              "blocking_factors": [
-                "captcha"
-              ]
+              "blocking_factors": []
             },
             "security": {
               "status": "not_observed_by_flow_classifier",

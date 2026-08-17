@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.855189+00:00",
+  "generated_at": "2026-08-17T03:12:44.174191+00:00",
   "report_title": "www.csdn.net 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -142,7 +142,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:11:12.764284+00:00",
+            "measured_at": "2026-08-17T01:36:57.243064+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -194,7 +194,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "短信验证码/扫码",
               "fields_observed": [],
@@ -217,7 +217,7 @@
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
-                2
+                3
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -266,6 +266,19 @@
             {
               "step": 1,
               "url": "https://www.csdn.net/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "hover_click"
+              ],
+              "tabs": [],
+              "note": "hover_login_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.csdn.net/",
               "ui_type": "standalone_page",
               "fields": [],
               "methods": [
@@ -286,7 +299,7 @@
               "note": "sms_tab_clicked_in_iframe_and_changed"
             },
             {
-              "step": 2,
+              "step": 3,
               "url": "https://www.csdn.net/",
               "ui_type": "inline_widget",
               "fields": [
@@ -306,7 +319,7 @@
               "note": "register_combined_text_clicked_and_changed"
             },
             {
-              "step": 3,
+              "step": 4,
               "url": "https://marketing.csdn.net/p/6f94cd6ce5ad5e27a045b10e9ae39541?pId=3292",
               "ui_type": "unknown",
               "fields": [],
@@ -321,7 +334,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:11:10.279068+00:00",
+            "measured_at": "2026-08-17T01:36:55.914805+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

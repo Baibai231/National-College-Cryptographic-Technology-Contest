@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.844312+00:00",
+  "generated_at": "2026-08-17T03:12:44.163262+00:00",
   "report_title": "www.52pojie.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,24 +20,22 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.52pojie.cn/member.php?mod=52register",
-          "final_url": "https://www.52pojie.cn/member.php?mod=52register",
-          "observed_route": "邮箱/账号/邮箱 → 口令",
+          "start_url": "https://www.52pojie.cn/",
+          "final_url": "https://www.52pojie.cn/",
+          "observed_route": "账号/邮箱 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "邮箱/账号/邮箱 → 口令",
+              "summary": "账号/邮箱 → 口令",
               "fields_observed": [
-                "email",
                 "identifier",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "email",
                 "identifier"
               ],
               "verification_observed": [],
@@ -49,13 +47,11 @@
             }
           ],
           "fields_observed": [
-            "email",
             "identifier",
             "password"
           ],
           "methods_observed": [
             "password",
-            "email",
             "identifier"
           ],
           "verification_observed": [],
@@ -68,18 +64,18 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.52pojie.cn/member.php?mod=52register",
+              "url": "https://www.52pojie.cn/",
               "ui_type": "inline_widget",
               "fields": [
-                "email",
                 "identifier",
                 "password"
               ],
               "methods": [
-                "email",
                 "identifier"
               ],
-              "blockers": [],
+              "blockers": [
+                "slide"
+              ],
               "actions": [],
               "tabs": [],
               "note": ""
@@ -87,7 +83,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T17:48:25.318165+00:00",
+            "measured_at": "2026-08-17T02:05:14.724264+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -100,22 +96,23 @@
             "schema_version": "1.0",
             "scope": "login",
             "measurement": {
-              "status": "classified",
+              "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
               "evidence_boundary": "safely_reachable_ui"
             },
             "authentication": {
               "observed_methods": [
-                "password",
-                "email"
+                "password"
               ],
               "password_status": "password_observed",
               "password_observed": true,
               "verification_observed": false,
               "phone_observed": false,
               "identifier_observed": true,
-              "blocking_factors": []
+              "blocking_factors": [
+                "slide"
+              ]
             },
             "security": {
               "status": "not_observed_by_flow_classifier",
@@ -127,7 +124,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.52pojie.cn/member.php?mod=52register",
-          "final_url": "https://graph.qq.com/oauth2.0/show?which=Login&display=pc&response_type=code&client_id=310187341&redirect_uri=https%3A%2F%2Fwww.52pojie.cn%2Fconnect.php%3Fmod%3Dlogin%26op%3Dcallback%26referer%3Dhttps%253A%252F%252Fwww.52pojie.cn%252Fmember.php%253Fmod%253D52register&state=c2e696d6ce1d672c0bfb39374ea6546e&scope=get_user_info%2Cadd_share%2Cadd_t%2Cadd_pic_t%2Cget_repost_list",
+          "final_url": "https://graph.qq.com/oauth2.0/show?which=Login&display=pc&response_type=code&client_id=310187341&redirect_uri=https%3A%2F%2Fwww.52pojie.cn%2Fconnect.php%3Fmod%3Dlogin%26op%3Dcallback%26referer%3Dhttps%253A%252F%252Fwww.52pojie.cn%252Fmember.php%253Fmod%253D52register&state=e21f3dffa0cab2ea53762fc41ede2426&scope=get_user_info%2Cadd_share%2Cadd_t%2Cadd_pic_t%2Cget_repost_list",
           "observed_route": "邮箱/账号/邮箱 → 口令",
           "observed_routes": [
             {
@@ -197,7 +194,7 @@
             },
             {
               "step": 2,
-              "url": "https://graph.qq.com/oauth2.0/show?which=Login&display=pc&response_type=code&client_id=310187341&redirect_uri=https%3A%2F%2Fwww.52pojie.cn%2Fconnect.php%3Fmod%3Dlogin%26op%3Dcallback%26referer%3Dhttps%253A%252F%252Fwww.52pojie.cn%252Fmember.php%253Fmod%253D52register&state=c2e696d6ce1d672c0bfb39374ea6546e&scope=get_user_info%2Cadd_share%2Cadd_t%2Cadd_pic_t%2Cget_repost_list",
+              "url": "https://graph.qq.com/oauth2.0/show?which=Login&display=pc&response_type=code&client_id=310187341&redirect_uri=https%3A%2F%2Fwww.52pojie.cn%2Fconnect.php%3Fmod%3Dlogin%26op%3Dcallback%26referer%3Dhttps%253A%252F%252Fwww.52pojie.cn%252Fmember.php%253Fmod%253D52register&state=e21f3dffa0cab2ea53762fc41ede2426&scope=get_user_info%2Cadd_share%2Cadd_t%2Cadd_pic_t%2Cget_repost_list",
               "ui_type": "sso_iframe",
               "fields": [],
               "methods": [],
@@ -216,7 +213,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T17:48:09.137969+00:00",
+            "measured_at": "2026-08-17T03:02:10.077084+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

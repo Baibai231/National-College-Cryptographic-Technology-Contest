@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.839550+00:00",
+  "generated_at": "2026-08-17T03:12:44.157805+00:00",
   "report_title": "www.10jqka.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -20,14 +20,14 @@
       "automatic": {
         "login": {
           "status": "observed",
-          "start_url": "https://www.10jqka.com.cn/",
+          "start_url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
           "final_url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
-          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令",
+          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2
+                1
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -54,7 +54,7 @@
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
-                3
+                2
               ],
               "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
@@ -82,7 +82,7 @@
             {
               "route_id": "automatic_route_3",
               "step_numbers": [
-                4
+                3
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -108,6 +108,34 @@
             },
             {
               "route_id": "automatic_route_4",
+              "step_numbers": [
+                4
+              ],
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "standalone_page"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_5",
               "step_numbers": [
                 5
               ],
@@ -135,7 +163,7 @@
               "safe_stop": "已到达口令输入界面，未提交表单"
             },
             {
-              "route_id": "automatic_route_5",
+              "route_id": "automatic_route_6",
               "step_numbers": [
                 6
               ],
@@ -193,19 +221,6 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.10jqka.com.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "login_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -233,7 +248,7 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 3,
+              "step": 2,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -259,7 +274,7 @@
               "note": "sms_tab_clicked_and_changed"
             },
             {
-              "step": 4,
+              "step": 3,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -287,7 +302,7 @@
               "note": "password_tab_clicked_and_changed"
             },
             {
-              "step": 5,
+              "step": 4,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -313,7 +328,7 @@
               "note": "register_tab_clicked_no_change"
             },
             {
-              "step": 6,
+              "step": 5,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -337,11 +352,35 @@
                 "register_tab"
               ],
               "note": "password_tab_clicked_no_change"
+            },
+            {
+              "step": 6,
+              "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
+              "ui_type": "standalone_page",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "identifier",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
+              "actions": [],
+              "tabs": [
+                "sms_tab",
+                "password_tab",
+                "register_tab"
+              ],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:45:21.969424+00:00",
+            "measured_at": "2026-08-17T02:08:19.696769+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -384,15 +423,15 @@
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.10jqka.com.cn/",
+          "start_url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
           "final_url": "https://upass.10jqka.com.cn/register",
           "observed_route": "手机号 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2,
-                3
+                1,
+                2
               ],
               "summary": "手机号 → 短信验证码 → 口令",
               "fields_observed": [
@@ -445,19 +484,6 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.10jqka.com.cn/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
               "url": "https://upass.10jqka.com.cn/login?redir=https%3A%2F%2Fwww.10jqka.com.cn%2F",
               "ui_type": "standalone_page",
               "fields": [
@@ -485,7 +511,7 @@
               "note": "register_structural_semantics_clicked_and_changed"
             },
             {
-              "step": 3,
+              "step": 2,
               "url": "https://upass.10jqka.com.cn/register",
               "ui_type": "standalone_page",
               "fields": [
@@ -506,7 +532,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:45:20.182873+00:00",
+            "measured_at": "2026-08-17T02:07:55.739919+00:00",
             "raw_flow_type": "verification_then_password",
             "raw_stop_reason": "password_step_reached"
           },

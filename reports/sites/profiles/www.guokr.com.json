@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.866479+00:00",
+  "generated_at": "2026-08-17T03:12:44.185238+00:00",
   "report_title": "www.guokr.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -66,7 +66,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:39:10.394739+00:00",
+            "measured_at": "2026-08-17T02:48:51.324710+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },
@@ -148,7 +148,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:22:08.885533+00:00",
+            "measured_at": "2026-08-17T02:56:07.263316+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "unrecognized_page"
           },

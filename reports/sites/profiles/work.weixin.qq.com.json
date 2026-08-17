@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.839244+00:00",
+  "generated_at": "2026-08-17T03:12:44.157423+00:00",
   "report_title": "work.weixin.qq.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -93,7 +93,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:28:49.099840+00:00",
+            "measured_at": "2026-08-17T02:50:04.947410+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },
@@ -189,7 +189,7 @@
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-16T20:40:44.271260+00:00",
+            "measured_at": "2026-08-17T02:58:32.192315+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

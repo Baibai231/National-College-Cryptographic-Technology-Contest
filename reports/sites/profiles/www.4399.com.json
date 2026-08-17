@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.842338+00:00",
+  "generated_at": "2026-08-17T03:12:44.161079+00:00",
   "report_title": "www.4399.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -22,42 +22,56 @@
           "status": "observed",
           "start_url": "https://www.4399.com/",
           "final_url": "https://www.4399.com/",
-          "observed_route": "手机号；备选：账号/邮箱 → 口令；备选：未确认具体方式；备选：账号/邮箱 → 口令；备选：账号/邮箱 → 口令",
+          "observed_route": "手机号 → 短信验证码；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令；备选：未确认具体方式；备选：账号/邮箱 → 短信验证码 → 口令；备选：账号/邮箱 → 短信验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
                 1
               ],
-              "summary": "手机号",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone"
               ],
               "methods_observed": [
-                "phone"
+                "phone",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
               ],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             },
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
                 2
               ],
-              "summary": "账号/邮箱 → 口令",
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "identifier",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "identifier"
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
               ],
-              "verification_observed": [],
+              "verification_observed": [
+                "sms"
+              ],
               "password_state": "observed_before_verification",
               "ui_types": [
                 "inline_widget"
@@ -69,29 +83,23 @@
               "step_numbers": [
                 3
               ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
-            },
-            {
-              "route_id": "automatic_route_4",
-              "step_numbers": [
-                4
-              ],
-              "summary": "账号/邮箱 → 口令",
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "identifier",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "identifier"
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
               ],
-              "verification_observed": [],
+              "verification_observed": [
+                "sms"
+              ],
               "password_state": "observed_before_verification",
               "ui_types": [
                 "inline_widget"
@@ -99,20 +107,68 @@
               "safe_stop": "已到达口令输入界面，未提交表单"
             },
             {
+              "route_id": "automatic_route_4",
+              "step_numbers": [
+                4
+              ],
+              "summary": "未确认具体方式",
+              "fields_observed": [],
+              "methods_observed": [],
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
+              "ui_types": [],
+              "safe_stop": "已走完当前安全可达范围"
+            },
+            {
               "route_id": "automatic_route_5",
               "step_numbers": [
                 5
               ],
-              "summary": "账号/邮箱 → 口令",
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
               "fields_observed": [
                 "identifier",
                 "password"
               ],
               "methods_observed": [
                 "password",
-                "identifier"
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
               ],
-              "verification_observed": [],
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "observed_before_verification",
+              "ui_types": [
+                "inline_widget"
+              ],
+              "safe_stop": "已到达口令输入界面，未提交表单"
+            },
+            {
+              "route_id": "automatic_route_6",
+              "step_numbers": [
+                6
+              ],
+              "summary": "账号/邮箱 → 短信验证码 → 口令",
+              "fields_observed": [
+                "identifier",
+                "password"
+              ],
+              "methods_observed": [
+                "password",
+                "identifier",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
+              ],
+              "verification_observed": [
+                "sms"
+              ],
               "password_state": "observed_before_verification",
               "ui_types": [
                 "inline_widget"
@@ -128,15 +184,24 @@
           "methods_observed": [
             "password",
             "phone",
-            "identifier"
+            "identifier",
+            "sms",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo"
           ],
-          "verification_observed": [],
+          "verification_observed": [
+            "sms"
+          ],
           "password_state": "multiple_observed_routes",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "已记录页面阻断因素，未继续交互；已到达口令输入界面，未提交表单",
-          "limitations": [],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问；已到达口令输入界面，未提交表单；已走完当前安全可达范围",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -147,10 +212,14 @@
               ],
               "methods": [
                 "auto_signup",
-                "phone"
+                "phone",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
               ],
               "blockers": [
-                "slide"
+                "sms_code"
               ],
               "actions": [
                 "tab_click"
@@ -171,42 +240,25 @@
               ],
               "methods": [
                 "auto_signup",
-                "identifier"
+                "identifier",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
               ],
-              "blockers": [
-                "slide"
-              ],
+              "blockers": [],
               "actions": [
                 "tab_click"
               ],
               "tabs": [
                 "password_tab",
-                "qr_tab"
+                "qr_tab",
+                "sms_tab"
               ],
-              "note": "qr_tab_clicked_and_changed"
+              "note": "sms_tab_clicked_in_iframe_no_change"
             },
             {
               "step": 3,
-              "url": "https://www.4399.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [
-                "auto_signup"
-              ],
-              "blockers": [
-                "slide"
-              ],
-              "actions": [
-                "tab_click"
-              ],
-              "tabs": [
-                "password_tab",
-                "qr_tab"
-              ],
-              "note": "password_tab_clicked_and_changed"
-            },
-            {
-              "step": 4,
               "url": "https://www.4399.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -215,11 +267,32 @@
               ],
               "methods": [
                 "auto_signup",
-                "identifier"
+                "identifier",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
               ],
-              "blockers": [
-                "slide"
+              "blockers": [],
+              "actions": [
+                "tab_click"
               ],
+              "tabs": [
+                "password_tab",
+                "qr_tab",
+                "sms_tab"
+              ],
+              "note": "qr_tab_clicked_and_changed"
+            },
+            {
+              "step": 4,
+              "url": "https://www.4399.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [
+                "auto_signup"
+              ],
+              "blockers": [],
               "actions": [
                 "tab_click"
               ],
@@ -239,22 +312,52 @@
               ],
               "methods": [
                 "auto_signup",
-                "identifier"
+                "identifier",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
               ],
-              "blockers": [
-                "slide"
+              "blockers": [],
+              "actions": [
+                "tab_click"
               ],
+              "tabs": [
+                "password_tab",
+                "qr_tab",
+                "sms_tab"
+              ],
+              "note": "password_tab_clicked_no_change"
+            },
+            {
+              "step": 6,
+              "url": "https://www.4399.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "identifier",
+                "password"
+              ],
+              "methods": [
+                "auto_signup",
+                "identifier",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [],
               "actions": [],
               "tabs": [
                 "password_tab",
-                "qr_tab"
+                "qr_tab",
+                "sms_tab"
               ],
               "note": ""
             }
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:52:21.482186+00:00",
+            "measured_at": "2026-08-17T02:15:43.493495+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -270,21 +373,22 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "password_step_reached",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "password",
                 "sms_or_otp",
+                "third_party",
                 "phone"
               ],
               "password_status": "password_observed",
               "password_observed": true,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": true,
               "blocking_factors": [
-                "slide"
+                "sms_code"
               ]
             },
             "security": {
@@ -298,41 +402,58 @@
           "status": "observed",
           "start_url": "https://www.4399.com/",
           "final_url": "https://www.4399.com/",
-          "observed_route": "手机号",
+          "observed_route": "手机号 → 短信验证码",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
-              "summary": "手机号",
+              "summary": "手机号 → 短信验证码",
               "fields_observed": [
                 "phone"
               ],
               "methods_observed": [
-                "phone"
+                "phone",
+                "sms",
+                "third_party",
+                "wechat",
+                "qq",
+                "weibo"
               ],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
+              "verification_observed": [
+                "sms"
+              ],
+              "password_state": "not_observed_before_verification",
               "ui_types": [
                 "inline_widget"
               ],
-              "safe_stop": "已记录页面阻断因素，未继续交互"
+              "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问"
             }
           ],
           "fields_observed": [
             "phone"
           ],
           "methods_observed": [
-            "phone"
+            "phone",
+            "sms",
+            "third_party",
+            "wechat",
+            "qq",
+            "weibo"
           ],
-          "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
+          "verification_observed": [
+            "sms"
+          ],
+          "password_state": "not_observed_before_verification",
           "ui_types": [
             "inline_widget"
           ],
-          "safe_stop": "已记录页面阻断因素，未继续交互",
-          "limitations": [],
+          "safe_stop": "安全测量停在短信验证码步骤，验证后页面未访问",
+          "limitations": [
+            "验证后情况未确认：需要完成身份验证后才能确认后续口令政策"
+          ],
           "steps": [
             {
               "step": 1,
@@ -343,12 +464,46 @@
               ],
               "methods": [
                 "auto_signup",
-                "phone"
+                "phone",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
               ],
               "blockers": [
-                "slide"
+                "sms_code"
               ],
-              "actions": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [
+                "password_tab",
+                "qr_tab"
+              ],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.4399.com/",
+              "ui_type": "inline_widget",
+              "fields": [
+                "phone"
+              ],
+              "methods": [
+                "auto_signup",
+                "phone",
+                "qq",
+                "sso",
+                "wechat",
+                "weibo"
+              ],
+              "blockers": [
+                "sms_code",
+                "captcha"
+              ],
+              "actions": [
+                "none"
+              ],
               "tabs": [
                 "password_tab",
                 "qr_tab"
@@ -358,14 +513,14 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:52:17.956018+00:00",
+            "measured_at": "2026-08-17T02:15:39.312448+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
           "raw_result": {
             "flow_type": "human_blocked",
             "stop_reason": "human_blocked",
-            "primary_method": "unknown"
+            "primary_method": "sms"
           },
           "policy": {
             "schema_version": "1.0",
@@ -374,20 +529,22 @@
               "status": "blocked_or_partial",
               "confidence": "high",
               "stop_reason": "human_blocked",
-              "evidence_boundary": "safely_reachable_ui"
+              "evidence_boundary": "pre_verification_only"
             },
             "authentication": {
               "observed_methods": [
                 "sms_or_otp",
+                "third_party",
                 "phone"
               ],
               "password_status": "not_determined",
               "password_observed": false,
-              "verification_observed": false,
+              "verification_observed": true,
               "phone_observed": true,
               "identifier_observed": false,
               "blocking_factors": [
-                "slide"
+                "captcha",
+                "sms_code"
               ]
             },
             "security": {

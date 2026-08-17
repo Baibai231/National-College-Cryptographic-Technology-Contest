@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.843102+00:00",
+  "generated_at": "2026-08-17T03:12:44.162161+00:00",
   "report_title": "www.51cto.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -317,7 +317,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:16:24.476005+00:00",
+            "measured_at": "2026-08-17T01:41:53.723224+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -503,7 +503,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:16:16.470851+00:00",
+            "measured_at": "2026-08-17T01:41:33.999106+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.867338+00:00",
+  "generated_at": "2026-08-17T03:12:44.185953+00:00",
   "report_title": "www.hujiang.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -93,7 +93,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:57:28.509012+00:00",
+            "measured_at": "2026-08-17T02:20:51.046133+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -234,7 +234,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:57:26.536762+00:00",
+            "measured_at": "2026-08-17T02:20:49.701127+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

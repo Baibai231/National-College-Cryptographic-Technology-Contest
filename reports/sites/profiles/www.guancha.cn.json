@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.865556+00:00",
+  "generated_at": "2026-08-17T03:12:44.184360+00:00",
   "report_title": "www.guancha.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -249,7 +249,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:20:12.928050+00:00",
+            "measured_at": "2026-08-17T01:45:30.446594+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -419,7 +419,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:20:05.632540+00:00",
+            "measured_at": "2026-08-17T01:45:23.227884+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

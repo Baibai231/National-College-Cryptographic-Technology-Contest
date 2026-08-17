@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.879418+00:00",
+  "generated_at": "2026-08-17T03:12:44.198096+00:00",
   "report_title": "www.mingdao.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -89,7 +89,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:58:27.375822+00:00",
+            "measured_at": "2026-08-17T02:21:51.047693+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -200,7 +200,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:58:22.908495+00:00",
+            "measured_at": "2026-08-17T02:21:49.373657+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

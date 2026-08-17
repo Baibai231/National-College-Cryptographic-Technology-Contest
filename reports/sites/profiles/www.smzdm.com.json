@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.884351+00:00",
+  "generated_at": "2026-08-17T03:12:44.203963+00:00",
   "report_title": "www.smzdm.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -27,7 +27,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "手机号 → 短信验证码/一次性验证码",
               "fields_observed": [
@@ -76,6 +76,19 @@
             {
               "step": 1,
               "url": "https://www.smzdm.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.smzdm.com/",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -97,7 +110,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:12:27.305967+00:00",
+            "measured_at": "2026-08-17T01:38:19.329412+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -146,7 +159,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -191,6 +204,19 @@
             {
               "step": 1,
               "url": "https://www.smzdm.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "entry_click"
+              ],
+              "tabs": [],
+              "note": "register_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.smzdm.com/",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -209,7 +235,7 @@
               "note": "register_accessible_text_clicked_and_changed"
             },
             {
-              "step": 2,
+              "step": 3,
               "url": "https://www.smzdm.com/",
               "ui_type": "unknown",
               "fields": [],
@@ -224,7 +250,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:12:25.348064+00:00",
+            "measured_at": "2026-08-17T01:38:08.470804+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

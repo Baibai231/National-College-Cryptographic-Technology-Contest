@@ -853,3 +853,16 @@ CRAWL_PROXY/HTTPS_PROXY/HTTP_PROXY 时强制加 `--no-proxy-server` 绕过系统
 - **残余差异（如实记录，不过拟合）**：约 35 站非空程序仍缺方法——多为
   隐藏折叠里的第三方（zhaopin 左上角微信等）、验证后口令（yicai/yiche/
   you.163/y.qq signup，安全边界不可达）、App-first/波动空程序 44 站。
+
+### 38. v5 追加两遍全量（第 3、4 轮）完成（2026-08-17）
+
+- 第 3 轮：304 条（失败 1，稳定后剩余 91 条未知/波动如实保留）。
+- 第 4 轮：304 条（失败 1，稳定后剩余 89 条）。
+- 四轮 flow 完全一致 282/304（93%）；不一致按多数投票仲裁，平票按人工
+  核验支持度，全失败回退上一版。
+- 最终数据（reports/sites/sites_latest.jsonl）：direct_password 97、
+  unknown 81、human_blocked 79、otp_only 29、no_web_signup 7、sso_only 5、
+  email_only 4、verification_then_password 2。决策表
+  reports/archive/v5_final_decisions.md。
+- 逐站比对残余差异与上轮相同性质：隐藏第三方/验证后口令/App-first 空程序
+  （如实记录，不过拟合）。

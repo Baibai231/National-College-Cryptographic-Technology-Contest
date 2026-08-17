@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.881877+00:00",
+  "generated_at": "2026-08-17T03:12:44.201065+00:00",
   "report_title": "www.people.com.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -269,7 +269,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:33:33.565919+00:00",
+            "measured_at": "2026-08-17T01:56:13.371001+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -428,7 +428,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:33:02.752588+00:00",
+            "measured_at": "2026-08-17T01:55:53.998114+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

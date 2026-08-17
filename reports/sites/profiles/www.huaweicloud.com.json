@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.866772+00:00",
+  "generated_at": "2026-08-17T03:12:44.185493+00:00",
   "report_title": "www.huaweicloud.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -270,7 +270,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:49:28.228176+00:00",
+            "measured_at": "2026-08-17T02:11:57.527739+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -314,7 +314,7 @@
         "signup": {
           "status": "observed",
           "start_url": "https://www.huaweicloud.com/",
-          "final_url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=cfa4a9e702b34199a499468c9e266778&lang=zh-cn",
+          "final_url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=99eeef6d5e384b43bd41c57bbf212288&lang=zh-cn",
           "observed_route": "手机号 → 短信验证码/一次性验证码",
           "observed_routes": [
             {
@@ -381,7 +381,7 @@
             },
             {
               "step": 2,
-              "url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=cfa4a9e702b34199a499468c9e266778&lang=zh-cn",
+              "url": "https://id1.cloud.huawei.com/UnifiedIDMPortal/portal/userRegister/quickRegister.html?access_type=offline&clientID=103493351&loginChannel=88000000&reqClientType=88&themeName=red&loginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2Flogin.html%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F%23&casLoginUrl=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin&service=https%3A%2F%2Fauth.huaweicloud.com%2Fauthui%2FcasLogin%3Fservice%3Dhttps%253A%252F%252Fwww.huaweicloud.com%252F&countryCode=cn&scope=https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Funified.profile+https%3A%2F%2Fwww.huawei.com%2Fauth%2Faccount%2Frisk.idstate+LoginState&cVersion=UP_CAS_6.26.2.100&state=99eeef6d5e384b43bd41c57bbf212288&lang=zh-cn",
               "ui_type": "inline_widget",
               "fields": [
                 "phone",
@@ -403,7 +403,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:49:20.665048+00:00",
+            "measured_at": "2026-08-17T02:11:55.562832+00:00",
             "raw_flow_type": "otp_only",
             "raw_stop_reason": "no_password_observed"
           },

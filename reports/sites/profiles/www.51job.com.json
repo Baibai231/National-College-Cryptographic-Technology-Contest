@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.843791+00:00",
+  "generated_at": "2026-08-17T03:12:44.162716+00:00",
   "report_title": "www.51job.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -350,7 +350,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:26:09.573924+00:00",
+            "measured_at": "2026-08-17T01:51:25.041458+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -509,7 +509,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:26:02.725193+00:00",
+            "measured_at": "2026-08-17T01:51:23.165058+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

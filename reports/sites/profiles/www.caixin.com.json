@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.850927+00:00",
+  "generated_at": "2026-08-17T03:12:44.170073+00:00",
   "report_title": "www.caixin.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -88,7 +88,7 @@
           ],
           "measurement": {
             "confidence": "medium",
-            "measured_at": "2026-08-16T19:37:37.868898+00:00",
+            "measured_at": "2026-08-17T02:00:03.481336+00:00",
             "raw_flow_type": "email_only",
             "raw_stop_reason": "no_password_observed"
           },
@@ -130,43 +130,33 @@
           "status": "observed",
           "start_url": "https://www.caixinglobal.com/",
           "final_url": "https://u.caixinglobal.com/user/register.html",
-          "observed_route": "手机号/邮箱 → 短信验证码/邮箱验证码 → 口令；备选：邮箱 → 邮箱验证码 → 口令",
+          "observed_route": "手机号/邮箱；备选：邮箱 → 邮箱验证码 → 口令",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1,
-                2
+                1
               ],
-              "summary": "手机号/邮箱 → 短信验证码/邮箱验证码 → 口令",
+              "summary": "手机号/邮箱",
               "fields_observed": [
                 "phone",
-                "email",
-                "password",
-                "code"
+                "email"
               ],
               "methods_observed": [
-                "password",
                 "phone",
-                "email",
-                "sms",
-                "email_otp"
+                "email"
               ],
-              "verification_observed": [
-                "sms",
-                "email_otp"
-              ],
-              "password_state": "observed_alongside_verification",
+              "verification_observed": [],
+              "password_state": "not_observed_in_safely_reachable_flow",
               "ui_types": [
-                "inline_widget",
                 "multi_step_wizard"
               ],
-              "safe_stop": "已到达口令输入界面，未提交表单"
+              "safe_stop": "已走完当前安全可达范围"
             },
             {
               "route_id": "automatic_route_2",
               "step_numbers": [
-                3
+                2
               ],
               "summary": "邮箱 → 邮箱验证码 → 口令",
               "fields_observed": [
@@ -206,12 +196,12 @@
             "sms",
             "email_otp"
           ],
-          "password_state": "observed_alongside_verification",
+          "password_state": "multiple_observed_routes",
           "ui_types": [
             "inline_widget",
             "multi_step_wizard"
           ],
-          "safe_stop": "已到达口令输入界面，未提交表单",
+          "safe_stop": "已走完当前安全可达范围；已到达口令输入界面，未提交表单",
           "limitations": [],
           "steps": [
             {
@@ -228,29 +218,7 @@
               ],
               "blockers": [],
               "actions": [
-                "entry_click"
-              ],
-              "tabs": [
-                "register_tab"
-              ],
-              "note": "register_accessible_text_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://u.caixinglobal.com/user/register.html",
-              "ui_type": "inline_widget",
-              "fields": [
-                "email",
-                "password",
-                "code"
-              ],
-              "methods": [
-                "email"
-              ],
-              "blockers": [
-                "email_code"
-              ],
-              "actions": [
+                "none",
                 "tab_click"
               ],
               "tabs": [
@@ -259,7 +227,7 @@
               "note": "register_tab_clicked_no_change"
             },
             {
-              "step": 3,
+              "step": 2,
               "url": "https://u.caixinglobal.com/user/register.html",
               "ui_type": "inline_widget",
               "fields": [
@@ -282,12 +250,12 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:37:06.949190+00:00",
-            "raw_flow_type": "identifier_then_password",
+            "measured_at": "2026-08-17T01:59:52.399478+00:00",
+            "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
           "raw_result": {
-            "flow_type": "identifier_then_password",
+            "flow_type": "direct_password",
             "stop_reason": "password_step_reached",
             "primary_method": "password"
           },

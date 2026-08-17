@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.890076+00:00",
+  "generated_at": "2026-08-17T03:12:44.209611+00:00",
   "report_title": "www.yicai.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -173,10 +173,10 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "entry_click"
+                "hover_click"
               ],
               "tabs": [],
-              "note": "entry_clicked_no_change"
+              "note": "hover_login_clicked_and_changed"
             },
             {
               "step": 2,
@@ -290,7 +290,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:38:19.230725+00:00",
+            "measured_at": "2026-08-17T02:01:41.185545+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -339,8 +339,7 @@
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                2,
-                3
+                2
               ],
               "summary": "手机号 → 短信验证码",
               "fields_observed": [
@@ -389,37 +388,13 @@
               "methods": [],
               "blockers": [],
               "actions": [
-                "hover_click"
-              ],
-              "tabs": [],
-              "note": "hover_login_clicked_and_changed"
-            },
-            {
-              "step": 2,
-              "url": "https://www.yicai.com/",
-              "ui_type": "inline_widget",
-              "fields": [
-                "phone",
-                "code"
-              ],
-              "methods": [
-                "auto_signup",
-                "phone"
-              ],
-              "blockers": [
-                "sms_code"
-              ],
-              "actions": [
                 "entry_click"
               ],
-              "tabs": [
-                "sms_tab",
-                "password_tab"
-              ],
+              "tabs": [],
               "note": "entry_clicked_no_change"
             },
             {
-              "step": 3,
+              "step": 2,
               "url": "https://www.yicai.com/",
               "ui_type": "inline_widget",
               "fields": [
@@ -446,7 +421,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:37:46.279879+00:00",
+            "measured_at": "2026-08-17T02:00:20.639717+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

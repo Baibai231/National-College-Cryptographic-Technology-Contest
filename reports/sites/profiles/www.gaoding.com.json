@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.864168+00:00",
+  "generated_at": "2026-08-17T03:12:44.183069+00:00",
   "report_title": "www.gaoding.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -210,6 +210,7 @@
               ],
               "blockers": [],
               "actions": [
+                "entry_click",
                 "entry_click"
               ],
               "tabs": [],
@@ -240,7 +241,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:57:03.612638+00:00",
+            "measured_at": "2026-08-17T02:20:29.823427+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },

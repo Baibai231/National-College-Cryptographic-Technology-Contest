@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.875475+00:00",
+  "generated_at": "2026-08-17T03:12:44.193741+00:00",
   "report_title": "www.kuwo.cn 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -98,7 +98,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:31:42.526080+00:00",
+            "measured_at": "2026-08-17T01:55:34.269338+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },
@@ -241,7 +241,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:31:19.468687+00:00",
+            "measured_at": "2026-08-17T01:55:31.452573+00:00",
             "raw_flow_type": "direct_password",
             "raw_stop_reason": "password_step_reached"
           },

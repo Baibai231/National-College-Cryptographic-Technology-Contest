@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-16T20:43:42.861252+00:00",
+  "generated_at": "2026-08-17T03:12:44.180330+00:00",
   "report_title": "www.eastmoney.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
@@ -65,7 +65,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:45:06.359662+00:00",
+            "measured_at": "2026-08-17T02:07:45.730919+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
@@ -149,7 +149,7 @@
           ],
           "measurement": {
             "confidence": "high",
-            "measured_at": "2026-08-16T19:44:38.801374+00:00",
+            "measured_at": "2026-08-17T02:07:18.162335+00:00",
             "raw_flow_type": "human_blocked",
             "raw_stop_reason": "human_blocked"
           },
