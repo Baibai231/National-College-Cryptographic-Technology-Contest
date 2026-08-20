@@ -87,10 +87,11 @@
     </div>
     <div class="input-group">
       <input id="classify-url" class="form-control" placeholder="https://example.com">
-      <select id="classify-kind" class="form-select" style="max-width:130px">
+      <select id="classify-kind" class="form-select" style="max-width:170px">
         <option value="both">注册+登录</option>
         <option value="signup">注册</option>
         <option value="login">登录</option>
+        <option value="policy">测试密码政策</option>
       </select>
       <button id="classify-btn" class="btn btn-success">开始分类</button>
     </div>
@@ -633,6 +634,7 @@ async function showDetail(host) {
   const pwdSide = (side) => pwd[side] || pwd.overall || '';
   document.getElementById('modal-body').innerHTML = `
     ${reportTableHtml(loginWithPwd, signupWithPwd, s.version)}
+    ${measuredPwdHtml(s.login.pwd_policy, s.signup.pwd_policy)}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
@@ -800,6 +802,97 @@ function addSiteBarHtml(btnLabel, tip) {
       <span class="text-muted small">${tip}</span>
     </div>`;
 }
+// 测试密码政策
+async function measurePolicy(url) {
+  const r = await fetch('/api/policy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, method: 'auto' })
+  });
+  return await r.json();
+}
+const PERM_CHAR_ZH = { p_space: '空格', p_unicd: 'Unicode 字符', p_emoji: 'Emoji',
+  p_spn1: '@', p_spn2: '#', p_spn3: '!', p_spn4: '$' };
+const PERM_SEQ_ZH = { p_rep: '重复字符', p_seq: '连续字符', p_dict: '字典词' };
+function listTrueZh(dict, zhMap) {
+  return Object.keys(dict || {}).filter(k => dict[k] === true)
+    .map(k => zhMap[k] || k).join('、');
+}
+function measuredPolicyHtml(policy, methodUsed) {
+  if (methodUsed === 'classified_only') {
+    const pt = policyText(policy);
+    return '<div class="small">密码政策：' +
+      (pt && pt !== '未测量' ? pt : '无可测口令框（仅完成分类）') + '</div>';
+  }
+  if (!policy || !Object.keys(policy).length) {
+    return '<div class="small text-muted">未测量到密码政策</div>';
+  }
+  const length = policy.length || [];
+  const r = policy.restrictive || {};
+  const p = policy.permissive || {};
+  const lines = [];
+  const lenParts = [];
+  if (length[0] > 0) lenParts.push('最小 ' + length[0] + ' 位');
+  if (length[1] > 0) lenParts.push('最大 ' + length[1] + ' 位');
+  lines.push('<b>长度：</b>' + (lenParts.length ? lenParts.join('，') : '未确定'));
+  const reqs = [];
+  if (r.r_dig_min) reqs.push('至少 ' + r.r_dig_min + ' 个数字');
+  if (r.r_upp_min) reqs.push('至少 ' + r.r_upp_min + ' 个大写字母');
+  if (r.r_low_min) reqs.push('至少 ' + r.r_low_min + ' 个小写字母');
+  if (r.r_sps_min) reqs.push('至少 ' + r.r_sps_min + ' 个特殊符号');
+  if (r.r_l_start) reqs.push('必须以字母开头');
+  if (r.r_2_word) reqs.push('需多词结构');
+  if (r.r_no_a_sps) reqs.push('不允许特殊符号');
+  if (r.r_cmb44) reqs.push('需含大小写字母+数字+特殊符号四类');
+  else if (r.r_cmb34) reqs.push('需含大小写字母/数字/特殊符号中三类');
+  else if (r.r_cmb24) reqs.push('需含四类字符中两类');
+  else if (r.r_cmb33) reqs.push('需含字母+数字+特殊符号三类');
+  else if (r.r_cmb23) reqs.push('需含字母/数字/特殊符号中两类');
+  lines.push('<b>限制：</b>' + (reqs.length ? reqs.join('；') : '无特殊限制'));
+  const perm = [];
+  const chars = listTrueZh(p.permitted_characters, PERM_CHAR_ZH);
+  const seqs = listTrueZh(p.permitted_sequences, PERM_SEQ_ZH);
+  if (chars) perm.push('字符（' + chars + '）');
+  if (seqs) perm.push('序列（' + seqs + '）');
+  const sd = p.short_and_long_password || {};
+  const slParts = [];
+  if (sd.p_shortd) slParts.push('极短密码被接受');
+  if (sd.p_longd) slParts.push('极长密码被接受');
+  if (slParts.length) perm.push(slParts.join('、'));
+  if (p.breached_password && p.breached_password.p_br) perm.push('拦截泄密口令');
+  lines.push('<b>允许：</b>' + (perm.length ? perm.join('；') : '未检测'));
+  return '<div class="small">' + lines.join('<br>') + '</div>';
+}
+function measuredPwdHtml(loginPwd, signupPwd) {
+  // 站点详情里仅在存在实测口令规则时显示（避免每站都多一行噪音）
+  const has = p => p && typeof p === 'object' && Object.keys(p).length;
+  if (!has(loginPwd) && !has(signupPwd)) return '';
+  const row = (label, p) => has(p)
+    ? `<div class="mt-1"><b>${label}实测口令规则：</b>${measuredPolicyHtml(p)}</div>` : '';
+  return `<div class="alert alert-light py-2 mt-2">${row('登录', loginPwd)}${row('注册', signupPwd)}</div>`;
+}
+function policyBoxHtml(d) {
+  const methodLabel = d.method_used === 'inline' ? 'inline（不提交即可判断）'
+    : d.method_used === 'full' ? 'full（需提交）'
+    : (d.method_used || '—');
+  const warn = d.suspicious_login_form
+    ? '<div class="alert alert-warning py-1">疑似在登录表单上测量，政策数据可能不可信</div>' : '';
+  const meta = [
+    d.class_letter ? '类型 ' + esc(d.class_letter) : '',
+    d.method_used ? '方法 ' + esc(methodLabel) : '',
+    d.stop_reason ? '停止原因：' + esc(d.stop_reason) : '',
+    d.confidence ? '置信度 ' + esc(d.confidence) : '',
+  ].filter(Boolean).join(' · ');
+  return `
+    <div class="alert alert-info py-2 mb-2">
+      <div><b>测试密码政策</b> ${badge(d.flow_type)}</div>
+      ${meta ? `<div class="small text-muted mt-1">${meta}</div>` : ''}
+      ${warn}
+      <div class="mt-2">${measuredPolicyHtml(d.policy, d.method_used)}</div>
+      ${d.note ? `<div class="small text-muted mt-1">${esc(d.note)}</div>` : ''}
+      ${d.error ? `<div class="small text-danger mt-1">${esc(d.error)}</div>` : ''}
+    </div>`;
+}
 document.getElementById('classify-btn').addEventListener('click', async () => {
   const url = document.getElementById('classify-url').value.trim();
   const kind = document.getElementById('classify-kind').value;
@@ -826,6 +919,20 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
         <div class="mt-2">${extraLines(d1, '注册')}${extraLines(d2, '登录')}</div>
       </div>
       ${addSiteBarHtml('两侧一起加入数据库', '登录和注册结果一起入库')}`;
+    } else if (kind === 'policy') {
+      btn.textContent = '测试密码政策中（约 1-3 分钟）…';
+      box.innerHTML = '<div class="spinner-border spinner-border-sm"></div> 正在访问并测量密码政策，请稍候…';
+      const d = await measurePolicy(url);
+      if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail || '测量失败')}</div>`; return; }
+      lastClassify = d;
+      if (d.method_used === 'classified_only') {
+        // 无口令框：与「注册」分类完全相同的输出（复用 classifyBoxHtml）
+        box.innerHTML = classifyBoxHtml(d, '注册')
+          + addSiteBarHtml('加入数据库', '无口令框，仅存注册分类结果');
+      } else {
+        box.innerHTML = policyBoxHtml(d)
+          + addSiteBarHtml('加入数据库', '注册分类 + 实测口令政策一起入库');
+      }
     } else {
       btn.textContent = '分类中（约 1-3 分钟）…';
       const d = await classifyOne(url, kind);
@@ -864,10 +971,14 @@ async function addSiteToDb() {
   } else {
     const d = lastClassify;
     url = d.url || '';
+    // 实测口令政策（inline/full）：policy 存分类政策，pwd_policy 存实测口令规则
+    const isPwdMeasured = d.method_used === 'inline' || d.method_used === 'full';
     const entry = {
       flow_type: d.flow_type, flow_zh: d.flow_zh,
       route: d.route || '', final_url: d.final_url || '',
-      steps: d.states || [], raw_states: d.states || [], policy: d.policy || {},
+      steps: d.states || [], raw_states: d.states || [],
+      policy: isPwdMeasured ? (d.classification_policy || {}) : (d.policy || {}),
+      pwd_policy: isPwdMeasured ? (d.policy || {}) : {},
       confidence: d.confidence, stop_reason: d.stop_reason,
       primary_method: d.primary_method, evidence: d.evidence || [],
       error: d.error || null, measured_at: d.measured_at

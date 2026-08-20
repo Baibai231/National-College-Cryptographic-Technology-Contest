@@ -37,6 +37,10 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+# 后端运行默认无头：不弹出 Chrome 窗口（复用 main._get_new_driver 已支持的
+# SITES_HEADLESS 机制）。本地调试想看浏览器时设 SITES_HEADLESS=0 再启动。
+os.environ.setdefault("SITES_HEADLESS", "1")
+
 DB_PATH = os.environ.get(
     "SITES_DB", str(_PROJECT_ROOT / "webapp" / "sites.db"))
 REPORTS_PATH = Path(os.environ.get(
@@ -61,6 +65,14 @@ try:
 except ValueError:
     _CLASSIFY_CONCURRENCY = 2
 _CLASSIFY_SEMAPHORE = threading.BoundedSemaphore(_CLASSIFY_CONCURRENCY)
+
+# 密码政策测量比纯分类更重（填表/可能提交），默认并发更低，可用环境变量调高。
+try:
+    _POLICY_CONCURRENCY = max(1, int(os.environ.get(
+        "SITES_POLICY_CONCURRENCY", "1")))
+except ValueError:
+    _POLICY_CONCURRENCY = 1
+_POLICY_SEMAPHORE = threading.BoundedSemaphore(_POLICY_CONCURRENCY)
 
 FLOW_ZH = {
     "direct_password": "有口令框", "identifier_then_password": "先账号后口令框",
@@ -143,6 +155,7 @@ def _row_to_site(row):
             "steps": details.get("login_steps", []),
             "raw_states": login_states,
             "policy": details.get("login_policy", {}),
+            "pwd_policy": details.get("login_pwd_policy", {}),
             "stop_reason": login_record.get("stop_reason"),
             "confidence": login_record.get("confidence"),
             "primary_method": login_record.get("primary_method"),
@@ -159,6 +172,7 @@ def _row_to_site(row):
             "steps": details.get("signup_steps", []),
             "raw_states": signup_states,
             "policy": details.get("signup_policy", {}),
+            "pwd_policy": details.get("signup_pwd_policy", {}),
             "stop_reason": signup_record.get("stop_reason"),
             "confidence": signup_record.get("confidence"),
             "primary_method": signup_record.get("primary_method"),
@@ -360,6 +374,7 @@ def add_site(req: AddSiteRequest):
             details_obj[f"{kind}_steps"] = states
             details_obj[f"{kind}_raw_states"] = states
             details_obj[f"{kind}_policy"] = record.get("policy") or {}
+            details_obj[f"{kind}_pwd_policy"] = record.get("pwd_policy") or {}
             details_obj[f"{kind}_error"] = record.get("error")
             details_obj[f"{kind}_record"] = record
         details = json.dumps(details_obj, ensure_ascii=False)
@@ -819,6 +834,11 @@ class ClassifyRequest(BaseModel):
     entry_kind: Literal["signup", "login"] = "signup"
 
 
+class PolicyRequest(BaseModel):
+    url: str = Field(max_length=2048)
+    method: Literal["auto", "inline", "full"] = "auto"
+
+
 class ReviewRequest(BaseModel):
     hostname: str = Field(max_length=253)
     login: str = Field("", max_length=4000)
@@ -1091,6 +1111,32 @@ def _combo_methods_for(states, flow_type, entry_kind=""):
         _states_to_objects(states), flow_type=flow_type or "")]
 
 
+def _classification_response(url: str, entry_kind: str, result: dict) -> dict:
+    """把一次分类结果格式化为 /api/classify 的统一返回结构。
+
+    供 /api/classify 与 /api/policy 的 classified_only 分支共用，保证
+    「无口令框」时「测试密码政策」的输出与「注册分类」完全一致。
+    """
+    flow_type = result.get("flow_type")
+    states = result.get("states") or []
+    return {
+        "url": url,
+        "entry_kind": entry_kind,
+        "flow_type": flow_type,
+        "flow_zh": FLOW_ZH.get(flow_type, "未确认"),
+        "stop_reason": result.get("stop_reason"),
+        "primary_method": result.get("primary_method"),
+        "confidence": result.get("confidence"),
+        "final_url": result.get("final_url"),
+        "states": states,
+        "methods": _combo_methods_for(states, flow_type, entry_kind),
+        "evidence": result.get("evidence") or [],
+        "policy": result.get("classification_policy") or result.get("policy") or {},
+        "error": result.get("error"),
+        "measured_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def _run_live_classification(url: str, kind: str) -> dict:
     """Run one live Chrome classification; caller owns the concurrency slot."""
     from utils.util_test_password import _get_new_driver
@@ -1114,23 +1160,7 @@ def _run_live_classification(url: str, kind: str) -> dict:
             signup_url, entry_kind=kind,
             entry_already_clicked=bool(entry_clicked and kind == "signup"),
         )
-        return {
-            "url": url,
-            "entry_kind": kind,
-            "flow_type": result.get("flow_type"),
-            "flow_zh": FLOW_ZH.get(result.get("flow_type"), "未确认"),
-            "stop_reason": result.get("stop_reason"),
-            "primary_method": result.get("primary_method"),
-            "confidence": result.get("confidence"),
-            "final_url": result.get("final_url"),
-            "states": result.get("states", []),
-            "methods": _combo_methods_for(
-                result.get("states", []), result.get("flow_type"), kind),
-            "evidence": result.get("evidence", []),
-            "policy": result.get("policy", {}),
-            "error": result.get("error"),
-            "measured_at": datetime.now(timezone.utc).isoformat(),
-        }
+        return _classification_response(url, kind, result)
     finally:
         try:
             driver.quit()
@@ -1198,6 +1228,69 @@ def classify_site(req: ClassifyRequest):
             500, "分类失败: {}: {}".format(type(exc).__name__, str(exc)[:200]))
     finally:
         _CLASSIFY_SEMAPHORE.release()
+
+
+def _run_live_policy(url: str, method: str) -> dict:
+    """Run one full password-policy measurement; caller owns the concurrency slot.
+
+    复用 main.test_single_site（分类 → _detect_method → inline/full 测量）。
+    只写 logs/<host>/ 日志、不落 JSON 结果文件（save_result 在 CLI main() 里）。
+
+    无口令框时（method_used == classified_only / 无注册界面）不测量，
+    输出与「注册分类」完全一致（复用 _classification_response）。
+    """
+    from main import test_single_site
+    result = test_single_site(url, method=method)
+    policy = result.get("policy") or {}
+    # 实测口令政策带 "restrictive" 键；分类政策/空政策没有 → 是否真的测到了口令政策。
+    measured = isinstance(policy, dict) and "restrictive" in policy
+    if not measured:
+        response = _classification_response(url, "signup", result)
+        response["method_used"] = result.get("method_used") or "classified_only"
+        response["class_letter"] = result.get("class_letter")
+        return response
+    return {
+        "url": url,
+        "method_used": result.get("method_used"),
+        "flow_type": result.get("flow_type"),
+        "flow_zh": FLOW_ZH.get(result.get("flow_type"), "未确认"),
+        "class_letter": result.get("class_letter"),
+        "confidence": result.get("confidence"),
+        "stop_reason": result.get("stop_reason"),
+        "primary_method": result.get("primary_method"),
+        "methods": result.get("methods", []),
+        "states": result.get("states", []),
+        "evidence": result.get("evidence", []),
+        "final_url": result.get("final_url"),
+        # 分类政策元数据（供「加入数据库」时 policy 字段存分类政策）
+        "classification_policy": result.get("classification_policy") or {},
+        "error": result.get("error"),
+        "note": result.get("note"),
+        "suspicious_login_form": result.get("suspicious_login_form", False),
+        "policy": policy,
+        "measured_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.post("/api/policy")
+def measure_policy(req: PolicyRequest):
+    """输入网站主页 → 完整测量密码政策（安全只读：只填口令框、不填身份信息）。"""
+    url, host = _validated_classify_url(req.url, resolve=False)
+    if not _POLICY_SEMAPHORE.acquire(blocking=False):
+        raise HTTPException(429, "服务器正在执行其他密码政策测试，请稍后重试")
+    try:
+        _validated_classify_url(url, resolve=True)
+        data = _run_live_policy(url, req.method)
+        data["hostname"] = host
+        return data
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            500, "密码政策测试失败: {}: {}".format(
+                type(exc).__name__, str(exc)[:200]))
+    finally:
+        _POLICY_SEMAPHORE.release()
 
 
 # 静态前端

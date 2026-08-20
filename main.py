@@ -283,6 +283,13 @@ def _apply_classification_to_result(result: dict, classification: dict) -> None:
     result["primary_method"] = classification.get("primary_method", "")
     # v4 逐方法清单（aggregate_methods 数据层）：method/name_zh/status/blockers/route/steps
     result["methods"] = classification.get("methods", [])
+    # 分类流程的完整证据（供 webapp 复用分类输出 / 落库用）
+    result["states"] = classification.get("states", [])
+    result["evidence"] = classification.get("evidence", [])
+    result["final_url"] = classification.get("final_url", "")
+    # 分类政策元数据（authentication/measurement），与实测口令政策
+    # （length/restrictive/permissive，存 result["policy"]）区分
+    result["classification_policy"] = classification.get("policy", {})
 
 
 # ================================================================

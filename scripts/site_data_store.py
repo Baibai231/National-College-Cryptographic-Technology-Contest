@@ -9,16 +9,29 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import threading
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+# Windows 无 fcntl 时的进程内锁（本地单进程 uvicorn 足够保证一致性；
+# 服务器端仍走 fcntl 跨进程锁，互不影响）。
+_WINDOWS_LOCK = threading.Lock()
+
 
 @contextmanager
 def coordinated_data_lock(path: Path | str):
-    """Take an exact-path advisory lock shared by the web app and sync job."""
-    import fcntl
+    """Take an exact-path advisory lock shared by the web app and sync job.
+
+    Linux 用 fcntl.flock 提供跨进程锁；Windows 退化为进程内线程锁。
+    """
+    try:
+        import fcntl
+    except ImportError:
+        with _WINDOWS_LOCK:
+            yield
+        return
 
     lock_path = Path(path)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -59,6 +72,8 @@ def measurement_record(hostname: str, site_url: str, version: str,
         "states": states,
         "methods": entry.get("methods") or [],
         "policy": entry.get("policy") or {},
+        # 实测口令政策（length/restrictive/permissive），与分类 policy 分开存
+        "pwd_policy": entry.get("pwd_policy") or {},
         "evidence": entry.get("evidence") or [],
         "error": entry.get("error"),
         "start_url": entry.get("start_url") or url,
