@@ -471,6 +471,11 @@ class FullFormPolicyTester:
         # 限制最大搜索长度（超过此长度仍未找到 → 极可能是登录表单）
         MAX_SEARCH_LENGTH = 12
 
+        # 时间预算：防止在登录表单等"无密码反馈"的页面上空转
+        # （登录表单不会给注册密码反馈，逐长度试探永远被拒，只能靠时间兜底退出）
+        ADMISSIBLE_DEADLINE_SECONDS = 120
+        deadline = time.monotonic() + ADMISSIBLE_DEADLINE_SECONDS
+
         for length in range(8, min(33, MAX_SEARCH_LENGTH + 1)):
             if length <= 10:
                 candidates = admissible_list[str(length)]
@@ -482,6 +487,12 @@ class FullFormPolicyTester:
                 ]
 
             for pwd in candidates:
+                if time.monotonic() > deadline:
+                    self.my_logger.warning(
+                        f"Admissible search exceeded {ADMISSIBLE_DEADLINE_SECONDS}s budget, "
+                        f"giving up early (likely a login form with no password feedback)."
+                    )
+                    return ""
                 if self.test_one_password(pwd, "Find admissible"):
                     self.admissible_password = pwd
                     with open(cache_path, "w", encoding="utf-8") as f:

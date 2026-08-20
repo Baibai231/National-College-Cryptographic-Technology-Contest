@@ -944,6 +944,11 @@ class SignupFlowClassifierEngine:
         var s = getComputedStyle(el);
         if (s.display === 'none' || s.visibility === 'hidden') return false;
         if (parseFloat(s.opacity) === 0) return false;
+        // 离屏元素（left 为负等）仍可能有宽高，需排除，避免选到隐藏表单里
+        // 的"去注册"死链（icourse163 实测）。
+        var vw = window.innerWidth || document.documentElement.clientWidth;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        if (r.right <= 0 || r.bottom <= 0 || r.left >= vw || r.top >= vh) return false;
         return true;
     }
     var candidates = [];
@@ -1010,8 +1015,16 @@ class SignupFlowClassifierEngine:
                     By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
                 el.click()
             except Exception as e:
-                logger.warning("切回注册 tab 可信点击失败: {}".format(e))
-                return False
+                # 原生 click 可能被模态框容器拦截（icourse163 "去注册"
+                # 实测 "element click intercepted"），回退 JS 点击。
+                try:
+                    el = self.driver.find_element(
+                        By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
+                    self.driver.execute_script(
+                        "arguments[0].click()", el)
+                except Exception:
+                    logger.warning("切回注册 tab 可信点击失败: {}".format(e))
+                    return False
             return True
         except Exception as e:
             logger.warning("切回注册 tab CDP 异常: {}: {}".format(type(e).__name__, e))
@@ -1031,14 +1044,18 @@ class SignupFlowClassifierEngine:
         """
         # 探索若从未真正切走（safe_click_tab 扫不到短信/邮箱 tab 时），浏览器
         # 仍停在注册口令视图，此时口令框（含 iframe 里）早已可见，无需再点。
-        if self._wait_for_field(self.driver, "password", timeout=1.0):
+        # 用 _locate_password_field() 而非 _wait_for_field("password")：
+        # 后者走 JS visible()，会漏掉 opacity:0/visibility:hidden 祖先的隐藏
+        # 登录口令框（icourse163 实测误判"已在口令视图"），前者用 Selenium
+        # is_displayed() 且能切进跨域注册 iframe，判断更准。
+        if self._locate_password_field() is not None:
             logger.info("全视图探索结束，浏览器已在注册口令视图，无需切回")
             return True
         # 首选：复用 _try_switch_to_signup_tab 的 CDP 深搜机制（safe_click_tab
         # 扫不到裸"注册"/label 里的注册入口，icourse163/xuetangx 实测失败）。
         if self._click_register_tab_via_cdp():
             time.sleep(1.5)
-            if self._wait_for_field(self.driver, "password", timeout=5):
+            if self._locate_password_field() is not None:
                 record_evidence(result, "return_to_signup_password_view:cdp")
                 logger.info("全视图探索结束，切回注册口令视图: cdp_register_tab")
                 return True
@@ -1049,7 +1066,7 @@ class SignupFlowClassifierEngine:
                 tab, outcome.clicked, outcome.reason))
             if outcome.clicked:
                 time.sleep(1.5)
-                if self._wait_for_field(self.driver, "password", timeout=5):
+                if self._locate_password_field() is not None:
                     record_evidence(
                         result,
                         "return_to_signup_password_view:{}".format(tab),
@@ -1103,33 +1120,38 @@ class SignupFlowClassifierEngine:
 
         return False
 
-    def get_current_password_field_xpath(self) -> Optional[str]:
-        """获取当前页面第一个可见密码字段的 XPath。
+    def _locate_password_field(self) -> Optional[dict]:
+        """定位当前可见口令框，返回 {'xpath': str, 'frame_path': tuple} 或 None。
 
-        分类器已导航到密码页面后，可用此方法获取 XPath 给 form filler 使用。
+        frame_path 为进入该口令框所需切换的 iframe 索引序列：
+        () 主文档，(2,) 顶层第 3 个 iframe，(1,0) 嵌套。分类流程在确认
+        "注册上下文出现口令框"时调用，随结果返回给表单填写器，避免下游
+        拿到一个不含 iframe 上下文的 XPath 而误操作主文档里的隐藏登录框。
 
-        注意：不少站点的注册口令框藏在跨域 iframe 里（icourse163 的
+        不少站点的注册口令框藏在跨域 iframe 里（icourse163 的
         reg.icourse163.org/index_reg2_new.html 实测），主文档里只有隐藏的
-        登录口令框。这里先查主文档可见口令框，查不到再逐个进入可见 iframe
-        查，避免 main.py 误判"不在口令视图"而触发无谓的重走。
+        登录口令框。这里先查主文档可见口令框，查不到再逐个进入可见认证
+        iframe 查（复用 page_detector 的 frame path 原语，支持嵌套）。
         """
         try:
             pwds = self.driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
             for el in pwds:
                 if el.is_displayed() and el.is_enabled():
-                    return self._make_xpath(el)
+                    return {"xpath": self._make_xpath(el), "frame_path": ()}
         except Exception:
             pass
-        # 跨域注册 iframe 兜底（163 等）：逐个进入可见 iframe 找口令框。
         try:
-            for frame in self.driver.find_elements(By.TAG_NAME, "iframe"):
+            from signup_flow_classifier.page_detector import (
+                _visible_frame_paths, _switch_to_frame_path)
+            for path in _visible_frame_paths(self.driver):
+                if not _switch_to_frame_path(self.driver, path):
+                    continue
                 try:
-                    self.driver.switch_to.frame(frame)
                     pwds = self.driver.find_elements(
                         By.CSS_SELECTOR, "input[type='password']")
                     for el in pwds:
                         if el.is_displayed() and el.is_enabled():
-                            return self._make_xpath(el)
+                            return {"xpath": self._make_xpath(el), "frame_path": path}
                 finally:
                     self.driver.switch_to.default_content()
         except Exception:
@@ -1138,6 +1160,15 @@ class SignupFlowClassifierEngine:
             except Exception:
                 pass
         return None
+
+    def get_current_password_field_xpath(self) -> Optional[str]:
+        """获取当前页面第一个可见密码字段的 XPath（供 main.py 重走判断用）。
+
+        返回不含 iframe 上下文的 XPath；需要 iframe 路径时请用
+        _locate_password_field() / 分类结果里的 password_field。
+        """
+        field = self._locate_password_field()
+        return field["xpath"] if field else None
 
     # ------------------------------------------------------------------
     # 内部方法
@@ -1342,8 +1373,21 @@ class SignupFlowClassifierEngine:
 
     @staticmethod
     def _make_xpath(el) -> str:
-        """为元素构造简单 XPath。"""
+        """为元素构造简单 XPath。
+
+        口令框优先加 @type='password' 限定：部分站点把注册口令框误标为
+        name='email'（icourse163 实测），不加 type 限定会让
+        //input[@name='email'] 命中真邮箱框而非口令框。
+        """
         try:
+            if (el.get_attribute("type") or "").lower() == "password":
+                val = el.get_attribute("id")
+                if val:
+                    return "//input[@type='password' and @id='{}']".format(val)
+                val = el.get_attribute("name")
+                if val:
+                    return "//input[@type='password' and @name='{}']".format(val)
+                return "//input[@type='password']"
             for attr in ("id", "name"):
                 val = el.get_attribute(attr)
                 if val:
@@ -1412,4 +1456,10 @@ class SignupFlowClassifierEngine:
             for s in result.states
         )
         d["signup_password_reached"] = getattr(result, "signup_password_reached", False)
+        # 注册上下文确认过口令框 → 记录其 XPath + iframe 路径，随结果返回，
+        # 供 main.py 交给表单填写器（切进对应 frame 再操作），避免误用主文档
+        # 里的隐藏登录框。正常路径与 stop_at_password 重走路径都从这里统一记录。
+        d["password_field"] = None
+        if getattr(result, "signup_password_reached", False):
+            d["password_field"] = self._locate_password_field()
         return d

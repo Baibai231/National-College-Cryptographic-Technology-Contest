@@ -81,6 +81,21 @@ class LoginLinkDiscovery:
         except Exception:
             return False
 
+    def inject_feedback_into_current_frame(self) -> None:
+        """在当前 frame 上下文注入反馈检测 JS（跨域 iframe 内联检测用）。
+
+        Page.addScriptToEvaluateOnNewDocument 理论上会向每个新 frame 注入，
+        但已存在的 iframe 或注入时序不保证覆盖；切进跨域 iframe 后若
+        watchPasswordFeedback 不存在，调用本方法手动补注入 form_detection_addons.js
+        （watchPasswordFeedback / getWatchedFeedback / stopWatchingFeedback /
+        detectPasswordFeedback 均在该文件内自包含，不依赖 scripts.js 的 Fathom）。
+        """
+        js = self._read_js("form_detection_addons.js")
+        try:
+            self.driver.execute_script(js)
+        except Exception:
+            logger.warning("当前 frame 反馈 JS 注入失败（跨域 iframe 内联检测可能失效）")
+
     def _wait_for_page_ready(self, timeout: float = 15) -> None:
         """等待页面 document.readyState === 'complete'，超时则不等"""
         deadline = time.time() + timeout
@@ -659,6 +674,12 @@ class LoginLinkDiscovery:
         var style = getComputedStyle(el);
         if (style.display === 'none' || style.visibility === 'hidden') return false;
         if (parseFloat(style.opacity) === 0) return false;
+        // 离屏元素（如隐藏登录表单里 left 为负的"去注册"a.goreg，icourse163
+        // 实测）rect 仍有宽高，但完全落在视口外，不视为可见，否则会抢在
+        // 可见的 span.goReg 前面被选中，导致点到死链而切不到注册 tab。
+        var vw = window.innerWidth || document.documentElement.clientWidth;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        if (rect.right <= 0 || rect.bottom <= 0 || rect.left >= vw || rect.top >= vh) return false;
         return true;
     }
 
@@ -764,13 +785,24 @@ class LoginLinkDiscovery:
                 # ── Selenium 可信点击（非 CDP 合成事件）──
                 # Chinese SPA 站点（163、xuetangx）的 React 事件处理器
                 # 只响应浏览器原生信任的点击事件
+                from selenium.webdriver.common.by import By
+                el = self.driver.find_element(
+                    By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
                 try:
-                    from selenium.webdriver.common.by import By
-                    el = self.driver.find_element(
-                        By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
                     el.click()
-                except Exception:
-                    pass
+                except Exception as e:
+                    # 原生 click 可能被模态框容器拦截（icourse163 "去注册"
+                    # 实测 "element click intercepted"）。回退 JS 点击：
+                    # jQuery/原生 handler 仍会响应，绕过覆盖层拦截。
+                    logger.debug(
+                        "注册 tab 原生点击失败({})，回退 JS 点击 el=<{} class={}>".format(
+                            type(e).__name__, el.tag_name,
+                            el.get_attribute("class")))
+                    try:
+                        self.driver.execute_script(
+                            "arguments[0].click()", el)
+                    except Exception as je:
+                        logger.debug("注册 tab JS 点击失败: {}".format(je))
 
                 time.sleep(1.5)
                 pwds = self.find_password_fields()

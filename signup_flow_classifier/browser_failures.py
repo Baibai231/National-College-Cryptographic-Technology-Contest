@@ -163,6 +163,59 @@ def detect_access_block(driver) -> Optional[str]:
     return None
 
 
+# ── 表单级机器人识别阻断组件（滑块/验证码）─────────────────────────
+# 与整页访问阻断（_ACCESS_PAGE_MARKERS）互补：这类组件叠加在注册/登录
+# 表单上（网易易盾 input.j-nameforslide / NetEase 容器 nc-container /
+# 极验 geetest / 滑动验证 slide-verify），不会让主文档空白，但会拦截
+# “获取验证码/提交”，导致内联无反馈、full-form 提交被卡死（icourse163
+# 实测触发 InvalidSessionIdException）。
+_SLIDE_CAPTCHA_SELECTORS = (
+    "[class*=j-nameforslide]",
+    "[class*=yidun]", "[id*=yidun]",
+    "[class*=nc-container]",
+    "[class*=geetest]",
+    "[class*=slide-verify]",
+    "[class*=slider-captcha]",
+    "[class*=captcha-slide]",
+)
+
+_SLIDE_CAPTCHA_TEXT = (
+    "拖动滑块", "滑动验证", "向右拖动", "完成拼图",
+    "拖动下方滑块", "请向右滑动", "滑块验证",
+)
+
+
+def detect_captcha_challenge(driver) -> Optional[str]:
+    """检测当前上下文中的表单级滑块/验证码阻断组件，返回脱敏命中原因。
+
+    按“组件存在即算命中”，不做严格可见性过滤——调用方（_detect_method）已
+    在内联无反馈后才调用，此时注册框里的易盾/滑块占位即可判定为阻断。
+    调用方应先在口令框所在 frame 上下文（跨域注册 iframe）中调用，才能
+    命中易盾滑块。
+    """
+    try:
+        payload = driver.execute_script(
+            "var sel=[],txt=[];"
+            "arguments[0].forEach(function(s){"
+            "  try{if(document.querySelector(s)){sel.push(s);}}catch(_){}"
+            "});"
+            "var body=document.body?document.body.innerText:'';"
+            "arguments[1].forEach(function(m){if(body.indexOf(m)>=0){txt.push(m);}});"
+            "return {sel:sel,txt:txt};",
+            list(_SLIDE_CAPTCHA_SELECTORS),
+            list(_SLIDE_CAPTCHA_TEXT),
+        )
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("txt"):
+        return "slide_captcha:" + payload["txt"][0]
+    if payload.get("sel"):
+        return "slide_captcha:" + payload["sel"][0]
+    return None
+
+
 def is_human_challenge_marker(marker: str) -> bool:
     """Distinguish a solvable human gate from a generic access denial."""
     return any(value in (marker or "") for value in _HUMAN_CHALLENGE_MARKERS)

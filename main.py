@@ -67,7 +67,8 @@ FLOW_TYPE_TO_LETTER = {
 # ================================================================
 
 def _detect_method(driver, site_url, signup_url,
-                   email_xpath=None, password_xpath=None):
+                   email_xpath=None, password_xpath=None,
+                   password_frame_path=None):
     """探测网站是内联验证型还是需提交型
 
     Args:
@@ -76,12 +77,18 @@ def _detect_method(driver, site_url, signup_url,
         signup_url: Phase 1 已发现的注册页 URL（当前浏览器所在页面）
         email_xpath: 邮箱字段 XPath（可选，Phase 1 提供）
         password_xpath: 密码字段 XPath（可选，Phase 1 提供）
+        password_frame_path: 口令框所在 iframe 路径（分类流程记录，()=主文档）
 
     返回: (method, signup_url, email_xpath, password_xpath)
 
     重要：此函数不再创建 LoginLinkDiscovery 或调用 navigate_to_signup()。
     Phase 1 已经将浏览器导航到注册页，此函数只做 inline 反馈检测。
     这避免了重复导航可能导致的不一致（不同导航路径到达不同的页面变体）。
+
+    口令框在跨域 iframe（如 icourse163 reg.icourse163.org）时，主文档里只有
+    隐藏登录框，必须切进 password_frame_path 才能命中注册口令框并观察其
+    反馈；本函数切进后不恢复默认上下文，由下游接管（inline 测量重新切 frame /
+    full-form 重新 driver.get）。
     """
     import utils.util_basic as uub
     from selenium.webdriver.common.by import By
@@ -107,11 +114,21 @@ def _detect_method(driver, site_url, signup_url,
         logger.info("未找到密码字段，默认使用 inline 方法")
         return "inline", signup_url, email_xpath, password_xpath
 
-    # ── 注意：不要用 Selenium switch_to.frame() 切换 iframe ──
-    # CDP 注入的 JS 函数（watchPasswordFeedback 等）仅在主 frame 上下文存在。
-    # 切换到 iframe 后这些函数不可用，会导致内联反馈检测失败。
-    # 密码反馈（如错误消息、强度指示器）通常渲染在主文档中，即使密码字段
-    # 本身在 iframe 内。MutationObserver 在主文档上监听即可捕获这些反馈。
+    # ── 切进口令框所在 frame（跨域注册 iframe 内联检测）──
+    # 口令框藏在跨域 iframe（icourse163 reg.icourse163.org）时，主文档里只有
+    # 隐藏登录框，不切进 frame 永远拿不到注册口令的反馈。分类流程已记录
+    # frame_path，这里切进去后 WebDriverWait / execute_script / watchPasswordFeedback
+    # 都作用于该 frame 上下文。切进后若反馈 JS 未注入则手动补注入。
+    from signup_flow_classifier.page_detector import _switch_to_frame_path
+    in_frame = False
+    if password_frame_path:
+        in_frame = _switch_to_frame_path(driver, password_frame_path)
+        if in_frame:
+            try:
+                if driver.execute_script("return typeof watchPasswordFeedback") != "function":
+                    LoginLinkDiscovery(driver).inject_feedback_into_current_frame()
+            except Exception:
+                pass
 
     uub.random_sleep([1, 2])
 
@@ -125,9 +142,12 @@ def _detect_method(driver, site_url, signup_url,
         elm.dispatchEvent(new Event('change', {bubbles: true}));
     """
 
-    for attempt in range(2):
+    # 探测密码序列：前两次用合规密码（能捕获强度指示器/合规提示类反馈），
+    # 第三次用非法短密码 "a"。gitee 等站点对合规密码 blur 零反馈，仅在非法
+    # 密码 blur 时才显示"密码长度不得低于8个字符"，必须补测非法密码才能命中 inline。
+    probe_passwords = ["k4m2x9a7", "n3p8r5t2", "a"]
+    for attempt, test_pwd in enumerate(probe_passwords):
         test_email = f"test{attempt}@example.com"
-        test_pwd = "k4m2x9a7" if attempt == 0 else "n3p8r5t2"
         try:
             # 先找到密码框
             pwd_el = WebDriverWait(driver, 5).until(
@@ -163,12 +183,19 @@ def _detect_method(driver, site_url, signup_url,
             try:
                 pwd_el.click()  # 聚焦
                 time.sleep(0.2)
-                # 真实鼠标移动到密码框右侧 30px 处点击（模拟"填写后点别处"）
-                ActionChains(driver).move_to_element(
-                    pwd_el
-                ).move_by_offset(
-                    pwd_el.size['width'] + 30, 5
-                ).click().perform()
+                if in_frame:
+                    # iframe 内 ActionChains 坐标计算不可靠，改用 JS blur 触发校验
+                    driver.execute_script(
+                        "arguments[0].blur(); "
+                        "arguments[0].dispatchEvent(new Event('blur', {bubbles:true}))",
+                        pwd_el)
+                else:
+                    # 真实鼠标移动到密码框右侧 30px 处点击（模拟"填写后点别处"）
+                    ActionChains(driver).move_to_element(
+                        pwd_el
+                    ).move_by_offset(
+                        pwd_el.size['width'] + 30, 5
+                    ).click().perform()
             except Exception:
                 pass
 
@@ -225,7 +252,20 @@ def _detect_method(driver, site_url, signup_url,
             except Exception:
                 pass
 
-    logger.info("内联反馈检测未成功（2次尝试均无反馈），回退到 full-form 方法")
+    # ── 机器人识别阻断检测：内联无反馈 + 表单级滑块/验证码组件 ──
+    # icourse163 实测：注册口令框在跨域 iframe（reg.icourse163.org），表单
+    # 含网易易盾滑块（input.j-nameforslide），填密码无内联反馈，full-form
+    # 提交会被滑块卡死并触发 InvalidSessionIdException。此时不回落
+    # full-form，而是标记 captcha_blocked，由 test_single_site 回退到只分类。
+    from signup_flow_classifier.browser_failures import detect_captcha_challenge
+    block_marker = detect_captcha_challenge(driver)
+    if block_marker:
+        logger.info(
+            "内联无反馈且检测到机器人识别阻断（{}），标记 captcha_blocked".format(block_marker)
+        )
+        return "captcha_blocked", signup_url, email_xpath, password_xpath
+
+    logger.info("内联反馈检测未成功（3次尝试均无反馈），回退到 full-form 方法")
     return "full", signup_url, email_xpath, password_xpath
 
 
@@ -369,7 +409,9 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         # 带 stop_at_password=True，让 classify 一直运行到口令框出现就停。
         if not engine.get_current_password_field_xpath():
             logger.info("有口令框但当前不在口令视图，重走分类流程定位口令框")
-            engine.classify(
+            # 捕获重走结果：stop_at_password 停在口令视图时，_done 已记录
+            # password_field（XPath + iframe 路径），供 Phase 3 直接使用。
+            classification = engine.classify(
                 signup_url, entry_kind="signup", stop_at_password=True)
 
         # ================================================================
@@ -381,12 +423,15 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             logger.debug("无法恢复模态框，使用当前页面状态继续")
 
         email_xpath, password_xpath = discovery.find_signup_fields()
-        # 重走已把浏览器停在口令视图：优先用引擎的当前口令字段 XPath，
-        # 避免 find_signup_fields 返回全视图探索后失效的旧 XPath 缓存。
-        if engine is not None:
-            eng_pwd = engine.get_current_password_field_xpath()
-            if eng_pwd:
-                password_xpath = eng_pwd
+        # 分类流程已在 signup_password_reached 时记录口令框的 XPath + iframe 路径，
+        # 优先采用它（避免 find_signup_fields 返回全视图探索后失效的旧 XPath 缓存，
+        # 且 password_field 带 iframe 路径，供下游切进跨域注册 iframe）。
+        password_frame_path = None
+        if classification is not None:
+            eng_field = classification.get("password_field")
+            if eng_field:
+                password_xpath = eng_field.get("xpath") or password_xpath
+                password_frame_path = eng_field.get("frame_path")
 
         # 兜底：重走定位后仍无口令字段 → 输出分类结果（classified_only）
         if not password_xpath:
@@ -412,11 +457,35 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             # 2 轮无反馈则自动切换到 full 方法（完整表单提交）
             method_used, _, email_xpath, password_xpath = \
                 _detect_method(driver, site_url, signup_url,
-                               email_xpath, password_xpath)
+                               email_xpath, password_xpath,
+                               password_frame_path=password_frame_path)
         else:
             method_used = method
 
         result["method_used"] = method_used
+
+        # ── 机器人识别阻断：注册口令框已定位，但表单级滑块/验证码
+        # （网易易盾 j-nameforslide / 极验等）拦截提交，内联无反馈、
+        # full-form 也会被卡死。此时直接输出已完成的分类结果，不测量。
+        if method_used == "captcha_blocked":
+            logger.info(
+                "检测到机器人识别阻断（滑块/验证码），跳过密码政策测量，"
+                "输出分类结果（类型{}/{}）".format(
+                    result.get("class_letter", "?"),
+                    result.get("flow_type", "unknown"),
+                )
+            )
+            result["method_used"] = "classified_only"
+            result["policy"] = classification.get("policy", {}) if classification else {}
+            if not result.get("note"):
+                result["note"] = (
+                    "注册口令框已定位（类型{}/{}），但存在机器人识别阻断"
+                    "（滑块/验证码），无法测量密码政策，仅输出分类结果。".format(
+                        result.get("class_letter", "?"),
+                        result.get("flow_type", "unknown"),
+                    )
+                )
+            return result
 
         # ================================================================
         # Phase 4: 执行密码政策测量
@@ -439,7 +508,31 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                     logger.debug("已在注册页面（URL 匹配），跳过页面重载")
             except Exception:
                 pass
-            result["policy"] = tester.run_password_policy_test()
+            # 口令框在 iframe（跨域注册 iframe，如 icourse163）时，分类流程已
+            # 记录 frame_path。切进该 frame 再测量，让 TestPassword 的
+            # find_element(password_xpath) 命中注册口令框而非主文档隐藏登录框。
+            # 强制 _signup_page_ready=True：避免 test_one_password 首次
+            # driver.get(signup_url) 把 frame 上下文重置回主文档。
+            if password_frame_path:
+                tester._signup_page_ready = True
+            in_frame = False
+            if password_frame_path:
+                from signup_flow_classifier.page_detector import _switch_to_frame_path
+                in_frame = _switch_to_frame_path(driver, password_frame_path)
+                if in_frame:
+                    try:
+                        if driver.execute_script("return typeof watchPasswordFeedback") != "function":
+                            LoginLinkDiscovery(driver).inject_feedback_into_current_frame()
+                    except Exception:
+                        pass
+            try:
+                result["policy"] = tester.run_password_policy_test()
+            finally:
+                if in_frame:
+                    try:
+                        driver.switch_to.default_content()
+                    except Exception:
+                        pass
         else:
             parsed = urlparse(site_url)
             hostname = parsed.hostname or "unknown"
@@ -670,7 +763,9 @@ def main():
     print("=" * 60)
     print("  测试汇总")
     print("=" * 60)
-    success = sum(1 for r in results.values() if not r["error"] and r["policy"])
+    success = sum(1 for r in results.values()
+                  if not r["error"] and r["policy"]
+                  and r.get("method_used") != "classified_only")
     failed = sum(1 for r in results.values() if r["error"])
     classified_only = sum(1 for r in results.values()
                           if r.get("method_used") == "classified_only")
