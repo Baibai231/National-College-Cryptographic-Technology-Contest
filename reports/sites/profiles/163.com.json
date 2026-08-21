@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-21T16:00:07.498894+00:00",
-  "report_title": "www.infzm.com 登录/注册认证档案",
+  "generated_at": "2026-08-21T16:00:07.410127+00:00",
+  "report_title": "163.com 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
   ],
@@ -14,101 +14,39 @@
   },
   "sites": [
     {
-      "id": "www.infzm.com",
-      "name": "www.infzm.com",
+      "id": "163.com",
+      "name": "163.com",
       "category": "待补充",
       "automatic": {
         "login": {
-          "status": "observed",
-          "start_url": "https://www.infzm.com/",
-          "final_url": "https://www.infzm.com/",
-          "observed_route": "未确认具体方式",
-          "observed_routes": [
-            {
-              "route_id": "automatic_route_1",
-              "step_numbers": [
-                1
-              ],
-              "summary": "未确认具体方式",
-              "fields_observed": [],
-              "methods_observed": [],
-              "verification_observed": [],
-              "password_state": "not_observed_in_safely_reachable_flow",
-              "ui_types": [],
-              "safe_stop": "已走完当前安全可达范围"
-            }
-          ],
+          "status": "missing",
+          "observed_route": "缺少测量记录",
+          "observed_routes": [],
           "fields_observed": [],
           "methods_observed": [],
           "verification_observed": [],
-          "password_state": "not_observed_in_safely_reachable_flow",
+          "password_state": "not_determined",
           "ui_types": [],
-          "safe_stop": "已走完当前安全可达范围",
+          "safe_stop": "未运行",
           "limitations": [
-            "程序置信度为 low",
-            "当前自动证据不足以确认完整路线"
+            "缺少记录"
           ],
-          "steps": [
-            {
-              "step": 1,
-              "url": "https://www.infzm.com/",
-              "ui_type": "unknown",
-              "fields": [],
-              "methods": [],
-              "blockers": [],
-              "actions": [
-                "entry_click"
-              ],
-              "tabs": [],
-              "note": "entry_clicked_no_change"
-            }
-          ],
-          "measurement": {
-            "confidence": "low",
-            "measured_at": "2026-08-17T02:49:27.694450+00:00",
-            "raw_flow_type": "unknown",
-            "raw_stop_reason": "auth_entry_no_auth_state"
-          },
-          "raw_result": {
-            "flow_type": "unknown",
-            "stop_reason": "auth_entry_no_auth_state",
-            "primary_method": "unknown"
-          },
-          "policy": {
-            "schema_version": "1.0",
-            "scope": "login",
-            "measurement": {
-              "status": "unknown",
-              "confidence": "low",
-              "stop_reason": "auth_entry_no_auth_state",
-              "evidence_boundary": "safely_reachable_ui"
-            },
-            "authentication": {
-              "observed_methods": [],
-              "password_status": "not_determined",
-              "password_observed": false,
-              "verification_observed": false,
-              "phone_observed": false,
-              "identifier_observed": false,
-              "blocking_factors": []
-            },
-            "security": {
-              "status": "not_observed_by_flow_classifier",
-              "note": "use login_policy_observer for passive transport and input checks"
-            }
-          },
+          "steps": [],
+          "raw_result": null,
+          "policy": {},
           "error": null
         },
         "signup": {
           "status": "observed",
-          "start_url": "https://www.infzm.com/",
-          "final_url": "https://www.infzm.com/",
+          "start_url": "https://163.com",
+          "final_url": "https://www.163.com/",
           "observed_route": "未确认具体方式",
           "observed_routes": [
             {
               "route_id": "automatic_route_1",
               "step_numbers": [
-                1
+                1,
+                2
               ],
               "summary": "未确认具体方式",
               "fields_observed": [],
@@ -132,7 +70,7 @@
           "steps": [
             {
               "step": 1,
-              "url": "https://www.infzm.com/",
+              "url": "https://www.163.com/",
               "ui_type": "unknown",
               "fields": [],
               "methods": [],
@@ -141,12 +79,25 @@
                 "entry_click"
               ],
               "tabs": [],
-              "note": "entry_clicked_no_change"
+              "note": "login_accessible_text_clicked_and_changed"
+            },
+            {
+              "step": 2,
+              "url": "https://www.163.com/",
+              "ui_type": "unknown",
+              "fields": [],
+              "methods": [],
+              "blockers": [],
+              "actions": [
+                "none"
+              ],
+              "tabs": [],
+              "note": ""
             }
           ],
           "measurement": {
             "confidence": "low",
-            "measured_at": "2026-08-17T02:56:16.100266+00:00",
+            "measured_at": "2026-08-21T00:52:56.726049+00:00",
             "raw_flow_type": "unknown",
             "raw_stop_reason": "auth_entry_no_auth_state"
           },

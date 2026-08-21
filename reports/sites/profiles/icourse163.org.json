@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-17T16:00:08.133042+00:00",
+  "generated_at": "2026-08-21T16:00:07.414350+00:00",
   "report_title": "icourse163.org 登录/注册认证档案",
   "automatic_result_sources": [
     "reports/sites/sites_latest.jsonl"
