@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-17T11:45:02.938375+00:00",
+  "updated_at": "2026-08-22T04:00:06.142053+00:00",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
@@ -1449,6 +1449,24 @@
       },
       "reviewed_from": "file@组员观察@2026-08-12",
       "note": "组员人工核验（41-80 表）：手机号+验证码"
+    },
+    "aistudy666.com": {
+      "manual_login": "手机号+口令+协议\n手机号+验证码+协议",
+      "manual_signup": "手机号+口令+验证码+协议",
+      "verified": true,
+      "structured": {
+        "login": {
+          "password": true,
+          "tos": true,
+          "otp": true
+        },
+        "signup": {
+          "password": true,
+          "otp": true,
+          "tos": true
+        }
+      },
+      "reviewed_from": "web@cjx@2026-08-16T12:50:50.130737+00:00"
     }
   }
 }
