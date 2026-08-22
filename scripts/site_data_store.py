@@ -17,7 +17,11 @@ from typing import Iterable
 
 # Windows 无 fcntl 时的进程内锁（本地单进程 uvicorn 足够保证一致性；
 # 服务器端仍走 fcntl 跨进程锁，互不影响）。
-_WINDOWS_LOCK = threading.Lock()
+# 必须用可重入锁 RLock：@_serialized_data_transaction 先持有本锁，
+# add_site 内部再调 upsert_records → _exclusive_lock → coordinated_data_lock
+# 会再次请求同一把锁；不可重入的 threading.Lock 会让同一线程二次 acquire
+# 永久死锁（表现为 /api/sites 卡死、无返回、无弹窗）。
+_WINDOWS_LOCK = threading.RLock()
 
 
 @contextmanager
@@ -74,6 +78,8 @@ def measurement_record(hostname: str, site_url: str, version: str,
         "policy": entry.get("policy") or {},
         # 实测口令政策（length/restrictive/permissive），与分类 policy 分开存
         "pwd_policy": entry.get("pwd_policy") or {},
+        # 实测方法（inline/full/classified_only 等），供详情表回显「类型」
+        "pwd_method": entry.get("pwd_method"),
         "evidence": entry.get("evidence") or [],
         "error": entry.get("error"),
         "start_url": entry.get("start_url") or url,

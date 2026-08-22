@@ -25,6 +25,7 @@ class LoginLinkDiscovery:
         self._injected = False
         self._cached_fields = {}  # 缓存检测结果
         self._entry_clicked = False  # navigate_to_signup 是否点击了入口链接
+        self._reinjected_handle = None  # 已注册 addScriptToEvaluateOnNewDocument 的新标签句柄
 
     # ------------------------------------------------------------------
     # CDP 工具方法
@@ -95,6 +96,51 @@ class LoginLinkDiscovery:
             self.driver.execute_script(js)
         except Exception:
             logger.warning("当前 frame 反馈 JS 注入失败（跨域 iframe 内联检测可能失效）")
+
+    def reinject_into_current_tab(self) -> None:
+        """切到新标签页后，向当前页面重新注入两个 JS 文件。
+
+        Page.addScriptToEvaluateOnNewDocument 只对注册脚本时的 target 生效；
+        注册入口 target=_blank 打开的新标签是新的 target，脚本不会自动跟随，
+        导致新标签页里 ruleset/getXPath/detectEmailInputs 等全部 undefined
+        （163.com「注册免费邮箱」新标签实测）。此处用 execute_script 向当前
+        已加载页面手动补注入。scripts.js 必须先注入，因为 form_detection_addons.js
+        里的 XPath 生成依赖 getXPath/gPt。
+        """
+        try:
+            handle = self.driver.current_window_handle
+        except Exception:
+            handle = None
+        # 每个新标签只需注册一次 addScriptToEvaluateOnNewDocument；
+        # 重复注册会导致脚本在新文档里执行多遍（脚本含顶层 var/function 声明，
+        # 幂等但浪费）。用句柄去重。
+        first_time = (handle is not None and handle != self._reinjected_handle)
+        for name in ["scripts.js", "form_detection_addons.js"]:
+            js = self._read_js(name)
+            try:
+                # 用 Runtime.evaluate 而非 execute_script：execute_script 会把脚本
+                # 包进一个函数作用域，导致顶层 function 声明（ruleset/getXPath/
+                # watchPasswordFeedback/detectFieldsInAllFrames 等）变成局部变量、
+                # 挂不到全局，字段/反馈检测 JS 全部 undefined。Runtime.evaluate 以
+                # 全局作用域执行，行为与 Page.addScriptToEvaluateOnNewDocument 一致。
+                self.driver.execute_cdp_cmd('Runtime.evaluate', {
+                    'expression': js,
+                    'returnByValue': True,
+                })
+                # 新标签是新的 CDP target，addScriptToEvaluateOnNewDocument 不会
+                # 从原 target 跟随；在此新 target 上重新注册，覆盖全视图探索等
+                # 后续页面导航（否则导航后 ruleset/detectFieldsInAllFrames 又
+                # 变 undefined，出现「JS 未注入，无法跨 frame 搜索」）。
+                if first_time:
+                    self.driver.execute_cdp_cmd(
+                        'Page.addScriptToEvaluateOnNewDocument',
+                        {'source': js},
+                    )
+            except Exception:
+                logger.warning(f"新标签页注入 {name} 失败")
+        if handle is not None:
+            self._reinjected_handle = handle
+        logger.debug("新标签页已重新注入 scripts.js + form_detection_addons.js")
 
     def _wait_for_page_ready(self, timeout: float = 15) -> None:
         """等待页面 document.readyState === 'complete'，超时则不等"""
@@ -492,7 +538,87 @@ class LoginLinkDiscovery:
                 # tryClickAndDetect 的 setTimeout 轮询只检测 URL 变化和密码字段，
                 # 无法感知「弹窗打开了但默认是 SMS/QR 视图」的情况。
                 # 用轻量指纹（可见 input + button + dialog 等）补充判断。
+                #
+                # 但指纹变化也可能是「合成点击对普通 <a> 链接无效」导致的假阳性：
+                # dispatchEvent(MouseEvent) 不触发浏览器默认的 <a> 导航（isTrusted:false），
+                # 点击后页面其实没跳转，只是 hover 下拉 / 广告 iframe 加载造成指纹漂移
+                # （163.com「注册免费邮箱」实测）。所以先补一次真实点击验证是否真的
+                # 导航了，确实导航才返回注册页 URL；否则才按「弹窗已打开」处理。
                 if old_fp and self._page_fingerprint() != old_fp:
+                    try:
+                        el = self.driver.find_element(By.XPATH, xpath)
+                        if el:
+                            _before = self.driver.window_handles
+                            try:
+                                el.click()
+                            except Exception:
+                                # 链接被覆盖层挡住（163.com「注册免费邮箱」在右上角
+                                # (902,21) 被遮挡，Selenium click 抛
+                                # ElementClickInterceptedException）→ JS click 绕过
+                                try:
+                                    self.driver.execute_script(
+                                        "arguments[0].click()", el)
+                                except Exception:
+                                    pass
+                            time.sleep(1.5)
+                            # 真实点击可能开新标签页（163.com 注册入口 target 为空
+                            # 但 JS 触发 window.open 实测）：优先切到带认证内容的新标签。
+                            _new_handles = [
+                                h for h in self.driver.window_handles
+                                if h not in _before
+                            ]
+                            if _new_handles:
+                                self.driver.switch_to.window(_new_handles[0])
+                                self._wait_for_spa_render()
+                                # 新标签是新的 CDP target，addScriptToEvaluateOnNewDocument
+                                # 不会跟随注入，手动补注入，否则字段检测 JS 全部 undefined
+                                self.reinject_into_current_tab()
+                                _new_url = self.driver.current_url
+                                if (self._is_same_site(homepage_url, _new_url)
+                                        and _new_url.rstrip('/')
+                                        != homepage_url.rstrip('/')
+                                        and _new_url.startswith(
+                                            ("http://", "https://"))):
+                                    logger.info(
+                                        f"[{idx}] 指纹变化后真实点击开新标签: "
+                                        f"-> {_new_url}")
+                                    self._entry_clicked = True
+                                    return _new_url
+                                # 新标签非本站认证页，切回原页继续走同标签判断
+                                if _before:
+                                    self.driver.switch_to.window(_before[0])
+                            # 同标签页导航
+                            _new_url = self.driver.current_url
+                            if (_new_url.rstrip('/')
+                                    != homepage_url.rstrip('/')):
+                                if self._is_same_site(homepage_url, _new_url):
+                                    logger.info(
+                                        f"[{idx}] 指纹变化后真实点击导航: -> {_new_url}")
+                                    self._entry_clicked = True
+                                    self._wait_for_spa_render()
+                                    return _new_url
+                                self.driver.get(homepage_url)
+                            # 点击仍无导航（覆盖层拦截 + JS click 因 isTrusted=false
+                            # 被 preventDefault）→ 直接按 href 导航。链接 href 已在
+                            # CDP 发现阶段拿到，无需依赖点击坐标/事件信任。
+                            _href = (link.get('href') or '').strip()
+                            if (_href and _href != '#'
+                                    and not _href.lower().startswith('javascript:')):
+                                from urllib.parse import urljoin
+                                _target = urljoin(self.driver.current_url, _href)
+                                if (_target.startswith(('http://', 'https://'))
+                                        and self._is_same_site(homepage_url, _target)
+                                        and _target.rstrip('/')
+                                        != homepage_url.rstrip('/')):
+                                    logger.info(
+                                        f"[{idx}] 覆盖层拦截，直接按 href 导航: "
+                                        f"-> {_target}")
+                                    self.driver.get(_target)
+                                    self._entry_clicked = True
+                                    self._wait_for_spa_render()
+                                    return _target
+                    except Exception:
+                        pass
                     logger.info(
                         f"[{idx}] 页面指纹变化 (CDP 未检测到密码字段但页面已变): "
                         f"\"{text}\"")
@@ -984,8 +1110,16 @@ class LoginLinkDiscovery:
         返回找到的第一对 (email_xpath, password_xpath)。
         """
         if not self.check_injected():
-            logger.warning("JS 未注入，无法跨 frame 搜索")
-            return None, None
+            # 自愈：分类器「全视图探索」可能导航到新文档或切换 frame/window，
+            # 导致 ruleset/detectFieldsInAllFrames 丢失。这里向当前页面补注入后再试。
+            logger.warning("JS 未注入，尝试重新注入后再跨 frame 搜索")
+            try:
+                self.reinject_into_current_tab()
+            except Exception as e:
+                logger.warning(f"重新注入失败: {e}")
+            if not self.check_injected():
+                logger.warning("JS 重新注入失败，无法跨 frame 搜索")
+                return None, None
 
         results = self._cdp_eval(
             "(typeof detectFieldsInAllFrames === 'function')"

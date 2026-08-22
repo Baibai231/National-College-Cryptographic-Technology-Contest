@@ -156,6 +156,7 @@ def _row_to_site(row):
             "raw_states": login_states,
             "policy": details.get("login_policy", {}),
             "pwd_policy": details.get("login_pwd_policy", {}),
+            "pwd_method": details.get("login_pwd_method"),
             "stop_reason": login_record.get("stop_reason"),
             "confidence": login_record.get("confidence"),
             "primary_method": login_record.get("primary_method"),
@@ -173,6 +174,7 @@ def _row_to_site(row):
             "raw_states": signup_states,
             "policy": details.get("signup_policy", {}),
             "pwd_policy": details.get("signup_pwd_policy", {}),
+            "pwd_method": details.get("signup_pwd_method"),
             "stop_reason": signup_record.get("stop_reason"),
             "confidence": signup_record.get("confidence"),
             "primary_method": signup_record.get("primary_method"),
@@ -375,6 +377,7 @@ def add_site(req: AddSiteRequest):
             details_obj[f"{kind}_raw_states"] = states
             details_obj[f"{kind}_policy"] = record.get("policy") or {}
             details_obj[f"{kind}_pwd_policy"] = record.get("pwd_policy") or {}
+            details_obj[f"{kind}_pwd_method"] = record.get("pwd_method")
             details_obj[f"{kind}_error"] = record.get("error")
             details_obj[f"{kind}_record"] = record
         details = json.dumps(details_obj, ensure_ascii=False)

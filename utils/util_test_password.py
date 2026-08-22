@@ -1009,10 +1009,10 @@ class TestPassword(object):
         modified_str = ""
         if not is_no_sps:
             self.my_logger.info("There are no requirements that the password should not include special symbol.")
-            self.my_logger.info("Replacing all the digits with special symbols.")
+            self.my_logger.info("Replacing all the digits with lowercase letters.")
             for i in self.admissible_password:
                 if i.isdigit():
-                    sps = self.fake.random_element(elements=('-', '@'))
+                    sps = uusg.gen_random_lower_character(1)
                     modified_str += sps
                 else:
                     modified_str += i

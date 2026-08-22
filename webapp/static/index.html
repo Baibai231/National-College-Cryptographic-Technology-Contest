@@ -270,6 +270,42 @@ function reportTableHtml(login, signup, version) {
     </tbody>
   </table>`;
 }
+function policyTestTableHtml(login, signup, version) {
+  const l = login || {};
+  const s = signup || {};
+  const only = !login && signup ? 'signup' : login && !signup ? 'login' : 'both';
+  const tds = (fn) => only === 'login'
+    ? `<td>${fn(l)}</td>`
+    : only === 'signup'
+      ? `<td>${fn(s)}</td>`
+      : `<td>${fn(l)}</td><td>${fn(s)}</td>`;
+  // 是否实测到口令政策：入库时 pwd_policy 只在 inline/full 下非空
+  const hasPwd = (e) => e && e.pwd_policy && typeof e.pwd_policy === 'object'
+    && Object.keys(e.pwd_policy).length;
+  // 类型：实际用哪种方法测的就填哪种（inline / full）；未实测不填
+  const typeCell = (e) => {
+    const m = (e && e.pwd_method) || '';
+    return m === 'inline' ? 'inline' : m === 'full' ? 'full' : '—';
+  };
+  // 方法清单：测得口令政策按分类结果填；无口令框只分类，不填
+  const methodCell = (e) => hasPwd(e)
+    ? methodsHtml((e || {}).methods)
+    : '<span class="text-muted">—</span>';
+  // 口令政策：测得→全部实测信息；未测→分类结果
+  const policyCell = (e) => hasPwd(e)
+    ? measuredPolicyHtml((e || {}).pwd_policy, (e && e.pwd_method))
+    : policyText((e || {}).policy);
+  return `<table class="table table-sm table-bordered align-middle">
+    <thead><tr><th style="width:90px">密码政策测试</th>${only === 'signup' ? '<th>注册（程序）</th>' : '<th>登录（程序）</th>'}${only === 'both' ? '<th>注册（程序）</th>' : ''}</tr></thead>
+    <tbody>
+      <tr><td>类型</td>${tds(typeCell)}</tr>
+      <tr><td>方法清单</td>${tds(methodCell)}</tr>
+      <tr><td>口令政策</td>${tds(policyCell)}</tr>
+      <tr><td>测量时间</td>${tds((e) => fmtTime((e || {}).measured_at))}</tr>
+      <tr><td>程序版本</td><td colspan="${only === 'both' ? 2 : 1}">${version || '?'}</td></tr>
+    </tbody>
+  </table>`;
+}
 function badge(flow) {
   return `<span class="flow-badge b-${flow || 'unknown'}">${FLOW_ZH[flow] || '未确认'}</span>`;
 }
@@ -633,7 +669,7 @@ async function showDetail(host) {
   // 口令政策人工列：优先侧判定（旧数据），否则用整站总判定
   const pwdSide = (side) => pwd[side] || pwd.overall || '';
   document.getElementById('modal-body').innerHTML = `
-    ${reportTableHtml(loginWithPwd, signupWithPwd, s.version)}
+    ${policyTestTableHtml(loginWithPwd, signupWithPwd, s.version)}
     ${measuredPwdHtml(s.login.pwd_policy, s.signup.pwd_policy)}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
@@ -872,25 +908,36 @@ function measuredPwdHtml(loginPwd, signupPwd) {
   return `<div class="alert alert-light py-2 mt-2">${row('登录', loginPwd)}${row('注册', signupPwd)}</div>`;
 }
 function policyBoxHtml(d) {
-  const methodLabel = d.method_used === 'inline' ? 'inline（不提交即可判断）'
-    : d.method_used === 'full' ? 'full（需提交）'
-    : (d.method_used || '—');
-  const warn = d.suspicious_login_form
-    ? '<div class="alert alert-warning py-1">疑似在登录表单上测量，政策数据可能不可信</div>' : '';
-  const meta = [
-    d.class_letter ? '类型 ' + esc(d.class_letter) : '',
-    d.method_used ? '方法 ' + esc(methodLabel) : '',
-    d.stop_reason ? '停止原因：' + esc(d.stop_reason) : '',
-    d.confidence ? '置信度 ' + esc(d.confidence) : '',
-  ].filter(Boolean).join(' · ');
+  const method = d.method_used;
+  const measured = method === 'inline' || method === 'full';
+  // 类型：实际用哪种方法测的就填哪种（inline / full）；无口令框则不填
+  const typeCell = method === 'inline' ? 'inline（不提交即可判断）'
+    : method === 'full' ? 'full（需提交）'
+    : '—';
+  // 方法清单：测得口令政策时按分类结果填；无口令框只分类，不填方法清单
+  const methodCell = measured
+    ? methodsHtml(d.methods)
+    : '<span class="text-muted">—</span>';
+  // 口令政策：测得→全部实测信息；未测→分类结果
+  const policyCell = measured
+    ? measuredPolicyHtml(d.policy, method)
+    : policyText(d.policy);
   return `
     <div class="alert alert-info py-2 mb-2">
       <div><b>测试密码政策</b> ${badge(d.flow_type)}</div>
-      ${meta ? `<div class="small text-muted mt-1">${meta}</div>` : ''}
-      ${warn}
-      <div class="mt-2">${measuredPolicyHtml(d.policy, d.method_used)}</div>
+      <table class="table table-sm table-bordered align-middle mt-2 mb-0">
+        <thead><tr><th style="width:90px">密码政策测试</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>类型</td><td>${typeCell}</td></tr>
+          <tr><td>方法清单</td><td>${methodCell}</td></tr>
+          <tr><td>口令政策</td><td>${policyCell}</td></tr>
+          <tr><td>测量时间</td><td>${fmtTime(d.measured_at)}</td></tr>
+          <tr><td>程序版本</td><td>v4</td></tr>
+        </tbody>
+      </table>
       ${d.note ? `<div class="small text-muted mt-1">${esc(d.note)}</div>` : ''}
       ${d.error ? `<div class="small text-danger mt-1">${esc(d.error)}</div>` : ''}
+      ${d.suspicious_login_form ? '<div class="alert alert-warning py-1 mt-1 mb-0">疑似在登录表单上测量，政策数据可能不可信</div>' : ''}
     </div>`;
 }
 document.getElementById('classify-btn').addEventListener('click', async () => {
@@ -925,14 +972,10 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const d = await measurePolicy(url);
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail || '测量失败')}</div>`; return; }
       lastClassify = d;
-      if (d.method_used === 'classified_only') {
-        // 无口令框：与「注册」分类完全相同的输出（复用 classifyBoxHtml）
-        box.innerHTML = classifyBoxHtml(d, '注册')
-          + addSiteBarHtml('加入数据库', '无口令框，仅存注册分类结果');
-      } else {
-        box.innerHTML = policyBoxHtml(d)
-          + addSiteBarHtml('加入数据库', '注册分类 + 实测口令政策一起入库');
-      }
+      const tip = d.method_used === 'classified_only'
+        ? '无口令框，仅存注册分类结果'
+        : '注册分类 + 实测口令政策一起入库';
+      box.innerHTML = policyBoxHtml(d) + addSiteBarHtml('加入数据库', tip);
     } else {
       btn.textContent = '分类中（约 1-3 分钟）…';
       const d = await classifyOne(url, kind);
@@ -979,6 +1022,7 @@ async function addSiteToDb() {
       steps: d.states || [], raw_states: d.states || [],
       policy: isPwdMeasured ? (d.classification_policy || {}) : (d.policy || {}),
       pwd_policy: isPwdMeasured ? (d.policy || {}) : {},
+      pwd_method: d.method_used,
       confidence: d.confidence, stop_reason: d.stop_reason,
       primary_method: d.primary_method, evidence: d.evidence || [],
       error: d.error || null, measured_at: d.measured_at

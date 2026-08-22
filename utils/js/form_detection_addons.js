@@ -974,6 +974,141 @@ function detectFieldsInAllFrames(optRoot) {
 }
 
 // ================================================================
+// 共享的密码反馈文本判定 — 覆盖"多种多样"的反馈形态
+// ================================================================
+// 很多站点的错误提示元素没有 error/invalid/hint 等语义 class，只靠文字本身
+// 表达"密码不合规"（如裸 <span>密码至少8位</span>、class="f14"/"u-tip"/"txt"
+// 等通用样式）。class 白名单覆盖不到这些形态，必须用关键词兜底识别。
+
+// 非密码字段错误词（姓名/邮箱/手机/验证码 等）——命中则绝不是密码反馈
+var _NON_PWD_TERMS = [
+    '姓名为必填', '姓名不能为空', '请填写姓名', '请填写名字', '姓名格式', '姓名长度',
+    '邮箱为必填', '邮箱不能为空', '请填写邮箱', '邮箱格式',
+    '手机号为必填', '手机不能为空', '请填写手机', '手机号码', '手机号格式',
+    '用户名为必填', '用户名不能为空', '验证码', '图形验证码',
+    'name is required', 'name required', 'full name',
+    'email is required', 'email required',
+    'phone is required', 'phone required',
+    'username is required', 'nickname is required',
+    'captcha', 'verification code',
+    'please enter your name', 'please enter name',
+    'please enter your email', 'please enter your phone'
+];
+
+function _isNonPwdFeedback(text) {
+    if (!text) return false;
+    var t = String(text).toLowerCase();
+    for (var i = 0; i < _NON_PWD_TERMS.length; i++) {
+        if (t.indexOf(_NON_PWD_TERMS[i].toLowerCase()) !== -1) return true;
+    }
+    return false;
+}
+
+// 密码校验反馈关键词（多语言）。命中说明这段文字在表达"密码合规性 / 强度"，
+// 而不是普通文案或字段 label（裸"密码"/"设置密码"不含约束词，不会被命中）。
+var PWD_FEEDBACK_KEYWORDS = new RegExp([
+    // 长度 / 数量约束（中文）
+    '长度', '位数', '个字符', '字符数', '太短', '太长', '过短', '过长',
+    '至少', '不少于', '不得少于', '不多于', '不得超过', '不得多于',
+    '最少', '最多', '最短', '最长',
+    // 组合要求（中文）
+    '大写', '小写', '大小写', '字母', '数字', '符号', '特殊字符', '特殊符号',
+    // 强度（中文）
+    '强度', '强弱',
+    // 英文
+    'too\\s*short', 'too\\s*long', 'at\\s*least', 'characters?', 'minimum', 'maximum',
+    'length', 'must\\s*(contain|include)', 'uppercase', 'lowercase',
+    'special\\s*characters?', '\\bweak', '\\bstrong', '\\bstrength', 'digits?',
+    'password\\s*(strength|length|must|too\\s*short|too\\s*long|at\\s*least)',
+    'pwd\\s*(strength|length)'
+].join('|'), 'i');
+
+function _looksLikePwdFeedback(text) {
+    if (!text) return false;
+    if (_isNonPwdFeedback(text)) return false;
+    return PWD_FEEDBACK_KEYWORDS.test(String(text));
+}
+
+/**
+ * 判断元素是否呈现"错误色"（红/橙系）。
+ *
+ * 很多站点（如 163.com）用颜色区分「规则提示」与「拒绝」：常驻的规则说明
+ * （「长度为8-16个字符」「需包含大、小写字母和数字」）为灰/中性色，违规时才
+ * 变红。文本完全一样、只有颜色不同，纯文本兜底会把灰色提示误判成拒绝。
+ * 因此文本关键词命中后还需颜色为红/橙系才算真正的拒绝信号。
+ */
+function _isErrorColor(el) {
+    try {
+        if (!el || el.nodeType !== 1) return false;
+        var cs = getComputedStyle(el);
+        var m = (cs.color || '').match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+        if (!m) return false;
+        var r = +m[1], g = +m[2], b = +m[3];
+        // 红/橙系：红通道明显高于绿蓝通道（灰/黑/蓝均不满足）
+        return r >= 140 && (r - g) >= 50 && (r - b) >= 50;
+    } catch (e) { return false; }
+}
+
+/**
+ * 在密码框附近（ancestor 链 4 层 + 最近 form）扫描"多样化"的反馈元素。
+ * 不依赖 class 白名单——任何可见、短文本、命中密码校验关键词且非其他字段
+ * 错误的元素都算反馈。observer 与静态检测共用此兜底。
+ *
+ * @param {Element} pwdEl - 密码框元素
+ * @returns {Object|null} 同 detectPasswordFeedback 的返回结构
+ */
+function _findNearbyPwdFeedback(pwdEl) {
+    if (!pwdEl || pwdEl.nodeType !== 1) return null;
+
+    // 搜索根：密码框 ancestor 链 4 层 + 最近 form
+    var roots = [];
+    var p = pwdEl.parentElement;
+    for (var level = 0; level < 4 && p; level++) {
+        roots.push(p);
+        p = p.parentElement;
+    }
+    try {
+        var _form = pwdEl.closest('form');
+        if (_form) roots.push(_form);
+    } catch(e) {}
+
+    // 去重
+    var seen = {};
+    var uniqueRoots = [];
+    for (var ri = 0; ri < roots.length; ri++) {
+        var r = roots[ri];
+        var key = (r.id || '') + '_' + r.tagName + '_' + ri;
+        if (!seen[key]) { seen[key] = true; uniqueRoots.push(r); }
+    }
+
+    // 候选：任意文本容器元素，可见 + 短文本 + 命中关键词
+    for (var ri2 = 0; ri2 < uniqueRoots.length; ri2++) {
+        var nodes;
+        try {
+            nodes = uniqueRoots[ri2].querySelectorAll(
+                'span, div, p, small, em, strong, b, li, label, i, td, dd');
+        } catch(e) { continue; }
+        for (var ni = 0; ni < nodes.length; ni++) {
+            var el = nodes[ni];
+            if (el === pwdEl) continue;
+            var rect;
+            try { rect = el.getBoundingClientRect(); } catch(e) { continue; }
+            if (rect.width <= 0 || rect.height <= 0) continue;
+            if (el.offsetParent === null) continue;
+            var txt = (el.textContent || '').trim().replace(/\s+/g, ' ');
+            if (txt.length < 2 || txt.length > 200) continue;
+            if (!_looksLikePwdFeedback(txt)) continue;
+            if (!_isErrorColor(el)) continue;  // 灰色=常驻规则提示，非拒绝信号
+            return {
+                hasFeedback: true, rejected: true, type: 'text-keyword',
+                message: txt.substring(0, 300)
+            };
+        }
+    }
+    return null;
+}
+
+// ================================================================
 // detectPasswordFeedback — 多维度密码反馈检测
 // ================================================================
 // 用尽所有前端常见的密码错误反馈机制检测输入的密码是否被拒绝。
@@ -987,6 +1122,7 @@ function detectFieldsInAllFrames(optRoot) {
 //   5. aria-describedby 指向的错误元素
 //   6. 兄弟/父级可见 error / hint / warning 元素文本
 //   7. 表单级密码强度指示器
+//   8. 文本关键词兜底（无 class / 通用 class 的多样化反馈）
 // ================================================================
 function detectPasswordFeedback(passwordXPath) {
     var DEFAULT_RESULT = { hasFeedback: false, rejected: false, type: null, message: null };
@@ -1125,29 +1261,7 @@ function detectPasswordFeedback(passwordXPath) {
                             // ── 过滤非密码字段错误 ──
                             // gitee 等网站在密码框 blur 时会触发表单级校验，
                             // "姓名为必填项"等错误与密码字段无关，不应视为密码反馈。
-                            var _txtLower = txt.toLowerCase();
-                            var _nonPwdTerms = [
-                                '姓名为必填', '姓名不能为空', '请填写姓名',
-                                '邮箱为必填', '邮箱不能为空', '请填写邮箱',
-                                '手机号为必填', '手机不能为空', '请填写手机',
-                                '用户名为必填', '验证码',
-                                'name is required', 'name required',
-                                'email is required', 'email required',
-                                'phone is required', 'phone required',
-                                'username is required', 'nickname is required',
-                                'captcha', 'verification code',
-                                'please enter your name', 'please enter name',
-                                'please enter your email',
-                                'please enter your phone',
-                            ];
-                            var _isNonPwd = false;
-                            for (var _ni = 0; _ni < _nonPwdTerms.length; _ni++) {
-                                if (_txtLower.indexOf(_nonPwdTerms[_ni]) !== -1) {
-                                    _isNonPwd = true;
-                                    break;
-                                }
-                            }
-                            if (_isNonPwd) continue;  // 跳过非密码字段错误
+                            if (_isNonPwdFeedback(txt)) continue;
                             return {
                                 hasFeedback: true, rejected: true, type: 'error-element',
                                 message: txt.substring(0, 300)
@@ -1193,6 +1307,12 @@ function detectPasswordFeedback(passwordXPath) {
                 }
             } catch(e) {}
         }
+    } catch(e) {}
+
+    // ---- 8. 文本关键词兜底（无 class / 通用 class 的多样化反馈）----
+    try {
+        var _nearby = _findNearbyPwdFeedback(el);
+        if (_nearby) return _nearby;
     } catch(e) {}
 
     return DEFAULT_RESULT;
@@ -1241,6 +1361,9 @@ var WATCH_ERROR_SELECTORS = [
     '[class*="helper"]', '[class*="description"]', '[class*="note"]'
 ];
 
+// 组合后的白名单选择器（一次 matches 判断，替代逐条 querySelectorAll）
+var WATCH_ERROR_SELECTOR = WATCH_ERROR_SELECTORS.join(',');
+
 function watchPasswordFeedback(passwordXPath) {
     // 停止已有监听器
     if (__pwdFeedbackWatcher) {
@@ -1271,29 +1394,48 @@ function watchPasswordFeedback(passwordXPath) {
 
     function recordFeedback(feedback) {
         // 跳过明显不是密码字段相关的错误（如"姓名为必填项"、"email is required"等）
-        var msg = (feedback.message || '').toLowerCase();
-        var nonPasswordTerms = [
-            '姓名为必填', '姓名不能为空', 'name is required', 'name required',
-            '邮箱为必填', '邮箱不能为空', 'email is required', 'email required',
-            '手机号为必填', '手机不能为空', 'phone is required', 'phone required',
-            '用户名为必填', 'username is required', 'nickname is required',
-            '验证码', 'captcha', 'verification code',
-            '请填写姓名', 'please enter your name', 'please enter name',
-            '请填写邮箱', 'please enter your email',
-            '请填写手机', 'please enter your phone',
-        ];
-        for (var ti = 0; ti < nonPasswordTerms.length; ti++) {
-            if (msg.indexOf(nonPasswordTerms[ti]) !== -1) {
-                return;  // 非密码字段错误，忽略
-            }
+        if (_isNonPwdFeedback(feedback.message)) {
+            return false;  // 非密码字段错误，忽略
         }
         // 按 message 去重
         for (var i = 0; i < __pwdFeedbackResults.length; i++) {
             if (__pwdFeedbackResults[i].message === feedback.message) {
-                return;
+                return false;
             }
         }
         __pwdFeedbackResults.push(feedback);
+        return true;
+    }
+
+    /**
+     * 判断元素是否"密码反馈元素"并记录。命中即返回 true（调用方可 early-return）。
+     * 规则：可见 + 短文本 + 非其他字段错误 + (class 白名单 或 文本关键词兜底)。
+     */
+    function _tryRecordFeedbackEl(el) {
+        if (!el || el.nodeType !== 1) return false;
+        try {
+            var rect = el.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) return false;
+            if (el.offsetParent === null) return false;
+        } catch(e) { return false; }
+        var txt = (el.textContent || '').trim().replace(/\s+/g, ' ');
+        if (txt.length < 2) return false;
+        if (_isNonPwdFeedback(txt)) return false;
+        try {
+            if (el.matches && el.matches(WATCH_ERROR_SELECTOR)) {
+                return recordFeedback({ hasFeedback: true, rejected: true,
+                    type: 'observer-added-el', message: txt.substring(0, 300) });
+            }
+        } catch(e) {}
+        if (txt.length <= 200 && _looksLikePwdFeedback(txt)) {
+            if (!_isErrorColor(el)) {
+                // 灰色/中性色 = 常驻规则提示（如「长度为8-16个字符」），不是拒绝信号
+                return false;
+            }
+            return recordFeedback({ hasFeedback: true, rejected: true,
+                type: 'observer-text-keyword', message: txt.substring(0, 300) });
+        }
+        return false;
     }
 
     var observer = new MutationObserver(function(mutations) {
@@ -1304,93 +1446,75 @@ function watchPasswordFeedback(passwordXPath) {
             if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                 for (var ai = 0; ai < mutation.addedNodes.length; ai++) {
                     var node = mutation.addedNodes[ai];
-                    if (node.nodeType !== 1) continue;
-
-                    // 检查新增节点自身
-                    for (var si = 0; si < WATCH_ERROR_SELECTORS.length; si++) {
+                    if (node.nodeType === 1) {
+                        // 新增元素自身 + 后代
+                        if (_tryRecordFeedbackEl(node)) return;
                         try {
-                            if (node.matches && node.matches(WATCH_ERROR_SELECTORS[si])) {
-                                var txt = (node.textContent || '').trim();
-                                if (txt.length > 0 && node.offsetParent !== null) {
-                                    if (recordFeedback({
-                                        hasFeedback: true, rejected: true,
-                                        type: 'observer-added-el',
-                                        message: txt.substring(0, 300)
-                                    })) return;
-                                }
+                            var descendants = node.querySelectorAll('*');
+                            for (var di = 0; di < descendants.length && di < 16; di++) {
+                                if (_tryRecordFeedbackEl(descendants[di])) return;
                             }
                         } catch(e) {}
-                    }
-
-                    // 检查新增节点的后代
-                    for (var si2 = 0; si2 < WATCH_ERROR_SELECTORS.length; si2++) {
-                        try {
-                            var descendants = node.querySelectorAll(WATCH_ERROR_SELECTORS[si2]);
-                            for (var di = 0; di < descendants.length && di < 3; di++) {
-                                var dTxt = (descendants[di].textContent || '').trim();
-                                if (dTxt.length > 0 && descendants[di].offsetParent !== null) {
-                                    if (recordFeedback({
-                                        hasFeedback: true, rejected: true,
-                                        type: 'observer-descendant-el',
-                                        message: dTxt.substring(0, 300)
-                                    })) return;
-                                }
-                            }
-                        } catch(e) {}
+                    } else if (node.nodeType === 3) {
+                        // 文本节点直接插入 → 检查其父容器（现在含反馈文字）
+                        if (_tryRecordFeedbackEl(node.parentElement)) return;
                     }
                 }
+                // 兜底：检查发生变更的容器本身（mutation.target 现在可能含反馈文字）
+                if (_tryRecordFeedbackEl(mutation.target)) return;
+            }
+
+            // ---- 文本内容变化（characterData：往已有空容器里填文字）----
+            if (mutation.type === 'characterData') {
+                if (_tryRecordFeedbackEl(mutation.target.parentElement)) return;
             }
 
             // ---- 属性变化 ----
-            if (mutation.type === 'attributes' && mutation.target === __pwdFeedbackPasswordEl) {
+            if (mutation.type === 'attributes') {
+                var tgt = mutation.target;
                 var attrName = mutation.attributeName;
 
-                if (attrName === 'aria-invalid') {
-                    var ariaVal = __pwdFeedbackPasswordEl.getAttribute('aria-invalid');
-                    if (ariaVal === 'true') {
-                        if (recordFeedback({
-                            hasFeedback: true, rejected: true,
-                            type: 'observer-aria-invalid', message: 'aria-invalid=true'
-                        })) return;
+                if (tgt === __pwdFeedbackPasswordEl) {
+                    if (attrName === 'aria-invalid') {
+                        var ariaVal = __pwdFeedbackPasswordEl.getAttribute('aria-invalid');
+                        if (ariaVal === 'true') {
+                            if (recordFeedback({
+                                hasFeedback: true, rejected: true,
+                                type: 'observer-aria-invalid', message: 'aria-invalid=true'
+                            })) return;
+                        }
+                    }
+
+                    if (attrName === 'class') {
+                        var cls = __pwdFeedbackPasswordEl.className || '';
+                        if (/error|invalid|danger|err|success/.test(cls)) {
+                            if (recordFeedback({
+                                hasFeedback: true, rejected: !/success/.test(cls),
+                                type: 'observer-class-change',
+                                message: 'class: ' + cls.substring(0, 100)
+                            })) return;
+                        }
                     }
                 }
 
-                if (attrName === 'class') {
-                    var cls = __pwdFeedbackPasswordEl.className || '';
-                    if (/error|invalid|danger|err|success/.test(cls)) {
-                        if (recordFeedback({
-                            hasFeedback: true, rejected: !/success/.test(cls),
-                            type: 'observer-class-change',
-                            message: 'class: ' + cls.substring(0, 100)
-                        })) return;
-                    }
+                // 错误提示容器自身的 class/style 显隐切换（常驻 DOM 的反馈元素）
+                if (attrName === 'class' || attrName === 'style') {
+                    if (_tryRecordFeedbackEl(tgt)) return;
                 }
             }
         }
     });
 
-    // 在 document.body 上监听子树变化
+    // 在 document.body 上监听：子树增删 + 文本内容变化 + class/style/aria 属性变化。
+    // characterData 与 attributes 是覆盖"往已有容器填文字 / 切换 class 显隐"
+    // 这两类常见反馈形态的关键（只靠 childList 会漏掉）。
     observer.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['class', 'style', 'aria-invalid', 'aria-describedby']
     });
-
-    // 在密码字段上监听属性变化
-    if (__pwdFeedbackPasswordEl) {
-        observer.observe(__pwdFeedbackPasswordEl, {
-            attributes: true,
-            attributeFilter: ['class', 'aria-invalid', 'aria-describedby']
-        });
-
-        // 在密码字段的父级链上监听子节点变化
-        var parent = __pwdFeedbackPasswordEl.parentElement;
-        for (var level = 0; level < 5 && parent; level++) {
-            try {
-                observer.observe(parent, { childList: true, subtree: false });
-            } catch(e) {}
-            parent = parent.parentElement;
-        }
-    }
 
     __pwdFeedbackWatcher = observer;
     return true;
