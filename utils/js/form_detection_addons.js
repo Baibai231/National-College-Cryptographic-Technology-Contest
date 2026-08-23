@@ -1423,6 +1423,10 @@ function watchPasswordFeedback(passwordXPath) {
         if (_isNonPwdFeedback(txt)) return false;
         try {
             if (el.matches && el.matches(WATCH_ERROR_SELECTOR)) {
+                // 颜色闸门：与 Path B / _findNearbyPwdFeedback 一致。
+                // 灰/中性色的提示（常驻规则说明、强度计「密码安全系数较低」）
+                // 不是拒绝信号——只有变红才是密码不合规。
+                if (!_isErrorColor(el)) return false;
                 return recordFeedback({ hasFeedback: true, rejected: true,
                     type: 'observer-added-el', message: txt.substring(0, 300) });
             }

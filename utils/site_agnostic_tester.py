@@ -16,7 +16,7 @@ site_agnostic_tester.py
 import time
 import utils.util_basic as uub
 from utils.login_link_discovery import LoginLinkDiscovery
-from utils.util_test_password import TestPassword
+from utils.util_test_password import TestPassword, BrowserDeadError
 
 
 class SitePasswordPolicyTester:
@@ -89,6 +89,32 @@ class SitePasswordPolicyTester:
     # ------------------------------------------------------------------
     # Phase 3: 密码政策测试
     # ------------------------------------------------------------------
+
+    def _checkpoint_policy(self, policy: dict, stage: str):
+        """把当前已测到的密码政策增量落盘到 logs/<host>/policy_<host>.partial.json。
+
+        测量是分阶段进行的，尾部（permissive 字符/序列/泄露密码）可能因浏览器
+        崩溃而中断。每个关键阶段后落盘，即使中途硬崩，已测出的长度/组合等核心
+        政策也不会丢。写入失败不打断主流程。
+        """
+        try:
+            import json
+            import os
+            host = self.test_site or "unknown"
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            site_dir = os.path.join(project_root, "logs", host)
+            os.makedirs(site_dir, exist_ok=True)
+            path = os.path.join(site_dir, f"policy_{host}.partial.json")
+            payload = {
+                "url": self.site_url,
+                "hostname": host,
+                "stage": stage,
+                "policy": policy,
+            }
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
 
     def run_password_policy_test(self) -> dict:
         """执行完整的密码政策突变测试（14 个维度）"""
@@ -167,15 +193,17 @@ class SitePasswordPolicyTester:
                 rp["r_cmb13"], rp["r_cmb23"], rp["r_cmb33"],
                 rp["r_cmb14"], rp["r_cmb24"], rp["r_cmb34"], rp["r_cmb44"]
             ] = self._tester.identify_combination_requirements(rp)
-            print(f"    组合: 13={rp['r_cmb13']} 23={rp['r_cmb23']} 33={rp['r_cmb33']} "
-                  f"14={rp['r_cmb14']} 24={rp['r_cmb24']} 34={rp['r_cmb34']} 44={rp['r_cmb44']}")
+            print(f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
+                  f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
 
             password_policy["length"][0], password_policy["length"][1] = \
                 self._tester.identify_min_and_max_length_limitations(rp, [0, 32], [6, 128])
             print(f"    长度: min={password_policy['length'][0]}, max={password_policy['length'][1]}")
+            self._checkpoint_policy(password_policy, "length_done")
 
             password_policy["permissive"]["permitted_characters"] = \
                 self._tester.identify_permissive_characters(password_policy["length"])
+            self._checkpoint_policy(password_policy, "permitted_characters_done")
             password_policy["permissive"]["short_and_long_password"] = \
                 self._tester.identify_long_short_passwords(password_policy["length"])
             password_policy["permissive"]["breached_password"] = \
@@ -183,12 +211,18 @@ class SitePasswordPolicyTester:
             password_policy["permissive"]["permitted_sequences"] = \
                 self._tester.identify_permitted_sequences(rp, password_policy["length"])
 
+        except BrowserDeadError as e:
+            print(f"    ✗ 浏览器会话终止，测量中止: {e}")
+            password_policy["_browser_dead"] = True
         except Exception as e:
             print(f"    ✗ 测试过程出错: {e}")
             import traceback
             traceback.print_exc()
+            if getattr(self._tester, "_browser_dead", False):
+                password_policy["_browser_dead"] = True
         finally:
             self._tester.my_logger.info(f"Policy of {self.test_site}: {password_policy}")
+            self._checkpoint_policy(password_policy, "final")
 
         return password_policy
 

@@ -277,6 +277,13 @@ class LoginLinkDiscovery:
         '/try',
     ]
 
+    # 站点直通注册页 URL（按注册域 eTLD+1 作 key）：
+    # 通用入口发现/点击导航对该站不可靠时，直接导航到已确认的真实注册页。
+    # 仅用于「定位注册页」；密码政策仍从该页真实表单测量（不填身份、不提交）。
+    _KNOWN_SIGNUP_URLS = {
+        "163.com": "https://mail.163.com/register/index.htm#/pn",
+    }
+
     # 注册关键词（多语言，含现代 SPA 用法）
     _SIGNUP_KEYWORDS = [
         # 英文
@@ -318,6 +325,37 @@ class LoginLinkDiscovery:
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
+
+        # ================================================================
+        # 第 -1 层：站点直通注册页 URL（先于一切通用发现）
+        # ================================================================
+        # 部分站点（如 163.com）的注册入口是「复合文本 + href 为空 +
+        # window.open」的组合，通用入口检测（detect_entry_button 精确文本/
+        # 结构语义匹配）与点击导航（可信点击被覆盖层挡、不可信点击触发
+        # window.open 被弹窗拦截）均不可靠。这里按注册域直通已确认的真实
+        # 注册页；密码政策仍从该页真实表单测量（不填身份、不提交）。
+        _reg_domain = self._registered_domain(homepage_url)
+        _known_url = self._KNOWN_SIGNUP_URLS.get(_reg_domain)
+        if _known_url:
+            logger.info(f"站点直通注册页命中 [{_reg_domain}] -> {_known_url}")
+            try:
+                self.driver.get(_known_url)
+                self._wait_for_spa_render(timeout=8)
+                pwds = self.find_password_fields()
+                if pwds:
+                    self._entry_clicked = True
+                    logger.info("站点直通成功：到达密码字段")
+                    self._try_switch_to_signup_tab()
+                    return self.driver.current_url
+                logger.warning("站点直通未发现密码字段，回退通用四层策略")
+            except Exception as e:
+                logger.warning(
+                    f"站点直通导航异常 (回退通用策略): {type(e).__name__}: {e}")
+            # 直通失败：回到首页，交给通用四层策略继续
+            try:
+                self.driver.get(homepage_url)
+            except Exception:
+                pass
 
         # ================================================================
         # 第 0 层：Selenium 可信点击入口检测（对齐 MyAutomaticPolicy）
@@ -1155,6 +1193,19 @@ class LoginLinkDiscovery:
         return None, None
 
     @staticmethod
+    def _registered_domain(url: str) -> str:
+        """返回 URL 的注册域（eTLD+1），如 passport.163.com → 163.com。"""
+        try:
+            from urllib.parse import urlparse
+            host = urlparse(url).hostname or ""
+            parts = host.split(".")
+            if len(parts) >= 2:
+                return ".".join(parts[-2:])
+            return host
+        except Exception:
+            return ""
+
+    @staticmethod
     def _is_same_site(url_a: str, url_b: str) -> bool:
         """判断两个 URL 是否属于同一注册域。
 
@@ -1166,18 +1217,8 @@ class LoginLinkDiscovery:
                                           "blob:", "data:", "about:")):
             return True
         try:
-            from urllib.parse import urlparse
-            pa = urlparse(url_a)
-            pb = urlparse(url_b)
-
-            def registered_domain(parsed):
-                host = parsed.hostname or ""
-                parts = host.split(".")
-                if len(parts) >= 2:
-                    return ".".join(parts[-2:])
-                return host
-
-            return registered_domain(pa) == registered_domain(pb)
+            return LoginLinkDiscovery._registered_domain(url_a) == \
+                LoginLinkDiscovery._registered_domain(url_b)
         except Exception:
             return True  # 解析失败不拦截
 

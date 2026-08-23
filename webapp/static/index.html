@@ -882,8 +882,6 @@ function measuredPolicyHtml(policy, methodUsed) {
   if (r.r_cmb44) reqs.push('需含大小写字母+数字+特殊符号四类');
   else if (r.r_cmb34) reqs.push('需含大小写字母/数字/特殊符号中三类');
   else if (r.r_cmb24) reqs.push('需含四类字符中两类');
-  else if (r.r_cmb33) reqs.push('需含字母+数字+特殊符号三类');
-  else if (r.r_cmb23) reqs.push('需含字母/数字/特殊符号中两类');
   lines.push('<b>限制：</b>' + (reqs.length ? reqs.join('；') : '无特殊限制'));
   const perm = [];
   const chars = listTrueZh(p.permitted_characters, PERM_CHAR_ZH);

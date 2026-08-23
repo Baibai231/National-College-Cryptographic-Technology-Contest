@@ -594,9 +594,21 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             logger.warning(
                 "{} 浏览器会话终止，标记结果".format(site_url)
             )
-            result["method_used"] = "browser_dead"
-            result["flow_type"] = "browser_crashed"
-            result["class_letter"] = "?"
+            _policy = result["policy"]
+            _length_measured = _policy.get("length") not in (None, [0, 0])
+            if _length_measured:
+                # 已测出实质政策（长度/组合等）→ 保留分类，仅加说明，
+                # 不降级 browser_crashed（避免丢掉 direct_password 等正确分类）
+                result["method_used"] = "partial_browser_dead"
+                if not result.get("note"):
+                    result["note"] = (
+                        "浏览器在测量尾部崩溃，核心政策（长度/组合）已测出，"
+                        "但 permissive 字符/序列/泄露密码等维度未测完。"
+                    )
+            else:
+                result["method_used"] = "browser_dead"
+                result["flow_type"] = "browser_crashed"
+                result["class_letter"] = "?"
 
     except Exception as e:
         result["error"] = str(e)
@@ -688,6 +700,13 @@ def save_result(site_url: str, result: dict):
     }
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
+    # 删除增量快照：成功收尾后不留陈旧 .partial.json（避免污染后续读取）
+    partial_path = os.path.join(site_dir, f"policy_{hostname}.partial.json")
+    if os.path.isfile(partial_path):
+        try:
+            os.remove(partial_path)
+        except Exception:
+            pass
     return output_path
 
 

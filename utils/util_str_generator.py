@@ -159,6 +159,34 @@ def transfer_upper_into_lower(admissible_password):
     return admissible_password.lower()
 
 
+def transfer_upper_into_symbol(admissible_password):
+    """把大写字母替换为安全符号 '!'，保持其余字符不变。
+
+    用于「缺失 upper」探测：把 3 类密码 lower+upper+digit 转成
+    lower+digit+symbol（仍 3 类，仅去掉大写），避免 .lower() 把类别
+    塌缩成 2 类（lower+digit）被 3-of-4 站点误拒，进而误判为 4-of-4。
+    '!' 经 permissive 测试确认合法且不破坏 163 等站点的内联校验提示。
+    """
+    ret_str = ""
+    for i in admissible_password:
+        if i.isupper():
+            ret_str += '!'
+        else:
+            ret_str += i
+    return ret_str
+
+
+def transfer_lower_into_symbol(admissible_password):
+    """把小写字母替换为安全符号 '!'，保持其余字符不变（对称于 transfer_upper_into_symbol）。"""
+    ret_str = ""
+    for i in admissible_password:
+        if i.islower():
+            ret_str += '!'
+        else:
+            ret_str += i
+    return ret_str
+
+
 def transfer_letter_to_digit(admissible_password):
     ret_str = ""
     for i in admissible_password:

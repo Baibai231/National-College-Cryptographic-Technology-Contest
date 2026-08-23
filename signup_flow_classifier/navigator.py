@@ -17,7 +17,8 @@ MAX_ENTRY_CLICKS = 2
 
 # 注册/登录入口的明确语义（避免误点）
 _ENTRY_REGISTER_TEXTS = [
-    "立即注册", "免费注册", "马上注册", "注册", "sign up", "create account", "register",
+    "立即注册", "免费注册", "马上注册", "注册", "注册免费邮箱",
+    "sign up", "create account", "register",
     "s'inscrire", "créer un compte", "registrarse", "crear cuenta", "registrieren",
     "konto erstellen", "新規登録", "会員登録", "アカウント作成", "회원가입",
     "계정 만들기", "зарегистрироваться", "создать аккаунт",

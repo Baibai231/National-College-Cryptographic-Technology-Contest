@@ -381,6 +381,15 @@ def _get_new_driver():
     return driver
 
 
+class BrowserDeadError(BaseException):
+    """浏览器会话已终止（Chrome 关闭/断开）时抛出，用于立即短路整个密码测量。
+
+    继承 BaseException 而非 Exception：这样它不会被 @logger.catch（默认只捕获
+    Exception）或各类 except Exception 吞掉，能一路冒泡到 run_password_policy_test
+    的 except BrowserDeadError，实现干净中断 + 增量落盘，而不是空转出垃圾结果。
+    """
+
+
 class TestPassword(object):
     def __init__(self, my_logger, test_site, admissible_password="",
                  signup_url="", email_xpath="", password_xpath="",
@@ -418,6 +427,9 @@ class TestPassword(object):
         # 使用调用方传入的 driver，而非全局单例 _SHARED_DRIVER
         # 确保与分类器/链接发现使用同一浏览器实例（SPA 弹窗不丢失）
         self._driver = driver
+        # 浏览器会话已终止标志：置位后 test_one_password 立即抛 BrowserDeadError，
+        # 避免后续几十个测试对已死 driver 空转失败（每个 ~16s 的 urllib3 退避）
+        self._browser_dead = False
 
     @logger.catch
     def find_admissible_password(self):
@@ -510,6 +522,10 @@ class TestPassword(object):
         :param info_name: the information of the testing process
         :return: True or False indicates the result
         """
+        if self._browser_dead:
+            raise BrowserDeadError(
+                f"browser session already closed; aborting measurement "
+                f"(skipping password '{test_password}')")
         self.my_logger.info(f"Tested password: {test_password} -- {info_name}")
         self.my_logger.debug(f"Begin to simulate testing the password {test_password} for signing up an account.")
         retries = 1
@@ -752,13 +768,15 @@ class TestPassword(object):
                 try:
                     driver.refresh()
                 except Exception:
-                    # browser may have been closed or disconnected;
-                    # stop retrying and let caller try the next password
+                    # 浏览器已被关闭/断开：后续所有测试都会对已死 driver 空转失败，
+                    # 立即终止整个测量（由 run_password_policy_test 捕获并落盘）。
+                    self._browser_dead = True
                     try:
                         driver.quit()
                     except Exception:
                         pass
-                    break
+                    raise BrowserDeadError(
+                        f"browser session closed: {str(e)[:120]}")
             finally:
                 self.my_logger.debug("Process end.")
                 # 共享 driver 不销毁，仅刷新到空白页，等待下一个密码测试
@@ -916,7 +934,10 @@ class TestPassword(object):
                     if changed_dict["digit"] == 0:
                         tmp_char = uusg.gen_random_digit(1)
                     else:
-                        tmp_char = uusg.gen_random_symbol_character(1)
+                        # 用安全定值符号：gen_random_symbol_character(1) 会从 string.punctuation
+                        # 随机取到 ' 或 \ 等字符，可能弄坏 163 内联校验提示导致假接受。
+                        # permissive 测试已确认 ! 是合法标点且不会破坏提示。
+                        tmp_char = '!'
                     tmp_ap = tmp_ap[:last_letter_index] + tmp_char + self.admissible_password[last_letter_index + 1:]
                     # test whether a 3 of 4 password can be accepted, true -> 0, false -> then should add a lowercase
                     self.my_logger.info("Adding a symbol/digit in the password.")
@@ -1021,6 +1042,25 @@ class TestPassword(object):
                 ret_minimum = 0
             else:
                 changed_dict = uub.get_each_character_num(modified_str)
+                if changed_dict["type_num"] == 2:
+                    # 数字被替换后类别掉到 2 类：拒绝可能源于「类别数不足」而非「缺数字」。
+                    # 用安全定值符号 '!' 替换最后一个字母，得到「3 类但无数字」再测：
+                    # 接受 → 数字并非必需（如 3-of-4）→ 0；拒绝 → 数字确实必需 → 走补回数字逻辑。
+                    # （与 change_and_test_lower_upper_minimum 的 disambiguate 逻辑一致）
+                    last_letter_index = None
+                    for index, char in enumerate(reversed(modified_str)):
+                        if char.isalpha():
+                            last_letter_index = len(modified_str) - index - 1
+                            break
+                    if last_letter_index is not None:
+                        tmp_ap = (modified_str[:last_letter_index] + '!'
+                                  + modified_str[last_letter_index + 1:])
+                        self.my_logger.info("Adding a symbol to disambiguate the digit minimum.")
+                        if self.test_one_password(tmp_ap, "add a symbol to disambiguate the digit minimum"):
+                            self.my_logger.info(
+                                f"Password {tmp_ap} without digit can be accepted; digit is not required.")
+                            ret_minimum = 0
+                            return ret_minimum
                 index_of_first_case = next((i for i, c in enumerate(self.admissible_password) if c.isdigit()), None)
                 if index_of_first_case is not None:
                     self.my_logger.debug(
@@ -1250,68 +1290,115 @@ class TestPassword(object):
             self.my_logger.error("This process is conducted in a unexpected way.")
         return ret_list
 
-    def identify_combination_requirements_3_sum(self, com_r):
-        """识别 3 类字符组合要求（upper, lower, digit 均已确认存在）
+    @staticmethod
+    def _reduce_combo_flags(*ret_lists):
+        """把多个组合标志列表归约为「细粒度 4 类维 one-hot」的单一结果。
 
-        当 r_no_a_sps=True（不允许特殊符号）时，实际只有 3 个可用类别，
-        此时只应设置 r_cmb23 或 r_cmb33，不应设置 r_cmb34 / r_cmb44。
-        否则 length_limit_initial_password() 会为满足「4 类」要求而插入 @ 等
-        特殊符号，导致所有长度测试密码被拒绝，二分搜索发散到边界值。
+        4 类维 {R14,R24,R34,R44} 取最大 N：同维内 r_cmb34 与 r_cmb44
+        不会同真（取更强要求的 r_cmb44）。粗粒度 3 类维已废弃，不再参与归约。
+        """
+        out = [False] * 7
+        order = (RMB.R14.value, RMB.R24.value, RMB.R34.value, RMB.R44.value)
+        n = 0
+        for i, idx in enumerate(order):
+            if any(r[idx] for r in ret_lists):
+                n = i + 1
+        if n:
+            out[order[n - 1]] = True
+        return out
+
+    def identify_combination_requirements_3_sum(self, com_r):
+        """识别「3 类已 individually required」时第 4 类是否也必需。
+
+        initial_sum == 3，即 LOWER/UPPER/DIGIT/SYMBOL 中恰有 3 类 = 1，
+        有且仅有一个缺失类。按缺失类分支逐一探测，每支 early return，
+        消除原 DL/SL 段串联执行、互相覆盖导致的标志堆积。
+
+        只报告细粒度 4 类维（r_cmb34 / r_cmb44）；粗粒度 3 类维已废弃。
         """
         ret_list = [False, False, False, False, False, False, False]
-        modified_password_dl = ""
-        modified_password_sl = ""
-        no_symbols = (com_r[CR.SYMBOL_R.value] == 0)
 
-        # ── DL section: digit/symbol 互换测试 ──
-        # 仅当符号确实存在/允许时此测试才有意义。
-        # 若符号计数为 0，transfer_symbol_into_digit 是空操作，
-        # 返回未改动的密码→测试成功→错误推断 r_cmb34=True。
-        if not no_symbols:
-            if com_r[CR.DIGIT_R.value] == 0:
-                modified_password_dl = uusg.transfer_digit_into_symbol(
-                    self.admissible_password)
+        # ── 缺失 digit：lower+upper+symbol 必需，探 digit 是否也必需 ──
+        if com_r[CR.DIGIT_R.value] == 0:
+            modified_password = uusg.transfer_digit_into_symbol(self.admissible_password)
+            if modified_password != "" and self.test_one_password(modified_password):
+                # digit 可被 symbol 替换 → 非必需 → 3 of 4
+                ret_list[RMB.R34.value] = True
             else:
-                # 符号存在 → 尝试将其转为数字
-                modified_password_dl = uusg.transfer_symbol_into_digit(
-                    self.admissible_password)
-
-            if modified_password_dl != "" and self.test_one_password(modified_password_dl):
-                ret_list[RMB.R34.value] = ret_list[RMB.R23.value] = True
-            else:
-                ret_list[RMB.R44.value] = ret_list[RMB.R33.value] = True
-
-        # ── SL section: upper/lower 互换测试 ──
-        if com_r[CR.UPPER_R.value] == 0:
-            modified_password_sl = uusg.transfer_upper_into_lower(self.admissible_password)
-        elif com_r[CR.LOWER_R.value] == 0:
-            modified_password_sl = uusg.transfer_lower_into_upper(self.admissible_password)
-        else:
-            # 大小写都存在 → 尝试去掉大写（全转小写）
-            modified_password_sl = uusg.transfer_upper_into_lower(self.admissible_password)
-
-        if modified_password_sl != "" and self.test_one_password(modified_password_sl):
-            # 去掉一种大小写后仍可接受 → 只需 2 类（有符号时对应3-of-4）
-            ret_list[RMB.R33.value] = ret_list[RMB.R34.value] = True
-        elif com_r[CR.UPPER_R.value] > 0 and com_r[CR.LOWER_R.value] > 0:
-            # 大小写均存在 → 尝试另一种方向（去掉小写保留大写）
-            modified_password_sl2 = uusg.transfer_lower_into_upper(self.admissible_password)
-            if modified_password_sl2 and self.test_one_password(modified_password_sl2):
-                ret_list[RMB.R33.value] = ret_list[RMB.R34.value] = True
-            else:
-                # 两种方向均失败 → 大小写都必需
-                if no_symbols:
-                    # 无符号 → 3 类全必需 → r_cmb33
-                    ret_list[RMB.R33.value] = True
-                else:
-                    # 有符号 → 可能需全部 4 类 → r_cmb44
-                    ret_list[RMB.R44.value] = True
-        else:
-            # 仅有一种大小写（或都没有），去除后失败
-            if no_symbols:
-                ret_list[RMB.R33.value] = True
-            else:
+                # digit 也必需 → 4 of 4
                 ret_list[RMB.R44.value] = True
+            return ret_list
+
+        # ── 缺失 symbol：lower+upper+digit 必需，symbol 本就可选 → 3 of 4 ──
+        if com_r[CR.SYMBOL_R.value] == 0:
+            ret_list[RMB.R34.value] = True
+            return ret_list
+
+        # ── 缺失 upper：lower+digit+symbol 必需，探 upper 是否也必需 ──
+        if com_r[CR.UPPER_R.value] == 0:
+            # 用符号替换大写（而非 .lower()）：保持 3 类（lower+digit+symbol），
+            # 避免 .lower() 把类别塌缩成 2 类（lower+digit）被 3-of-4 站点误拒，
+            # 进而误判为 4-of-4。
+            modified_password = uusg.transfer_upper_into_symbol(self.admissible_password)
+            if modified_password != "" and self.test_one_password(modified_password):
+                # upper 可去掉 → 非必需 → 3 of 4
+                ret_list[RMB.R34.value] = True
+            else:
+                # upper 也必需 → 4 of 4
+                ret_list[RMB.R44.value] = True
+            return ret_list
+
+        # ── 缺失 lower：upper+digit+symbol 必需，探 lower 是否也必需 ──
+        if com_r[CR.LOWER_R.value] == 0:
+            modified_password = uusg.transfer_lower_into_symbol(self.admissible_password)
+            if modified_password != "" and self.test_one_password(modified_password):
+                # lower 可去掉 → 非必需 → 3 of 4
+                ret_list[RMB.R34.value] = True
+            else:
+                # lower 也必需 → 4 of 4
+                ret_list[RMB.R44.value] = True
+            return ret_list
+
+        # initial_sum == 3 时必有且仅有一个缺失类，理论上不会走到这里。
+        self.my_logger.error("This process is conducted in a unexpected way.")
+        return ret_list
+
+    def identify_combination_requirements_0_sum(self, com_r):
+        """识别「无个体必需类别，但可能存在 N-of-M 组合要求」的政策。
+
+        initial_sum == 0：LOWER/UPPER/DIGIT/SYMBOL 均非 individually required
+        （各自 minimum 均为 0），但密码仍可能要求「任意 N 类」（如 163 的 3-of-4）。
+        依次探测「1 类 / 2 类 / 3 类」密码是否可接受，确定 N：
+        - 1 类接受 → 1 of 4（r_cmb14）
+        - 2 类接受 → 2 of 4（r_cmb24）
+        - 3 类接受 → 3 of 4（r_cmb34）
+        - 均拒 → 4 of 4（r_cmb44）
+        """
+        ret_list = [False, False, False, False, False, False, False]
+
+        # 1 类：全部压成单一字符类（小写）
+        one_class = uusg.transfer_upper_into_lower(
+            uusg.transfer_sth_to_letter(self.admissible_password)
+        )
+        self.my_logger.info(f"0_sum: test 1-class password {one_class}.")
+        if self.test_one_password(one_class):
+            ret_list[RMB.R14.value] = True
+            return ret_list
+
+        # 2 类：lower + digit（大写→小写，符号→数字）
+        two_class = uusg.transfer_upper_into_lower(
+            uusg.transfer_symbol_into_digit(self.admissible_password)
+        )
+        self.my_logger.info(f"0_sum: test 2-class password {two_class}.")
+        if self.test_one_password(two_class):
+            ret_list[RMB.R24.value] = True
+            return ret_list
+
+        # 3 类：admissible 本身为 lower+upper+digit（3 细类），已由
+        # find_admissible_password 确认可接受。到达此处说明 1/2 类均被拒、
+        # 3 类被接受 → 3 of 4。
+        self.my_logger.info("0_sum: 1/2-class rejected while admissible (3-class) accepted -> 3 of 4.")
+        ret_list[RMB.R34.value] = True
         return ret_list
 
     def identify_combination_requirements_2_sum(self, com_r):
@@ -1324,14 +1411,15 @@ class TestPassword(object):
             self.my_logger.info(f"Modified password is {modified_str_two} with symbol and lower.")
             if self.test_one_password(modified_str_two):
                 # r24 is true
-                ret_list[RMB.R24.value] = ret_list[RMB.R23.value] = True
+                ret_list[RMB.R24.value] = True
             else:
-                com_r_1 = com_r_2 = com_r
+                com_r_1 = com_r.copy()
+                com_r_2 = com_r.copy()
                 com_r_1[CR.UPPER_R.value] = 1
                 com_r_2[CR.DIGIT_R.value] = 1
                 ret_list_1 = self.identify_combination_requirements_3_sum(com_r_1)
                 ret_list_2 = self.identify_combination_requirements_3_sum(com_r_2)
-                ret_list = [a or b for a, b in zip(ret_list_1, ret_list_2)]
+                ret_list = self._reduce_combo_flags(ret_list_1, ret_list_2)
             return ret_list
         elif com_r[CR.SYMBOL_R.value] == 1 and com_r[CR.UPPER_R.value] == 1:
             modified_str_two = uusg.transfer_symbol_into_digit(
@@ -1340,42 +1428,45 @@ class TestPassword(object):
             self.my_logger.info(f"Modified password is {modified_str_two} with symbol and upper.")
             if self.test_one_password(modified_str_two):
                 # r24 is true
-                ret_list[RMB.R24.value] = ret_list[RMB.R23.value] = True
+                ret_list[RMB.R24.value] = True
             else:
-                com_r_1 = com_r_2 = com_r
+                com_r_1 = com_r.copy()
+                com_r_2 = com_r.copy()
                 com_r_1[CR.LOWER_R.value] = 1
                 com_r_2[CR.DIGIT_R.value] = 1
                 ret_list_1 = self.identify_combination_requirements_3_sum(com_r_1)
                 ret_list_2 = self.identify_combination_requirements_3_sum(com_r_2)
-                ret_list = [a or b for a, b in zip(ret_list_1, ret_list_2)]
+                ret_list = self._reduce_combo_flags(ret_list_1, ret_list_2)
             return ret_list
         elif com_r[CR.SYMBOL_R.value] == 1 and com_r[CR.DIGIT_R.value] == 1:
             modified_str_two = uusg.transfer_letter_to_digit(self.admissible_password)
             self.my_logger.info(f"Modified password is {modified_str_two} with symbol and digit.")
             if self.test_one_password(modified_str_two):
                 # r24 is true
-                ret_list[RMB.R24.value] = ret_list[RMB.R23.value] = True
+                ret_list[RMB.R24.value] = True
             else:
-                com_r_1 = com_r_2 = com_r
+                com_r_1 = com_r.copy()
+                com_r_2 = com_r.copy()
                 com_r_1[CR.LOWER_R.value] = 1
                 com_r_2[CR.UPPER_R.value] = 1
                 ret_list_1 = self.identify_combination_requirements_3_sum(com_r_1)
                 ret_list_2 = self.identify_combination_requirements_3_sum(com_r_2)
-                ret_list = [a or b for a, b in zip(ret_list_1, ret_list_2)]
+                ret_list = self._reduce_combo_flags(ret_list_1, ret_list_2)
             return ret_list
         elif com_r[CR.LOWER_R.value] == 1 and com_r[CR.UPPER_R.value] == 1:
             modified_str_two = uusg.transfer_sth_to_letter(self.admissible_password)
             self.my_logger.info(f"Modified password is {modified_str_two} with lower and upper.")
             if self.test_one_password(modified_str_two):
                 # r24 is true
-                ret_list[RMB.R24.value] = ret_list[RMB.R13.value] = True
+                ret_list[RMB.R24.value] = True
             else:
-                com_r_1 = com_r_2 = com_r
+                com_r_1 = com_r.copy()
+                com_r_2 = com_r.copy()
                 com_r_1[CR.DIGIT_R.value] = 1
                 com_r_2[CR.SYMBOL_R.value] = 1
                 ret_list_1 = self.identify_combination_requirements_3_sum(com_r_1)
                 ret_list_2 = self.identify_combination_requirements_3_sum(com_r_2)
-                ret_list = [a or b for a, b in zip(ret_list_1, ret_list_2)]
+                ret_list = self._reduce_combo_flags(ret_list_1, ret_list_2)
             return ret_list
         elif com_r[CR.LOWER_R.value] == 1 and com_r[CR.DIGIT_R.value] == 1:
             modified_str_two = uusg.transfer_upper_into_lower(
@@ -1385,14 +1476,15 @@ class TestPassword(object):
             if self.test_one_password(modified_str_two):
                 # r24 is true
                 self.my_logger.info(f"Here we go!")
-                ret_list[RMB.R24.value] = ret_list[RMB.R23.value] = True
+                ret_list[RMB.R24.value] = True
             else:
-                com_r_1 = com_r_2 = com_r
+                com_r_1 = com_r.copy()
+                com_r_2 = com_r.copy()
                 com_r_1[CR.UPPER_R.value] = 1
                 com_r_2[CR.SYMBOL_R.value] = 1
                 ret_list_1 = self.identify_combination_requirements_3_sum(com_r_1)
                 ret_list_2 = self.identify_combination_requirements_3_sum(com_r_2)
-                ret_list = [a or b for a, b in zip(ret_list_1, ret_list_2)]
+                ret_list = self._reduce_combo_flags(ret_list_1, ret_list_2)
             return ret_list
         elif com_r[CR.UPPER_R.value] == 1 and com_r[CR.DIGIT_R.value] == 1:
             modified_str_two = uusg.transfer_lower_into_upper(
@@ -1401,77 +1493,73 @@ class TestPassword(object):
             self.my_logger.info(f"Modified password is {modified_str_two} with upper and digit.")
             if self.test_one_password(modified_str_two):
                 # r24 is true
-                ret_list[RMB.R24.value] = ret_list[RMB.R23.value] = True
+                ret_list[RMB.R24.value] = True
             else:
-                com_r_1 = com_r_2 = com_r
+                com_r_1 = com_r.copy()
+                com_r_2 = com_r.copy()
                 com_r_1[CR.LOWER_R.value] = 1
                 com_r_2[CR.SYMBOL_R.value] = 1
                 ret_list_1 = self.identify_combination_requirements_3_sum(com_r_1)
                 ret_list_2 = self.identify_combination_requirements_3_sum(com_r_2)
-                ret_list = [a or b for a, b in zip(ret_list_1, ret_list_2)]
+                ret_list = self._reduce_combo_flags(ret_list_1, ret_list_2)
             return ret_list
         else:
             self.my_logger.error("This process is conducted in a unexpected way.")
             return ret_list
 
     def identify_combination_requirements_1_sum(self, com_r):
+        """识别「1 类 individually required」时实际需几类。
+
+        initial_sum == 1，即 LOWER/UPPER/DIGIT/SYMBOL 中恰有 1 类 = 1。
+        先探「仅此 1 类是否足够」；不足则枚举其余 3 类作为「第 2 必需类」，
+        分别交给 _2_sum（其内部再递归 _3_sum 覆盖 3-of-4 / 4-of-4）。
+        """
         ret_list = [False, False, False, False, False, False, False]
-        com_r_1 = com_r_2 = com_r_3 = com_r
+
         if com_r[CR.SYMBOL_R.value] == 1:
             modified_str = uusg.transfer_digit_into_symbol(
                 uusg.transfer_letter_to_digit(self.admissible_password)
             )
-            if self.test_one_password(modified_str):
-                # r24 is true
-                ret_list[RMB.R14.value] = ret_list[RMB.R13.value] = True
-            else:
-                com_r_1[CR.UPPER_R.value] = 1
-                com_r_2[CR.LOWER_R.value] = 1
-                com_r_3[CR.DIGIT_R.value] = 1
+            extras = (CR.UPPER_R.value, CR.LOWER_R.value, CR.DIGIT_R.value)
         elif com_r[CR.DIGIT_R.value] == 1:
             modified_str = uusg.transfer_symbol_into_digit(
                 uusg.transfer_letter_to_digit(self.admissible_password)
             )
-            if self.test_one_password(modified_str):
-                # r24 is true
-                ret_list[RMB.R14.value] = ret_list[RMB.R13.value] = True
-            else:
-                com_r_1[CR.UPPER_R.value] = 1
-                com_r_2[CR.LOWER_R.value] = 1
-                com_r_3[CR.SYMBOL_R.value] = 1
+            extras = (CR.UPPER_R.value, CR.LOWER_R.value, CR.SYMBOL_R.value)
         elif com_r[CR.UPPER_R.value] == 1:
             modified_str = uusg.transfer_lower_into_upper(
                 uusg.transfer_sth_to_letter(self.admissible_password)
             )
-            if self.test_one_password(modified_str):
-                # r24 is true
-                ret_list[RMB.R14.value] = ret_list[RMB.R13.value] = True
-            else:
-                com_r_1[CR.DIGIT_R.value] = 1
-                com_r_2[CR.LOWER_R.value] = 1
-                com_r_3[CR.SYMBOL_R.value] = 1
+            extras = (CR.DIGIT_R.value, CR.LOWER_R.value, CR.SYMBOL_R.value)
         elif com_r[CR.LOWER_R.value] == 1:
             modified_str = uusg.transfer_upper_into_lower(
                 uusg.transfer_sth_to_letter(self.admissible_password)
             )
-            if self.test_one_password(modified_str):
-                # r24 is true
-                ret_list[RMB.R14.value] = ret_list[RMB.R13.value] = True
-            else:
-                com_r_1[CR.DIGIT_R.value] = 1
-                com_r_2[CR.UPPER_R.value] = 1
-                com_r_3[CR.SYMBOL_R.value] = 1
+            extras = (CR.DIGIT_R.value, CR.UPPER_R.value, CR.SYMBOL_R.value)
         else:
             self.my_logger.error("This process is conducted in a unexpected way.")
+            return ret_list
+
+        if self.test_one_password(modified_str):
+            # 只需 1 类 → 1 of 4
+            ret_list[RMB.R14.value] = True
+            return ret_list
+
+        # 需要更多类 → 枚举其余 3 类作为「第 2 必需类」的假设
+        com_r_1 = com_r.copy()
+        com_r_2 = com_r.copy()
+        com_r_3 = com_r.copy()
+        com_r_1[extras[0]] = 1
+        com_r_2[extras[1]] = 1
+        com_r_3[extras[2]] = 1
         ret_list_1 = self.identify_combination_requirements_2_sum(com_r_1)
         ret_list_2 = self.identify_combination_requirements_2_sum(com_r_2)
-        ret_list_3 = self.identify_combination_requirements_3_sum(com_r_3)
-        ret_list = [a or b or c for a, b, c in zip(ret_list_1, ret_list_2, ret_list_3)]
-        return ret_list
+        ret_list_3 = self.identify_combination_requirements_2_sum(com_r_3)
+        return self._reduce_combo_flags(ret_list_1, ret_list_2, ret_list_3)
 
     def identify_combination_requirements(self, restrictive_policy):
         self.my_logger.info("Identifying the composition requirements of the website BEGINs.")
-        # R13 R23 R33 R14 R24 R34 R44
+        # R13 R23 R33 R14 R24 R34 R44 —— 粗粒度前 3 项已废弃，恒 False
         ret_list = [False, False, False, False, False, False, False]
         # letter upper lower digit symbol -> number
         com_r = [0, 0, 0, 0, 0]
@@ -1498,6 +1586,8 @@ class TestPassword(object):
         initial_sum = sum(com_r[1:])
 
         if initial_sum == 4:
+            # 4-of-4：细粒度 lower/upper/digit/symbol 四类全必需。
+            # 粗粒度 3 类维已废弃，仅报细粒度。
             ret_list[RMB.R44.value] = True
             return ret_list
         elif initial_sum == 3:
@@ -1506,6 +1596,8 @@ class TestPassword(object):
             ret_list = self.identify_combination_requirements_2_sum(com_r)
         elif initial_sum == 1:
             ret_list = self.identify_combination_requirements_1_sum(com_r)
+        else:
+            ret_list = self.identify_combination_requirements_0_sum(com_r)
         self.my_logger.info("Identifying the composition requirements of the website ends.")
         return ret_list
 
@@ -1881,7 +1973,16 @@ class TestPassword(object):
         uni_flag = False
         for i in test_unicode_list:
             mp_uni = initial_password[:-1] + i
-            if self.test_one_password(mp_uni, "[Unicode] Testing the unicode password"):
+            try:
+                allowed = self.test_one_password(mp_uni, "[Unicode] Testing the unicode password")
+            except BrowserDeadError:
+                raise  # 浏览器已死，短路整个测量，不做无用重试
+            except Exception as exc:
+                self.my_logger.warning(
+                    f"[Unicode] 单个字符测试异常，按「不允许」跳过: {mp_uni} "
+                    f"({type(exc).__name__}: {exc})")
+                allowed = False
+            if allowed:
                 uni_flag = True
                 self.my_logger.success(f"[Unicode] Testing permitted character: {mp_uni} is allowed.")
             else:
@@ -1894,7 +1995,16 @@ class TestPassword(object):
         emo_flag = False
         for i in test_unicode_list:
             mp_emo = initial_password[:-1] + i
-            if self.test_one_password(mp_emo, "[Emoji] Testing the emoji password"):
+            try:
+                allowed = self.test_one_password(mp_emo, "[Emoji] Testing the emoji password")
+            except BrowserDeadError:
+                raise  # 浏览器已死，短路整个测量
+            except Exception as exc:
+                self.my_logger.warning(
+                    f"[Emoji] 单个字符测试异常，按「不允许」跳过: {mp_emo} "
+                    f"({type(exc).__name__}: {exc})")
+                allowed = False
+            if allowed:
                 emo_flag = True
                 self.my_logger.success(f"[Emoji] Testing permitted character: {mp_emo} is allowed.")
             else:
