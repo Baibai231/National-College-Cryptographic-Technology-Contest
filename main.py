@@ -171,8 +171,19 @@ def _detect_method(driver, site_url, signup_url,
                 except Exception:
                     pass
 
-            # 填密码
-            driver.execute_script(js_set, pwd_el, test_pwd)
+            # 填密码（键盘模拟：清空 → 聚焦 → send_keys）
+            # 用户也是键盘输入，send_keys 触发真实键盘事件，能同时驱动
+            # React/Vue/TANGRAM 等所有框架的校验；JS setter 只发 input/change，
+            # 百度 TANGRAM 只认真实键盘事件，会导致校验不触发。失败时回退 JS。
+            driver.execute_script(
+                "arguments[0].value=''; "
+                "arguments[0].dispatchEvent(new Event('input', {bubbles: true}));",
+                pwd_el)
+            try:
+                pwd_el.click()
+                pwd_el.send_keys(test_pwd)
+            except Exception:
+                driver.execute_script(js_set, pwd_el, test_pwd)
 
             # ── focus → blur 触发校验 ──
             # gitee、stackoverflow 等网站在密码框失去焦点（blur）时才显示
@@ -194,7 +205,7 @@ def _detect_method(driver, site_url, signup_url,
                     ActionChains(driver).move_to_element(
                         pwd_el
                     ).move_by_offset(
-                        pwd_el.size['width'] + 30, 5
+                        pwd_el.size['width'] // 2 + 30, 5
                     ).click().perform()
             except Exception:
                 pass
@@ -281,6 +292,7 @@ def _apply_classification_to_result(result: dict, classification: dict) -> None:
     result["confidence"] = classification.get("confidence", "low")
     result["stop_reason"] = classification.get("stop_reason", "")
     result["primary_method"] = classification.get("primary_method", "")
+    result["ui_type"] = classification.get("ui_type", "")
     # v4 逐方法清单（aggregate_methods 数据层）：method/name_zh/status/blockers/route/steps
     result["methods"] = classification.get("methods", [])
     # 分类流程的完整证据（供 webapp 复用分类输出 / 落库用）
@@ -290,6 +302,45 @@ def _apply_classification_to_result(result: dict, classification: dict) -> None:
     # 分类政策元数据（authentication/measurement），与实测口令政策
     # （length/restrictive/permissive，存 result["policy"]）区分
     result["classification_policy"] = classification.get("policy", {})
+
+
+def _policy_is_usable(policy) -> bool:
+    """判断 Phase 4 得到的是否是可信的实测口令政策。"""
+    if not isinstance(policy, dict) or not policy:
+        return False
+
+    # 明确标记为登录表单、访问阻断、门控表单，或浏览器死亡且未测到长度时，
+    # 都说明当前 policy 不能作为注册口令政策输出。
+    if policy.get("_suspicious_login_form"):
+        return False
+    if policy.get("_access_blocked"):
+        return False
+    if policy.get("_gated_form_unverifiable"):
+        return False
+    if policy.get("_browser_dead"):
+        return policy.get("length") not in (None, [0, 0])
+
+    # 找不到可接受密码时，inline 测试器会返回一个全零的默认 policy。
+    restrictive = policy.get("restrictive") or {}
+    permissive = policy.get("permissive") or {}
+    if (
+        policy.get("length") == [0, 0]
+        and not any(restrictive.values())
+        and not any(permissive.values())
+    ):
+        return False
+
+    return True
+
+
+def _fallback_to_classification(result: dict, classification: dict, note: str = "") -> dict:
+    """测量失败时，用已经完成的注册流程分类结果兜底输出。"""
+    result["method_used"] = "classified_only"
+    result["policy"] = classification.get("policy", {}) if classification else {}
+    result["error"] = None
+    if note and not result.get("note"):
+        result["note"] = note
+    return result
 
 
 # ================================================================
@@ -314,6 +365,7 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
     _site_host = urlparse(site_url).hostname or "unknown"
     get_logger(_site_host)
     driver = None
+    classification = None
     try:
         driver = _get_new_driver()
 
@@ -323,7 +375,6 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         discovery = LoginLinkDiscovery(driver)
         signup_url = discovery.navigate_to_signup(site_url)
 
-        classification = None   # Phase 2 会填充；fallback 提前填充时跳过 Phase 2
         engine = None
 
         if not signup_url:
@@ -340,7 +391,12 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                         and classification["flow_type"] != "unknown"):
                     # 分类器有把握 → 使用该结果
                     if classification["should_proceed"]:
-                        signup_url = fallback_url
+                        # 分类器「全视图探索」可能已导航到真实注册页（如 SPA 的
+                        # /register），而 fallback_url 是分类前捕获的首页 URL。
+                        # 用分类结果里记录的 final_url（或当前实际 URL），否则
+                        # Phase 4 会 driver.get(首页) 把浏览器从注册页拉回首页，
+                        # 导致找不到 input[type=password] 死循环重试。
+                        signup_url = classification.get("final_url") or driver.current_url
                         logger.info(
                             "回退分类成功: {} (类型{} confidence={}), 继续测量".format(
                                 classification["flow_type"],
@@ -356,16 +412,22 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                                 result.get("class_letter", "?")))
                         return result
                 else:
-                    # 分类器也无把握 → 维持原逻辑
-                    result["error"] = "未发现注册页面"
-                    result["flow_type"] = "no_web_signup"
-                    result["class_letter"] = "H"
-                    return result
+                    return _fallback_to_classification(
+                        result,
+                        classification,
+                        "注册页发现失败，回退分类无把握；仅输出分类结果，不推断为无网页注册。",
+                    )
             except Exception as e:
                 logger.warning("回退分类失败: {}".format(e))
-                result["error"] = "未发现注册页面"
-                result["flow_type"] = "no_web_signup"
-                result["class_letter"] = "H"
+                if classification:
+                    return _fallback_to_classification(
+                        result,
+                        classification,
+                        "注册页发现失败，回退分类异常；仅输出已有分类结果。",
+                    )
+                result["error"] = str(e)
+                result["flow_type"] = "unknown"
+                result["class_letter"] = "I"
                 return result
 
         # ================================================================
@@ -503,8 +565,11 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             tester.email_xpath = email_xpath
             tester.password_xpath = password_xpath
             if not tester.discover_form_fields():
-                result["error"] = "无法检测表单字段"
-                return result
+                return _fallback_to_classification(
+                    result,
+                    classification,
+                    "密码字段检测失败，回退输出注册流程分类结果。",
+                )
             # 若当前已在注册页面，标记页面就绪，防止 test_one_password
             # 内部重新 driver.get(signup_url) 导致 SPA 模态框关闭
             try:
@@ -551,6 +616,14 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                 test_site=hostname,
             )
             result["policy"] = tester.run_full_test()
+
+        # ── 测量结果不可信时，回退到已经完成的注册流程分类 ──
+        if not _policy_is_usable(result.get("policy")):
+            _fallback_to_classification(
+                result,
+                classification,
+                "密码政策测试未得到可信结果，回退输出注册流程分类结果。",
+            )
 
         # ── 后处理：检测异常情况 ──
         # 注意：对于 A/B/E 类网站，即使检测到疑似登录表单，
@@ -611,9 +684,16 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                 result["class_letter"] = "?"
 
     except Exception as e:
-        result["error"] = str(e)
         import traceback
         traceback.print_exc()
+        if classification:
+            _fallback_to_classification(
+                result,
+                classification,
+                "密码政策测试发生异常，回退输出注册流程分类结果。",
+            )
+        else:
+            result["error"] = str(e)
     finally:
         if driver:
             try:
@@ -694,9 +774,15 @@ def save_result(site_url: str, result: dict):
         "primary_method": result.get("primary_method", ""),
         "confidence": result.get("confidence", "low"),
         "stop_reason": result.get("stop_reason", ""),
+        "ui_type": result.get("ui_type", ""),
         "methods": result.get("methods", []),
         "error": result.get("error"),
         "policy": result.get("policy", {}),
+        "classification_policy": result.get("classification_policy", {}),
+        "states": result.get("states", []),
+        "evidence": result.get("evidence", []),
+        "final_url": result.get("final_url", ""),
+        "note": result.get("note", ""),
     }
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)

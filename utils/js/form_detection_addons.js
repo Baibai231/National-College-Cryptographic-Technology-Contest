@@ -1029,6 +1029,46 @@ function _looksLikePwdFeedback(text) {
     return PWD_FEEDBACK_KEYWORDS.test(String(text));
 }
 
+// ================================================================
+// 门控表单检测（gated form）—— 区分"密码本身不合规"与"整表未完成"
+// ================================================================
+// 很多注册表单除密码外还要求手机号/短信验证码/确认密码/协议勾选，而这些字段
+// 出于安全边界不会被填写。此时前端表单级校验会把整个表单标为"未完成"，密码框
+// 的 aria-invalid=true / error class 可能只是"整表未完成"的连带结果，与密码
+// 内容无关。这类表单里 aria-invalid/error-class 必须降级为软信号，只有密码
+// 专属错误消息（或原生 HTML5 内容校验）才能判定拒绝。
+function _isGatedForm(pwdEl) {
+    if (!pwdEl || pwdEl.nodeType !== 1) return false;
+    var form = null;
+    try { form = pwdEl.closest('form'); } catch(e) {}
+    var scope = form || document;
+    var candidates;
+    try { candidates = scope.querySelectorAll('input, select, textarea'); } catch(e) { return false; }
+    for (var i = 0; i < candidates.length; i++) {
+        var el = candidates[i];
+        if (el === pwdEl) continue;
+        var type = String(el.type || '').toLowerCase();
+        if (type === 'hidden' || type === 'submit' || type === 'button' ||
+            type === 'reset' || type === 'image') continue;
+        var hint = String(el.name || '') + ' ' + String(el.placeholder || '') + ' ' +
+                   String(el.getAttribute ? el.getAttribute('aria-label') || '' : '') + ' ' +
+                   String(el.id || '');
+        // 手机号 / 验证码 / 确认密码 / 协议勾选 —— 这些字段恒为空且不会被填写
+        if (type === 'tel' || /(手机|电话|手机号|phone|mobile)/i.test(hint)) return true;
+        if (/(验证码|短信|verification|verify|captcha)/i.test(hint)) return true;
+        if (/(确认|再次|confirm|retype|repeat|re-?enter)/i.test(hint)) return true;
+        if (type === 'checkbox') {
+            var tosHint = hint;
+            try {
+                var lbl = el.closest('label');
+                if (lbl) tosHint += ' ' + (lbl.textContent || '');
+            } catch(e) {}
+            if (/(同意|协议|条款|agree|terms|policy|隐私)/i.test(tosHint)) return true;
+        }
+    }
+    return false;
+}
+
 /**
  * 判断元素是否呈现"错误色"（红/橙系）。
  *
@@ -1047,6 +1087,33 @@ function _isErrorColor(el) {
         // 红/橙系：红通道明显高于绿蓝通道（灰/黑/蓝均不满足）
         return r >= 140 && (r - g) >= 50 && (r - b) >= 50;
     } catch (e) { return false; }
+}
+
+/**
+ * 判断元素是否属于「密码规则清单 / 强度计」。
+ *
+ * 百度等站点把每条规则（长度 8~14、至少 2 种字符类型、不含空格/中文…）做成独立
+ * 条目（如 pwd-checklist-item），输入过程中按「当前是否满足」实时切换 error/success：
+ * 只敲 1 个字符时长度条目变红（-error），敲满 8 位后变绿（-success）。这是打字
+ * 过程中的瞬态，不是最终拒绝信号。密码框本身变红才是拒绝依据，规则清单与
+ * strength-indicator 同理，必须跳过，否则合法密码会在逐字输入的瞬间被误判拒绝。
+ */
+function _isChecklistOrStrengthEl(el) {
+    try {
+        var node = el;
+        for (var lv = 0; lv < 3 && node; lv++) {
+            var cls = '';
+            try {
+                cls = (typeof node.className === 'string') ? node.className :
+                      (node.className && node.className.baseVal) || '';
+            } catch (e) {}
+            if (/(check\s*-?\s*list|rule\s*-?\s*list|strength-meter|password-strength|pw-strength|pwd-check|pwd-rule|validity-check)/i.test(cls)) {
+                return true;
+            }
+            node = node.parentElement;
+        }
+    } catch (e) {}
+    return false;
 }
 
 /**
@@ -1140,17 +1207,25 @@ function detectPasswordFeedback(passwordXPath) {
     }
     if (!el || el.nodeType !== 1) return DEFAULT_RESULT;
 
+    // 门控表单：aria-invalid / error class 可能来自"整表未完成"，降级为软信号
+    var gated = _isGatedForm(el);
+
     // ---- 1. aria-invalid ----
     var ariaInv = el.getAttribute('aria-invalid');
     if (ariaInv !== null && ariaInv !== '') {
         if (ariaInv === 'true') {
-            return { hasFeedback: true, rejected: true, type: 'aria-invalid', message: 'aria-invalid=true' };
+            if (!gated) {
+                return { hasFeedback: true, rejected: true, type: 'aria-invalid', message: 'aria-invalid=true' };
+            }
+            // gated：不在此判拒绝，继续后续密码专属检查
         }
         if (ariaInv === 'false') {
             return { hasFeedback: true, rejected: false, type: 'aria-invalid', message: 'aria-invalid=false' };
         }
         // 其他非空值 (如 "grammar") — 视为有反馈但不确定是否拒绝
-        return { hasFeedback: true, rejected: true, type: 'aria-invalid', message: String(ariaInv) };
+        if (!gated) {
+            return { hasFeedback: true, rejected: true, type: 'aria-invalid', message: String(ariaInv) };
+        }
     }
 
     // ---- 2. HTML5 Constraint Validation API ----
@@ -1187,7 +1262,7 @@ function detectPasswordFeedback(passwordXPath) {
     // ---- 4. 密码字段自身 class 变化 ----
     try {
         var cls = el.className || '';
-        if (/error|invalid|danger|err/i.test(cls)) {
+        if (/error|invalid|danger|err/i.test(cls) && !gated) {
             return { hasFeedback: true, rejected: true, type: 'input-class', message: 'class contains error/invalid/danger' };
         }
     } catch(e) {}
@@ -1201,7 +1276,9 @@ function detectPasswordFeedback(passwordXPath) {
                 var descEl = document.getElementById(ids[di]);
                 if (descEl && descEl.offsetParent !== null) {
                     var descText = (descEl.textContent || '').trim();
-                    if (descText.length > 1) {
+                    // 仅当描述文本是「密码专属」错误（含政策关键词）才算拒绝，
+                    // 防止 aria-describedby 指向手机号/协议等其他字段错误。
+                    if (descText.length > 1 && _looksLikePwdFeedback(descText)) {
                         return {
                             hasFeedback: true, rejected: true, type: 'aria-describedby',
                             message: descText.substring(0, 300)
@@ -1261,7 +1338,9 @@ function detectPasswordFeedback(passwordXPath) {
                             // ── 过滤非密码字段错误 ──
                             // gitee 等网站在密码框 blur 时会触发表单级校验，
                             // "姓名为必填项"等错误与密码字段无关，不应视为密码反馈。
-                            if (_isNonPwdFeedback(txt)) continue;
+                            // 还要求文本命中密码政策关键词（长度/数字/符号…），
+                            // 否则"我已阅读并同意服务协议"等协议勾选错误也会被误判。
+                            if (!_looksLikePwdFeedback(txt)) continue;
                             return {
                                 hasFeedback: true, rejected: true, type: 'error-element',
                                 message: txt.substring(0, 300)
@@ -1339,6 +1418,12 @@ var __pwdFeedbackWatcher = null;
 var __pwdFeedbackResults = [];
 var __pwdFeedbackPasswordEl = null;
 var __pwdFeedbackWatchingXPath = null;  // 保存原始 XPath（密码字段可能在 iframe 内，document.evaluate 找不到时用于兜底）
+// Element UI / Vue 等框架用 v-if + 过渡动画（如 el-zoom-in-top）插入错误 div：
+// 插入瞬间高度为 0、offsetParent 为 null、或文本尚未填入，MutationObserver 第一击
+// 会因「不可见 / 空文本」漏掉，而过渡结束不再产生新 mutation，导致 observer 永远抓不到
+// （只能靠静态兜底）。这里把候选反馈元素记下，等过渡结束（约 350ms）统一复查一次。
+var __pwdFeedbackPendingRechecks = [];
+var __pwdFeedbackRecheckTimer = null;
 
 var WATCH_ERROR_SELECTORS = [
     '[class*="error"]', '[class*="invalid"]', '[class*="warning"]',
@@ -1392,6 +1477,9 @@ function watchPasswordFeedback(passwordXPath) {
     // 标记密码字段
     __pwdFeedbackPasswordEl.setAttribute('data-pwd-feedback-watching', 'true');
 
+    // 门控表单：aria-invalid / error class 可能来自"整表未完成"，不作为硬拒绝
+    var gated = _isGatedForm(__pwdFeedbackPasswordEl);
+
     function recordFeedback(feedback) {
         // 跳过明显不是密码字段相关的错误（如"姓名为必填项"、"email is required"等）
         if (_isNonPwdFeedback(feedback.message)) {
@@ -1408,6 +1496,31 @@ function watchPasswordFeedback(passwordXPath) {
     }
 
     /**
+     * 把「长得像错误提示容器但当前不可见/空文本」的元素记入延迟复查队列，
+     * 等过渡动画结束后再复查一次。只复查命中 WATCH_ERROR_SELECTOR 的元素，
+     * 避免给任意不可见节点排定时器。
+     */
+    function _scheduleDelayedRecheck(el) {
+        try {
+            if (!el || el.nodeType !== 1) return;
+            if (!el.matches || !el.matches(WATCH_ERROR_SELECTOR)) return;
+            for (var i = 0; i < __pwdFeedbackPendingRechecks.length; i++) {
+                if (__pwdFeedbackPendingRechecks[i] === el) return;
+            }
+            __pwdFeedbackPendingRechecks.push(el);
+            if (__pwdFeedbackRecheckTimer) return;  // 已有定时器，到期会统一复查
+            __pwdFeedbackRecheckTimer = setTimeout(function() {
+                __pwdFeedbackRecheckTimer = null;
+                var list = __pwdFeedbackPendingRechecks.slice();
+                __pwdFeedbackPendingRechecks = [];
+                for (var j = 0; j < list.length; j++) {
+                    _tryRecordFeedbackEl(list[j]);
+                }
+            }, 350);
+        } catch(e) {}
+    }
+
+    /**
      * 判断元素是否"密码反馈元素"并记录。命中即返回 true（调用方可 early-return）。
      * 规则：可见 + 短文本 + 非其他字段错误 + (class 白名单 或 文本关键词兜底)。
      */
@@ -1415,18 +1528,33 @@ function watchPasswordFeedback(passwordXPath) {
         if (!el || el.nodeType !== 1) return false;
         try {
             var rect = el.getBoundingClientRect();
-            if (rect.width <= 0 || rect.height <= 0) return false;
-            if (el.offsetParent === null) return false;
+            if (rect.width <= 0 || rect.height <= 0) {
+                // v-if 过渡插入：当前不可见，记下等过渡结束后复查
+                _scheduleDelayedRecheck(el);
+                return false;
+            }
+            if (el.offsetParent === null) {
+                _scheduleDelayedRecheck(el);
+                return false;
+            }
         } catch(e) { return false; }
         var txt = (el.textContent || '').trim().replace(/\s+/g, ' ');
-        if (txt.length < 2) return false;
+        if (txt.length < 2) {
+            // 空容器：文本可能稍后填入，补一个延迟复查兜底
+            _scheduleDelayedRecheck(el);
+            return false;
+        }
         if (_isNonPwdFeedback(txt)) return false;
+        // 规则清单 / 强度计（pwd-checklist 等）≠ 拒绝，跳过
+        if (_isChecklistOrStrengthEl(el)) return false;
         try {
             if (el.matches && el.matches(WATCH_ERROR_SELECTOR)) {
                 // 颜色闸门：与 Path B / _findNearbyPwdFeedback 一致。
                 // 灰/中性色的提示（常驻规则说明、强度计「密码安全系数较低」）
                 // 不是拒绝信号——只有变红才是密码不合规。
                 if (!_isErrorColor(el)) return false;
+                // 密码专属闸门：必须是密码政策错误，过滤协议勾选/手机号等其它字段错误
+                if (!_looksLikePwdFeedback(txt)) return false;
                 return recordFeedback({ hasFeedback: true, rejected: true,
                     type: 'observer-added-el', message: txt.substring(0, 300) });
             }
@@ -1481,7 +1609,7 @@ function watchPasswordFeedback(passwordXPath) {
                 if (tgt === __pwdFeedbackPasswordEl) {
                     if (attrName === 'aria-invalid') {
                         var ariaVal = __pwdFeedbackPasswordEl.getAttribute('aria-invalid');
-                        if (ariaVal === 'true') {
+                        if (ariaVal === 'true' && !gated) {
                             if (recordFeedback({
                                 hasFeedback: true, rejected: true,
                                 type: 'observer-aria-invalid', message: 'aria-invalid=true'
@@ -1491,7 +1619,7 @@ function watchPasswordFeedback(passwordXPath) {
 
                     if (attrName === 'class') {
                         var cls = __pwdFeedbackPasswordEl.className || '';
-                        if (/error|invalid|danger|err|success/.test(cls)) {
+                        if (/error|invalid|danger|err|success/.test(cls) && !gated) {
                             if (recordFeedback({
                                 hasFeedback: true, rejected: !/success/.test(cls),
                                 type: 'observer-class-change',
@@ -1546,6 +1674,11 @@ function getWatchedFeedback() {
 }
 
 function stopWatchingFeedback() {
+    if (__pwdFeedbackRecheckTimer) {
+        clearTimeout(__pwdFeedbackRecheckTimer);
+        __pwdFeedbackRecheckTimer = null;
+    }
+    __pwdFeedbackPendingRechecks = [];
     if (__pwdFeedbackWatcher) {
         __pwdFeedbackWatcher.disconnect();
         __pwdFeedbackWatcher = null;

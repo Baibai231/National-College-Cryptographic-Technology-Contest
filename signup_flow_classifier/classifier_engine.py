@@ -10,7 +10,7 @@
 
 import time
 from typing import Optional, Dict
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlparse
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -1249,18 +1249,35 @@ class SignupFlowClassifierEngine:
         """
         parsed = urlparse(url)
         path = parsed.path.lower()
+        query_keys = {
+            key.lower()
+            for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
+        }
         if parsed.scheme == "file":
             path = path.rsplit("/", 1)[-1]
         signup_hints = ("signup", "sign-up", "sign_up", "register", "regphone")
         login_hints = ("login", "sign-in", "sign_in", "signin")
+        signup_query_keys = {"reg", "register", "signup", "sign-up", "sign_up", "regphone"}
+        login_query_keys = {"login", "signin", "sign-in", "sign_in"}
         # 同一路径偶尔同时带有两类词（测试页名、redirect 语义等），当前实际登录
         # 语义优先，不能因为文件名中也出现 register 就跳过注册入口。
-        if entry_kind == "signup" and any(hint in path for hint in login_hints):
+        if entry_kind == "signup" and (
+            login_query_keys & query_keys
+            or any(hint in path for hint in login_hints)
+        ):
             return False
-        if entry_kind == "login" and any(hint in path for hint in signup_hints):
+        if entry_kind == "login" and (
+            signup_query_keys & query_keys
+            or any(hint in path for hint in signup_hints)
+        ):
             return False
-        hints = signup_hints if entry_kind == "signup" else login_hints
-        return any(hint in path for hint in hints)
+        if entry_kind == "signup":
+            return bool(signup_query_keys & query_keys) or any(
+                hint in path for hint in signup_hints
+            )
+        return bool(login_query_keys & query_keys) or any(
+            hint in path for hint in login_hints
+        )
 
     @staticmethod
     def _wait_for_field(driver: WebDriver, field_type: str,

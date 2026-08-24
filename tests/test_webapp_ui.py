@@ -58,6 +58,35 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("stat-coverage", self.html)
         self.assertIn("stat-login-coverage", self.html)
 
+    def test_policy_result_falls_back_to_classification_table(self):
+        # 无口令框或政策测试未完成时，按注册分类展示，口令政策留空
+        self.assertIn("isPolicyMeasured", self.html)
+        self.assertIn("classificationOnlyTableHtml", self.html)
+        self.assertIn("注册与分类", self.html)
+        self.assertIn("密码政策测试未完成，仅输出注册与分类结果", self.html)
+        self.assertIn("密码政策测试未完成，仅存注册分类结果", self.html)
+
+    def test_policy_result_labels_measured_method_without_method_list(self):
+        # 测到口令政策时，方法清单直接写"进行密码政策测试"
+        self.assertIn("进行密码政策测试", self.html)
+
+    def test_db_policy_table_uses_two_columns_when_measured(self):
+        # 实测口令政策入库后，详情表只保留"密码政策测试"两列，不加登录/注册
+        self.assertIn('colspan="2" class="text-center">密码政策测试', self.html)
+
+    def test_db_policy_table_falls_back_to_three_column_classification(self):
+        # 未实测时按注册+分类展示三列：条目 + 登录 + 注册
+        self.assertIn('colspan="3" class="text-center">注册与分类', self.html)
+        self.assertIn("<th>登录（程序）</th><th>注册（程序）</th>", self.html)
+
+
+class PolicyApiTests(unittest.TestCase):
+    def test_policy_response_exposes_measured_flag(self):
+        app_src = (Path(__file__).parents[1] / "webapp" / "app.py").read_text(
+            encoding="utf-8")
+        self.assertIn('"policy_measured": True', app_src)
+        self.assertIn('response["policy_measured"] = False', app_src)
+
 
 if __name__ == "__main__":
     unittest.main()

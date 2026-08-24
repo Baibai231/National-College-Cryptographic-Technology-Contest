@@ -1251,6 +1251,7 @@ def _run_live_policy(url: str, method: str) -> dict:
         response = _classification_response(url, "signup", result)
         response["method_used"] = result.get("method_used") or "classified_only"
         response["class_letter"] = result.get("class_letter")
+        response["policy_measured"] = False
         return response
     return {
         "url": url,
@@ -1271,6 +1272,7 @@ def _run_live_policy(url: str, method: str) -> dict:
         "note": result.get("note"),
         "suspicious_login_form": result.get("suspicious_login_form", False),
         "policy": policy,
+        "policy_measured": True,
         "measured_at": datetime.now(timezone.utc).isoformat(),
     }
 

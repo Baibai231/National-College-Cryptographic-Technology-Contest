@@ -201,15 +201,22 @@ class SitePasswordPolicyTester:
             print(f"    长度: min={password_policy['length'][0]}, max={password_policy['length'][1]}")
             self._checkpoint_policy(password_policy, "length_done")
 
+            # 方案 A 联动：max 未检出（None）时，下游 permissive 测试仍需要一个可用
+            # 长度来构造密码，降级为 admissible 密码长度，避免 None 传播导致崩溃。
+            _eff_max = password_policy["length"][1]
+            if _eff_max is None:
+                _eff_max = max(password_policy["length"][0], len(admissible))
+            _eff_length = [password_policy["length"][0], _eff_max]
+
             password_policy["permissive"]["permitted_characters"] = \
-                self._tester.identify_permissive_characters(password_policy["length"])
+                self._tester.identify_permissive_characters(_eff_length)
             self._checkpoint_policy(password_policy, "permitted_characters_done")
             password_policy["permissive"]["short_and_long_password"] = \
-                self._tester.identify_long_short_passwords(password_policy["length"])
+                self._tester.identify_long_short_passwords(_eff_length)
             password_policy["permissive"]["breached_password"] = \
-                self._tester.identify_breached_passwords(rp, password_policy["length"])
+                self._tester.identify_breached_passwords(rp, _eff_length)
             password_policy["permissive"]["permitted_sequences"] = \
-                self._tester.identify_permitted_sequences(rp, password_policy["length"])
+                self._tester.identify_permitted_sequences(rp, _eff_length)
 
         except BrowserDeadError as e:
             print(f"    ✗ 浏览器会话终止，测量中止: {e}")
@@ -223,6 +230,12 @@ class SitePasswordPolicyTester:
         finally:
             self._tester.my_logger.info(f"Policy of {self.test_site}: {password_policy}")
             self._checkpoint_policy(password_policy, "final")
+
+        # 门控表单 + 全程未观察到任何密码专属拒绝 → "全接受"结论不可信
+        if getattr(self._tester, '_gated_form', False) and \
+                not getattr(self._tester, '_saw_pwd_specific_reject', False):
+            password_policy["_gated_form_unverifiable"] = True
+            print("    ⚠ 门控表单：全程无密码专属拒绝信号，政策可能无法据此验证")
 
         return password_policy
 

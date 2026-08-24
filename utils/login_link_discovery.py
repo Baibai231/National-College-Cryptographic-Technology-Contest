@@ -811,6 +811,9 @@ class LoginLinkDiscovery:
         """
         import time
         try:
+            # 部分登录弹窗（百度通行证）先渲染密码框，后渲染底部“立即注册”
+            # 链接。若立即扫描会漏掉该链接，导致永远停留登录视图。
+            time.sleep(2.0)
             result = self.driver.execute_cdp_cmd('Runtime.evaluate', {
                 'expression': '''
 (function() {
@@ -923,7 +926,11 @@ class LoginLinkDiscovery:
             }
         } catch(e) {}
     }
-    if (searchRoots.length === 0) searchRoots.push(document.body);
+    // 始终把 document.body 作为兜底搜索根。
+    // 部分站点的 class 里会出现无关的 panel/overlay，让上面的模态框
+    // 选择器误命中这些非认证容器；如果因此跳过 body，真正的登录弹窗
+    // 里的“立即注册”就永远找不到。
+    searchRoots.push(document.body);
 
     for (var r = 0; r < searchRoots.length; r++) walk(searchRoots[r]);
 
@@ -950,6 +957,7 @@ class LoginLinkDiscovery:
                 # Chinese SPA 站点（163、xuetangx）的 React 事件处理器
                 # 只响应浏览器原生信任的点击事件
                 from selenium.webdriver.common.by import By
+                before_handles = self.driver.window_handles
                 el = self.driver.find_element(
                     By.CSS_SELECTOR, "[data-ap-signup-tab='1']")
                 try:
@@ -968,7 +976,41 @@ class LoginLinkDiscovery:
                     except Exception as je:
                         logger.debug("注册 tab JS 点击失败: {}".format(je))
 
-                time.sleep(1.5)
+                time.sleep(2.0)
+
+                # ── 新窗口/新标签页处理 ──
+                # 百度通行证的“立即注册”不是同页 SPA 切换，而是打开新的
+                # passport.baidu.com 注册窗口。旧逻辑只检查当前窗口，
+                # 因此永远看不到新窗口里的注册密码框。
+                new_handles = [
+                    h for h in self.driver.window_handles
+                    if h not in before_handles
+                ]
+                if new_handles:
+                    try:
+                        self.driver.switch_to.window(new_handles[0])
+                        self._wait_for_page_ready(timeout=15)
+                        # 新标签是新的 CDP target，字段检测脚本不会自动跟随。
+                        self.reinject_into_current_tab()
+                        pwds = self.find_password_fields()
+                        if pwds:
+                            self._entry_clicked = True
+                            logger.info(
+                                "注册入口打开新标签页，密码字段可见: "
+                                f"{self.driver.current_url}"
+                            )
+                            return True
+                    except Exception as e:
+                        logger.debug(
+                            "新标签页注册表单检测失败: {}:{}".format(
+                                type(e).__name__, e))
+                    # 新标签没有注册密码框：切回原窗口继续按同页切换处理
+                    if before_handles:
+                        try:
+                            self.driver.switch_to.window(before_handles[0])
+                        except Exception:
+                            pass
+
                 pwds = self.find_password_fields()
                 if pwds:
                     logger.info("注册 tab 切换成功，密码字段可见")

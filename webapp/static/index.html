@@ -273,36 +273,42 @@ function reportTableHtml(login, signup, version) {
 function policyTestTableHtml(login, signup, version) {
   const l = login || {};
   const s = signup || {};
-  const only = !login && signup ? 'signup' : login && !signup ? 'login' : 'both';
-  const tds = (fn) => only === 'login'
-    ? `<td>${fn(l)}</td>`
-    : only === 'signup'
-      ? `<td>${fn(s)}</td>`
-      : `<td>${fn(l)}</td><td>${fn(s)}</td>`;
   // 是否实测到口令政策：入库时 pwd_policy 只在 inline/full 下非空
   const hasPwd = (e) => e && e.pwd_policy && typeof e.pwd_policy === 'object'
     && Object.keys(e.pwd_policy).length;
-  // 类型：实际用哪种方法测的就填哪种（inline / full）；未实测不填
-  const typeCell = (e) => {
-    const m = (e && e.pwd_method) || '';
-    return m === 'inline' ? 'inline' : m === 'full' ? 'full' : '—';
-  };
-  // 方法清单：测得口令政策按分类结果填；无口令框只分类，不填
-  const methodCell = (e) => hasPwd(e)
-    ? methodsHtml((e || {}).methods)
-    : '<span class="text-muted">—</span>';
-  // 口令政策：测得→全部实测信息；未测→分类结果
-  const policyCell = (e) => hasPwd(e)
-    ? measuredPolicyHtml((e || {}).pwd_policy, (e && e.pwd_method))
-    : policyText((e || {}).policy);
+  const measuredLogin = hasPwd(l);
+  const measuredSignup = hasPwd(s);
+  const measured = measuredLogin || measuredSignup;
+  const versionText = version || '?';
+  if (measured) {
+    // 实测到口令政策：只展示真实测得的数据，不加登录/注册分类
+    const e = measuredSignup ? s : l;
+    const method = (e && e.pwd_method) || '';
+    const typeCell = method === 'inline' ? 'inline'
+      : method === 'full' ? 'full' : '—';
+    return `<table class="table table-sm table-bordered align-middle">
+      <thead><tr><th colspan="2" class="text-center">密码政策测试</th></tr></thead>
+      <tbody>
+        <tr><td style="width:90px">类型</td><td>${typeCell}</td></tr>
+        <tr><td>方法清单</td><td>进行密码政策测试</td></tr>
+        <tr><td>口令政策</td><td>${measuredPolicyHtml(e.pwd_policy, method)}</td></tr>
+        <tr><td>测量时间</td><td>${fmtTime(e.measured_at)}</td></tr>
+        <tr><td>程序版本</td><td>${versionText}</td></tr>
+      </tbody>
+    </table>`;
+  }
+  // 未实测（无口令框/测试失败）→ 注册+分类，三列：条目 + 登录 + 注册
+  const tds = (fn) => `<td>${fn(l)}</td><td>${fn(s)}</td>`;
+  const badgeOf = (e) => badge((e && e.flow_type) || 'unknown');
   return `<table class="table table-sm table-bordered align-middle">
-    <thead><tr><th style="width:90px">密码政策测试</th>${only === 'signup' ? '<th>注册（程序）</th>' : '<th>登录（程序）</th>'}${only === 'both' ? '<th>注册（程序）</th>' : ''}</tr></thead>
+    <thead><tr><th colspan="3" class="text-center">注册与分类</th></tr></thead>
+    <thead><tr><th style="width:90px">条目</th><th>登录（程序）</th><th>注册（程序）</th></tr></thead>
     <tbody>
-      <tr><td>类型</td>${tds(typeCell)}</tr>
-      <tr><td>方法清单</td>${tds(methodCell)}</tr>
-      <tr><td>口令政策</td>${tds(policyCell)}</tr>
+      <tr><td>类型</td>${tds(badgeOf)}</tr>
+      <tr><td>方法清单</td>${tds((e) => methodsHtml((e || {}).methods))}</tr>
+      <tr><td>口令政策</td>${tds(() => '<span class="text-muted">—</span>')}</tr>
       <tr><td>测量时间</td>${tds((e) => fmtTime((e || {}).measured_at))}</tr>
-      <tr><td>程序版本</td><td colspan="${only === 'both' ? 2 : 1}">${version || '?'}</td></tr>
+      <tr><td>程序版本</td><td colspan="2">${versionText}</td></tr>
     </tbody>
   </table>`;
 }
@@ -905,21 +911,41 @@ function measuredPwdHtml(loginPwd, signupPwd) {
     ? `<div class="mt-1"><b>${label}实测口令规则：</b>${measuredPolicyHtml(p)}</div>` : '';
   return `<div class="alert alert-light py-2 mt-2">${row('登录', loginPwd)}${row('注册', signupPwd)}</div>`;
 }
+function isPolicyMeasured(d) {
+  return !!(d && (d.policy_measured === true ||
+    (d.policy && typeof d.policy === 'object' && 'restrictive' in d.policy)));
+}
+function classificationOnlyTableHtml(d) {
+  return `<table class="table table-sm table-bordered align-middle mt-2 mb-0">
+    <thead><tr><th style="width:80px">条目</th><th>注册（程序）</th></tr></thead>
+    <tbody>
+      <tr><td>类型</td><td>${badge(d.flow_type)}</td></tr>
+      <tr><td>方法清单</td><td>${methodsHtml(d.methods)}</td></tr>
+      <tr><td>口令政策</td><td>—</td></tr>
+      <tr><td>测量时间</td><td>${fmtTime(d.measured_at)}</td></tr>
+      <tr><td>程序版本</td><td>v4</td></tr>
+    </tbody>
+  </table>`;
+}
 function policyBoxHtml(d) {
   const method = d.method_used;
-  const measured = method === 'inline' || method === 'full';
+  const measured = isPolicyMeasured(d);
+  if (!measured) {
+    return `
+      <div class="alert alert-info py-2 mb-2">
+        <div><b>注册与分类</b> ${badge(d.flow_type)}</div>
+        <div class="mt-2">${classificationOnlyTableHtml(d)}</div>
+        <div class="mt-2">${extraLines(d, '注册')}</div>
+        <div class="small text-muted mt-1">密码政策测试未完成，仅输出注册与分类结果</div>
+        ${d.error ? `<div class="small text-danger mt-1">${esc(d.error)}</div>` : ''}
+      </div>`;
+  }
   // 类型：实际用哪种方法测的就填哪种（inline / full）；无口令框则不填
   const typeCell = method === 'inline' ? 'inline（不提交即可判断）'
     : method === 'full' ? 'full（需提交）'
     : '—';
-  // 方法清单：测得口令政策时按分类结果填；无口令框只分类，不填方法清单
-  const methodCell = measured
-    ? methodsHtml(d.methods)
-    : '<span class="text-muted">—</span>';
-  // 口令政策：测得→全部实测信息；未测→分类结果
-  const policyCell = measured
-    ? measuredPolicyHtml(d.policy, method)
-    : policyText(d.policy);
+  const methodCell = '进行密码政策测试';
+  const policyCell = measuredPolicyHtml(d.policy, method);
   return `
     <div class="alert alert-info py-2 mb-2">
       <div><b>测试密码政策</b> ${badge(d.flow_type)}</div>
@@ -970,9 +996,11 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const d = await measurePolicy(url);
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail || '测量失败')}</div>`; return; }
       lastClassify = d;
-      const tip = d.method_used === 'classified_only'
-        ? '无口令框，仅存注册分类结果'
-        : '注册分类 + 实测口令政策一起入库';
+      const tip = isPolicyMeasured(d)
+        ? '注册分类 + 实测口令政策一起入库'
+        : (d.method_used === 'classified_only'
+          ? '无口令框，仅存注册分类结果'
+          : '密码政策测试未完成，仅存注册分类结果');
       box.innerHTML = policyBoxHtml(d) + addSiteBarHtml('加入数据库', tip);
     } else {
       btn.textContent = '分类中（约 1-3 分钟）…';
@@ -1013,7 +1041,7 @@ async function addSiteToDb() {
     const d = lastClassify;
     url = d.url || '';
     // 实测口令政策（inline/full）：policy 存分类政策，pwd_policy 存实测口令规则
-    const isPwdMeasured = d.method_used === 'inline' || d.method_used === 'full';
+    const isPwdMeasured = isPolicyMeasured(d);
     const entry = {
       flow_type: d.flow_type, flow_zh: d.flow_zh,
       route: d.route || '', final_url: d.final_url || '',

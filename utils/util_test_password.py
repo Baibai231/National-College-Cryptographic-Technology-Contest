@@ -430,6 +430,13 @@ class TestPassword(object):
         # 浏览器会话已终止标志：置位后 test_one_password 立即抛 BrowserDeadError，
         # 避免后续几十个测试对已死 driver 空转失败（每个 ~16s 的 urllib3 退避）
         self._browser_dead = False
+        # 门控表单（手机号/验证码/确认密码/协议勾选 恒为空）标志
+        self._gated_form = False
+        # 是否曾观察到密码专属拒绝信号（用于区分"政策宽松"与"门控表单无法验证"）
+        self._saw_pwd_specific_reject = False
+        # 最近一次拒绝消息：find_admissible_password 据此自适应判断站点要求
+        # （如提到「符号」则立即补符号候选，而非跑完无符号扩展再回退）
+        self._last_reject_msg = ""
 
     @logger.catch
     def find_admissible_password(self):
@@ -446,19 +453,11 @@ class TestPassword(object):
                 self.admissible_password = cached
                 return cached
         flag = False
-        # GitHub 新政策下 6-7 位密码必被拒，直接从 8 开始
-        for i in range(8, 33):
-            if i <= 10:
-                test_pwd_list = self.admissible_password_list[str(i)]
-            else:
-                sub_cnt = i - 10
-                sub_str = uusg.gen_random_str_no_symbol(sub_cnt)
-                test_pwd_list = [
-                    self.admissible_password_list["10"][0] + sub_str,
-                    self.admissible_password_list["10"][1] + sub_str
-                ]
+        # Phase A：8/9/10 无符号主池（覆盖大多数常见政策）。GitHub 新政策下
+        # 6-7 位密码必被拒，故直接从 8 开始。
+        for i in range(8, 11):
             ret = False
-            for pwd in test_pwd_list:
+            for pwd in self.admissible_password_list[str(i)]:
                 ret = self.test_one_password(pwd, "Find the admissible name")
                 if ret:
                     flag = True
@@ -466,6 +465,50 @@ class TestPassword(object):
                     break
             if ret:
                 break
+
+        # Phase B：8/9/10 全被拒且反馈提到「符号」→ 站点要求特殊符号。
+        # 立即试符号候选（小写+数字+符号 / 大写+小写+数字+符号），
+        # 而非先跑完 11-32 位无符号扩展再回退（太慢）。
+        if not flag:
+            _lm = (getattr(self, '_last_reject_msg', '') or '').lower()
+            _need_symbol = False
+            if any(k in _lm for k in ['符号', '特殊字符', '特殊符号', 'symbol', 'special char']):
+                if not any(k in _lm for k in ['不能', '不允许', '禁止', '不含', 'not allowed', 'cannot']):
+                    _need_symbol = True
+            if _need_symbol:
+                for i in range(8, 33):
+                    symbol_candidates = [
+                        "a3!" + uusg.gen_random_lower_character(i - 3),
+                        "aB3!" + uusg.gen_random_lower_character(i - 4),
+                    ]
+                    ret = False
+                    for pwd in symbol_candidates:
+                        ret = self.test_one_password(pwd, "Find the admissible name (symbol)")
+                        if ret:
+                            flag = True
+                            self.admissible_password = pwd
+                            break
+                    if ret:
+                        break
+
+        # Phase C：11-32 位无符号扩展（长度型站点，如 GitHub 15+）
+        if not flag:
+            for i in range(11, 33):
+                sub_cnt = i - 10
+                sub_str = uusg.gen_random_str_no_symbol(sub_cnt)
+                test_pwd_list = [
+                    self.admissible_password_list["10"][0] + sub_str,
+                    self.admissible_password_list["10"][1] + sub_str
+                ]
+                ret = False
+                for pwd in test_pwd_list:
+                    ret = self.test_one_password(pwd, "Find the admissible name")
+                    if ret:
+                        flag = True
+                        self.admissible_password = pwd
+                        break
+                if ret:
+                    break
 
         if not flag:
             self.my_logger.warning("There is no admissible password available.")
@@ -535,6 +578,18 @@ class TestPassword(object):
             driver = self._driver or _get_shared_driver()
             try:
                 self.my_logger.debug(f"Begin the {retries}-(st/nd/rd/th) attempt(s).")
+                # 方案 B：session 健康检查。每次填充前先探活，若浏览器已死（如
+                # invalid session id）则立即短路，避免在死 driver 上空转 5 次重试。
+                try:
+                    driver.execute_script("return 1")
+                except Exception as _probe_exc:
+                    self._browser_dead = True
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    raise BrowserDeadError(
+                        f"browser session closed (probe failed): {str(_probe_exc)[:120]}")
                 # 同页面复用：页面已就绪时只重填密码字段，不重新加载页面
                 if not self._signup_page_ready:
                     if not self.signup_url:
@@ -587,13 +642,30 @@ class TestPassword(object):
                         ActionChains(driver).move_to_element(
                             password_elem
                         ).move_by_offset(
-                            password_elem.size['width'] + 30, 5
+                            password_elem.size['width'] // 2 + 30, 5
                         ).click().perform()
                         time.sleep(0.2)
                     except Exception:
                         pass
 
-                # ── 启动 MutationObserver（必须先于 DOM 变更启动）──
+                # ── 先清空并失焦，让上一轮的校验错误先清除 ──
+                # 关键顺序：observer 必须在 reset+失焦之后、fill 之前启动。
+                # Element UI 的错误提示只在 blur 时才清除；若 observer 在 reset
+                # 之前启动，会记录到"清空字段"触发的残留错误，导致后续合法密码
+                # 被误判为拒绝（长度二分搜索因此每一步都被拒 → 测出 max=32）。
+                driver.execute_script(JS_RESET_PASSWORD, password_elem)
+                time.sleep(0.3)
+                try:
+                    ActionChains(driver).move_to_element(
+                        password_elem
+                    ).move_by_offset(
+                        password_elem.size['width'] // 2 + 30, 5
+                    ).click().perform()
+                    time.sleep(0.2)
+                except Exception:
+                    pass
+
+                # ── 启动 MutationObserver（reset 之后、fill 之前，只观察本次填充）──
                 # 用 MutationObserver 而非静态 detectPasswordFeedback()，
                 # 避免检测到表单中已存在的其他字段的错误（如"姓名为必填项"）。
                 driver.execute_script(
@@ -601,23 +673,32 @@ class TestPassword(object):
                     self.password_xpath,
                 )
 
-                driver.execute_script(JS_RESET_PASSWORD, password_elem)
-                time.sleep(0.3)
-                driver.execute_script(JS_ADD_TEXT_TO_INPUT, password_elem, test_password)
-                # ── focus → blur 触发内联校验 ──
-                # 用 Selenium ActionChains 真实鼠标移动：先点密码框聚焦，
-                # 再移动到密码框右侧空白区域点击，模拟用户"填写后点别处"。
+                # ── 填密码：键盘模拟（聚焦 → send_keys）──
+                # 用户也是键盘输入，send_keys 触发真实键盘事件，能同时驱动
+                # React/Vue/TANGRAM 等所有框架的校验；JS setter 只发 input/change，
+                # 百度 TANGRAM 只认真实键盘事件，会导致校验不触发。失败时回退 JS。
                 try:
-                    password_elem.click()  # 聚焦
+                    password_elem.click()  # send_keys 前必须先聚焦
+                    password_elem.send_keys(test_password)
+                except Exception:
+                    driver.execute_script(JS_ADD_TEXT_TO_INPUT, password_elem, test_password)
+                # ── blur 触发内联校验 ──
+                # gitee 等站点在密码框失去焦点（blur）时才显示拒绝反馈，必须失焦。
+                # 用 Selenium ActionChains 真实鼠标移动：移动到密码框右侧空白区域点击。
+                try:
                     time.sleep(0.2)
-                    # 移动到密码框右侧 30px 处点击空白区域
                     ActionChains(driver).move_to_element(
                         password_elem
                     ).move_by_offset(
-                        password_elem.size['width'] + 30, 5
+                        password_elem.size['width'] // 2 + 30, 5
                     ).click().perform()
                 except Exception:
                     pass
+                # ── 等待边框 CSS 过渡结束 ──
+                # 百度等站点 blur 后先移除 error class，但边框颜色红→灰有约 0.5s
+                # 过渡，中间态(如 rgb(254,90,90))会被 isErrorBorder 误判成拒绝红。
+                # 等过渡结束再采样，让「变红」=「稳定红」，符合「以密码框变红为准」。
+                time.sleep(0.6)
                 self.my_logger.debug(f"Fill the password field with {test_password}.")
                 # 确认字段值已写入（防止 setter 失败）
                 if password_elem.get_attribute("value") != test_password:
@@ -634,29 +715,94 @@ class TestPassword(object):
                 # 不作为接受/拒绝的判定依据，仅记录在终端和日志中。
                 fb_result = None
                 _strength_note = None  # 强度计文本（仅备注，不参与决策）
-                deadline = time.time() + 8
+                # 门控表单检测：注册表单除密码外还有手机号/验证码/确认密码/协议
+                # 等恒为空的必填字段。此时密码框的 aria-invalid=true / error class
+                # 可能只是"整表未完成"的连带结果，与密码内容无关，必须降级为软信号。
+                gated_form = False
+                try:
+                    gated_form = bool(driver.execute_script(
+                        "return (typeof _isGatedForm === 'function') && _isGatedForm(arguments[0])",
+                        password_elem))
+                except Exception:
+                    gated_form = False
+                if gated_form:
+                    self._gated_form = True
+                # 门控表单下等待时长可缩短（密码专属错误在 blur 后 1~2s 内渲染）
+                deadline = time.time() + (3 if gated_form else 8)
                 while time.time() < deadline:
                     try:
-                        # 第一层：密码字段自身状态（aria-invalid / validity / :invalid / error class）
-                        # 这是唯一的"密码被拒绝"信号 —— 输入框变红 = 密码不合规
+                        # 第一层：密码字段自身状态（validity / :invalid / aria-invalid / class）
+                        # 原生 HTML5 内容校验（validity/:invalid）始终是硬拒绝；
+                        # aria-invalid / error class 在门控表单下降级为软信号，
+                        # 交由第二层密码专属错误消息佐证。
                         field_state = driver.execute_script("""
                             var el = arguments[0];
-                            var state = {rejected: false, reason: null};
-                            if (el.getAttribute('aria-invalid') === 'true')
-                                { state.rejected = true; state.reason = 'aria-invalid=true'; }
-                            if (!state.rejected && el.validity && !el.validity.valid)
-                                { state.rejected = true; state.reason = 'html5-invalid: ' + (el.validationMessage || '').substring(0, 100); }
-                            if (!state.rejected && el.matches && el.matches(':invalid'))
-                                { state.rejected = true; state.reason = 'css-invalid'; }
-                            if (!state.rejected) {
-                                var cls = el.className || '';
-                                if (/(?:^|\\s)(error|invalid|danger)(?:\\s|$)/i.test(cls))
-                                    { state.rejected = true; state.reason = 'class: ' + cls.substring(0, 50); }
+                            var gated = arguments[1] === true;
+                            var state = {rejected: false, reason: null, gated: gated, soft: false};
+                            function isErrorBorder(c) {
+                                var m = (c || '').match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?/);
+                                if (!m) return false;
+                                var r = +m[1], g = +m[2], b = +m[3];
+                                var a = (m[4] !== undefined && m[4] !== '') ? parseFloat(m[4]) : 1.0;
+                                if (a < 0.6) return false;
+                                // 「纯红」判定：红通道高、绿蓝通道都低且彼此接近（g≈b）。
+                                // 橙色（focus/品牌高亮）的 g 明显高于 b，据此排除，避免把
+                                // gitee 的 focus 橙（rgba(243,155,84,.61)）误判成错误红。
+                                return r >= 170 && (r - g) >= 80 && (r - b) >= 80 && Math.abs(g - b) <= 40;
                             }
-                            if (!state.rejected && el.getAttribute('aria-invalid') === 'false')
+                            if (el.validity && !el.validity.valid)
+                                { state.rejected = true; state.reason = 'html5-invalid: ' + (el.validationMessage || '').substring(0, 100); }
+                            else if (el.matches && el.matches(':invalid'))
+                                { state.rejected = true; state.reason = 'css-invalid'; }
+                            else if (el.getAttribute('aria-invalid') === 'true') {
+                                if (gated) { state.soft = true; state.reason = 'aria-invalid=true (soft, gated)'; }
+                                else { state.rejected = true; state.reason = 'aria-invalid=true'; }
+                            }
+                            if (!state.rejected && !state.soft) {
+                                var cls = el.className || '';
+                                if (/\\b(error|invalid|danger)\\b/i.test(cls)) {
+                                    if (gated) { state.soft = true; state.reason = 'class (soft, gated): ' + cls.substring(0, 50); }
+                                    else { state.rejected = true; state.reason = 'class: ' + cls.substring(0, 50); }
+                                }
+                            }
+                            // ── 密码框变红检测（核心拒绝信号）──
+                            // gitee 等站点对「太长/太短/字符不足」不在 input 自身写
+                            // error class，而是给密码框的外层容器（如 .field）加 error
+                            // class、并把边框染红。检查 input 自身 + 祖先链（往上 3 层）
+                            // 的 error/invalid/danger class 与边框变红。祖先链是密码框
+                            // 专属容器，其 error 只可能来自密码本身违规（其他字段的
+                            // 错误在各自字段的容器上，不在此链上），因此门控表单也不
+                            // 降级——密码框变红即拒绝，强度计只是辅助。
+                            // 颜色只查 borderColor（边框），不查文字 color；并用「纯红」
+                            // （g≈b）区分 focus/品牌的橙色边框。
+                            if (!state.rejected && !state.soft) {
+                                var node = el;
+                                for (var lv = 0; lv < 4 && node; lv++) {
+                                    var ncls = '';
+                                    try {
+                                        ncls = (typeof node.className === 'string')
+                                            ? node.className
+                                            : (node.className && node.className.baseVal) || '';
+                                    } catch (e) {}
+                                    if (/\\b(error|invalid|danger)\\b/i.test(ncls)) {
+                                        state.rejected = true;
+                                        state.reason = 'ancestor-error-class(lv=' + lv + '): ' + ncls.substring(0, 50);
+                                        break;
+                                    }
+                                    var ncs = null;
+                                    try { ncs = getComputedStyle(node); } catch (e) {}
+                                    if (ncs && isErrorBorder(ncs.borderColor)) {
+                                        state.rejected = true;
+                                        state.reason = 'ancestor-red-border(lv=' + lv + '): border=' + ncs.borderColor;
+                                        break;
+                                    }
+                                    node = node.parentElement;
+                                }
+                            }
+                            if (!state.rejected && !state.soft && el.getAttribute('aria-invalid') === 'false')
                                 { state.reason = 'aria-invalid=false'; }
                             return state;
-                        """, password_elem)
+                        """, password_elem, gated_form)
                         if field_state and field_state.get("rejected"):
                             fb_result = {"rejected": True, "type": "field-state",
                                          "message": field_state.get("reason", "")}
@@ -665,6 +811,8 @@ class TestPassword(object):
                             fb_result = {"rejected": False, "type": "field-state",
                                          "message": "aria-invalid=false"}
                             break
+                        # 软信号（门控表单的 aria-invalid=true / error class）：
+                        # 不在此判拒绝，继续第二层用密码专属错误消息佐证。
 
                         # 第二层：Observer/静态扫描反馈
                         # 只关注真正的错误消息（error-element / observer-added-el），
@@ -721,7 +869,7 @@ class TestPassword(object):
                         ActionChains(driver).move_to_element(
                             password_elem
                         ).move_by_offset(
-                            password_elem.size['width'] + 30, 5
+                            password_elem.size['width'] // 2 + 30, 5
                         ).click().perform()
                         time.sleep(0.2)
                     except Exception:
@@ -733,6 +881,8 @@ class TestPassword(object):
                 fb_msg = fb_result.get("message", "")
                 if fb_result.get("rejected"):
                     flag = False
+                    self._saw_pwd_specific_reject = True
+                    self._last_reject_msg = fb_msg
                     self.my_logger.warning(
                         f"The tested password {test_password} is rejected ({fb_type}: {fb_msg})")
                 else:
@@ -752,7 +902,7 @@ class TestPassword(object):
                     ActionChains(driver).move_to_element(
                         password_elem
                     ).move_by_offset(
-                        password_elem.size['width'] + 30, 5
+                        password_elem.size['width'] // 2 + 30, 5
                     ).click().perform()
                     time.sleep(0.2)
                 except Exception:
@@ -1558,6 +1708,13 @@ class TestPassword(object):
         return self._reduce_combo_flags(ret_list_1, ret_list_2, ret_list_3)
 
     def identify_combination_requirements(self, restrictive_policy):
+        # ── 已知局限（暂不修复，记录备查）──
+        # 引擎的组合模型是「至少 N 个数字/大写/小写/符号 + N-of-M 组合」，
+        # 无法表达「字母/数字/标点 **至少 2 类**」这类「N-of-M 但不区分具体哪类」策略。
+        # 后果（以百度为例，实际策略为「≥2 of {字母,数字,标点}」）：
+        #   - 把数字全换成小写得到纯字母（仅 1 类）→ 被拒，引擎误读成 r_dig_min=1；
+        #   - 把「≥2 of 3 类」误判成 r_cmb34=True（3 of 4）。
+        # 这两项均非百度真实政策，属策略模型覆盖盲区，留待后续扩展「≥N 类」维度。
         self.my_logger.info("Identifying the composition requirements of the website BEGINs.")
         # R13 R23 R33 R14 R24 R34 R44 —— 粗粒度前 3 项已废弃，恒 False
         ret_list = [False, False, False, False, False, False, False]
@@ -1777,8 +1934,11 @@ class TestPassword(object):
         排除"随机扩展引入意外模式"导致的误判。
         """
         lo = min_interval[0]
-        hi = min_interval[1]
         initial_len = len(initial_password)
+        # admissible_password（长度 initial_len）已被确认接受，故最小长度必然 ≤ initial_len。
+        # 若 hi 越过 initial_len，二分会把「太长被拒」误判为「太短被拒」，
+        # 一路顶到上界（如百度 max=14 时误报 min=32）。故 hi 截断到 initial_len。
+        hi = min(min_interval[1], initial_len)
 
         # 分析 initial_password 中的字符类别
         has_lower = any(c.islower() for c in initial_password)
@@ -1854,6 +2014,27 @@ class TestPassword(object):
             result += uusg.gen_random_str_no_symbol(target_len - len(result))
         return result[:target_len]
 
+    def _read_password_maxlength(self):
+        """读取密码输入框的 maxlength 属性，返回正整数上限或 None。
+
+        仅读 HTML 属性，不填、不提交。用于佐证二分搜索测出的长度上限：
+        区分「输入框强制截断、真实上限已知」与「网站不实时校验过长、
+        二分一路顶到写死上界（此时真实上限未知）」。maxlength 是浏览器
+        强制截断上限，是长度上限最权威的来源。
+        """
+        try:
+            driver = self._driver or _get_shared_driver()
+            el = driver.find_element(By.XPATH, self.password_xpath)
+            ml = el.get_attribute("maxlength")
+            if ml is not None and str(ml).strip() != "":
+                ml = int(ml)
+                if ml > 0:
+                    return ml
+            return None
+        except Exception as exc:
+            self.my_logger.debug(f"_read_password_maxlength: 读取失败 {exc}")
+            return None
+
     def binary_search_max(self, initial_password, max_interval):
         """二分搜索最大密码长度。
 
@@ -1926,6 +2107,26 @@ class TestPassword(object):
             ret_min = initial_min_length
         ret_min = self.binary_search_min(initial_password, min_interval)
         ret_max = self.binary_search_max(initial_password, max_interval)
+
+        # 方案 A：长度上限不盲信二分结果。
+        # 若二分顶到写死上界 max_interval[1]，说明在搜索范围内每一步都「看不到拒绝
+        # 信号」——可能是输入框无 maxlength、且网站不实时校验「过长」（校验在提交时）。
+        # 此时读输入框 maxlength 佐证：
+        #   - 有 maxlength=N → 浏览器强制截断，N 即真实上限（可能 > 上界）；
+        #   - 无 maxlength → 真实上限未知，标记 None（未检出），避免误报 128。
+        if ret_max == max_interval[1]:
+            maxlength = self._read_password_maxlength()
+            if maxlength:
+                self.my_logger.warning(
+                    f"二分顶到上界 {max_interval[1]}，但输入框 maxlength={maxlength}，"
+                    f"以 maxlength 作为真实上限")
+                ret_max = maxlength
+            else:
+                self.my_logger.warning(
+                    f"二分顶到上界 {max_interval[1]}，且输入框无 maxlength 佐证，"
+                    f"网站可能不实时校验「过长」，真实上限未检出（max=None）")
+                ret_max = None
+
         # TODO: 3 -> test the password
         self.my_logger.info(
             f"Length limitation results: min={ret_min}, max={ret_max}"
@@ -1949,11 +2150,14 @@ class TestPassword(object):
             # #
             "p_spn4": False
         }
-        # TODO 1.0 generated password with maximum password
-        max_len = password_length[1]
+        # TODO 1.0 generated password with admissible password (方案 B)
+        # 字符替换测试（Unicode/emoji/空格/特殊符号）只关心「字符类型是否被接受」，
+        # 与密码长度无关。改用 admissible_password 本身，避免超长密码（如 max=128）
+        # 叠加 Unicode 字符导致浏览器崩溃（invalid session id）。
         len_ap = len(self.admissible_password)
-        initial_password = self.admissible_password + uusg.gen_random_str_no_symbol(max_len - len_ap)
-        self.my_logger.info(f"Generating the password with maximum length: {initial_password}.")
+        initial_password = self.admissible_password
+        self.my_logger.info(
+            f"Generating the permissive-char test password (len={len_ap}): {initial_password}.")
         try:
             assert len(initial_password) >= 3, "Password with maximum length should longer than 3."
             self.my_logger.info("Password with maximum length should longer than 3.")
@@ -1990,27 +2194,8 @@ class TestPassword(object):
         if uni_flag:
             ret_dict["p_unicd"] = True
 
-        # TODO 2.2 Replace the last character with emoji character
-        test_unicode_list = ['😊', '❤️', '👍', '🚀', '😺', '☕', '🌻']
-        emo_flag = False
-        for i in test_unicode_list:
-            mp_emo = initial_password[:-1] + i
-            try:
-                allowed = self.test_one_password(mp_emo, "[Emoji] Testing the emoji password")
-            except BrowserDeadError:
-                raise  # 浏览器已死，短路整个测量
-            except Exception as exc:
-                self.my_logger.warning(
-                    f"[Emoji] 单个字符测试异常，按「不允许」跳过: {mp_emo} "
-                    f"({type(exc).__name__}: {exc})")
-                allowed = False
-            if allowed:
-                emo_flag = True
-                self.my_logger.success(f"[Emoji] Testing permitted character: {mp_emo} is allowed.")
-            else:
-                self.my_logger.warning(f"[Emoji] Testing permitted character: {mp_emo} is not allowed.")
-        if emo_flag:
-            ret_dict["p_emoji"] = True
+        # emoji 不再测试：键盘模拟无法可靠输入 emoji（非键盘字符），且无测量意义。
+        # p_emoji 保持默认 False。
 
         # TODO 2.3 Replace the last character with special characters
         # . ! _ #
