@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-08-22T04:00:06.142053+00:00",
+  "updated_at": "2026-08-24T16:00:07.443869+00:00",
   "note": "人工复核结果（组员浏览器实测）。manual 字段为人工观察，verified=true 表示已人工确认。",
   "sites": {
     "36kr.com": {
@@ -341,26 +341,51 @@
       "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.cctv.com": {
-      "manual_login": "账号+密码",
-      "manual_signup": "注册表单藏在登录界面",
+      "manual_login": "手机号+口令+协议\n手机号+验证码+协议\n邮箱+口令+协议\n第三方",
+      "manual_signup": "手机号+口令+验证码+协议",
       "verified": true,
       "pwd_testability": {
         "login": "inline",
         "signup": "inline",
         "overall": "inline"
       },
-      "reviewed_from": "file@组员观察@2026-08-12"
+      "reviewed_from": "web@cjx@2026-08-16T12:53:30.591557+00:00",
+      "structured": {
+        "login": {
+          "password": true,
+          "tos": true,
+          "otp": true,
+          "sso": true
+        },
+        "signup": {
+          "password": true,
+          "otp": true,
+          "tos": true
+        }
+      }
     },
     "www.china.com": {
-      "manual_login": "账号+密码",
-      "manual_signup": "注册表单藏在登录界面",
+      "manual_login": "邮箱+口令\n第三方",
+      "manual_signup": "手机号+口令+验证码+人机验证+协议",
       "verified": true,
       "pwd_testability": {
         "login": "inline",
         "signup": "inline",
         "overall": "inline"
       },
-      "reviewed_from": "file@组员观察@2026-08-12"
+      "reviewed_from": "web@cjx@2026-08-16T12:59:06.695225+00:00",
+      "structured": {
+        "login": {
+          "password": true,
+          "sso": true
+        },
+        "signup": {
+          "password": true,
+          "otp": true,
+          "captcha": true,
+          "tos": true
+        }
+      }
     },
     "www.chinanews.com": {
       "manual_login": "无登录注册表单",
@@ -419,15 +444,27 @@
       "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dangdang.com": {
-      "manual_login": "手机号+验证码",
-      "manual_signup": "手机号+密码注册",
+      "manual_login": "手机号+口令+协议\n邮箱+口令+协议\n手机号+验证码+协议\n第三方",
+      "manual_signup": "手机号+验证码+协议",
       "verified": true,
       "pwd_testability": {
         "login": "full",
         "signup": "full",
         "overall": "full"
       },
-      "reviewed_from": "file@组员观察@2026-08-12"
+      "reviewed_from": "web@cjx@2026-08-16T13:00:36.211230+00:00",
+      "structured": {
+        "login": {
+          "password": true,
+          "tos": true,
+          "otp": true,
+          "sso": true
+        },
+        "signup": {
+          "otp": true,
+          "tos": true
+        }
+      }
     },
     "www.dewu.com": {
       "manual_login": "无登录注册表单，扫码下载误判",
@@ -463,15 +500,24 @@
       "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.dongchedi.com": {
-      "manual_login": "手机号+验证码",
-      "manual_signup": "手机号+验证码注册（危险模式：仅登录）",
+      "manual_login": "手机号+验证码\n手机号+口令",
+      "manual_signup": "手机号+验证码",
       "verified": true,
       "pwd_testability": {
         "login": "full",
         "signup": "none",
         "overall": "full"
       },
-      "reviewed_from": "file@组员观察@2026-08-12"
+      "reviewed_from": "web@cjx@2026-08-16T13:02:59.213416+00:00",
+      "structured": {
+        "login": {
+          "otp": true,
+          "password": true
+        },
+        "signup": {
+          "otp": true
+        }
+      }
     },
     "www.meituan.com": {
       "manual_login": "无登录注册界面",
@@ -552,15 +598,27 @@
       "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.pconline.com.cn": {
-      "manual_login": "手机号+验证码，有第三方",
-      "manual_signup": "手机号+验证码注册，有第三方",
+      "manual_login": "手机号+验证码\n扫码\n第三方\n账号+口令\n手机号+口令\n邮箱+口令",
+      "manual_signup": "手机号+验证码\n手机号+口令",
       "verified": true,
       "pwd_testability": {
         "login": "inline",
         "signup": "inline",
         "overall": "inline"
       },
-      "reviewed_from": "file@组员观察@2026-08-12"
+      "reviewed_from": "web@cjx@2026-08-16T13:06:31.361207+00:00",
+      "structured": {
+        "login": {
+          "otp": true,
+          "scan": true,
+          "sso": true,
+          "password": true
+        },
+        "signup": {
+          "otp": true,
+          "password": true
+        }
+      }
     },
     "www.people.com.cn": {
       "manual_login": "账号+密码",
@@ -652,15 +710,28 @@
       "reviewed_from": "file@组员观察@2026-08-12"
     },
     "www.suning.com": {
-      "manual_login": "账号+密码",
-      "manual_signup": "注册需跳转+同意注册协议",
+      "manual_login": "扫码\n第三方\n邮箱+口令\n手机号+口令\n账号+口令\n手机号+验证码",
+      "manual_signup": "手机号+口令+验证码+协议",
       "verified": true,
       "pwd_testability": {
         "login": "inline",
         "signup": "inline",
         "overall": "inline"
       },
-      "reviewed_from": "file@组员观察@2026-08-12"
+      "reviewed_from": "web@cjx@2026-08-16T13:08:33.129930+00:00",
+      "structured": {
+        "login": {
+          "scan": true,
+          "sso": true,
+          "password": true,
+          "otp": true
+        },
+        "signup": {
+          "password": true,
+          "otp": true,
+          "tos": true
+        }
+      }
     },
     "www.taobao.com": {
       "manual_login": "手机号+验证码",
