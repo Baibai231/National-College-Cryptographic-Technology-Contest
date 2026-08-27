@@ -561,11 +561,25 @@ class LoginLinkDiscovery:
                     try:
                         _cur = (self.driver.current_url or "").split("?")[0]
                         _old = (homepage_url or "").split("?")[0]
-                        if _cur and _old and _cur != _old:
-                            logger.info(f"[{idx}] 链接已点击(导航成功): -> {_cur}")
-                            self._entry_clicked = True
+                        # 规范化比较（去尾斜杠）：仍在首页不算导航成功
+                        _cur_norm = (_cur or "").rstrip("/")
+                        _old_norm = (_old or "").rstrip("/")
+                        if (_cur and _old and _cur != _old
+                                and _cur_norm != _old_norm):
                             self._wait_for_spa_render()
-                            return _cur
+                            if self._page_has_auth_signal():
+                                logger.info(f"[{idx}] 链接已点击(导航成功): -> {_cur}")
+                                self._entry_clicked = True
+                                return _cur
+                            logger.debug(
+                                f"[{idx}] 导航到 {_cur} 但无认证信号，回退重试下一个链接")
+                            try:
+                                self.driver.get(homepage_url)
+                                self._wait_for_page_ready(timeout=10)
+                            except Exception:
+                                pass
+                            consecutive_no_nav += 1
+                            continue
                     except Exception:
                         pass
                     logger.debug(f"[{idx}] 未找到或不可见: {text}")
@@ -577,15 +591,38 @@ class LoginLinkDiscovery:
                 if click_result.get('navigated'):
                     new = click_result.get('newUrl', '')
                     if new and new != homepage_url:
+                        # 规范化比较（去尾斜杠/query）：new 与首页相同说明
+                        # 点击未真正离开首页（如锚点/重定向回首页），不当作
+                        # 导航成功，继续试下一个链接。
+                        _new_norm = (new or "").split("?")[0].rstrip("/")
+                        _home_norm = (homepage_url or "").split("?")[0].rstrip("/")
+                        if _new_norm == _home_norm:
+                            logger.debug(f"[{idx}] 点击后仍在首页，跳过: -> {new}")
+                            consecutive_no_nav += 1
+                            continue
                         if not self._is_same_site(homepage_url, new):
                             logger.debug(f"[{idx}] 跨站链接，跳过: -> {new}")
                             self.driver.get(homepage_url)
                             consecutive_no_nav += 1
                             continue
                         logger.info(f"导航: -> {new}")
-                        self._entry_clicked = True
                         self._wait_for_spa_render()
-                        return new
+                        # 导航后验证新页确实含认证信号（input/注册入口）。
+                        # 否则可能点到同名链接（GitHub 无头实测：header 的
+                        # "Sign up" 未命中，先点到 MCP Registry 的 "Sign up"
+                        # → /mcp 空壳页），回退首页继续试下一个链接。
+                        if self._page_has_auth_signal():
+                            self._entry_clicked = True
+                            return new
+                        logger.debug(
+                            f"[{idx}] 导航到 {new} 但无认证信号，回退重试下一个链接")
+                        try:
+                            self.driver.get(homepage_url)
+                            self._wait_for_page_ready(timeout=10)
+                        except Exception:
+                            pass
+                        consecutive_no_nav += 1
+                        continue
 
                 if click_result.get('hasPassword'):
                     logger.info(
@@ -1298,16 +1335,18 @@ class LoginLinkDiscovery:
         while time.time() < deadline:
             try:
                 result = self._cdp_eval(
-                    "var inputs = document.querySelectorAll("
-                    "  'input[type=password]:not([disabled]), "
-                    "  input[type=email]:not([disabled]), "
-                    "  input[name*=email i]:not([disabled]), "
-                    "  input[name*=mail i]:not([disabled])'"
-                    ");"
-                    "for (var i = 0; i < inputs.length; i++) {"
-                    "  if (inputs[i].offsetHeight > 0) return true;"
-                    "}"
-                    "return false;"
+                    "(function() {"
+                    "  var inputs = document.querySelectorAll("
+                    "    'input[type=password]:not([disabled]), "
+                    "    input[type=email]:not([disabled]), "
+                    "    input[name*=email i]:not([disabled]), "
+                    "    input[name*=mail i]:not([disabled])'"
+                    "  );"
+                    "  for (var i = 0; i < inputs.length; i++) {"
+                    "    if (inputs[i].offsetHeight > 0) return true;"
+                    "  }"
+                    "  return false;"
+                    "})();"
                 )
                 if result:
                     return
@@ -1315,6 +1354,50 @@ class LoginLinkDiscovery:
                 pass
             time.sleep(0.3)
         logger.debug(f"SPA 渲染等待超时 ({timeout}s)")
+
+    def _page_has_auth_signal(self) -> bool:
+        """导航到新 URL 后检查页面是否含认证信号。
+
+        点击注册链接可能命中同名但非认证的页面（GitHub 无头实测：先点到
+        MCP Registry 的 "Sign up" → /mcp 空壳页）。检查可见的认证输入框
+        （password/email/tel）或 URL 注册路径。注意：不能把页面上任意
+        "Sign up/登录" 链接文本当信号——GitHub 全站 header 常驻 Sign up
+        链接，mcp 等非注册页也有，会误放行。
+        """
+        try:
+            if self._cdp_eval(
+                "(function() {"
+                "  var vis = function(e) {"
+                "    var r = e.getBoundingClientRect();"
+                "    var s = getComputedStyle(e);"
+                "    return r.width > 0 && r.height > 0"
+                "      && s.display !== 'none' && s.visibility !== 'hidden';"
+                "  };"
+                "  var inputs = document.querySelectorAll("
+                "    'input[type=password]:not([disabled]), "
+                "    input[type=email]:not([disabled]), "
+                "    input[name*=email i]:not([disabled]), "
+                "    input[name*=mail i]:not([disabled]), "
+                "    input[type=tel]:not([disabled])'"
+                "  );"
+                "  for (var i = 0; i < inputs.length; i++) {"
+                "    if (vis(inputs[i])) return true;"
+                "  }"
+                "  return false;"
+                "})();"
+            ):
+                return True
+        except Exception:
+            return True  # 检测失败不拦截（保守放行）
+        # URL 路径含注册字样也算（如 /signup、/register、/reg）
+        try:
+            from urllib.parse import urlparse
+            path = (urlparse(self.driver.current_url).path or "").lower()
+            if any(m in path for m in ("/signup", "/register", "/reg", "/sign-up")):
+                return True
+        except Exception:
+            pass
+        return False
 
     def _page_fingerprint(self) -> str:
         """轻量页面指纹，用于检测 SPA 模态框/视图切换。
