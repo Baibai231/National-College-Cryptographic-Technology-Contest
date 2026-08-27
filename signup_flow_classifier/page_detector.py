@@ -243,8 +243,14 @@ def _classify_combined(combined: str, t: str, visible: str = "") -> str:
     visible 传用户可见语义（placeholder/aria-label），用于纠正 name/id
     与界面文案不一致的站点（如 imooc 注册手机号框 name="email"）。
     """
-    if t == "password" or _match_any(combined, _PASSWORD_HINTS):
+    if t == "password":
         return "password"
+    # 复合命名消歧（语言无关）：type 非 password、且 id/name 同时含
+    # password 与 account/user/login 等账号字样（iam.nankai 的
+    # password_account_input 实测，英文界面），是"某体系下的账号框"，
+    # 不是口令框——需在口令关键词之前判定。
+    if _match_any(combined, _IDENTIFIER_HINTS):
+        return "identifier"
     if t == "email":
         return "email"
     if t == "tel":
@@ -271,26 +277,54 @@ def _classify_combined(combined: str, t: str, visible: str = "") -> str:
 
 
 def classify_input_type(el) -> str:
-    """判断可见输入框的语义类型。"""
+    """判断可见输入框的语义类型。
+
+    判定优先级（2026-08-17 南开 iam 实测教训）：
+      1. type 属性（password/email/tel）——HTML 标准语义，语言无关
+      2. autocomplete 属性——浏览器密码管理器依赖的标准语义
+      3. 用户可见文字（placeholder/aria-label）
+      4. 复合命名消歧：id 同时含 password 与 account/login 等字样时，
+         （如 iam.nankai 的 password_account_i）按账号框处理——这是
+         "某登录体系下的账号框"，不是口令框
+      5. 关键词兜底
+    """
     input_type = (el.get_attribute("type") or "").lower()
     name = el.get_attribute("name") or ""
     placeholder = el.get_attribute("placeholder") or ""
     element_id = el.get_attribute("id") or ""
     aria_label = el.get_attribute("aria-label") or ""
+    autocomplete = (el.get_attribute("autocomplete") or "").lower()
     combined = f"{input_type} {name} {placeholder} {element_id} {aria_label}"
     semantic_name = f"{name} {element_id} {aria_label}"
 
-    if input_type == "password" or _match_any(combined, _PASSWORD_HINTS):
+    if input_type == "password":
         return "password"
     if input_type == "email":
         return "email"
     if input_type == "tel":
         return "phone"
-    # code 必须先于普通文本 phone 判断；"6 digits" 不是手机号语义。
+    # autocomplete 是 W3C 标准化的字段用途声明（密码管理器依赖它），
+    # 与界面语言无关，优先于一切文字猜测。
+    if autocomplete:
+        ac = autocomplete.replace("_", "-")
+        if "current-password" in ac or "new-password" in ac:
+            return "password"
+        if "email" in ac:
+            return "email"
+        if "tel" in ac:
+            return "phone"
+        if "username" in ac or "nickname" in ac:
+            return "identifier"
+    # 验证码先于普通文本判断（避免与邮箱/手机号关键词互相污染）
     if _match_any(combined, _CODE_HINTS):
         return "code"
-    # 用户可见语义优先：placeholder/aria-label 明确说是手机号/邮箱时，
-    # 不受 name/id 里过时字段名误导（imooc 注册手机号框 name="email" 实测）。
+    # 复合命名消歧：id 同时含 password 与 account/user/login 字样的文本框
+    # （iam.nankai 的 password_account_i 实测），是账号框不是口令框；
+    # 需在口令关键词检查之前判定。
+    if _match_any(semantic_name, _IDENTIFIER_HINTS):
+        pw_conflict = "password" in semantic_name.lower() or "passwd" in semantic_name.lower()
+        if not pw_conflict:
+            return "identifier"
     visible = f"{placeholder} {aria_label}".strip()
     if visible:
         v_phone = _match_any(visible, _PHONE_HINTS)
@@ -299,7 +333,16 @@ def classify_input_type(el) -> str:
             return "phone"
         if v_email and not v_phone:
             return "email"
-    # name/id 明确写 account/username 时，它可能同时接受手机和邮箱。
+    if input_type == "text":
+        # 无明确证据的 text 框：若 id/name 明确含 password 字样（开发者
+        # 命名习惯，如 password_account_i），不再按口令关键词误判
+        if _match_any(element_id + " " + name, _PASSWORD_HINTS):
+            other_words = re.sub(r"(?i)passwo?r?d|passwd", "", element_id + " " + name)
+            if _IDENTIFIER_HINTS and any(
+                h.lower() in other_words.lower() for h in _IDENTIFIER_HINTS
+            ):
+                return "identifier"
+            return "other"
     if _match_any(semantic_name, _IDENTIFIER_HINTS):
         return "identifier"
     if _match_any(combined, _EMAIL_HINTS):
@@ -308,6 +351,8 @@ def classify_input_type(el) -> str:
         return "phone"
     if _match_any(combined, _IDENTIFIER_HINTS):
         return "identifier"
+    if _match_any(combined, _PASSWORD_HINTS):
+        return "password"
     return "other"
 
 
@@ -832,17 +877,25 @@ def detect_fields_all_frames(driver: WebDriver) -> List[str]:
 # 表单内 tab 语义（如 B站/豆瓣的 密码登录/短信登录 切换）
 _TAB_KINDS = {
     "password_tab": ["密码登录", "账号密码", "密码注册", "账密", "账号登录", "账号注册",
-                     "使用密码验证登录", "密码验证登录", "账号密码登录", "密码登录方式"],
+                     "使用密码验证登录", "密码验证登录", "账号密码登录", "密码登录方式",
+                     "password login", "account login"],
     "password_signup_tab": ["密码注册", "账号注册"],
     "sms_tab": ["短信登录", "验证码登录", "手机号登录", "短信验证码登录", "手机验证码登录",
-                "网易手机账号登录", "手机登录", "手机号验证码登录", "短信登 录"],
-    "email_tab": ["邮箱登录", "邮箱注册", "网易邮箱账号登录", "邮箱账号登录"],
+                "网易手机账号登录", "手机登录", "手机号验证码登录", "短信登 录",
+                "sms login", "phone login"],
+    "email_tab": ["邮箱登录", "邮箱注册", "网易邮箱账号登录", "邮箱账号登录",
+                  "email login"],
     "qr_tab": ["扫码登录", "二维码登录", "扫码登"],
+    # 精确匹配 hint：以 ! 结尾（如 "sms!"），要求元素文本整词/全文相等
+    "sms_tab!": ["sms", "短信"],
+    "email_tab!": ["email"],
+    "account_tab!": ["account"],
     "register_tab": [
         "立即注册", "免费注册", "注册账号", "sign up", "register",
         "去注册", "新用户注册", "手机注册", "邮箱注册", "註冊",
         "s'inscrire", "registrarse", "registrieren", "新規登録", "会員登録",
-        "회원가입", "зарегистрироваться",
+        "회원가입", "зарегистрироваться", "免费注册", "create account",
+        "create new account", "new account",
     ],
 }
 
@@ -859,7 +912,7 @@ def detect_tabs(driver: WebDriver) -> List[str]:
         payload = _json.dumps(_TAB_KINDS, ensure_ascii=False)
         found = driver.execute_script(
             "const kinds = " + payload + ";" +
-            "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');"
+            "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '').toLowerCase();"
             "const roots=[document], els=[], shortTexts=[];"
             "for(let i=0;i<roots.length&&i<100;i++){"
             " for(const e of roots[i].querySelectorAll('*')) if(e.shadowRoot) roots.push(e.shadowRoot);"
@@ -874,11 +927,20 @@ def detect_tabs(driver: WebDriver) -> List[str]:
             " }"
             "}"
             "const out = [];"
-            "for (const kind in kinds) {"
-            "  const hs = kinds[kind];"
-            "  if (hs.some(h => els.includes(norm(h)))) { out.push(kind); continue; }"
+            "for (const kindRaw in kinds) {"
+            "  const exact = kindRaw.endsWith('!');"
+            "  const hs = kinds[kindRaw].map(h => norm(h).toLowerCase());"
+            "  if (!hs.length) continue;"
+            "  const kind = kindRaw.replace(/!$/, '');"
+            "  if (hs.some(h => els.includes(h))) { out.push(kind); continue; }"
+            "  if (exact) {"
+            "    // 精确匹配 hint：仅整词相等（不区分大小写），防通用短词误报"
+            "    if (shortTexts.some(t => hs.some("
+            "      h => t.toLowerCase() === h))) { out.push(kind); }"
+            "    continue;"
+            "  }"
             "  // 分词匹配：一个元素含多个 tab 名（zol 短信登录+帐号登录合并文本实测）"
-            "  if (shortTexts.some(t => hs.some(h => t.includes(norm(h))))) out.push(kind);"
+            "  if (shortTexts.some(t => hs.some(h => t.includes(norm(h))))) { out.push(kind); }"
             "}"
             "return out;"
         )

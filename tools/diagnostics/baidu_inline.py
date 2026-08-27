@@ -1,14 +1,14 @@
 """baidu.com inline 失败诊断 —— 只观察密码框反馈，不填身份信息、不提交。
 
 用法:
-  D:/Anaconda/anaconda/python.exe _diag_baidu_inline.py
+  .venv/bin/python tools/diagnostics/baidu_inline.py
 """
 import json
 import os
 import sys
 import time
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 

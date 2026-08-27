@@ -237,6 +237,16 @@ class SignupFlowClassifierEngine:
         stopped_after_changed_last_step = False
         signup_reveal_pending = False
 
+        # 慢渲染等待：导航刚完成（SPA/代理延迟），页面认证字段可能尚未挂载
+        # （GitHub /signup 实测：导航后 React 渲染可能 >5s，第一步立即检测会
+        # 误判 no_password_observed）。进入主循环前先轮询等待认证信号出现，
+        # 避免把"页面未渲染完"当成"页面无密码框"。
+        try:
+            if parsed_url.scheme != "file":
+                self._wait_for_any_auth_signal(self.driver, timeout=10)
+        except Exception:
+            pass
+
         for step in range(1, effective_max_steps + 3):
             if step > step_limit:
                 break

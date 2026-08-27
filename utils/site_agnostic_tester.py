@@ -159,6 +159,17 @@ class SitePasswordPolicyTester:
         }
 
         try:
+            # 先用明显非法的一字符密码建立负对照。若当前表单连该候选都不给出
+            # 密码专属拒绝证据，就无法把后续“没变红/没报错”解释为接受。
+            if not self._tester.establish_inline_control():
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = (
+                    "negative_control_not_rejected: inline 表单未对一字符密码给出"
+                    "明确密码专属拒绝证据"
+                )
+                print("    ⚠ inline 负对照未成立，停止政策推断并回退仅分类")
+                return password_policy
+
             admissible = self._tester.find_admissible_password()
             if not admissible:
                 print("    ✗ 无法找到可接受的密码")
@@ -189,12 +200,15 @@ class SitePasswordPolicyTester:
             rp["r_sps_min"] = self._tester.change_and_test_symbol_minimum(rp["r_no_a_sps"])
             print(f"    r_sps_min: {rp['r_sps_min']}")
 
-            [
-                rp["r_cmb13"], rp["r_cmb23"], rp["r_cmb33"],
-                rp["r_cmb14"], rp["r_cmb24"], rp["r_cmb34"], rp["r_cmb44"]
-            ] = self._tester.identify_combination_requirements(rp)
-            print(f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
-                  f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
+            # 固定顺序的连续突变可能积累页面状态或触发策略切换。进入长度阶段前
+            # 重新跑“负对照 + 已知基准”配对，二者任一漂移就停止推断。
+            if not self._tester.establish_inline_control() or not \
+                    self._tester.test_one_password(
+                        admissible, "phase control: revalidate admissible before length"):
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = \
+                    "control_pair_drifted_before_length_phase"
+                return password_policy
 
             password_policy["length"][0], password_policy["length"][1] = \
                 self._tester.identify_min_and_max_length_limitations(rp, [0, 32], [6, 128])
@@ -207,6 +221,33 @@ class SitePasswordPolicyTester:
             if _eff_max is None:
                 _eff_max = max(password_policy["length"][0], len(admissible))
             _eff_length = [password_policy["length"][0], _eff_max]
+
+            # ── 组合要求测试（长度已确定后执行）──
+            # 修复缺陷3（组合先于长度）：组合测试的密码必须在合法长度区间内构造，
+            # 否则站点先拒绝"长度不合法"，测出的 r_cmb* 全是长度拒绝的假象。
+            # 组合测试前同样重验负对照+基准对。
+            if not self._tester.establish_inline_control() or not \
+                    self._tester.test_one_password(
+                        admissible, "phase control: revalidate admissible before combination"):
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = \
+                    "control_pair_drifted_before_combination_phase"
+                return password_policy
+
+            [
+                rp["r_cmb13"], rp["r_cmb23"], rp["r_cmb33"],
+                rp["r_cmb14"], rp["r_cmb24"], rp["r_cmb34"], rp["r_cmb44"]
+            ] = self._tester.identify_combination_requirements(rp, _eff_length)
+            print(f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
+                  f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
+
+            if not self._tester.establish_inline_control() or not \
+                    self._tester.test_one_password(
+                        admissible, "phase control: revalidate admissible before permissive"):
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = \
+                    "control_pair_drifted_before_permissive_phase"
+                return password_policy
 
             password_policy["permissive"]["permitted_characters"] = \
                 self._tester.identify_permissive_characters(_eff_length)
@@ -228,6 +269,8 @@ class SitePasswordPolicyTester:
             if getattr(self._tester, "_browser_dead", False):
                 password_policy["_browser_dead"] = True
         finally:
+            password_policy["_probe_evidence"] = list(
+                getattr(self._tester, "_probe_evidence", []))
             self._tester.my_logger.info(f"Policy of {self.test_site}: {password_policy}")
             self._checkpoint_policy(password_policy, "final")
 
@@ -236,6 +279,14 @@ class SitePasswordPolicyTester:
                 not getattr(self._tester, '_saw_pwd_specific_reject', False):
             password_policy["_gated_form_unverifiable"] = True
             print("    ⚠ 门控表单：全程无密码专属拒绝信号，政策可能无法据此验证")
+
+        if getattr(self._tester, '_had_inconclusive', False):
+            password_policy["_inconclusive"] = True
+            password_policy.setdefault(
+                "_inconclusive_reason",
+                "at_least_one_password_probe_lacked_accept_or_reject_evidence",
+            )
+            print("    ⚠ 至少一个候选缺少明确证据，整份政策降级为无法判断")
 
         return password_policy
 

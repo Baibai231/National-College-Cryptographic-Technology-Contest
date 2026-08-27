@@ -27,6 +27,7 @@ class MainFallbackTests(unittest.TestCase):
         )
         self.assertFalse(main._policy_is_usable({"_suspicious_login_form": True}))
         self.assertFalse(main._policy_is_usable({"_access_blocked": True}))
+        self.assertFalse(main._policy_is_usable({"_inconclusive": True}))
         self.assertFalse(main._policy_is_usable({"_browser_dead": True, "length": [0, 0]}))
 
     def test_policy_is_usable_keeps_measured_policies(self):
@@ -42,6 +43,21 @@ class MainFallbackTests(unittest.TestCase):
         self.assertTrue(
             main._policy_is_usable({"_browser_dead": True, "length": [8, 32]})
         )
+
+    def test_full_form_requires_switch_and_exact_hostname_allowlist(self):
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertFalse(main._full_form_authorized("https://example.com"))
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "PASSWORD_POLICY_ALLOW_FULL_FORM": "1",
+                "PASSWORD_POLICY_FULL_FORM_ALLOWLIST": "safe.example,example.com.evil",
+            },
+            clear=True,
+        ):
+            self.assertTrue(main._full_form_authorized("https://safe.example/signup"))
+            self.assertFalse(main._full_form_authorized("https://www.safe.example/signup"))
+            self.assertFalse(main._full_form_authorized("https://example.com/signup"))
 
     def test_fallback_to_classification_restores_classification_result(self):
         classification = {

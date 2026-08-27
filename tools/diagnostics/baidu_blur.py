@@ -5,14 +5,14 @@
    —— 用于区分「CSS 过渡瞬态」和「持久误拒」。
 
 用法:
-  D:/Anaconda/anaconda/python.exe _diag_baidu_blur.py
+  .venv/bin/python tools/diagnostics/baidu_blur.py
 """
 import json
 import os
 import sys
 import time
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 

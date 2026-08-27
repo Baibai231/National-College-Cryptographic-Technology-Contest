@@ -6,7 +6,7 @@ main.py — 参赛代码入口
   python main.py https://github.com https://gitea.com # 多站点并发
   python main.py -i urls.txt -c 3                     # 文件输入 + 并发控制
   python main.py --method inline https://github.com   # 强制内联验证
-  python main.py --method full https://example.com    # 强制全表单提交
+  python main.py --method full https://example.com    # 仅显式授权白名单可用
 
 选项:
   --method {auto,inline,full}  密码测试方法（默认 auto）
@@ -16,7 +16,8 @@ main.py — 参赛代码入口
   --no-cmp                     禁用 CMP 弹窗检测
 
 auto 模式策略:
-  先尝试 2 轮内联验证（填密码后等待 DOM 反馈），2 轮无反馈则自动切换到全表单提交方法。
+  只尝试安全的内联验证（填密码后等待 DOM 反馈）；无可靠反馈则回退到仅分类，
+  不自动填写身份字段、不提交注册表单。
 """
 
 import sys
@@ -60,6 +61,31 @@ FLOW_TYPE_TO_LETTER = {
     "no_web_signup": "H",
     "unknown": "I",
 }
+
+
+def _full_form_authorized(site_url: str) -> bool:
+    """仅允许显式开关 + 精确主机白名单同时命中的 full-form 测量。
+
+    full-form 会填写身份字段并点击提交，不能由 ``auto`` 或公开网页默认触发。
+    即使调用方显式指定 ``--method full``，也必须同时设置：
+
+    - ``PASSWORD_POLICY_ALLOW_FULL_FORM=1``
+    - ``PASSWORD_POLICY_FULL_FORM_ALLOWLIST=host1,host2``
+
+    白名单只做规范化后的精确 hostname 匹配，不接受后缀或通配符。
+    """
+    enabled = os.environ.get("PASSWORD_POLICY_ALLOW_FULL_FORM", "").strip().lower()
+    if enabled not in {"1", "true", "yes"}:
+        return False
+    host = (urlparse(site_url).hostname or "").rstrip(".").lower()
+    allowed = {
+        item.strip().rstrip(".").lower()
+        for item in os.environ.get(
+            "PASSWORD_POLICY_FULL_FORM_ALLOWLIST", ""
+        ).split(",")
+        if item.strip()
+    }
+    return bool(host and host in allowed)
 
 
 # ================================================================
@@ -146,8 +172,7 @@ def _detect_method(driver, site_url, signup_url,
     # 第三次用非法短密码 "a"。gitee 等站点对合规密码 blur 零反馈，仅在非法
     # 密码 blur 时才显示"密码长度不得低于8个字符"，必须补测非法密码才能命中 inline。
     probe_passwords = ["k4m2x9a7", "n3p8r5t2", "a"]
-    for attempt, test_pwd in enumerate(probe_passwords):
-        test_email = f"test{attempt}@example.com"
+    for test_pwd in probe_passwords:
         try:
             # 先找到密码框
             pwd_el = WebDriverWait(driver, 5).until(
@@ -160,16 +185,8 @@ def _detect_method(driver, site_url, signup_url,
                 password_xpath,
             )
 
-            # 填邮箱（如果存在）
-            if email_xpath:
-                try:
-                    email_el = WebDriverWait(driver, 5).until(
-                        EC.visibility_of_element_located((By.XPATH, email_xpath))
-                    )
-                    driver.execute_script(js_set, email_el, test_email)
-                    time.sleep(0.3)
-                except Exception:
-                    pass
+            # 安全边界：inline 只操作密码框，不填写邮箱、手机号等身份字段。
+            # 若网站必须先填写身份字段才校验密码，本次结果应为无法判断。
 
             # 填密码（键盘模拟：清空 → 聚焦 → send_keys）
             # 用户也是键盘输入，send_keys 触发真实键盘事件，能同时驱动
@@ -276,8 +293,11 @@ def _detect_method(driver, site_url, signup_url,
         )
         return "captcha_blocked", signup_url, email_xpath, password_xpath
 
-    logger.info("内联反馈检测未成功（3次尝试均无反馈），回退到 full-form 方法")
-    return "full", signup_url, email_xpath, password_xpath
+    logger.info(
+        "内联反馈检测未成功（3次尝试均无可靠反馈），"
+        "按安全边界返回 inline_unsupported，不自动进入 full-form"
+    )
+    return "inline_unsupported", signup_url, email_xpath, password_xpath
 
 
 # ================================================================
@@ -316,6 +336,8 @@ def _policy_is_usable(policy) -> bool:
     if policy.get("_access_blocked"):
         return False
     if policy.get("_gated_form_unverifiable"):
+        return False
+    if policy.get("_inconclusive"):
         return False
     if policy.get("_browser_dead"):
         return policy.get("length") not in (None, [0, 0])
@@ -522,8 +544,8 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             return result
 
         if method == "auto":
-            # auto 模式：先尝试 inline（填密码→点空白→读反馈），
-            # 2 轮无反馈则自动切换到 full 方法（完整表单提交）
+            # auto 模式只尝试 inline（填密码→点空白→读反馈）。
+            # 无可靠反馈返回 inline_unsupported，绝不自动提交完整注册表单。
             method_used, _, email_xpath, password_xpath = \
                 _detect_method(driver, site_url, signup_url,
                                email_xpath, password_xpath,
@@ -536,9 +558,12 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         # ── 机器人识别阻断：注册口令框已定位，但表单级滑块/验证码
         # （网易易盾 j-nameforslide / 极验等）拦截提交，内联无反馈、
         # full-form 也会被卡死。此时直接输出已完成的分类结果，不测量。
-        if method_used == "captcha_blocked":
+        if method_used in {"captcha_blocked", "inline_unsupported"}:
+            unsupported = method_used == "inline_unsupported"
             logger.info(
-                "检测到机器人识别阻断（滑块/验证码），跳过密码政策测量，"
+                ("inline 未建立可靠反馈对照，" if unsupported else
+                 "检测到机器人识别阻断（滑块/验证码），") +
+                "跳过密码政策测量，"
                 "输出分类结果（类型{}/{}）".format(
                     result.get("class_letter", "?"),
                     result.get("flow_type", "unknown"),
@@ -547,13 +572,22 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             result["method_used"] = "classified_only"
             result["policy"] = classification.get("policy", {}) if classification else {}
             if not result.get("note"):
-                result["note"] = (
-                    "注册口令框已定位（类型{}/{}），但存在机器人识别阻断"
-                    "（滑块/验证码），无法测量密码政策，仅输出分类结果。".format(
-                        result.get("class_letter", "?"),
-                        result.get("flow_type", "unknown"),
+                if unsupported:
+                    result["note"] = (
+                        "注册口令框已定位（类型{}/{}），但 inline 未观察到可验证的"
+                        "密码专属反馈；结果为无法判断，仅输出分类结果。".format(
+                            result.get("class_letter", "?"),
+                            result.get("flow_type", "unknown"),
+                        )
                     )
-                )
+                else:
+                    result["note"] = (
+                        "注册口令框已定位（类型{}/{}），但存在机器人识别阻断"
+                        "（滑块/验证码），无法测量密码政策，仅输出分类结果。".format(
+                            result.get("class_letter", "?"),
+                            result.get("flow_type", "unknown"),
+                        )
+                    )
             return result
 
         # ================================================================
@@ -605,7 +639,13 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                         driver.switch_to.default_content()
                     except Exception:
                         pass
-        else:
+        elif method_used == "full":
+            if not _full_form_authorized(site_url):
+                return _fallback_to_classification(
+                    result,
+                    classification,
+                    "full-form 默认关闭；仅显式授权且精确主机白名单命中时可运行。",
+                )
             parsed = urlparse(site_url)
             hostname = parsed.hostname or "unknown"
             tester = FullFormPolicyTester(
@@ -614,8 +654,15 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                 email_xpath=email_xpath or "",
                 password_xpath=password_xpath or "",
                 test_site=hostname,
+                authorized=True,
             )
             result["policy"] = tester.run_full_test()
+        else:
+            return _fallback_to_classification(
+                result,
+                classification,
+                "未知或不可用的密码政策测量方法，回退输出注册流程分类结果。",
+            )
 
         # ── 测量结果不可信时，回退到已经完成的注册流程分类 ──
         if not _policy_is_usable(result.get("policy")):

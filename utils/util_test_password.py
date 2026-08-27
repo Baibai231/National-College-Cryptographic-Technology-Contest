@@ -390,6 +390,19 @@ class BrowserDeadError(BaseException):
     """
 
 
+class ProbeOutcome(str, Enum):
+    """单个候选密码的证据结论。
+
+    旧接口仍返回 bool 供策略代码使用，但真实结论保存在
+    ``TestPassword._last_probe_outcome``。只有明确接受证据，或已经用负对照
+    证明当前表单会可靠拒绝弱密码后“候选无拒绝”，才允许返回 True。
+    """
+
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    INCONCLUSIVE = "inconclusive"
+
+
 class TestPassword(object):
     def __init__(self, my_logger, test_site, admissible_password="",
                  signup_url="", email_xpath="", password_xpath="",
@@ -437,6 +450,54 @@ class TestPassword(object):
         # 最近一次拒绝消息：find_admissible_password 据此自适应判断站点要求
         # （如提到「符号」则立即补符号候选，而非跑完无符号扩展再回退）
         self._last_reject_msg = ""
+        # 单次探测采用三态证据；bool 仅作旧策略接口的兼容层。
+        self._last_probe_outcome = ProbeOutcome.INCONCLUSIVE
+        self._last_probe_evidence = "not_started"
+        self._probe_evidence = []
+        self._negative_control_confirmed = False
+        self._had_inconclusive = False
+
+    def _record_probe(self, password: str, outcome: ProbeOutcome,
+                      evidence: str) -> None:
+        self._last_probe_outcome = outcome
+        self._last_probe_evidence = evidence
+        if outcome == ProbeOutcome.INCONCLUSIVE:
+            self._had_inconclusive = True
+        self._probe_evidence.append({
+            "password_length": len(password),
+            "outcome": outcome.value,
+            "evidence": evidence[:300],
+        })
+
+    def establish_inline_control(self) -> bool:
+        """用明显无效的短密码验证当前表单确实会给出密码专属拒绝反馈。"""
+        self._negative_control_confirmed = False
+        self.test_one_password("a", "negative control: invalid one-character password")
+        confirmed = self._last_probe_outcome == ProbeOutcome.REJECTED
+        self._negative_control_confirmed = confirmed
+        if confirmed:
+            self.my_logger.info("inline 负对照成立：一字符密码得到明确拒绝证据。")
+        else:
+            self.my_logger.warning(
+                "inline 负对照未成立：不能把后续候选的‘无拒绝信号’解释为接受。")
+        return confirmed
+
+    @staticmethod
+    def _stratified_candidates(length: int):
+        """生成覆盖常见字符类别要求、但不依赖错误文案的基准候选。"""
+        if length < 4:
+            return []
+        filler = ("kqmxvzptnryfbw" * 3)[:length]
+
+        def build(prefix: str) -> str:
+            return (prefix + filler)[:length]
+
+        return list(dict.fromkeys([
+            build("a3"),       # 小写 + 数字
+            build("Aa3"),      # 大写 + 小写 + 数字
+            build("a3!"),      # 小写 + 数字 + 符号
+            build("Aa3!"),     # 四类字符
+        ]))
 
     @logger.catch
     def find_admissible_password(self):
@@ -447,17 +508,23 @@ class TestPassword(object):
         self.my_logger.info(f"Begin finding the admissible password for {self.test_site}.")
         cache_path = _admissible_cache_path(self.test_site)
         if os.path.isfile(cache_path):
-            cached = open(cache_path, "r", encoding="utf-8").read().strip()
+            with open(cache_path, "r", encoding="utf-8") as cache_file:
+                cached = cache_file.read().strip()
             if cached:
-                self.my_logger.info(f"使用缓存的 admissible password: {cached}")
-                self.admissible_password = cached
-                return cached
+                self.my_logger.info(f"重新验证缓存的 admissible password: {cached}")
+                if self.test_one_password(cached, "Revalidate cached admissible password"):
+                    self.admissible_password = cached
+                    return cached
+                self.my_logger.warning("缓存密码本轮未通过，忽略缓存并重新搜索。")
         flag = False
         # Phase A：8/9/10 无符号主池（覆盖大多数常见政策）。GitHub 新政策下
         # 6-7 位密码必被拒，故直接从 8 开始。
         for i in range(8, 11):
             ret = False
-            for pwd in self.admissible_password_list[str(i)]:
+            candidates = list(dict.fromkeys(
+                self.admissible_password_list[str(i)] + self._stratified_candidates(i)
+            ))
+            for pwd in candidates:
                 ret = self.test_one_password(pwd, "Find the admissible name")
                 if ret:
                     flag = True
@@ -491,15 +558,11 @@ class TestPassword(object):
                     if ret:
                         break
 
-        # Phase C：11-32 位无符号扩展（长度型站点，如 GitHub 15+）
+        # Phase C：11-32 位分层扩展。每个长度同时覆盖 2/3/4 类字符，
+        # 不再依赖网站错误文案是否恰好提到“大写/符号”。
         if not flag:
             for i in range(11, 33):
-                sub_cnt = i - 10
-                sub_str = uusg.gen_random_str_no_symbol(sub_cnt)
-                test_pwd_list = [
-                    self.admissible_password_list["10"][0] + sub_str,
-                    self.admissible_password_list["10"][1] + sub_str
-                ]
+                test_pwd_list = self._stratified_candidates(i)
                 ret = False
                 for pwd in test_pwd_list:
                     ret = self.test_one_password(pwd, "Find the admissible name")
@@ -594,28 +657,41 @@ class TestPassword(object):
                 if not self._signup_page_ready:
                     if not self.signup_url:
                         self.my_logger.error("signup_url is not set; cannot navigate to signup page.")
+                        self._record_probe(
+                            test_password, ProbeOutcome.INCONCLUSIVE,
+                            "signup_url_missing")
                         return False
                     driver.get(self.signup_url)
                     self.my_logger.debug(f"Access the signup page: {self.signup_url}")
                     uub.random_sleep([1, 2])
-                    # find the email input field and fill it (if available)
-                    if self.email_xpath:
-                        try:
-                            email_elem = WebDriverWait(driver, 10).until(
-                                EC.presence_of_element_located((By.XPATH, self.email_xpath))
-                            )
-                            email_elem.send_keys(self.username)
-                            self.my_logger.debug(f"Fill the email field with {self.username}.")
-                            uub.random_sleep([1, 2])
-                        except Exception:
-                            self.my_logger.warning("Email input not found via xpath, continuing without email.")
-                    else:
-                        self.my_logger.debug("email_xpath is not set; skipping email field fill.")
+                    # 安全边界：inline 只操作密码框，不填写邮箱、手机号等身份字段。
+                    # 如果身份门控导致密码反馈无法触发，结果应为 inconclusive。
+                    self.my_logger.debug("Inline mode skips all identity fields.")
                     self._signup_page_ready = True
                 if not self.password_xpath:
                     self.my_logger.warning("password_xpath is not set; cannot find password field.")
+                    self._record_probe(
+                        test_password, ProbeOutcome.INCONCLUSIVE,
+                        "password_xpath_missing")
                     return False
-                password_elem = driver.find_element(By.XPATH, self.password_xpath)
+                # 等待密码框渲染（SPA / 慢页面 / 代理延迟：固定 sleep 不够，
+                # 页面未就绪时 find_element 会空转失败直到 5 次重试耗尽）
+                password_elem = None
+                for _wait in range(20):
+                    try:
+                        password_elem = driver.find_element(By.XPATH, self.password_xpath)
+                        if password_elem.is_displayed():
+                            break
+                    except Exception:
+                        password_elem = None
+                    time.sleep(0.5)
+                if password_elem is None:
+                    self.my_logger.warning(
+                        f"password field not found after waiting: {self.password_xpath}")
+                    self._record_probe(
+                        test_password, ProbeOutcome.INCONCLUSIVE,
+                        "password_field_not_rendered")
+                    return False
                 # React 标准输入方式：原生 value setter + input/change 双事件。
                 # 顺序很重要：先移除 aria-invalid（清掉上一轮校验残留），
                 # 再清空并填入新密码，等待校验重新写入属性。
@@ -682,6 +758,9 @@ class TestPassword(object):
                     password_elem.send_keys(test_password)
                 except Exception:
                     driver.execute_script(JS_ADD_TEXT_TO_INPUT, password_elem, test_password)
+                # 等待 React 受控组件完成状态同步（send_keys 后立即 blur，
+                # GitHub 等 React 站点可能因 onChange 未处理完而清空字段值）
+                time.sleep(0.5)
                 # ── blur 触发内联校验 ──
                 # gitee 等站点在密码框失去焦点（blur）时才显示拒绝反馈，必须失焦。
                 # 用 Selenium ActionChains 真实鼠标移动：移动到密码框右侧空白区域点击。
@@ -701,18 +780,44 @@ class TestPassword(object):
                 time.sleep(0.6)
                 self.my_logger.debug(f"Fill the password field with {test_password}.")
                 # 确认字段值已写入（防止 setter 失败）
-                if password_elem.get_attribute("value") != test_password:
-                    self.my_logger.warning(f"Password field value mismatch, treat as rejected: {test_password}")
+                _actual_value = ""
+                try:
+                    _actual_value = password_elem.get_attribute("value") or ""
+                except Exception:
+                    pass
+                if _actual_value != test_password:
+                    # 字段值被站点改写/清空：站点拒绝保留该输入（GitHub 实测：
+                    # 填 1 字符密码 "a" 后字段值被清空/改写）。这是"站点拒收
+                    # 该密码"的强信号，判为拒绝而非 inconclusive。
+                    _cleared = (not _actual_value
+                                or len(_actual_value) < len(test_password))
+                    if _cleared:
+                        try:
+                            driver.execute_script("stopWatchingFeedback()")
+                        except Exception:
+                            pass
+                        self.my_logger.warning(
+                            f"Password field value cleared/rewritten by site "
+                            f"({_actual_value!r} != {test_password!r}); "
+                            f"treated as REJECTED (site refuses to keep input)")
+                        self._record_probe(
+                            test_password, ProbeOutcome.REJECTED,
+                            f"field_value_cleared_by_site: got={_actual_value!r}")
+                        return False
+                    self.my_logger.warning(
+                        f"Password field value mismatch, outcome is inconclusive: {test_password}")
                     try:
                         driver.execute_script("stopWatchingFeedback()")
                     except Exception:
                         pass
+                    self._record_probe(
+                        test_password, ProbeOutcome.INCONCLUSIVE,
+                        "password_field_value_mismatch")
                     return False
 
                 # ── 双重检测：字段自身状态决定接受/拒绝 ──
-                # 核心原则：密码输入框变红（error class / :invalid / aria-invalid）
-                # 是唯一的拒绝信号。密码强度计（强/中/弱）只是信息性展示，
-                # 不作为接受/拒绝的判定依据，仅记录在终端和日志中。
+                # 密码框错误状态与密码专属错误文本均可作为拒绝证据；强度计
+                # （强/中/弱）只是信息性展示，不作为接受/拒绝的判定依据。
                 fb_result = None
                 _strength_note = None  # 强度计文本（仅备注，不参与决策）
                 # 门控表单检测：注册表单除密码外还有手机号/验证码/确认密码/协议
@@ -738,7 +843,8 @@ class TestPassword(object):
                         field_state = driver.execute_script("""
                             var el = arguments[0];
                             var gated = arguments[1] === true;
-                            var state = {rejected: false, reason: null, gated: gated, soft: false};
+                            var state = {rejected: false, reason: null, gated: gated, soft: false,
+                                         pending: false};
                             function isErrorBorder(c) {
                                 var m = (c || '').match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?/);
                                 if (!m) return false;
@@ -749,6 +855,26 @@ class TestPassword(object):
                                 // 橙色（focus/品牌高亮）的 g 明显高于 b，据此排除，避免把
                                 // gitee 的 focus 橙（rgba(243,155,84,.61)）误判成错误红。
                                 return r >= 170 && (r - g) >= 80 && (r - b) >= 80 && Math.abs(g - b) <= 40;
+                            }
+                            // 异步校验瞬态（GitHub "Verifying…" 实测）：
+                            // 必须在 validity 检查之前判定——Verifying… 会同时
+                            // 触发 html5-invalid，如果不提前返回 pending 就会被
+                            // 直接误判为 rejected
+                            var vm = el.validationMessage || '';
+                            if (/verif|checking|check|validating|process|wait|pending/i.test(vm) && vm.length < 30
+                                && !/must|should|at least|at most|contain|required/i.test(vm)) {
+                                return {rejected: false, soft: false, gated: gated,
+                                        pending: true,
+                                        reason: 'async-verifying: ' + vm.substring(0, 60)};
+                            }
+                            // GitHub 异步校验的通用失败消息 "Validation failed"：
+                            // 对合法密码是瞬态（服务端校验中），对非法密码是最终态。
+                            // 无法仅凭消息区分，必须标记 pending 让轮询等到最终态。
+                            if (/^validation failed$/i.test(vm.trim())
+                                && !/must|should|at least|at most|contain|required/i.test(vm)) {
+                                return {rejected: false, soft: false, gated: gated,
+                                        pending: true,
+                                        reason: 'async-validating-failed-state: ' + vm.substring(0, 60)};
                             }
                             if (el.validity && !el.validity.valid)
                                 { state.rejected = true; state.reason = 'html5-invalid: ' + (el.validationMessage || '').substring(0, 100); }
@@ -811,6 +937,7 @@ class TestPassword(object):
                             fb_result = {"rejected": False, "type": "field-state",
                                          "message": "aria-invalid=false"}
                             break
+                        # pending 状态（async-verifying）不 break，继续轮询等真实结果
                         # 软信号（门控表单的 aria-invalid=true / error class）：
                         # 不在此判拒绝，继续第二层用密码专属错误消息佐证。
 
@@ -852,18 +979,107 @@ class TestPassword(object):
                 except Exception:
                     pass
 
+                # ── 拒绝信号最终复验（防异步校验瞬态误判）──
+                # GitHub 等服务端异步校验的站点：密码框可能先进入 invalid 状态
+                # （validationMessage="Verifying…"/"Validation failed"），服务端
+                # 校验完成后才回到 valid。observer/field-state 可能把瞬态记成
+                # 拒绝。轮询结束后再读一次字段最终状态：若此时 valid=true 且
+                # 不再处于瞬态消息，则改判接受。
+                # 复验条件（全部满足才改判）：
+                #   1. 类型是 field-state / html5-validity / observer-aria-invalid
+                #      / observer-class-change —— 这些是"字段自身状态"信号，
+                #      可能被异步校验瞬态污染
+                #   2. 消息不含具体要求（"长度为8~14个字符"/"至少包含…"等）——
+                #      具体要求的拒绝消息（百度 error-element）是真实拒绝证据
+                #   3. 轮询结束时字段 valid=true 且不在瞬态消息状态
+                if (fb_result is not None and fb_result.get("rejected")
+                        and fb_result.get("type") in (
+                            "html5-validity", "field-state",
+                            "observer-aria-invalid", "observer-class-change")):
+                    try:
+                        _fb_msg_lower = (fb_result.get("message") or "").lower()
+                        _has_specific_requirement = any(
+                            kw in _fb_msg_lower for kw in (
+                                "must", "should", "at least", "at most", "contain",
+                                "required", "too", "characters", "letters", "digits",
+                                "长度", "至少", "包含", "不能", "不允许",
+                                "字母", "数字", "符号", "密码",
+                            )
+                        )
+                        _final_state = driver.execute_script("""
+                            var el = arguments[0];
+                            var vm = (el.validationMessage || '').trim();
+                            var transient = /(verif|checking|validating|process|wait|pending)/i.test(vm)
+                                || /^validation failed$/i.test(vm);
+                            // 字段必须完全干净才算瞬态解除：
+                            // gitee 等自定义校验站拒绝时红边框/error class 常驻，
+                            // 即使 validity.valid=true 也是真实拒绝，绝不能改判。
+                            function isErrorBorder(c) {
+                                var m = (c || '').match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?/);
+                                if (!m) return false;
+                                var r = +m[1], g = +m[2], b = +m[3];
+                                return r >= 170 && (r - g) >= 80 && (r - b) >= 80 && Math.abs(g - b) <= 40;
+                            }
+                            var dirty = false;
+                            var cls = el.className || '';
+                            if (/\\b(error|invalid|danger)\\b/i.test(cls)) dirty = true;
+                            if (!dirty) {
+                                var node = el;
+                                for (var lv = 0; lv < 4 && node; lv++) {
+                                    var ncls = '';
+                                    try { ncls = (typeof node.className === 'string') ? node.className : ''; } catch(e) {}
+                                    if (/\\b(error|invalid|danger)\\b/i.test(ncls)) { dirty = true; break; }
+                                    try {
+                                        var ncs = getComputedStyle(node);
+                                        if (ncs && isErrorBorder(ncs.borderColor)) { dirty = true; break; }
+                                    } catch(e) {}
+                                    node = node.parentElement;
+                                }
+                            }
+                            return {
+                                valid: !el.validity || el.validity.valid,
+                                transient: transient,
+                                dirty: dirty,
+                                vm: vm.substring(0, 60)
+                            };
+                        """, password_elem)
+                        if (not _has_specific_requirement
+                                and _final_state and _final_state.get("valid")
+                                and not _final_state.get("transient")
+                                and not _final_state.get("dirty")):
+                            self.my_logger.info(
+                                f"拒绝信号 {fb_result.get('type')}:{fb_result.get('message','')[:50]} "
+                                f"复验为异步瞬态（最终 valid=true），改判接受。")
+                            fb_result = {"rejected": False, "type": "final-revalidation",
+                                         "message": "async transient resolved: field valid at poll end"}
+                    except Exception:
+                        pass
+
                 if fb_result is None:
-                    # 既无字段级错误信号（输入框未变红），也无真正的错误消息
-                    # → 密码被接受。强度计文本仅作为备注记录。
+                    # “无拒绝信号”本身不是接受证据。只有本轮同一表单先用一字符
+                    # 负对照得到明确拒绝，才能把候选的无拒绝解释为差分接受。
                     _strength_info = ""
                     if _strength_note:
                         _strength_info = f", strength_meter=\"{_strength_note[:80]}\""
                         self._parse_strength_level(_strength_note)
                     else:
                         self._last_strength_level = None
-                    self.my_logger.success(
-                        f"The tested password {test_password} appears accepted"
-                        f" (no rejection signal detected{_strength_info})")
+                    if self._negative_control_confirmed:
+                        self.my_logger.success(
+                            f"The tested password {test_password} appears accepted"
+                            f" (paired negative control rejected; no candidate rejection"
+                            f" signal{_strength_info})")
+                        self._record_probe(
+                            test_password, ProbeOutcome.ACCEPTED,
+                            "paired_negative_control_rejected_and_candidate_no_rejection")
+                    else:
+                        self.my_logger.warning(
+                            f"The tested password {test_password} is inconclusive"
+                            f" (no rejection signal and no validated negative control"
+                            f"{_strength_info})")
+                        self._record_probe(
+                            test_password, ProbeOutcome.INCONCLUSIVE,
+                            "no_rejection_signal_without_validated_negative_control")
                     # 退出密码框
                     try:
                         ActionChains(driver).move_to_element(
@@ -875,7 +1091,7 @@ class TestPassword(object):
                     except Exception:
                         pass
                     uub.random_sleep([0.5, 1])
-                    return True
+                    return self._last_probe_outcome == ProbeOutcome.ACCEPTED
 
                 fb_type = fb_result.get("type", "unknown")
                 fb_msg = fb_result.get("message", "")
@@ -883,10 +1099,16 @@ class TestPassword(object):
                     flag = False
                     self._saw_pwd_specific_reject = True
                     self._last_reject_msg = fb_msg
+                    self._record_probe(
+                        test_password, ProbeOutcome.REJECTED,
+                        f"{fb_type}: {fb_msg}")
                     self.my_logger.warning(
                         f"The tested password {test_password} is rejected ({fb_type}: {fb_msg})")
                 else:
                     flag = True
+                    self._record_probe(
+                        test_password, ProbeOutcome.ACCEPTED,
+                        f"{fb_type}: {fb_msg or 'explicit_non_rejected_state'}")
                     # 强度计文本（如有）仅作为备注，不参与决策
                     _strength_info = ""
                     if _strength_note:
@@ -931,12 +1153,17 @@ class TestPassword(object):
                 self.my_logger.debug("Process end.")
                 # 共享 driver 不销毁，仅刷新到空白页，等待下一个密码测试
 
+        self._record_probe(
+            test_password, ProbeOutcome.INCONCLUSIVE,
+            "probe_retries_exhausted")
+        return False
+
     def check_special_symbols(self, test_password):
         """[Restrictive -- Special Symbols] 真正测试网站是否允许特殊符号。
 
         旧实现只检查密码池自身字符串（含不含符号），没有测试网站——
         密码池恰好不含符号时会把"允许符号"的网站误判为"禁止符号"。
-        新实现：在 admissible 密码末尾追加特殊符号 @ 后提交给网站：
+        新实现：保持密码长度不变，把一个冗余字符替换为特殊符号 @：
             - 被接受 → 特殊符号允许 → 返回 False（r_no_a_sps=False）
             - 被拒绝 → 特殊符号禁止 → 返回 True（r_no_a_sps=True）
         :param test_password: the admissible password
@@ -945,7 +1172,35 @@ class TestPassword(object):
         if not test_password:
             self.my_logger.error("No admissible password available; Improper process here.")
             raise AssertionError("No admissible password available for special symbol check.")
-        symbol_pw = test_password + "@"
+        if any(not char.isalnum() for char in test_password):
+            self.my_logger.info("可接受基准密码本身含特殊符号，已证明网站允许符号。")
+            return False
+
+        def char_kind(char):
+            if char.islower():
+                return "lower"
+            if char.isupper():
+                return "upper"
+            if char.isdigit():
+                return "digit"
+            return "symbol"
+
+        counts = {}
+        for char in test_password:
+            kind = char_kind(char)
+            counts[kind] = counts.get(kind, 0) + 1
+        replace_at = next(
+            (idx for idx in range(len(test_password) - 1, -1, -1)
+             if counts.get(char_kind(test_password[idx]), 0) > 1),
+            None,
+        )
+        if replace_at is None:
+            self._record_probe(
+                test_password, ProbeOutcome.INCONCLUSIVE,
+                "special_symbol_probe_has_no_redundant_character_to_replace")
+            self.my_logger.warning("无法在保持长度和已有字符类别的前提下加入符号。")
+            return False
+        symbol_pw = test_password[:replace_at] + "@" + test_password[replace_at + 1:]
         self.my_logger.info(f"Testing whether special symbols are allowed with: {symbol_pw}")
         if self.test_one_password(symbol_pw, "test special symbol"):
             self.my_logger.info("Special symbols are allowed by the website.")
@@ -1707,7 +1962,7 @@ class TestPassword(object):
         ret_list_3 = self.identify_combination_requirements_2_sum(com_r_3)
         return self._reduce_combo_flags(ret_list_1, ret_list_2, ret_list_3)
 
-    def identify_combination_requirements(self, restrictive_policy):
+    def identify_combination_requirements(self, restrictive_policy, eff_length=None):
         # ── 已知局限（暂不修复，记录备查）──
         # 引擎的组合模型是「至少 N 个数字/大写/小写/符号 + N-of-M 组合」，
         # 无法表达「字母/数字/标点 **至少 2 类**」这类「N-of-M 但不区分具体哪类」策略。
@@ -1715,6 +1970,19 @@ class TestPassword(object):
         #   - 把数字全换成小写得到纯字母（仅 1 类）→ 被拒，引擎误读成 r_dig_min=1；
         #   - 把「≥2 of 3 类」误判成 r_cmb34=True（3 of 4）。
         # 这两项均非百度真实政策，属策略模型覆盖盲区，留待后续扩展「≥N 类」维度。
+        # 组合测试在长度测试之后执行（P3 修复缺陷3：组合先于长度会误判），
+        # eff_length=[min, max] 用于记录/保护：admissible 长度超出上限时组合
+        # 测试的密码必然被长度拒绝，此时结果不可信。
+        if eff_length is not None:
+            try:
+                _ad = self.admissible_password or ""
+                _lo, _hi = eff_length[0], eff_length[1]
+                if _ad and _hi is not None and len(_ad) > _hi:
+                    self.my_logger.warning(
+                        f"admissible 长度 {len(_ad)} 超出组合阶段长度上限 {_hi}，"
+                        f"组合测试结果可能被长度拒绝污染。")
+            except Exception:
+                pass
         self.my_logger.info("Identifying the composition requirements of the website BEGINs.")
         # R13 R23 R33 R14 R24 R34 R44 —— 粗粒度前 3 项已废弃，恒 False
         ret_list = [False, False, False, False, False, False, False]

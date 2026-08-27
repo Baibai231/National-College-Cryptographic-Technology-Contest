@@ -6,14 +6,14 @@
 据此判断 full-form 的 _capture_dom_errors 是否把常驻政策提示误当拒绝信号。
 
 用法:
-  D:/Anaconda/anaconda/python.exe _diag_gamersky_hint.py
+  .venv/bin/python tools/diagnostics/gamersky_hint.py
 """
 import json
 import os
 import sys
 import time
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 

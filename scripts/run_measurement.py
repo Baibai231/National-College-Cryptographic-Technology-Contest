@@ -11,7 +11,10 @@
 """
 import argparse
 import json
+import multiprocessing
 import os
+import queue
+import signal
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -79,6 +82,120 @@ def classify_one(site: str, kind: str) -> dict:
     return record
 
 
+def _classify_worker(site: str, kind: str, result_queue) -> None:
+    """隔离单站 Selenium；父进程可在超时时安全终止此子进程。"""
+    def _terminate(_signum, _frame):
+        raise TimeoutError("site watchdog terminated worker")
+
+    try:
+        signal.signal(signal.SIGTERM, _terminate)
+    except (AttributeError, ValueError):
+        pass
+    try:
+        result_queue.put(classify_one(site, kind))
+    except BaseException as exc:
+        result_queue.put({
+            "site": site,
+            "hostname": urlparse(site).hostname or site,
+            "entry_kind": kind,
+            "error": "{}:{}".format(type(exc).__name__, str(exc)[:200]),
+        })
+    finally:
+        # 子进程只持有写端；显式关闭可避免长批次在 macOS 上累积 semaphore。
+        try:
+            result_queue.close()
+            result_queue.cancel_join_thread()
+        except Exception:
+            pass
+
+
+def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int):
+    """并发执行任务并以进程级看门狗防止单站卡死整轮回归。
+
+    Selenium 的线程无法强制中断，因此这里特意不用 ThreadPoolExecutor。
+    每个子进程完成后由它自己的 finally 关闭 driver；超时时先发送 SIGTERM，
+    让 worker 捕获并走 finally，然后才由父进程记录 site_timeout。
+    """
+    context = multiprocessing.get_context("spawn")
+    pending = iter(tasks)
+    active = {}
+    exhausted = False
+
+    def start_next():
+        nonlocal exhausted
+        if exhausted:
+            return
+        try:
+            site, kind = next(pending)
+        except StopIteration:
+            exhausted = True
+            return
+        result_queue = context.Queue(maxsize=1)
+        process = context.Process(
+            target=_classify_worker, args=(site, kind, result_queue), daemon=False)
+        process.start()
+        active[process.pid] = {
+            "process": process, "queue": result_queue, "site": site,
+            "kind": kind, "started": time.monotonic(),
+        }
+
+    while len(active) < workers and not exhausted:
+        start_next()
+
+    while active:
+        completed = []
+        for pid, item in list(active.items()):
+            process = item["process"]
+            elapsed = time.monotonic() - item["started"]
+            if process.is_alive() and elapsed < timeout_seconds:
+                continue
+
+            timed_out = process.is_alive()
+            if timed_out:
+                process.terminate()
+            process.join(timeout=5)
+            if process.is_alive():
+                process.kill()
+                process.join(timeout=5)
+
+            if timed_out:
+                record = {
+                    "site": item["site"],
+                    "hostname": urlparse(item["site"]).hostname or item["site"],
+                    "entry_kind": item["kind"],
+                    "error": "site_timeout:{}s".format(timeout_seconds),
+                }
+            else:
+                try:
+                    record = item["queue"].get(timeout=0.5)
+                except queue.Empty:
+                    record = {
+                        "site": item["site"],
+                        "hostname": urlparse(item["site"]).hostname or item["site"],
+                        "entry_kind": item["kind"],
+                        "error": "worker_exited_without_result",
+                    }
+            try:
+                item["queue"].close()
+                item["queue"].join_thread()
+            except Exception:
+                pass
+            try:
+                process.close()
+            except Exception:
+                pass
+            completed.append((pid, record))
+
+        for pid, record in completed:
+            active.pop(pid, None)
+            yield record
+            while len(active) < workers and not exhausted:
+                start_next()
+
+        if not completed:
+            time.sleep(0.2)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", action="append", default=[],
@@ -94,6 +211,8 @@ def main():
     ap.add_argument("--only", default="", help="只跑逗号分隔的主机名子集")
     ap.add_argument("--retry-unknown", type=int, default=0,
                     help="主跑后对 unknown/error 记录自动重跑 N 轮并多数投票取稳定结果")
+    ap.add_argument("--site-timeout", type=int, default=0,
+                    help="单站进程级超时秒数；0 表示沿用线程模式。全量回归建议 90")
     args = ap.parse_args()
 
     if args.resume and args.overwrite:
@@ -141,24 +260,34 @@ def main():
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
     fail = 0
     t0 = time.time()
-    with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        futures = {pool.submit(classify_one, s, k): (s, k)
-                   for s, k in pending}
-        for i, future in enumerate(as_completed(futures), 1):
-            site, kind = futures[future]
-            try:
-                rec = future.result()
-            except Exception as exc:
-                rec = {"site": site, "entry_kind": kind,
-                       "error": "{}:{}".format(type(exc).__name__, str(exc)[:200])}
-            with open(args.output, "a", encoding="utf-8") as f:
-                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-            host = urlparse(site).hostname or site
-            status = "✗" if rec.get("error") else "✓"
-            print(f"[{i}/{len(pending)}] {status} {host} {kind} "
-                  f"-> {rec.get('flow_type')} ({rec.get('stop_reason')})")
-            if rec.get("error"):
-                fail += 1
+    if args.site_timeout > 0:
+        completed_records = _iter_with_site_timeout(
+            pending, args.workers, args.site_timeout)
+    else:
+        def _thread_records():
+            with ThreadPoolExecutor(max_workers=args.workers) as pool:
+                futures = {pool.submit(classify_one, s, k): (s, k)
+                           for s, k in pending}
+                for future in as_completed(futures):
+                    site, kind = futures[future]
+                    try:
+                        yield future.result()
+                    except Exception as exc:
+                        yield {"site": site, "entry_kind": kind,
+                               "error": "{}:{}".format(type(exc).__name__, str(exc)[:200])}
+        completed_records = _thread_records()
+
+    for i, rec in enumerate(completed_records, 1):
+        site = rec.get("site") or ""
+        kind = rec.get("entry_kind") or "?"
+        with open(args.output, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        host = urlparse(site).hostname or site
+        status = "✗" if rec.get("error") else "✓"
+        print(f"[{i}/{len(pending)}] {status} {host} {kind} "
+              f"-> {rec.get('flow_type')} ({rec.get('stop_reason')})")
+        if rec.get("error"):
+            fail += 1
     elapsed = time.time() - t0
     print(f"\n完成。失败 {fail}/{len(pending)}，耗时 {elapsed:.0f} 秒。"
           f"\n结果已写入 {args.output}")

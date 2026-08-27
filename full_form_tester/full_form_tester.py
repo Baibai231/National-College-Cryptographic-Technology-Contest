@@ -63,6 +63,7 @@ class FullFormPolicyTester:
         email_xpath: str = "",
         password_xpath: str = "",
         test_site: str = "",
+        authorized: bool = False,
     ):
         """
         Args:
@@ -79,12 +80,16 @@ class FullFormPolicyTester:
         self.email_xpath = email_xpath
         self.password_xpath = password_xpath
         self.test_site = test_site
+        self.authorized = authorized
 
         # 组件
         self.rate_ctrl = RateController()
         self.data_gen = DataGenerator(locale="zh_CN")
         self.error_parser = PasswordErrorParser()
-        self.form_submitter = FormSubmitter(driver, self.rate_ctrl, self.data_gen)
+        self.form_submitter = FormSubmitter(
+            driver, self.rate_ctrl, self.data_gen,
+            allow_submit=authorized,
+        )
 
         # 状态
         self.admissible_password: str = ""
@@ -730,6 +735,15 @@ class FullFormPolicyTester:
                 "breached_password": {},
             },
         }
+
+        if not self.authorized:
+            self.my_logger.warning(
+                "full-form 未获得显式授权，未填写身份字段、未提交表单。")
+            policy["_inconclusive"] = True
+            policy["_full_form_unauthorized"] = True
+            policy["_note"] = (
+                "full-form 默认关闭；需要显式授权和精确主机白名单。")
+            return policy
 
         try:
             # ── 机器人拦截检测：在登录表单预检前先检查是否被拦截 ──

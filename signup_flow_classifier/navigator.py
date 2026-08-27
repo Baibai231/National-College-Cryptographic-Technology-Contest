@@ -710,7 +710,7 @@ def safe_click_tab(driver: WebDriver, kind: str) -> NavigationOutcome:
     点击后用页面指纹确认视图是否真的切换，避免过去永远返回 changed=False。
     """
     from signup_flow_classifier.page_detector import _TAB_KINDS
-    hints = _TAB_KINDS.get(kind, [])
+    hints = [h.rstrip("!") for h in _TAB_KINDS.get(kind, [])]
     if not hints:
         return NavigationOutcome(False, False, f"no_{kind}")
     quoted = "[" + ",".join(json.dumps(h) for h in hints) + "]"

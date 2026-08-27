@@ -1,14 +1,14 @@
 """baidu.com 密码框「a」红色响应诊断 —— 只测一个密码 'a'，等 5 秒观察是否变红。
 
 用法:
-  D:/Anaconda/anaconda/python.exe _diag_baidu_red.py
+  .venv/bin/python tools/diagnostics/baidu_red.py
 """
 import json
 import os
 import sys
 import time
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 

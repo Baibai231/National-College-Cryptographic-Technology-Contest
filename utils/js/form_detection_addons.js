@@ -759,6 +759,12 @@ function tryClickAndDetect(xpath, timeoutMs) {
         } catch(e) { resolve(result); return; }
 
         // ── 3. 完整鼠标事件序列 (bubbles:true 穿透 React 合成事件委托) ──
+        // 注意：el.click() 可能触发页面导航（如 GitHub Sign up → /signup），
+        // 导航会销毁当前 JS 上下文，导致后续代码（含 result.clicked=true）
+        // 无法执行、Promise 无法 resolve。因此 clicked 标记必须在触发事件
+        // 之前设置，导航发生时 CDP awaitPromise 会超时/报错，由 Python 层
+        // 用 driver.current_url 变化兜底判断导航是否成功。
+        result.clicked = true;
         try {
             var mOpts = {bubbles: true, cancelable: true, view: window,
                          clientX: rect.left + rect.width/2,
@@ -771,7 +777,6 @@ function tryClickAndDetect(xpath, timeoutMs) {
             // 也触发 focus + 原生 click
             try { el.focus(); } catch(e) {}
             try { el.click(); } catch(e) {}
-            result.clicked = true;
         } catch(e) {}
 
         // ── 4. Shadow DOM 穿透搜索密码字段 ──
@@ -1233,6 +1238,16 @@ function detectPasswordFeedback(passwordXPath) {
         if (typeof el.validity !== 'undefined' && el.validity !== null) {
             if (!el.validity.valid) {
                 var vMsg = el.validationMessage || '';
+                // 异步校验瞬态（GitHub "Verifying…" 实测）：校验仍在进行，
+                // 不是最终结果。返回无反馈，让 Python 轮询等待稳定状态，
+                // 避免把瞬态误判为拒绝。
+                // 注意：只有 "Verifying…" 类是瞬态；"Validation failed" 是
+                // 服务器校验完成的最终拒绝（实测 12s 稳定不变），必须判拒绝。
+                if (/(verif|checking|check|validating|process|wait|pending)/i.test(vMsg)
+                        && vMsg.length < 30
+                        && !/(must|should|at least|at most|contain|required|too)/i.test(vMsg)) {
+                    return DEFAULT_RESULT;
+                }
                 return {
                     hasFeedback: true, rejected: true, type: 'html5-validity',
                     message: vMsg.substring(0, 300)

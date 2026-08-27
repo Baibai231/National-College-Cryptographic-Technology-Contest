@@ -48,7 +48,8 @@ class FormSubmitter:
         'a[role="button"]',
     ]
 
-    def __init__(self, driver, rate_ctrl: RateController, data_gen: DataGenerator):
+    def __init__(self, driver, rate_ctrl: RateController, data_gen: DataGenerator,
+                 allow_submit: bool = False):
         """
         Args:
             driver: Selenium WebDriver 实例
@@ -58,6 +59,7 @@ class FormSubmitter:
         self._driver = driver
         self._rate = rate_ctrl
         self._data = data_gen
+        self._allow_submit = allow_submit
 
         # 跨测试共享的填充数据（同一身份，避免每次生成不同数据）
         self._cached_field_values: Dict[str, str] = {}
@@ -218,6 +220,10 @@ class FormSubmitter:
                 continue
 
         # 3. 提交前等待
+        if not self._allow_submit:
+            result["submission_blocked"] = True
+            return result
+
         self._rate.delay_before_submit()
 
         # 4. 找到并点击提交按钮

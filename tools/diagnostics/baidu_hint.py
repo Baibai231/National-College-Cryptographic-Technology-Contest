@@ -4,14 +4,14 @@
 的 class、文字颜色、可见性，以及 getWatchedFeedback() 抓到了什么。
 
 用法:
-  D:/Anaconda/anaconda/python.exe _diag_baidu_hint.py
+  .venv/bin/python tools/diagnostics/baidu_hint.py
 """
 import json
 import os
 import sys
 import time
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 

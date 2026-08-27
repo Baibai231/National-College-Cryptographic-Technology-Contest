@@ -536,6 +536,18 @@ class LoginLinkDiscovery:
                     })
                     click_result = (cdp_result.get('result') or {}).get('value') or {}
                 except Exception as e:
+                    # 点击触发导航时 JS 上下文销毁，CDP awaitPromise 会超时/报错。
+                    # 这是成功信号：用 current_url 判断是否真的导航走了。
+                    try:
+                        _cur = (self.driver.current_url or "").split("?")[0]
+                        _old = (homepage_url or "").split("?")[0]
+                        if _cur and _old and _cur != _old:
+                            logger.info(f"[{idx}] CDP 点击触发导航(上下文销毁): -> {_cur}")
+                            self._entry_clicked = True
+                            self._wait_for_spa_render()
+                            return _cur
+                    except Exception:
+                        pass
                     logger.debug(f"[{idx}] CDP click 异常: {type(e).__name__}: {e}")
                     consecutive_no_nav += 1
                     if consecutive_no_nav >= 3:
@@ -544,6 +556,18 @@ class LoginLinkDiscovery:
                     continue
 
                 if not click_result.get('clicked'):
+                    # clicked=false 也可能是导航销毁上下文导致 Promise 未 resolve。
+                    # 用 current_url 兜底：URL 变了就是导航成功。
+                    try:
+                        _cur = (self.driver.current_url or "").split("?")[0]
+                        _old = (homepage_url or "").split("?")[0]
+                        if _cur and _old and _cur != _old:
+                            logger.info(f"[{idx}] 链接已点击(导航成功): -> {_cur}")
+                            self._entry_clicked = True
+                            self._wait_for_spa_render()
+                            return _cur
+                    except Exception:
+                        pass
                     logger.debug(f"[{idx}] 未找到或不可见: {text}")
                     continue
 

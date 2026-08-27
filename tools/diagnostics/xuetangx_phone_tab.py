@@ -1,5 +1,5 @@
 """
-diag_xuetangx_phone_tab.py — 一次性只读诊断探针
+xuetangx_phone_tab.py — 一次性只读诊断探针
 
 目的：xuetangx（学堂在线）手机号注册 tab 上的「inline 密码反馈」到底长什么样，
 以及为什么 _detect_method() 在手机 tab 上拿不到反馈。
@@ -17,7 +17,7 @@ import os
 import json
 import time
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
