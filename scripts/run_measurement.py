@@ -49,28 +49,22 @@ def classify_one(site: str, kind: str) -> dict:
         "states": [], "policy": {}, "evidence": [], "error": None,
     }
     try:
-        driver = _get_new_driver()
-        discovery = LoginLinkDiscovery(driver)
-        signup_url = discovery.navigate_to_signup(site)
-        engine = SignupFlowClassifierEngine(driver)
-        if not signup_url:
-            signup_url = driver.current_url
-        entry_clicked = getattr(discovery, "_entry_clicked", False)
-        result = engine.classify(
-            signup_url, entry_kind=kind,
-            entry_already_clicked=bool(entry_clicked and kind == "signup"),
-        )
-        record["flow_type"] = result.get("flow_type")
-        record["confidence"] = result.get("confidence")
-        record["stop_reason"] = result.get("stop_reason")
-        record["primary_method"] = result.get("primary_method")
-        record["ui_type"] = result.get("ui_type")
-        record["final_url"] = result.get("final_url")
-        record["states"] = result.get("states", [])
-        record["methods"] = result.get("methods", [])
-        record["policy"] = result.get("policy", {})
-        record["evidence"] = result.get("evidence", [])
-        record["start_url"] = result.get("start_url")
+        # 完整流程（分类 + 密码政策测量）：复用 main.test_single_site，
+        # 它内部完成注册页发现→分类→inline 密码测量→(失败时)回退仅分类。
+        # 此前 classify_one 只跑分类器，从不进入密码测量，导致批量结果
+        # 的 policy 恒为空、method_used 恒为 None（实测 154 站全量验证
+        # 发现 0 条含有效长度政策）。
+        from main import test_single_site
+        result = test_single_site(site, method="auto")
+        for key in (
+            "flow_type", "confidence", "stop_reason", "primary_method",
+            "ui_type", "final_url", "states", "methods", "policy",
+            "evidence", "method_used", "note", "error",
+        ):
+            if key in result:
+                record[key] = result[key]
+        if not record.get("start_url") and result.get("final_url"):
+            record["start_url"] = result["final_url"]
     except Exception as exc:
         record["error"] = "{}:{}".format(type(exc).__name__, str(exc)[:200])
     finally:
