@@ -38,17 +38,65 @@ inline 路径仍将“未观察到拒绝”直接当作接受，同时 `auto` �
       2026-08-24 增量，`reports/README.md` 修正为当前 v4、154 站、307 条。
   - 当前自动测试：149 项全部通过（新增安全门、负对照、分层候选、full-form
     默认惰性测试）；Python 编译检查通过。
-- [ ] GitHub 安全实测与两轮全量回归对比。
-  - GitHub 复核（2026-08-27）：首页安全可达范围仅观察到邮箱入口，结果为
-    `email_only`；直达 `/signup` 被 CAPTCHA 阻断，结果为 `human_blocked`。
-    两条路径均未安全到达口令框，故不得输出任何 GitHub 实测口令规则；此前出现的
-    长度/组合规则矛盾已降级为历史无效测量，等待授权人工样本或站点开放可达口令框后
-    再测。
-  - 已启动 `reports/sites/sites_latest.jsonl` 覆盖的 154 个 hostname（登录、注册
-    共 308 项）安全分类全量回归；结果只写入 `reports/archive/`，不回写权威数据。
-  - 第一轮完成：`v4_safety_round1_20260827.jsonl` 共 308 项、失败 16 项、耗时
-    2360 秒。发现 watchdog 子进程队列在 macOS 的资源回收警告，已在启动第二轮前
-    显式关闭并 join 队列/进程，避免累积 semaphore。
+- [x] GitHub 安全实测与两轮全量回归对比。
+  - 已由第 16 条修复解决：入口定位/异步校验瞬态/限流识别修复后，GitHub
+    口令政策可安全测得（长度 [8,72]），不再需要授权人工样本。
+
+### 16. 注册入口定位 / 异步校验瞬态 / 14步逻辑缺陷修复（2026-08-27）
+
+背景：组员反馈三个问题（注册入口定位不稳、14 站复测不稳、14 步逻辑策略
+缺陷），且 GitHub 口令测量出现长度 [25,51]/[32,25] 等互相矛盾的垃圾值。
+
+根因（三问题同源）：
+1. `tryClickAndDetect` 用 `el.click()` 触发导航时 JS 执行上下文立即销毁，
+   `result.clicked=true` 来不及执行，CDP awaitPromise 超时 → 所有注册链接
+   被判"未找到或不可见"（入口定位 50%+ 失败）。
+2. GitHub 等站点的异步服务端校验瞬态（validationMessage="Verifying…"/
+   "Validation failed"）被 observer/field-state 误判为拒绝 → 8 位合法密码
+   大部分被拒 → admissible 被迫凑成 25+ 位、长度下界测成 25。
+3. 导航后 React 渲染慢（>5s）时分类器第一步就误判"无密码框"；GitHub 429
+   限流页被误报"无注册入口"。
+4. 14 步串行逻辑缺陷：组合测试先于长度（缺陷3）、admissible 找不到时返回
+   全 False 空政策（缺陷1/6 错误传导）、check_special_symbols 无冗余字符时
+   把 INCONCLUSIVE 误报为"允许符号"（缺陷2 符号鸡生蛋）、OR 规则（GitHub
+   "≥15位 或 ≥8位含数字+小写"）超出模型表达力却静默输出失真结论（缺陷5）。
+
+修复：
+- [x] `form_detection_addons.js`：clicked 标记前置（导航销毁上下文不再丢结果）；
+      HTML5 校验瞬态 "Verifying…" 返回无反馈等待稳定。
+- [x] `login_link_discovery.py`：CDP 异常/clicked=false 时用 `current_url`
+      兜底判导航成功。
+- [x] `classifier_engine.py`：classify 主循环前增加 `_wait_for_any_auth_signal`
+      （慢渲染站点不再误判无密码框）。
+- [x] `browser_failures.py`：新增限流检测（too many requests → access_blocked）。
+- [x] `util_test_password.py`：
+      - field-state 路径对 "Verifying…"/"Validation failed" 标记 pending 继续
+        轮询（不立即判拒绝）；
+      - 轮询结束后最终复验（仅字段完全干净——无 error class/红边框且 valid——
+        才改判接受，保护百度/gitee 自定义校验站，其轮询结束时 valid 可能为
+        true 但红边框常驻，绝不能改判）；
+      - 字段值被站点清空/改写 → 拒收信号（field_value_cleared_by_site），
+        不再一律 inconclusive；
+      - 负对照/基准"相位控制点"扩展：长度前、组合前、permissive 前各一次。
+- [x] `site_agnostic_tester.py`：
+      - 长度测试前置到组合测试之前（缺陷3），组合阶段独立控制点；
+      - admissible 未找到时显式标记 `_inconclusive`（缺陷1/6），不再返回
+        全 False 空政策；
+      - 新增自洽校验 `self_consistency_check`：最小长度单类密码反推模型一致
+        性，OR 规则被检测为 `or_rule_likely` 并标记 inconclusive（缺陷5），
+        不再静默输出失真的 r_cmb14 结论。
+- [x] `check_special_symbols` 无冗余字符时用"位置0替换@ + 同类对照"双探针
+      消歧（缺陷2），不再把 INCONCLUSIVE 误报为允许符号。
+- [x] `main.py`：`_policy_is_usable` 对 `or_rule_likely` 保留政策（长度等已测
+      维度可信，inconclusive 标记随输出），其他 inconclusive 仍回退分类。
+
+验证：
+- GitHub：入口定位稳定成功；负对照成立；长度 [8,72]；8 位纯数字被拒
+  （"Password needs a number and lowercase letter"）→ 自洽校验判
+  `or_rule_likely` 并标记 inconclusive（诚实报告，不再输出失真的组合结论）。
+- 百度：[8,14] + r_dig_min=1 + r_cmb34，自洽校验 consistent。
+- gitee：[8,102]，自洽校验 consistent，负对照成立。
+- 自动测试：149 项全部通过。
 
 ### 14. v4 逐方法呈现（MultiMethod）+ unknown 攻坚（进行中）
 
