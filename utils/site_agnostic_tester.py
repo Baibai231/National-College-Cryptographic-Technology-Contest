@@ -172,6 +172,12 @@ class SitePasswordPolicyTester:
 
             admissible = self._tester.find_admissible_password()
             if not admissible:
+                # P3 缺陷1/6 修复：admissible 找不到时不能返回"全 False 空政策"——
+                # 下游会把它当成"站点无任何限制"（错误传导）。必须显式标记
+                # inconclusive，让调用方知道这是"无法推断"而非"无限制"。
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = (
+                    "admissible_password_not_found: 无法找到可接受的密码")
                 print("    ✗ 无法找到可接受的密码")
                 return password_policy
             print(f"    ✓ 可接受密码: {admissible}")
@@ -240,6 +246,19 @@ class SitePasswordPolicyTester:
             ] = self._tester.identify_combination_requirements(rp, _eff_length)
             print(f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
                   f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
+
+            # ── P3 自洽校验：用已推断约束反推密码验证模型一致性 ──
+            # 模型是 AND 语义，无法表达 OR 规则（如 GitHub "≥15位 或
+            # ≥8位含数字+小写"）。若反推密码与推断约束矛盾，说明模型
+            # 无法解释站点行为，政策结论不可信 → 标记 inconclusive。
+            _consistent, _consistency_note = \
+                self._tester.self_consistency_check(rp, _eff_length, admissible)
+            if not _consistent:
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = _consistency_note
+                print(f"    ⚠ 自洽校验失败: {_consistency_note}")
+                return password_policy
+            print(f"    自洽校验: {_consistency_note}")
 
             if not self._tester.establish_inline_control() or not \
                     self._tester.test_one_password(

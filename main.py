@@ -338,7 +338,16 @@ def _policy_is_usable(policy) -> bool:
     if policy.get("_gated_form_unverifiable"):
         return False
     if policy.get("_inconclusive"):
-        return False
+        # or_rule_likely 是"模型已知局限"而非"无证据"：长度等已测维度仍然
+        # 可信，保留政策（_inconclusive 标记随 JSON 输出，消费方可见）。
+        # 其他 inconclusive（负对照未成立/无 admissible/控制点漂移等）说明
+        # 本轮测量证据不足，回退分类。
+        _reason = str(policy.get("_inconclusive_reason", ""))
+        if "or_rule_likely" not in _reason:
+            return False
+        # or_rule 场景下至少要有可信长度才保留
+        if policy.get("length") in (None, [0, 0]):
+            return False
     if policy.get("_browser_dead"):
         return policy.get("length") not in (None, [0, 0])
 

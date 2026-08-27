@@ -1195,10 +1195,42 @@ class TestPassword(object):
             None,
         )
         if replace_at is None:
+            # P3 缺陷2 修复：无冗余字符时不能直接返回 False(=允许符号)——
+            # 那是把 INCONCLUSIVE 误报成"允许"。回退：替换位置 0 为 @，
+            # 并用"替换位置 0 为另一类字符（不含符号）"作对照消歧：
+            #   - @ 探针被接受 → 允许符号（返回 False）
+            #   - @ 探针被拒 且 对照被接受 → 符号是拒绝原因 → 禁止符号（返回 True）
+            #   - @ 探针被拒 且 对照也被拒 → 是"丢失原字符类别"导致的拒绝，
+            #     与符号无关，符号状态无法判定 → 保持 False 但记录标记，
+            #     让下游知道符号结论不可信（避免误报"允许"）。
+            self.my_logger.warning(
+                "admissible 无冗余字符可替换，改用位置0替换 + 对照消歧。")
+            symbol_pw = "@" + test_password[1:]
+            self.my_logger.info(
+                f"Testing whether special symbols are allowed with: {symbol_pw}")
+            if self.test_one_password(symbol_pw, "test special symbol (fallback)"):
+                self.my_logger.info("Special symbols are allowed by the website.")
+                return False
+            # 对照：把位置 0 换成与原字符不同的另一类字符（不含符号）
+            _kinds = {
+                "lower": "a", "upper": "A", "digit": "3",
+            }
+            orig_kind = char_kind(test_password[0])
+            control_char = next(
+                (c for k, c in _kinds.items() if k != orig_kind), "a")
+            control_pw = control_char + test_password[1:]
+            self.my_logger.info(
+                f"Control probe (no symbol) with: {control_pw}")
+            if self.test_one_password(control_pw, "control: replace with other class"):
+                self.my_logger.info(
+                    "Symbol probe rejected but control accepted: symbols NOT allowed.")
+                return True
+            self.my_logger.warning(
+                "符号判定 inconclusive：@ 探针与对照均被拒，无法区分"
+                "『禁止符号』与『丢失字符类别』。按允许处理但记录标记。")
             self._record_probe(
                 test_password, ProbeOutcome.INCONCLUSIVE,
-                "special_symbol_probe_has_no_redundant_character_to_replace")
-            self.my_logger.warning("无法在保持长度和已有字符类别的前提下加入符号。")
+                "special_symbol_inconclusive_ambiguous_rejection")
             return False
         symbol_pw = test_password[:replace_at] + "@" + test_password[replace_at + 1:]
         self.my_logger.info(f"Testing whether special symbols are allowed with: {symbol_pw}")
@@ -2025,6 +2057,76 @@ class TestPassword(object):
             ret_list = self.identify_combination_requirements_0_sum(com_r)
         self.my_logger.info("Identifying the composition requirements of the website ends.")
         return ret_list
+
+    def self_consistency_check(self, restrictive_policy, eff_length, admissible):
+        """P3 自洽校验：用已推断的约束反推密码验证模型一致性。
+
+        引擎模型是 AND 语义（长度 + 各类最少数量 + N-of-M 组合）。真实站点
+        常有 OR 语义（如 GitHub「≥15 位 或 ≥8 位且含数字+小写」），模型无法
+        表达，导致推断出的约束与实际行为不一致而不自知。本方法用两类反推
+        密码探测模型与站点行为是否自洽：
+
+          1. 最小长度单类密码（全数字）：当模型预测"任意单类即可"时（无
+             类要求或仅 r_cmb14），站点若拒绝 → OR 规则/缺失约束信号，
+             模型无法解释该行为 → 返回 (False, note)
+          2. 最小长度 + admissible 同类结构密码（截断）：模型预测接受，
+             站点若拒绝 → 最小长度下需要更多类别（OR 规则的分支）→ 返回
+             (False, note)
+
+        :return: (ok: bool, note: str)  ok=False 表示发现模型无法解释的行为，
+                 调用方应把政策标记 inconclusive 而非输出失真结论
+        """
+        note = ""
+        lo = eff_length[0] if eff_length else None
+        hi = eff_length[1] if eff_length else None
+        if not lo or lo < 4 or not admissible:
+            return True, "skip: min length insufficient for probing"
+        rp = restrictive_policy
+        inferred_classes = 0
+        if rp.get("r_dig_min", 0) > 0:
+            inferred_classes += 1
+        if rp.get("r_upp_min", 0) > 0:
+            inferred_classes += 1
+        if rp.get("r_low_min", 0) > 0:
+            inferred_classes += 1
+        if rp.get("r_sps_min", 0) > 0:
+            inferred_classes += 1
+        cmb = any(rp.get(k, False) for k in (
+            "r_cmb13", "r_cmb23", "r_cmb33",
+            "r_cmb14", "r_cmb24", "r_cmb34", "r_cmb44"))
+        # 模型预测"任意单类字符即可"：无类要求，或仅要求"至少1类"
+        single_class_enough = (
+            inferred_classes == 0 and (not cmb or rp.get("r_cmb14", False)))
+
+        # 1) 最小长度单类密码（全数字，无重复/连续，避免"禁止重复/顺序"
+        #    规则的干扰——"99999999" 可能因重复被拒而非类别问题）
+        if single_class_enough and lo >= 4:
+            probe_pw = ("9630852741" * 2)[:lo]
+            self.my_logger.info(
+                f"自洽校验: 最小长度单类密码 {probe_pw} (len={lo})")
+            if not self.test_one_password(
+                    probe_pw, "consistency: single-class at min length"):
+                note = (
+                    "or_rule_likely: 最小长度单类密码被拒但模型未推断任何"
+                    "字符类要求（可能为 OR 规则或缺失约束），政策可能失真")
+                self.my_logger.warning(note)
+                return False, note
+
+        # 2) 最小长度 + admissible 同类结构（截断保留类别）
+        if len(admissible) > lo:
+            probe_pw = admissible[:lo]
+            if probe_pw != admissible:
+                self.my_logger.info(
+                    f"自洽校验: 最小长度同类结构密码 {probe_pw} (len={lo})")
+                if not self.test_one_password(
+                        probe_pw, "consistency: admissible prefix at min length"):
+                    note = (
+                        "or_rule_likely: 最小长度下 admissble 前缀被拒，"
+                        "站点可能在短长度要求更多字符类别（OR 规则分支），"
+                        "政策可能失真")
+                    self.my_logger.warning(note)
+                    return False, note
+        return True, "consistent"
 
     def length_limit_initial_password(self, restrictive_p):
         initial_password = ""
