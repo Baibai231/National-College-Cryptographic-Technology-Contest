@@ -300,6 +300,7 @@ def _get_shared_driver():
 
     _SHARED_DRIVER.maximize_window()
     _SHARED_DRIVER.set_page_load_timeout(25)
+    _SHARED_DRIVER.set_script_timeout(10)
 
     # 注入 Fathom + 表单检测 JS（幂等，每个新页面自动执行）
     _inject_form_detection_js(_SHARED_DRIVER)
@@ -359,6 +360,11 @@ def _get_new_driver():
 
     driver.maximize_window()
     driver.set_page_load_timeout(30)
+    # 跨域 iframe 内 execute_script 的 CDP 上下文切换可能挂起
+    # （pan.baidu 注册弹窗 passport.baidu.com 实测：无 script_timeout 时
+    # 会无限阻塞，整个测量卡死 15 分钟）。设置脚本执行超时防止挂死，
+    # 超时后由调用方异常路径回退/重试。
+    driver.set_script_timeout(10)
 
     # ── CDP 注入 notABot.js（与 CAPDriver 对齐） ──
     _notabot_path = os.path.join(
@@ -406,7 +412,7 @@ class ProbeOutcome(str, Enum):
 class TestPassword(object):
     def __init__(self, my_logger, test_site, admissible_password="",
                  signup_url="", email_xpath="", password_xpath="",
-                 driver=None):
+                 driver=None, password_frame_path=None):
         self.fake = faker.Faker()
         # 2026-08 更新：GitHub 新政策为"至少15位，或至少8位+数字+小写"，
         # 且拒绝泄露密码与连续序列。旧密码池（2023年，6-10位）已全部失效。
@@ -440,6 +446,11 @@ class TestPassword(object):
         # 使用调用方传入的 driver，而非全局单例 _SHARED_DRIVER
         # 确保与分类器/链接发现使用同一浏览器实例（SPA 弹窗不丢失）
         self._driver = driver
+        # 口令框所在 iframe 路径（分类流程记录，()=主文档）。跨域注册
+        # iframe（pan.baidu 的 passport.baidu.com 实测）时，find_element
+        # 必须在对应 frame 上下文执行；iframe 异步渲染，查找前需先确保
+        # iframe 已出现再切换，否则在主文档找不到注册口令框。
+        self.password_frame_path = tuple(password_frame_path) if password_frame_path else None
         # 浏览器会话已终止标志：置位后 test_one_password 立即抛 BrowserDeadError，
         # 避免后续几十个测试对已死 driver 空转失败（每个 ~16s 的 urllib3 退避）
         self._browser_dead = False
@@ -620,6 +631,32 @@ class TestPassword(object):
         else:
             self._last_strength_level = None
 
+    def _ensure_frame_context(self, driver) -> bool:
+        """确保 driver 当前处于口令框所在的 iframe 上下文。
+
+        跨域注册 iframe（pan.baidu 的 passport.baidu.com 实测）异步渲染：
+        main.py 切 frame 时 iframe 可能尚未出现，或页面重载后上下文丢失。
+        每次查找口令框前调用：回主文档 → 逐个切换 frame_path 索引。
+        切换失败（iframe 未出现）返回 False，由调用方重试等待。
+        """
+        if not self.password_frame_path:
+            return True
+        try:
+            driver.switch_to.default_content()
+            frames = driver.find_elements(By.TAG_NAME, "iframe")
+            for index in self.password_frame_path:
+                if index >= len(frames):
+                    return False
+                driver.switch_to.frame(frames[index])
+                frames = driver.find_elements(By.TAG_NAME, "iframe")
+            return True
+        except Exception:
+            try:
+                driver.switch_to.default_content()
+            except Exception:
+                pass
+            return False
+
     @logger.catch
     def test_one_password(self, test_password, info_name="Default Name for the process."):
         """
@@ -676,9 +713,13 @@ class TestPassword(object):
                     return False
                 # 等待密码框渲染（SPA / 慢页面 / 代理延迟：固定 sleep 不够，
                 # 页面未就绪时 find_element 会空转失败直到 5 次重试耗尽）
+                # 若口令框在 iframe 内（跨域注册 iframe 实测），先确保
+                # iframe 已出现并切换进去，再找口令框。
                 password_elem = None
-                for _wait in range(20):
+                for _wait in range(30):
                     try:
+                        if self.password_frame_path:
+                            self._ensure_frame_context(driver)
                         password_elem = driver.find_element(By.XPATH, self.password_xpath)
                         if password_elem.is_displayed():
                             break

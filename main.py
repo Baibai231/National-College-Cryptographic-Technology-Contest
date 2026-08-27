@@ -607,6 +607,12 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             tester.signup_url = signup_url
             tester.email_xpath = email_xpath
             tester.password_xpath = password_xpath
+            # 口令框所在 iframe 路径：跨域注册 iframe（pan.baidu 的
+            # passport.baidu.com 实测）时，TestPassword 每次查找口令框前
+            # 先确保 iframe 上下文，避免"iframe 未渲染完→主文档找不到
+            # 口令框→负对照失败"的时序问题。
+            if password_frame_path:
+                tester.password_frame_path = password_frame_path
             if not tester.discover_form_fields():
                 return _fallback_to_classification(
                     result,

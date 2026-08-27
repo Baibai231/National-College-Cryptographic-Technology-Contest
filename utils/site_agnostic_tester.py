@@ -134,6 +134,7 @@ class SitePasswordPolicyTester:
             email_xpath=self.email_xpath,
             password_xpath=self.password_xpath,
             driver=self.driver,
+            password_frame_path=getattr(self, 'password_frame_path', None),
         )
         # 传播页面就绪标志：main.py 中 Phase 3 (_detect_method) 已在注册页上
         # 完成 inline 反馈检测，浏览器停留在注册表单页面。设置此标志防止

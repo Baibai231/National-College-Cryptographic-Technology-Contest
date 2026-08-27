@@ -787,6 +787,23 @@ class LoginLinkDiscovery:
                     break
 
         # ================================================================
+        # 第 1.5 层：登录入口 → 注册链接兜底
+        # ================================================================
+        # 主界面只有登录表单的站（pan.baidu/百度实测）：首页没有注册链接，
+        # 注册藏在"去登录/登录"点击后打开的登录页/弹窗里（"立即注册"等）。
+        # 注册链接发现为 0 或全部点击失败后，先点登录入口，再在登录视图里
+        # 找注册链接并点击，验证密码框出现才算到达注册界面。
+        if not self._entry_clicked:
+            logger.info("尝试登录入口 → 注册链接兜底...")
+            try:
+                self.driver.get(homepage_url)
+                self._wait_for_page_ready(timeout=10)
+            except Exception:
+                pass
+            if self._login_to_signup_fallback():
+                return self.driver.current_url
+
+        # ================================================================
         # 第 2 层：尝试常见注册 URL 模式
         # ================================================================
         logger.info("尝试 URL 模式回退...")
@@ -858,6 +875,96 @@ class LoginLinkDiscovery:
         # ================================================================
         logger.warning("所有注册页面发现策略均失败")
         return None
+
+    def _login_to_signup_fallback(self) -> bool:
+        """登录入口 → 注册链接兜底（主界面只有登录表单的站）。
+
+        流程（pan.baidu/百度实测）：
+          1. 找可见登录入口（"去登录/登录/立即登录/sign in/log in/login"，
+             DIV/SPAN/A/BUTTON 都算，不限于 <a> 链接）；
+          2. CDP 事件序列点击（可能触发导航到登录页或打开弹窗）；
+          3. 等待页面稳定后调用 _try_switch_to_signup_tab 找"立即注册/去注册"
+             等注册链接并点击；
+          4. 验证出现密码框才算到达注册界面（登录密码框不算注册证据，
+             必须点过注册入口）。
+
+        Returns:
+            True  = 到达注册界面（含密码框）
+            False = 未找到登录入口或注册链接
+        """
+        import time
+        LOGIN_KEYWORDS = (
+            "去登录", "立即登录", "登录", "sign in", "log in", "login",
+        )
+
+        def _click_first(expression: str) -> bool:
+            try:
+                r = self.driver.execute_cdp_cmd('Runtime.evaluate', {
+                    'expression': expression,
+                    'returnByValue': True,
+                })
+                return bool((r.get('result') or {}).get('value'))
+            except Exception:
+                return False
+
+        # 1) 找登录入口
+        login_click_js = """
+            (function() {
+              var KEYWORDS = ["去登录", "立即登录", "登录", "sign in", "log in", "login"];
+              var els = document.querySelectorAll('a,button,div,span,[role=button]');
+              for (var i = 0; i < els.length; i++) {
+                var e = els[i];
+                if (e.children.length > 0) continue;
+                var t = (e.innerText || '').trim();
+                if (t.length > 0 && t.length <= 8
+                    && KEYWORDS.some(function(k) { return t === k || t.indexOf(k) === 0; })) {
+                  var r = e.getBoundingClientRect();
+                  if (r.width > 0 && r.height > 0) {
+                    var opts = {bubbles: true, cancelable: true, view: window,
+                                clientX: r.left + r.width/2, clientY: r.top + r.height/2};
+                    e.dispatchEvent(new MouseEvent('mouseover', opts));
+                    e.dispatchEvent(new MouseEvent('mousedown', opts));
+                    e.dispatchEvent(new MouseEvent('mouseup', opts));
+                    e.dispatchEvent(new MouseEvent('click', opts));
+                    try { e.click(); } catch (err) {}
+                    return true;
+                  }
+                }
+              }
+              return false;
+            })();
+        """
+        if not _click_first(login_click_js):
+            logger.debug("登录入口兜底: 未找到可见登录入口")
+            return False
+        logger.info("登录入口兜底: 已点击登录入口，等待注册链接出现...")
+        time.sleep(3)
+        try:
+            self._wait_for_page_ready(timeout=8)
+        except Exception:
+            pass
+        try:
+            self._wait_for_spa_render(timeout=4)
+        except Exception:
+            pass
+
+        # 2) 登录视图里找注册链接并点击（复用注册 tab 切换逻辑）
+        if not self._try_switch_to_signup_tab():
+            logger.debug("登录入口兜底: 登录视图未找到注册链接")
+            return False
+
+        # 3) 验证密码框出现（注册界面的密码框）
+        try:
+            self._wait_for_spa_render(timeout=4)
+        except Exception:
+            pass
+        pwds = self.find_password_fields()
+        if pwds:
+            logger.info(f"登录入口兜底: 到达注册界面 -> {self.driver.current_url[:80]}")
+            self._entry_clicked = True
+            return True
+        logger.debug("登录入口兜底: 点击注册后仍无密码框")
+        return False
 
     def _try_switch_to_signup_tab(self) -> bool:
         """在已打开的 SPA 模态框中寻找并点击"注册"tab。

@@ -119,6 +119,30 @@ or_rule_likely 并 inconclusive，但没有探测规则本身。本条把 OR 规
 
 验证：156 项测试全部通过（新增 OR 刻画断言）。
 
+### 18. 注册链接空壳页回退 + 14 站无头复测（2026-08-27）
+
+背景：无头模式下 GitHub 首页"Sign up"链接不可见，先点到 MCP Registry 的
+同名链接 → /mcp 空壳页被当注册页返回，分类误判 no_web_signup。
+
+修复：
+- [x] `_page_has_auth_signal`：导航到新 URL 后验证含认证 input
+      （password/email/tel）或 URL 注册路径；不能用页面上任意
+      "Sign up/登录" 链接文本当信号（GitHub 全站 header 常驻 Sign up）。
+- [x] navigated / clicked=false 分支：URL 规范化比较（去尾斜杠/query），
+      点击后仍在首页不再误判为导航成功。
+- [x] `_wait_for_spa_render` / `_page_has_auth_signal` 的 JS 顶层 return
+      语法错误（Runtime.evaluate 顶层 return 非法，被 except 保守放行，
+      导致 SPA 等待永远"超时"、认证信号永远误判 True），包 IIFE 修复。
+
+14 站无头复测（取 cn50 前 14 站，workers=2，260 秒，0 失败）：
+- 8/14 与 round1 一致；6/14 差异（cls.cn→human_blocked、hexun→unknown、
+  le.com→verification_then_password、stcn→unknown、yinyuetai→otp_only）。
+- 差异站点有头复探：cls.cn/hexun/le.com 均有密码/邮箱框（入口可达），
+  stcn/yinyuetai 均无（站点本身变化）。差异主要是站点反爬/改版及无头
+  弹窗局限（CHANGELOG 第 14 条已记录），非本轮修复引入。
+
+验证：156 项测试全部通过。
+
 ### 14. v4 逐方法呈现（MultiMethod）+ unknown 攻坚（进行中）
 
 背景：35% 记录（106/302）观察到≥2种注册/登录方法，但分类/存储/展示全链路
