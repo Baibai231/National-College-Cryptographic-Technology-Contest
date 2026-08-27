@@ -36,7 +36,7 @@ if os.path.isfile(_version_path):
         _CURRENT_VERSION = _fh.read().strip() or "unknown"
 
 
-def classify_one(site: str, kind: str) -> dict:
+def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
     driver = None
     record = {
         "site": site,
@@ -49,22 +49,46 @@ def classify_one(site: str, kind: str) -> dict:
         "states": [], "policy": {}, "evidence": [], "error": None,
     }
     try:
-        # 完整流程（分类 + 密码政策测量）：复用 main.test_single_site，
-        # 它内部完成注册页发现→分类→inline 密码测量→(失败时)回退仅分类。
-        # 此前 classify_one 只跑分类器，从不进入密码测量，导致批量结果
-        # 的 policy 恒为空、method_used 恒为 None（实测 154 站全量验证
-        # 发现 0 条含有效长度政策）。
-        from main import test_single_site
-        result = test_single_site(site, method="auto")
-        for key in (
-            "flow_type", "confidence", "stop_reason", "primary_method",
-            "ui_type", "final_url", "states", "methods", "policy",
-            "evidence", "method_used", "note", "error",
-        ):
-            if key in result:
-                record[key] = result[key]
-        if not record.get("start_url") and result.get("final_url"):
-            record["start_url"] = result["final_url"]
+        if measure_policy:
+            # 完整流程（分类 + 密码政策测量）：复用 main.test_single_site，
+            # 它内部完成注册页发现→分类→inline 密码测量→(失败时)回退仅分类。
+            # 此前 classify_one 只跑分类器，从不进入密码测量，导致批量结果
+            # 的 policy 恒为空、method_used 恒为 None（154 站全量验证发现
+            # 0 条含有效长度政策）。
+            from main import test_single_site
+            result = test_single_site(site, method="auto")
+            for key in (
+                "flow_type", "confidence", "stop_reason", "primary_method",
+                "ui_type", "final_url", "states", "methods", "policy",
+                "evidence", "method_used", "note", "error",
+            ):
+                if key in result:
+                    record[key] = result[key]
+            if not record.get("start_url") and result.get("final_url"):
+                record["start_url"] = result["final_url"]
+            return record
+        driver = _get_new_driver()
+        discovery = LoginLinkDiscovery(driver)
+        signup_url = discovery.navigate_to_signup(site)
+        engine = SignupFlowClassifierEngine(driver)
+        if not signup_url:
+            signup_url = driver.current_url
+        entry_clicked = getattr(discovery, "_entry_clicked", False)
+        result = engine.classify(
+            signup_url, entry_kind=kind,
+            entry_already_clicked=bool(entry_clicked and kind == "signup"),
+        )
+        record["flow_type"] = result.get("flow_type")
+        record["confidence"] = result.get("confidence")
+        record["stop_reason"] = result.get("stop_reason")
+        record["primary_method"] = result.get("primary_method")
+        record["ui_type"] = result.get("ui_type")
+        record["final_url"] = result.get("final_url")
+        record["states"] = result.get("states", [])
+        record["methods"] = result.get("methods", [])
+        record["policy"] = result.get("policy", {})
+        record["evidence"] = result.get("evidence", [])
+        record["start_url"] = result.get("start_url")
     except Exception as exc:
         record["error"] = "{}:{}".format(type(exc).__name__, str(exc)[:200])
     finally:
@@ -76,7 +100,8 @@ def classify_one(site: str, kind: str) -> dict:
     return record
 
 
-def _classify_worker(site: str, kind: str, result_queue) -> None:
+def _classify_worker(site: str, kind: str, result_queue,
+                     measure_policy: bool = False) -> None:
     """隔离单站 Selenium；父进程可在超时时安全终止此子进程。"""
     def _terminate(_signum, _frame):
         raise TimeoutError("site watchdog terminated worker")
@@ -86,7 +111,7 @@ def _classify_worker(site: str, kind: str, result_queue) -> None:
     except (AttributeError, ValueError):
         pass
     try:
-        result_queue.put(classify_one(site, kind))
+        result_queue.put(classify_one(site, kind, measure_policy=measure_policy))
     except BaseException as exc:
         result_queue.put({
             "site": site,
@@ -103,7 +128,8 @@ def _classify_worker(site: str, kind: str, result_queue) -> None:
             pass
 
 
-def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int):
+def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
+                            measure_policy: bool = False):
     """并发执行任务并以进程级看门狗防止单站卡死整轮回归。
 
     Selenium 的线程无法强制中断，因此这里特意不用 ThreadPoolExecutor。
@@ -126,7 +152,8 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int):
             return
         result_queue = context.Queue(maxsize=1)
         process = context.Process(
-            target=_classify_worker, args=(site, kind, result_queue), daemon=False)
+            target=_classify_worker,
+            args=(site, kind, result_queue, measure_policy), daemon=False)
         process.start()
         active[process.pid] = {
             "process": process, "queue": result_queue, "site": site,
@@ -203,6 +230,9 @@ def main():
     ap.add_argument("--overwrite", action="store_true",
                     help="开始前清空输出文件；与 --resume 互斥")
     ap.add_argument("--only", default="", help="只跑逗号分隔的主机名子集")
+    ap.add_argument("--measure-policy", action="store_true",
+                    help="对分类出的注册口令框站点额外执行密码政策测量"
+                         "（完整流程，每站 5-15 分钟；不带此开关只跑分类）")
     ap.add_argument("--retry-unknown", type=int, default=0,
                     help="主跑后对 unknown/error 记录自动重跑 N 轮并多数投票取稳定结果")
     ap.add_argument("--site-timeout", type=int, default=0,
@@ -256,12 +286,15 @@ def main():
     t0 = time.time()
     if args.site_timeout > 0:
         completed_records = _iter_with_site_timeout(
-            pending, args.workers, args.site_timeout)
+            pending, args.workers, args.site_timeout,
+            measure_policy=args.measure_policy)
     else:
         def _thread_records():
             with ThreadPoolExecutor(max_workers=args.workers) as pool:
-                futures = {pool.submit(classify_one, s, k): (s, k)
-                           for s, k in pending}
+                futures = {pool.submit(
+                    classify_one, s, k,
+                    measure_policy=args.measure_policy): (s, k)
+                    for s, k in pending}
                 for future in as_completed(futures):
                     site, kind = futures[future]
                     try:
@@ -325,8 +358,10 @@ def _stabilize_unknown(args, sites, kinds):
         tasks = unstable
         new_recs = {}
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = {pool.submit(classify_one, "https://" + h + "/", k): (h, k)
-                       for h, k in tasks}
+            futures = {pool.submit(
+                classify_one, "https://" + h + "/", k,
+                measure_policy=args.measure_policy): (h, k)
+                for h, k in tasks}
             for future in as_completed(futures):
                 h, k = futures[future]
                 try:

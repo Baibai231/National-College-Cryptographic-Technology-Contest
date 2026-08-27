@@ -797,11 +797,37 @@ class LoginLinkDiscovery:
             logger.info("尝试登录入口 → 注册链接兜底...")
             try:
                 self.driver.get(homepage_url)
-                self._wait_for_page_ready(timeout=10)
+                self._wait_for_page_ready(timeout=8)
             except Exception:
                 pass
-            if self._login_to_signup_fallback():
-                return self.driver.current_url
+            # 快速预检：页面没有可见登录入口文本时直接跳过兜底
+            # （无弹窗站实测：登录兜底白白耗时 3s+SPA渲染+找字段 ~15s，
+            # 且会拖慢全量回归导致 site_timeout）。
+            try:
+                _has_login_entrance = bool(self._cdp_eval(
+                    "(function() {"
+                    "  var K = ['去登录', '立即登录', '登录', 'sign in', 'log in', 'login'];"
+                    "  var els = document.querySelectorAll('a,button,div,span,[role=button]');"
+                    "  for (var i = 0; i < els.length && i < 300; i++) {"
+                    "    var e = els[i];"
+                    "    if (e.children.length > 0) continue;"
+                    "    var t = (e.innerText || '').trim();"
+                    "    if (t.length > 0 && t.length <= 8"
+                    "      && K.some(function(k) { return t === k || t.indexOf(k) === 0; })) {"
+                    "      var r = e.getBoundingClientRect();"
+                    "      if (r.width > 0 && r.height > 0) return true;"
+                    "    }"
+                    "  }"
+                    "  return false;"
+                    "})();"
+                ))
+            except Exception:
+                _has_login_entrance = True  # 检测失败不拦截
+            if _has_login_entrance:
+                if self._login_to_signup_fallback():
+                    return self.driver.current_url
+            else:
+                logger.debug("登录入口兜底: 页面无可见登录入口，跳过")
 
         # ================================================================
         # 第 2 层：尝试常见注册 URL 模式
@@ -938,13 +964,13 @@ class LoginLinkDiscovery:
             logger.debug("登录入口兜底: 未找到可见登录入口")
             return False
         logger.info("登录入口兜底: 已点击登录入口，等待注册链接出现...")
-        time.sleep(3)
+        time.sleep(1.5)
         try:
-            self._wait_for_page_ready(timeout=8)
+            self._wait_for_page_ready(timeout=6)
         except Exception:
             pass
         try:
-            self._wait_for_spa_render(timeout=4)
+            self._wait_for_spa_render(timeout=3)
         except Exception:
             pass
 
@@ -955,7 +981,7 @@ class LoginLinkDiscovery:
 
         # 3) 验证密码框出现（注册界面的密码框）
         try:
-            self._wait_for_spa_render(timeout=4)
+            self._wait_for_spa_render(timeout=3)
         except Exception:
             pass
         pwds = self.find_password_fields()
