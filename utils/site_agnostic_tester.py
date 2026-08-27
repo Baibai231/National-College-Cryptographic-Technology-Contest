@@ -185,6 +185,16 @@ class SitePasswordPolicyTester:
 
             rp = password_policy["restrictive"]
 
+            # ── 突变阶段中间控制点（P3 缺陷4：副作用隔离）──
+            # 7 个连续突变步骤会积累页面状态（残留错误/弹窗状态漂移），
+            # 每 2~3 步插入一次"负对照+基准"复验，任一漂移即停止推断，
+            # 避免后续步骤在污染状态下测出垃圾值。
+            def _control_pair(label: str) -> bool:
+                if not self._tester.establish_inline_control() or not \
+                        self._tester.test_one_password(admissible, label):
+                    return False
+                return True
+
             rp["r_no_a_sps"] = self._tester.check_special_symbols(admissible)
             print(f"    r_no_a_sps: {rp['r_no_a_sps']}")
 
@@ -194,8 +204,20 @@ class SitePasswordPolicyTester:
             rp["r_l_start"] = self._tester.change_and_test_letter_start_password(rp["r_2_word"])
             print(f"    r_l_start: {rp['r_l_start']}")
 
+            if not _control_pair("phase control: revalidate after letter-start"):
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = \
+                    "control_pair_drifted_after_letter_start_step"
+                return password_policy
+
             rp["r_dig_min"] = self._tester.change_and_test_digit_minimum(rp["r_no_a_sps"])
             print(f"    r_dig_min: {rp['r_dig_min']}")
+
+            if not _control_pair("phase control: revalidate after digit-minimum"):
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = \
+                    "control_pair_drifted_after_digit_minimum_step"
+                return password_policy
 
             rp["r_upp_min"] = self._tester.change_and_test_lower_upper_minimum(True, rp["r_no_a_sps"])
             print(f"    r_upp_min: {rp['r_upp_min']}")
@@ -208,9 +230,7 @@ class SitePasswordPolicyTester:
 
             # 固定顺序的连续突变可能积累页面状态或触发策略切换。进入长度阶段前
             # 重新跑“负对照 + 已知基准”配对，二者任一漂移就停止推断。
-            if not self._tester.establish_inline_control() or not \
-                    self._tester.test_one_password(
-                        admissible, "phase control: revalidate admissible before length"):
+            if not _control_pair("phase control: revalidate admissible before length"):
                 password_policy["_inconclusive"] = True
                 password_policy["_inconclusive_reason"] = \
                     "control_pair_drifted_before_length_phase"
@@ -250,13 +270,19 @@ class SitePasswordPolicyTester:
             # ── P3 自洽校验：用已推断约束反推密码验证模型一致性 ──
             # 模型是 AND 语义，无法表达 OR 规则（如 GitHub "≥15位 或
             # ≥8位含数字+小写"）。若反推密码与推断约束矛盾，说明模型
-            # 无法解释站点行为，政策结论不可信 → 标记 inconclusive。
-            _consistent, _consistency_note = \
+            # 无法解释站点行为 → 标记 inconclusive，但保留 OR 规则刻画
+            # 结果（_or_rule），让消费方看到已探测到的真实行为。
+            _consistent, _consistency_note, _or_rule = \
                 self._tester.self_consistency_check(rp, _eff_length, admissible)
             if not _consistent:
                 password_policy["_inconclusive"] = True
                 password_policy["_inconclusive_reason"] = _consistency_note
-                print(f"    ⚠ 自洽校验失败: {_consistency_note}")
+                if _or_rule:
+                    password_policy["_or_rule"] = _or_rule
+                    print(f"    ⚠ 自洽校验失败(OR规则): {_consistency_note}")
+                    print(f"    _or_rule: {_or_rule}")
+                else:
+                    print(f"    ⚠ 自洽校验失败: {_consistency_note}")
                 return password_policy
             print(f"    自洽校验: {_consistency_note}")
 

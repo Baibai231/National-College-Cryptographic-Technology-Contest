@@ -70,9 +70,13 @@ class PasswordPolicySafetyTests(unittest.TestCase):
             "r_cmb13": False, "r_cmb23": False, "r_cmb33": False,
             "r_cmb14": True, "r_cmb24": False, "r_cmb34": False, "r_cmb44": False,
         }
-        ok, note = tester.self_consistency_check(rp, [8, 72], tester.admissible_password)
+        ok, note, or_rule = tester.self_consistency_check(
+            rp, [8, 72], tester.admissible_password)
         self.assertFalse(ok)
         self.assertIn("or_rule_likely", note)
+        # OR 规则刻画已探测：单类被拒、两两组合有接受、长度替代分支
+        self.assertIsNotNone(or_rule)
+        self.assertEqual(or_rule.get("min_length"), 8)
 
     def test_self_consistency_passes_when_single_class_accepted(self):
         tester = TestPassword(mock.MagicMock(), "example.com")
@@ -85,8 +89,10 @@ class PasswordPolicySafetyTests(unittest.TestCase):
             "r_cmb13": False, "r_cmb23": False, "r_cmb33": False,
             "r_cmb14": False, "r_cmb24": False, "r_cmb34": False, "r_cmb44": False,
         }
-        ok, _ = tester.self_consistency_check(rp, [8, 72], tester.admissible_password)
+        ok, _, or_rule = tester.self_consistency_check(
+            rp, [8, 72], tester.admissible_password)
         self.assertTrue(ok)
+        self.assertIsNone(or_rule)
 
     def test_self_consistency_skips_probe_when_classes_required(self):
         tester = TestPassword(mock.MagicMock(), "example.com")
@@ -100,8 +106,10 @@ class PasswordPolicySafetyTests(unittest.TestCase):
             "r_cmb13": False, "r_cmb23": False, "r_cmb33": False,
             "r_cmb14": False, "r_cmb24": False, "r_cmb34": True, "r_cmb44": False,
         }
-        ok, _ = tester.self_consistency_check(rp, [8, 14], tester.admissible_password)
+        ok, _, or_rule = tester.self_consistency_check(
+            rp, [8, 14], tester.admissible_password)
         self.assertTrue(ok)
+        self.assertIsNone(or_rule)
         # len(admissible)==lo → 前缀探针也跳过，只调用了负对照验证前的调用
         tester.test_one_password.assert_not_called()
 

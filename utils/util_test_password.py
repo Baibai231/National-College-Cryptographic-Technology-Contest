@@ -2068,19 +2068,21 @@ class TestPassword(object):
 
           1. 最小长度单类密码（全数字）：当模型预测"任意单类即可"时（无
              类要求或仅 r_cmb14），站点若拒绝 → OR 规则/缺失约束信号，
-             模型无法解释该行为 → 返回 (False, note)
+             模型无法解释该行为 → 返回 (False, note, or_rule)
           2. 最小长度 + admissible 同类结构密码（截断）：模型预测接受，
              站点若拒绝 → 最小长度下需要更多类别（OR 规则的分支）→ 返回
-             (False, note)
+             (False, note, or_rule)
 
-        :return: (ok: bool, note: str)  ok=False 表示发现模型无法解释的行为，
-                 调用方应把政策标记 inconclusive 而非输出失真结论
+        :return: (ok: bool, note: str, or_rule: dict|None)  ok=False 表示
+                 发现模型无法解释的行为；or_rule 为已刻画的 OR 规则结构
+                 （identify_or_rule 探测结果），调用方据此输出而非丢弃
         """
         note = ""
+        or_rule = None
         lo = eff_length[0] if eff_length else None
         hi = eff_length[1] if eff_length else None
         if not lo or lo < 4 or not admissible:
-            return True, "skip: min length insufficient for probing"
+            return True, "skip: min length insufficient for probing", None
         rp = restrictive_policy
         inferred_classes = 0
         if rp.get("r_dig_min", 0) > 0:
@@ -2110,7 +2112,11 @@ class TestPassword(object):
                     "or_rule_likely: 最小长度单类密码被拒但模型未推断任何"
                     "字符类要求（可能为 OR 规则或缺失约束），政策可能失真")
                 self.my_logger.warning(note)
-                return False, note
+                # 刻画 OR 规则分支（最少字符类 + 长度替代分支）
+                or_rule = self.identify_or_rule(
+                    eff_length, admissible,
+                    r_no_a_sps=bool(rp.get("r_no_a_sps", False)))
+                return False, note, or_rule
 
         # 2) 最小长度 + admissible 同类结构（截断保留类别）
         if len(admissible) > lo:
@@ -2125,8 +2131,74 @@ class TestPassword(object):
                         "站点可能在短长度要求更多字符类别（OR 规则分支），"
                         "政策可能失真")
                     self.my_logger.warning(note)
-                    return False, note
-        return True, "consistent"
+                    return False, note, None
+        return True, "consistent", None
+
+    def identify_or_rule(self, eff_length, admissible, r_no_a_sps=False):
+        """P3 OR 规则刻画：探测并输出结构化的 OR 规则描述。
+
+        在自洽校验发现 OR 规则后调用，探测两类信息（探针有界，约 5~7 个）：
+          1. 最小长度下的最少字符类要求：单类密码（lower/upper/digit）逐一
+             探测哪些类不足；再用两两组合探测"几类才够"。
+          2. 长度替代分支：单类密码从 lo+2 起向上探测，找到单类即可被接受
+             的长度阈值（GitHub 实测 15 位即可任意组合）。
+
+        :return: dict（可直接作为 policy["_or_rule"]）或 None（探测不足）
+        """
+        lo = eff_length[0] if eff_length else None
+        hi = eff_length[1] if eff_length else None
+        if not lo or lo < 4:
+            return None
+        or_rule = {
+            "min_length": lo,
+            "single_class_rejected": ["digit"],
+            "single_class_accepted": [],
+            "pair_classes": {},
+            "length_alternative": None,
+        }
+        lower_pool = "kqmavzptnryfbwjcxldgsehuio"
+        upper_pool = lower_pool.upper()
+        digit_pool = "9630852741"
+
+        def _probe(pool: str, length: int) -> bool:
+            pw = (pool * 3)[:length]
+            return bool(self.test_one_password(
+                pw, f"or-rule probe: {pool[:3]}... len={length}"))
+
+        # 1) 单类探测（digit 已在自洽校验确认被拒）
+        single_map = {
+            "lower": lower_pool, "upper": upper_pool, "digit": digit_pool,
+        }
+        single_accepted = []
+        for name, pool in single_map.items():
+            if name == "digit":
+                continue  # 已确认被拒
+            if _probe(pool, lo):
+                single_accepted.append(name)
+        or_rule["single_class_rejected"] = [
+            n for n in ("digit", "lower", "upper")
+            if n not in single_accepted
+        ]
+        or_rule["single_class_accepted"] = single_accepted
+
+        # 2) 两两组合探测（排除禁止符号，且单类不够时才需要）
+        pairs = [("lower", "upper"), ("lower", "digit"), ("upper", "digit")]
+        for a, b in pairs:
+            pa, pb = single_map[a], single_map[b]
+            pw = (pa[:5] + pb[:5])[:lo]
+            pw = (pw * 3)[:lo]
+            accepted = bool(self.test_one_password(
+                pw, f"or-rule probe: {a}+{b} len={lo}"))
+            or_rule["pair_classes"][f"{a}+{b}"] = accepted
+
+        # 3) 长度替代分支：单类密码从 lo 起向上探测
+        # 若 hi 存在，限制探测范围避免撞上最大长度
+        max_len = min(hi, lo + 12) if hi else lo + 12
+        for length in range(lo + 2, max_len + 1, 2):
+            if _probe(digit_pool, length):
+                or_rule["length_alternative"] = length
+                break
+        return or_rule
 
     def length_limit_initial_password(self, restrictive_p):
         initial_password = ""

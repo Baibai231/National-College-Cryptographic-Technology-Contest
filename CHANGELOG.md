@@ -98,6 +98,27 @@ inline 路径仍将“未观察到拒绝”直接当作接受，同时 `auto` �
 - gitee：[8,102]，自洽校验 consistent，负对照成立。
 - 自动测试：149 项全部通过。
 
+### 17. OR 规则刻画 + 突变步骤中间控制点（2026-08-27）
+
+第 16 条把 OR 规则（GitHub "≥15 位 或 ≥8 位含数字+小写"）标记为
+or_rule_likely 并 inconclusive，但没有探测规则本身。本条把 OR 规则从
+"标记不可信"升级为"可刻画输出"：
+
+- [x] `identify_or_rule`：自洽校验发现 OR 规则后，有界探测（5~7 个探针）
+      - 最小长度下各单类（lower/upper/digit）是否足够；
+      - 两两组合（lower+upper / lower+digit / upper+digit）哪些被接受；
+      - 长度替代分支：单类密码从 lo+2 向上探测，找到"单类即可"的长度阈值。
+      输出结构化 `_or_rule`（min_length / single_class_rejected /
+      single_class_accepted / pair_classes / length_alternative）。
+- [x] `site_agnostic_tester.py`：`self_consistency_check` 返回
+      (ok, note, or_rule)，or_rule 随政策输出，消费方可看到已探测的真实行为。
+- [x] P3 缺陷4（副作用隔离）：7 个连续突变步骤间插入两个中间控制点
+      （r_l_start 后、r_dig_min 后），负对照/基准任一漂移即停止推断，
+      避免后续步骤在污染状态下测出垃圾值。
+- [x] 测试适配三返回值并新增断言（min_length / or_rule 结构）。
+
+验证：156 项测试全部通过（新增 OR 刻画断言）。
+
 ### 14. v4 逐方法呈现（MultiMethod）+ unknown 攻坚（进行中）
 
 背景：35% 记录（106/302）观察到≥2种注册/登录方法，但分类/存储/展示全链路
