@@ -946,12 +946,11 @@ class TestPassword(object):
                             // gitee 等站点对「太长/太短/字符不足」不在 input 自身写
                             // error class，而是给密码框的外层容器（如 .field）加 error
                             // class、并把边框染红。检查 input 自身 + 祖先链（往上 3 层）
-                            // 的 error/invalid/danger class 与边框变红。祖先链是密码框
-                            // 专属容器，其 error 只可能来自密码本身违规（其他字段的
-                            // 错误在各自字段的容器上，不在此链上），因此门控表单也不
-                            // 降级——密码框变红即拒绝，强度计只是辅助。
-                            // 颜色只查 borderColor（边框），不查文字 color；并用「纯红」
-                            // （g≈b）区分 focus/品牌的橙色边框。
+                            // 的 error/invalid/danger class 与边框变红。
+                            // 门控表单降级：aistudy666 实测——blur 时整表校验连坐，
+                            // 错误样式可能加到 lv>=2 的容器（form/大容器），密码本身
+                            // 合法也会变红。lv=1（密码框直接父容器）仍视为密码专属
+                            // 硬拒绝；lv>=2 降级 soft 交由错误消息佐证。
                             if (!state.rejected && !state.soft) {
                                 var node = el;
                                 for (var lv = 0; lv < 4 && node; lv++) {
@@ -962,15 +961,25 @@ class TestPassword(object):
                                             : (node.className && node.className.baseVal) || '';
                                     } catch (e) {}
                                     if (/\\b(error|invalid|danger)\\b/i.test(ncls)) {
-                                        state.rejected = true;
-                                        state.reason = 'ancestor-error-class(lv=' + lv + '): ' + ncls.substring(0, 50);
+                                        if (gated && lv >= 2) {
+                                            state.soft = true;
+                                            state.reason = 'ancestor-error-class(soft,gated,lv=' + lv + '): ' + ncls.substring(0, 50);
+                                        } else {
+                                            state.rejected = true;
+                                            state.reason = 'ancestor-error-class(lv=' + lv + '): ' + ncls.substring(0, 50);
+                                        }
                                         break;
                                     }
                                     var ncs = null;
                                     try { ncs = getComputedStyle(node); } catch (e) {}
                                     if (ncs && isErrorBorder(ncs.borderColor)) {
-                                        state.rejected = true;
-                                        state.reason = 'ancestor-red-border(lv=' + lv + '): border=' + ncs.borderColor;
+                                        if (gated && lv >= 2) {
+                                            state.soft = true;
+                                            state.reason = 'ancestor-red-border(soft,gated,lv=' + lv + '): border=' + ncs.borderColor;
+                                        } else {
+                                            state.rejected = true;
+                                            state.reason = 'ancestor-red-border(lv=' + lv + '): border=' + ncs.borderColor;
+                                        }
                                         break;
                                     }
                                     node = node.parentElement;

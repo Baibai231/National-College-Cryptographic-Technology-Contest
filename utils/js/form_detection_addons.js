@@ -1562,6 +1562,19 @@ function watchPasswordFeedback(passwordXPath) {
         if (_isNonPwdFeedback(txt)) return false;
         // 规则清单 / 强度计（pwd-checklist 等）≠ 拒绝，跳过
         if (_isChecklistOrStrengthEl(el)) return false;
+        // ── 门控表单连坐降级（aistudy666 实测）──
+        // 门控表单（手机号/验证码/确认密码恒空）blur 时整表校验会把
+        // 密码错误提示"连坐"变红显示（如"至少6位密码"），即使密码本身
+        // 合法。此时文本类拒绝信号不可信——误判会导致 1~32 位密码全被
+        // 拒、找不到 admissible。跳过文本信号，让负对照/field-state
+        // 正确判定（门控表单无法验证 → 回退分类）。
+        var _gatedNow = false;
+        try {
+            _gatedNow = (typeof _isGatedForm === 'function')
+                && __pwdFeedbackPasswordEl
+                && _isGatedForm(__pwdFeedbackPasswordEl);
+        } catch(e) {}
+        if (_gatedNow) return false;
         try {
             if (el.matches && el.matches(WATCH_ERROR_SELECTOR)) {
                 // 颜色闸门：与 Path B / _findNearbyPwdFeedback 一致。
