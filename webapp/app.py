@@ -1305,3 +1305,174 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.get("/")
 def index():
     return FileResponse(str(STATIC_DIR / "index.html"))
+
+
+# ================================================================
+# 异步测量任务队列
+# ================================================================
+# 用户提交 URL 后立即返回 task_id，后台线程排队测量（分类或口令政策），
+# 通过 GET /api/tasks/{id} 轮询状态。测量在后台线程执行，与请求线程
+# 解耦：刷新页面 / 关闭浏览器 / 重复查询都不影响进行中的测量。
+# 状态持久化到 webapp/tasks.json，服务重启后仍可查询历史任务。
+
+import uuid
+
+_TASKS_DIR = Path(__file__).resolve().parent
+_TASKS_PATH = _TASKS_DIR / "tasks.json"
+_TASK_LOCK = threading.Lock()
+_MAX_TASKS = 500  # 只保留最近 500 个任务
+
+# 后台测量线程（单 worker 串行，避免并发 Chrome 抢占；队列机制保证
+# 提交即返回，用户无需等待）。
+_TASK_WORKER = None  # type: ignore[assignment]  # threading.Thread
+_TASK_WAKEUP = threading.Event()
+_TASK_QUEUE = []  # type: ignore[var-annotated]  # list[dict]
+
+
+def _load_tasks() -> dict:
+    try:
+        if _TASKS_PATH.exists():
+            return json.loads(_TASKS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+def _save_tasks(tasks: dict) -> None:
+    try:
+        keys = sorted(tasks, key=lambda k: tasks[k].get("created_at", ""), reverse=True)
+        trimmed = {k: tasks[k] for k in keys[:_MAX_TASKS]}
+        _TASKS_PATH.write_text(
+            json.dumps(trimmed, ensure_ascii=False, indent=1), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _task_snapshot(task: dict) -> dict:
+    return {
+        "task_id": task.get("task_id"),
+        "url": task.get("url"),
+        "entry_kind": task.get("entry_kind"),
+        "kind": task.get("kind"),
+        "status": task.get("status"),
+        "created_at": task.get("created_at"),
+        "started_at": task.get("started_at"),
+        "finished_at": task.get("finished_at"),
+        "result": task.get("result"),
+        "error": task.get("error"),
+    }
+
+
+class TaskSubmitRequest(BaseModel):
+    url: str = Field(..., description="网站 URL")
+    kind: Literal["classify", "policy"] = "classify"
+    entry_kind: Literal["signup", "login"] = "signup"
+    method: Literal["auto", "inline", "full"] = "auto"
+
+
+def _task_worker_loop() -> None:
+    """后台任务执行循环：取队首任务 → 执行 → 更新状态 → 写盘。"""
+    while True:
+        _TASK_WAKEUP.wait(timeout=60)
+        _TASK_WAKEUP.clear()
+        with _TASK_LOCK:
+            if not _TASK_QUEUE:
+                continue
+            task = _TASK_QUEUE.pop(0)
+        try:
+            task["status"] = "running"
+            task["started_at"] = datetime.now(timezone.utc).isoformat()
+            _save_tasks(_load_tasks() | {task["task_id"]: task})
+            try:
+                if task["kind"] == "policy":
+                    result = _run_live_policy(task["url"], task.get("method", "auto"))
+                else:
+                    result = _run_live_classification(task["url"], task.get("entry_kind", "signup"))
+                task["status"] = "done"
+                task["result"] = result
+            except Exception as exc:
+                task["status"] = "error"
+                task["error"] = "{}: {}".format(type(exc).__name__, str(exc)[:300])
+        finally:
+            task["finished_at"] = datetime.now(timezone.utc).isoformat()
+            with _TASK_LOCK:
+                tasks = _load_tasks()
+                tasks[task["task_id"]] = task
+                _save_tasks(tasks)
+
+
+def _ensure_task_worker() -> None:
+    global _TASK_WORKER
+    with _TASK_LOCK:
+        if _TASK_WORKER is None or not _TASK_WORKER.is_alive():
+            _TASK_WORKER = threading.Thread(
+                target=_task_worker_loop, daemon=True, name="task-worker")
+            _TASK_WORKER.start()
+
+
+@app.post("/api/tasks")
+def submit_task(req: TaskSubmitRequest):
+    """提交异步测量任务，立即返回 task_id（不阻塞）。
+
+    用户可刷新页面/离开，任务在后台线程执行；
+    通过 GET /api/tasks/{task_id} 轮询状态。
+    """
+    url, host = _validated_classify_url(req.url, resolve=False)
+    task_id = uuid.uuid4().hex[:12]
+    task = {
+        "task_id": task_id,
+        "url": url,
+        "hostname": host,
+        "entry_kind": req.entry_kind,
+        "kind": req.kind,
+        "method": req.method,
+        "status": "queued",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": None,
+        "finished_at": None,
+        "result": None,
+        "error": None,
+    }
+    with _TASK_LOCK:
+        tasks = _load_tasks()
+        tasks[task_id] = task
+        _save_tasks(tasks)
+        _TASK_QUEUE.append(task)
+    _ensure_task_worker()
+    _TASK_WAKEUP.set()
+    return {"task_id": task_id, "status": "queued", "url": url}
+
+
+@app.get("/api/tasks/{task_id}")
+def task_status(task_id: str):
+    """查询任务状态（queued / running / done / error）。"""
+    tasks = _load_tasks()
+    task = tasks.get(task_id)
+    if not task:
+        raise HTTPException(404, "任务不存在")
+    return _task_snapshot(task)
+
+
+@app.get("/api/tasks")
+def task_list(limit: int = Query(20, ge=1, le=100)):
+    """最近任务列表（按创建时间倒序）。"""
+    tasks = _load_tasks()
+    items = sorted(tasks.values(),
+                   key=lambda t: t.get("created_at", ""), reverse=True)[:limit]
+    return {"tasks": [_task_snapshot(t) for t in items]}
+
+
+@app.post("/api/tasks/{task_id}/cancel")
+def cancel_task(task_id: str):
+    """取消排队中（未开始）的任务。"""
+    with _TASK_LOCK:
+        for i, task in enumerate(_TASK_QUEUE):
+            if task.get("task_id") == task_id:
+                _TASK_QUEUE.pop(i)
+                task["status"] = "cancelled"
+                task["finished_at"] = datetime.now(timezone.utc).isoformat()
+                tasks = _load_tasks()
+                tasks[task_id] = task
+                _save_tasks(tasks)
+                return {"task_id": task_id, "status": "cancelled"}
+    raise HTTPException(404, "任务不在队列中（可能已开始或已完成）")
