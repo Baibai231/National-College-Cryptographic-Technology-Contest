@@ -2328,6 +2328,25 @@ class TestPassword(object):
                 return out.slice(0, 20);
             """)
             if not texts:
+                # 跨域 iframe（caixin u.caixinglobal.com 实测）：JS 无法
+                # 访问 contentDocument。若口令框在 iframe 内，切进去再扫。
+                if self.password_frame_path:
+                    self._ensure_frame_context(driver)
+                    texts = driver.execute_script("""
+                        var out = [];
+                        document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
+                          var t = (e.innerText || '').trim();
+                          if (t && t.length >= 4 && t.length < 100
+                              && /密码|口令|password|passwd/i.test(t)
+                              && e.children.length === 0) out.push(t);
+                        });
+                        return out.slice(0, 20);
+                    """)
+                    try:
+                        driver.switch_to.default_content()
+                    except Exception:
+                        pass
+            if not texts:
                 return hint
             for t in texts:
                 # 过滤纯导航/链接文本（"密码登录/忘记密码/密码重置"无规则信息）
