@@ -19,7 +19,7 @@ import threading
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Header, Query
@@ -1140,6 +1140,46 @@ def _classification_response(url: str, entry_kind: str, result: dict) -> dict:
     }
 
 
+def _db_entry_for(host: str, kind: str) -> Optional[dict]:
+    """从数据库读取该站某一侧（signup/login）的已有结果。
+
+    返回与 /api/classify 数据库命中分支相同结构的 entry：
+    {flow_type, flow_zh, stop_reason, primary_method, confidence, final_url,
+     states, methods, evidence, policy, error, measured_at, route, manual}
+    该侧未测 / 结果为 unknown/error（视为无效）时返回 None，
+    调用方据此决定是否需要现场测量。
+    """
+    try:
+        conn = _conn()
+        try:
+            cur = conn.cursor()
+            row = None
+            # 精确 hostname 优先；数据库常存不带 www 的规范域名
+            # （36kr.com 实测：任务 URL www.36kr.com 查不到，去掉 www 命中）
+            for candidate in (host, host.replace("www.", "", 1)):
+                cur.execute("SELECT * FROM sites WHERE hostname = ?", (candidate,))
+                row = cur.fetchone()
+                if row:
+                    break
+        finally:
+            conn.close()
+        if not row:
+            return None
+        site = _row_to_site(row)
+        entry = site.get(kind)
+        if not entry:
+            return None
+        # unknown / 无有效结论 / 无测量时间 → 视为未测，现场重测
+        if not entry.get("flow_type") or entry.get("flow_type") == "unknown":
+            return None
+        if not entry.get("measured_at"):
+            return None
+        entry["manual"] = site.get("manual")
+        return entry
+    except Exception:
+        return None
+
+
 def _run_live_classification(url: str, kind: str) -> dict:
     """Run one live Chrome classification; caller owns the concurrency slot."""
     from utils.util_test_password import _get_new_driver
@@ -1366,8 +1406,50 @@ def _task_snapshot(task: dict) -> dict:
 class TaskSubmitRequest(BaseModel):
     url: str = Field(..., description="网站 URL")
     kind: Literal["classify", "policy"] = "classify"
-    entry_kind: Literal["signup", "login"] = "signup"
+    entry_kind: Literal["signup", "login", "both"] = "signup"
     method: Literal["auto", "inline", "full"] = "auto"
+
+
+def _run_task_classify(url: str, kind: str) -> dict:
+    """现场分类单个入口（signup/login），返回与 _classification_response 同构结果。"""
+    return _run_live_classification(url, kind)
+
+
+def _run_task_both(url: str) -> dict:
+    """注册+登录：已测侧用数据库结果，未测侧现场测，合并返回。
+
+    结果结构：
+    {
+      "url", "entry_kind": "both",
+      "signup": {...} | None, "login": {...} | None,
+      "signup_from_database": bool, "login_from_database": bool,
+    }
+    """
+    from urllib.parse import urlparse
+    host = urlparse(url).hostname or url
+    parts = {}
+    for kind in ("signup", "login"):
+        cached = _db_entry_for(host, kind)
+        if cached:
+            parts[kind] = cached
+            parts[kind + "_from_database"] = True
+        else:
+            try:
+                parts[kind] = _run_live_classification(url, kind)
+                parts[kind + "_from_database"] = False
+            except Exception as exc:
+                parts[kind] = {"error": "{}:{}".format(
+                    type(exc).__name__, str(exc)[:200])}
+                parts[kind + "_from_database"] = False
+    result = {
+        "url": url,
+        "entry_kind": "both",
+        "signup": parts.get("signup"),
+        "login": parts.get("login"),
+        "signup_from_database": bool(parts.get("signup_from_database")),
+        "login_from_database": bool(parts.get("login_from_database")),
+    }
+    return result
 
 
 def _task_worker_loop() -> None:
@@ -1385,9 +1467,32 @@ def _task_worker_loop() -> None:
             _save_tasks(_load_tasks() | {task["task_id"]: task})
             try:
                 if task["kind"] == "policy":
-                    result = _run_live_policy(task["url"], task.get("method", "auto"))
+                    # 口令政策：库中已有实测结果则直接返回，不重复测量
+                    from urllib.parse import urlparse as _urlparse
+                    _host = _urlparse(task["url"]).hostname or task["url"]
+                    cached = _db_entry_for(_host, "signup") or _db_entry_for(_host, "login")
+                    if cached and (cached.get("pwd_policy") or {}).get("length", [0, 0]) != [0, 0]:
+                        result = {
+                            "url": task["url"],
+                            "entry_kind": task.get("entry_kind", "signup"),
+                            "hostname": _host,
+                            "from_database": True,
+                            "method_used": cached.get("pwd_method") or "inline",
+                            "flow_type": cached.get("flow_type"),
+                            "flow_zh": cached.get("flow_zh"),
+                            "policy": cached.get("pwd_policy", {}),
+                            "classification_policy": cached.get("policy", {}),
+                            "policy_measured": True,
+                            "measured_at": cached.get("measured_at"),
+                        }
+                    else:
+                        result = _run_live_policy(task["url"], task.get("method", "auto"))
+                        result["hostname"] = _host
                 else:
-                    result = _run_live_classification(task["url"], task.get("entry_kind", "signup"))
+                    if task.get("entry_kind") == "both":
+                        result = _run_task_both(task["url"])
+                    else:
+                        result = _run_task_classify(task["url"], task.get("entry_kind", "signup"))
                 task["status"] = "done"
                 task["result"] = result
             except Exception as exc:

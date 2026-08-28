@@ -1069,23 +1069,34 @@ async function addTaskToDb(taskId) {
   const t = await r.json();
   if (t.status !== 'done' || !t.result) { alert('任务未完成，无法入库'); return; }
   const d = t.result;
-  // 与 addSiteToDb 相同的入库格式：policy 存分类政策，pwd_policy 存实测口令规则
-  const isPwdMeasured = isPolicyMeasured(d);
-  const entry = {
-    flow_type: d.flow_type, flow_zh: d.flow_zh,
-    route: d.route || '', final_url: d.final_url || '',
-    steps: d.states || [], raw_states: d.states || [],
-    policy: isPwdMeasured ? (d.classification_policy || {}) : (d.policy || {}),
-    pwd_policy: isPwdMeasured ? (d.policy || {}) : {},
-    pwd_method: d.method_used,
-    confidence: d.confidence, stop_reason: d.stop_reason,
-    primary_method: d.primary_method, evidence: d.evidence || [],
-    error: d.error || null, measured_at: d.measured_at
+  let login = {}, signup = {}, url = '';
+  const mkEntry = (x) => {
+    const isPwdMeasured = isPolicyMeasured(x);
+    return {
+      flow_type: x.flow_type, flow_zh: x.flow_zh,
+      route: x.route || '', final_url: x.final_url || '',
+      steps: x.states || [], raw_states: x.states || [],
+      policy: isPwdMeasured ? (x.classification_policy || {}) : (x.policy || {}),
+      pwd_policy: isPwdMeasured ? (x.policy || {}) : {},
+      pwd_method: x.method_used,
+      confidence: x.confidence, stop_reason: x.stop_reason,
+      primary_method: x.primary_method, evidence: x.evidence || [],
+      error: x.error || null, measured_at: x.measured_at
+    };
   };
-  const kind = d.entry_kind === 'login' ? 'login' : 'signup';
-  const login = kind === 'login' ? entry : {};
-  const signup = kind === 'signup' ? entry : {};
-  const url = d.url || t.url || '';
+  if (d.entry_kind === 'both') {
+    // 合并结果：注册/登录分别入库（已测侧为库中旧数据，覆盖更新为最新）
+    url = d.url || t.url || '';
+    if (d.signup && d.signup.flow_type) signup = mkEntry(d.signup);
+    if (d.login && d.login.flow_type) login = mkEntry(d.login);
+  } else if (d.entry_kind === 'login') {
+    url = d.url || t.url || '';
+    login = mkEntry(d);
+  } else {
+    url = d.url || t.url || '';
+    signup = mkEntry(d);
+  }
+  if (!login.flow_type && !signup.flow_type) { alert('没有可入库的结果'); return; }
   const host = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   const token = prompt('请输入管理员口令：', '');
   if (token === null) return;
@@ -1114,8 +1125,30 @@ async function showTaskResult(taskId) {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — ${t.status === 'done' ? '口令政策测量完成' : '未完成'}</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交 · ${fmtTime(t.finished_at)} 完成</div>
+        ${result.from_database ? '<div class="badge bg-secondary mt-1">数据库已有结果，未重复测量</div>' : ''}
       </div>
       ${t.status === 'done' ? policyBoxHtml(result) : ''}
+      ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
+  } else if (result.entry_kind === 'both') {
+    // 注册+登录合并结果：已测侧标注"数据库已有"，未测侧为现场结果
+    const signup = result.signup || {};
+    const login = result.login || {};
+    const signupTag = result.signup_from_database ? '（数据库已有）' : '（现场测量）';
+    const loginTag = result.login_from_database ? '（数据库已有）' : '（现场测量）';
+    body = `<div class="alert alert-info py-2">
+        <div><b>${esc(t.url)}</b> — 注册+登录分类</div>
+        <div class="small text-muted">${fmtTime(t.created_at)} 提交${t.finished_at ? ' · ' + fmtTime(t.finished_at) + ' 完成' : ''}</div>
+      </div>
+      ${signup.flow_type ? `
+        <div class="alert alert-info py-2 mb-2"><div><b>注册${signupTag}</b></div>
+          <div class="mt-2">${reportTableHtml(null, signup, 'v4')}</div>
+          <div class="mt-2">${extraLines(signup, '注册')}</div>
+        </div>` : (signup.error ? `<div class="alert alert-danger py-2">注册失败: ${esc(signup.error)}</div>` : '')}
+      ${login.flow_type ? `
+        <div class="alert alert-info py-2 mb-2"><div><b>登录${loginTag}</b></div>
+          <div class="mt-2">${reportTableHtml(login, null, 'v4')}</div>
+          <div class="mt-2">${extraLines(login, '登录')}</div>
+        </div>` : (login.error ? `<div class="alert alert-danger py-2">登录失败: ${esc(login.error)}</div>` : '')}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   } else {
     body = `<div class="alert alert-info py-2">
@@ -1156,7 +1189,7 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
         <div class="small text-muted">后台测量中（约 1-15 分钟）。刷新页面不影响测量，完成后可在下方"我的测量任务"查看结果。</div>
       </div>`;
     } else {
-      const entryKind = kind === 'both' ? 'signup' : kind;
+      const entryKind = kind;  // 'both' 原样提交，后端分别查库/现场测
       const r = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1165,13 +1198,10 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const d = await r.json();
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
       const label = kind === 'both' ? '注册+登录' : (kind === 'signup' ? '注册' : '登录');
-      const hint = kind === 'both'
-        ? '注册分类完成后会自动追加登录分类任务。'
-        : '刷新页面不影响测量，完成后可在下方"我的测量任务"查看结果。';
       box.innerHTML = `<div class="alert alert-success py-2">
-        <div><b>${label}分类任务已提交</b></div>
+        <div><b>${label}任务已提交</b></div>
         <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
-        <div class="small text-muted">${hint}</div>
+        <div class="small text-muted">已测过的部分直接使用数据库结果，未测的部分后台测量。完成后在下方"我的测量任务"查看。</div>
       </div>`;
     }
     loadTasks();
