@@ -847,13 +847,21 @@ function listTrueZh(dict, zhMap) {
     .map(k => zhMap[k] || k).join('、');
 }
 function measuredPolicyHtml(policy, methodUsed) {
+  const hint = (policy || {})._hint_policy;
+  const hintHtml = hint && hint.raw_texts && hint.raw_texts.length
+    ? `<div class="small text-warning mt-1"><b>页面提示：</b>
+        ${hint.length_min ? '≥' + hint.length_min + '位 ' : ''}${hint.length_max ? '≤' + hint.length_max + '位 ' : ''}
+        ${(hint.charset_hints || []).join('、')}
+        ${hint.raw_texts.map(esc).join('<br>')}
+      </div>`
+    : '';
   if (methodUsed === 'classified_only') {
     const pt = policyText(policy);
     return '<div class="small">密码政策：' +
-      (pt && pt !== '未测量' ? pt : '无可测口令框（仅完成分类）') + '</div>';
+      (pt && pt !== '未测量' ? pt : '无可测口令框（仅完成分类）') + '</div>' + hintHtml;
   }
   if (!policy || !Object.keys(policy).length) {
-    return '<div class="small text-muted">未测量到密码政策</div>';
+    return '<div class="small text-muted">未测量到密码政策</div>' + hintHtml;
   }
   const length = policy.length || [];
   const r = policy.restrictive || {};
@@ -917,12 +925,27 @@ function policyBoxHtml(d) {
   const method = d.method_used;
   const measured = isPolicyMeasured(d);
   if (!measured) {
+    // 提示政策（inline 无法建立反馈时解析的页面自述规则）
+    const hint = (d.policy || {})._hint_policy;
+    const hintHtml = hint && hint.raw_texts && hint.raw_texts.length
+      ? `<div class="alert alert-warning py-2 mt-2 mb-0">
+          <div><b>页面提示政策（非实测）</b></div>
+          ${hint.length_min || hint.length_max
+            ? `<div class="small mt-1">长度：${hint.length_min || '?'}${hint.length_max ? ' ~ ' + hint.length_max : ' 以上'}</div>`
+            : ''}
+          ${(hint.charset_hints || []).length
+            ? `<div class="small mt-1">字符要求：${hint.charset_hints.join('、')}</div>`
+            : ''}
+          <div class="small text-muted mt-1">${hint.raw_texts.map(esc).join('<br>')}</div>
+        </div>`
+      : '';
     return `
       <div class="alert alert-info py-2 mb-2">
         <div><b>注册与分类</b> ${badge(d.flow_type)}</div>
         <div class="mt-2">${classificationOnlyTableHtml(d)}</div>
         <div class="mt-2">${extraLines(d, '注册')}</div>
         <div class="small text-muted mt-1">密码政策测试未完成，仅输出注册与分类结果</div>
+        ${hintHtml}
         ${d.error ? `<div class="small text-danger mt-1">${esc(d.error)}</div>` : ''}
       </div>`;
   }
