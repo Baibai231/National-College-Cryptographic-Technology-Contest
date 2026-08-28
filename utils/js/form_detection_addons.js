@@ -997,7 +997,8 @@ var _NON_PWD_TERMS = [
     'username is required', 'nickname is required',
     'captcha', 'verification code',
     'please enter your name', 'please enter name',
-    'please enter your email', 'please enter your phone'
+    'please enter your email', 'please enter your phone',
+    '用户名格式', '账号格式', '用户名长度', '账号名'
 ];
 
 function _isNonPwdFeedback(text) {
@@ -1005,6 +1006,13 @@ function _isNonPwdFeedback(text) {
     var t = String(text).toLowerCase();
     for (var i = 0; i < _NON_PWD_TERMS.length; i++) {
         if (t.indexOf(_NON_PWD_TERMS[i].toLowerCase()) !== -1) return true;
+    }
+    // 用户名/账号格式规则（12306 实测："6-30位字母、数字或"_",字母开头"
+    // 是用户名框提示，含"开头/下划线"特征词且无"密码"字样 → 非密码反馈）
+    if (/用户名|账号|昵称/i.test(t)
+            && /(字母开头|下划线|开头|格式|昵称)/i.test(t)
+            && !/密码|口令|password|passwd/i.test(t)) {
+        return true;
     }
     return false;
 }

@@ -1018,6 +1018,14 @@ class TestPassword(object):
                                 # 跳过非密码字段错误
                                 if any(p in msg for p in _non_pwd_patterns):
                                     continue
+                                # 用户名/账号格式错误（12306 实测："6-30位
+                                # 字母、数字或_,字母开头"是用户名框提示，
+                                # 含"开头/下划线"特征词且无"密码"字样）
+                                if (('用户名' in msg or '账号' in msg or '昵称' in msg)
+                                        and ('开头' in msg or '下划线' in msg
+                                             or '格式' in msg or '昵称' in msg)
+                                        and '密码' not in msg and '口令' not in msg):
+                                    continue
                                 # 强度指示器 → 仅记录备注，不参与 accept/reject 决策
                                 if rtype == 'strength-indicator':
                                     if not _strength_note:
