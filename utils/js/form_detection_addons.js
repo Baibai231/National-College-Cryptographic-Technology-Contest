@@ -1034,6 +1034,18 @@ function _looksLikePwdFeedback(text) {
     return PWD_FEEDBACK_KEYWORDS.test(String(text));
 }
 
+// 密码规则词检测：文本是否明确描述密码规则（长度/字符类别/组合要求）。
+// 与 _looksLikePwdFeedback 的区别：反馈关键词（不能/错误/无效）宽泛，
+// 规则词（至少/必须/6-20/位/字符/数字/字母/符号/长度/大小写）更具体。
+// gamersky 实测：拒绝提示为灰色文本"密码不能带有中文，并且个数在6-20位！"
+// —— 含"密码/不能/6-20/位"规则词，即使灰色也应视为拒绝反馈。
+function _looksLikePwdRule(text) {
+    if (!text) return false;
+    var t = String(text);
+    if (!/(密码|password|passwd)/i.test(t)) return false;
+    return /(至少|必须|不能|不允许|禁止|需|6-20|\d+\s*[-~至到]\s*\d+|位|个字符|字符|数字|字母|符号|长度|大小写|大写|小写)/i.test(t);
+}
+
 // ================================================================
 // 门控表单检测（gated form）—— 区分"密码本身不合规"与"整表未完成"
 // ================================================================
@@ -1580,7 +1592,11 @@ function watchPasswordFeedback(passwordXPath) {
                 // 颜色闸门：与 Path B / _findNearbyPwdFeedback 一致。
                 // 灰/中性色的提示（常驻规则说明、强度计「密码安全系数较低」）
                 // 不是拒绝信号——只有变红才是密码不合规。
-                if (!_isErrorColor(el)) return false;
+                // 注意：observer 只捕获「blur 后新增/变化」的元素，不存在
+                // 常驻误判；gamersky 实测拒绝提示为灰色文本的 error 容器
+                // （"密码不能带有中文，并且个数在6-20位！"），颜色闸门会漏判。
+                // 动态出现的密码规则提示（含规则词）即反馈，放宽颜色要求。
+                if (!_isErrorColor(el) && !_looksLikePwdRule(txt)) return false;
                 // 密码专属闸门：必须是密码政策错误，过滤协议勾选/手机号等其它字段错误
                 if (!_looksLikePwdFeedback(txt)) return false;
                 return recordFeedback({ hasFeedback: true, rejected: true,
@@ -1588,8 +1604,9 @@ function watchPasswordFeedback(passwordXPath) {
             }
         } catch(e) {}
         if (txt.length <= 200 && _looksLikePwdFeedback(txt)) {
-            if (!_isErrorColor(el)) {
-                // 灰色/中性色 = 常驻规则提示（如「长度为8-16个字符」），不是拒绝信号
+            if (!_isErrorColor(el) && !_looksLikePwdRule(txt)) {
+                // 灰色/中性色且无规则词 = 常驻规则提示（如「长度为8-16个字符」）
+                // 或强度计，不是拒绝信号
                 return false;
             }
             return recordFeedback({ hasFeedback: true, rejected: true,
@@ -1616,7 +1633,26 @@ function watchPasswordFeedback(passwordXPath) {
                             }
                         } catch(e) {}
                     } else if (node.nodeType === 3) {
-                        // 文本节点直接插入 → 检查其父容器（现在含反馈文字）
+                        // 文本节点直接插入 → 检查其父容器（现在含反馈文字）。
+                        // gamersky 实测：提示文本先插入到无尺寸临时容器
+                        // （pw:0）再移动到 error div（438×34）。用尺寸判断
+                        // 会漏掉第一阶段，移动后的第二阶段可能因文本已存在
+                        // 被 innerText 路径跳过。直接用插入的文本内容判断，
+                        // 不依赖父容器尺寸——文本本身存在即可能为反馈。
+                        var ntext = (node.data || '').trim();
+                        if (ntext.length >= 2 && _looksLikePwdFeedback(ntext)) {
+                            var pel = null;
+                            try { pel = node.parentElement; } catch(e) {}
+                            var pelErr = false;
+                            if (pel) {
+                                try { pelErr = _isErrorColor(pel) || _looksLikePwdRule(ntext); } catch(e) { pelErr = false; }
+                            }
+                            if (pelErr) {
+                                if (recordFeedback({hasFeedback: true,
+                                    rejected: true, type: 'observer-text-keyword',
+                                    message: ntext.substring(0, 300)})) return;
+                            }
+                        }
                         if (_tryRecordFeedbackEl(node.parentElement)) return;
                     }
                 }

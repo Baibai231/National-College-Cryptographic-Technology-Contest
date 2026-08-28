@@ -2260,6 +2260,66 @@ class TestPassword(object):
                 break
         return or_rule
 
+    def extract_hint_policy(self) -> dict:
+        """解析页面上的密码规则提示文本，提取政策线索。
+
+        inline 反馈无法建立（gamersky 等瞬时闪现提示/提交时才校验的站）
+        时，页面常驻/闪现的规则提示（"密码不能带有中文，并且个数在6-20
+        位！"）本身含政策信息。解析长度区间与字符类要求作为「线索政策」
+        （_hint_policy），标注为提示而非实测，让用户至少看到站点自述规则。
+
+        :return: {"length_min": int|None, "length_max": int|None,
+                  "charset_hints": [str], "raw_texts": [str]}
+        """
+        import re as _re
+        hint = {"length_min": None, "length_max": None,
+                "charset_hints": [], "raw_texts": []}
+        try:
+            driver = self._driver or _get_shared_driver()
+            texts = driver.execute_script("""
+                var out = [];
+                document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
+                  var t = (e.innerText || '').trim();
+                  if (t && t.length >= 4 && t.length < 100
+                      && /密码|口令|password|passwd/i.test(t)
+                      && e.children.length === 0) out.push(t);
+                });
+                return out.slice(0, 15);
+            """)
+            if not texts:
+                return hint
+            for t in texts:
+                hint["raw_texts"].append(t[:120])
+                # 长度区间：6-20位 / 8~16个字符 / 至少6位 / 最长20位
+                m = _re.search(r'(\d+)\s*[-~至到]\s*(\d+)\s*[位个]', t)
+                if m:
+                    hint["length_min"] = int(m.group(1))
+                    hint["length_max"] = int(m.group(2))
+                    continue
+                m = _re.search(r'至少\s*(\d+)\s*[位个]', t)
+                if m and hint["length_min"] is None:
+                    hint["length_min"] = int(m.group(1))
+                    continue
+                m = _re.search(r'最长\s*(\d+)\s*[位个]|不能超过\s*(\d+)', t)
+                if m and hint["length_max"] is None:
+                    hint["length_max"] = int(m.group(1) or m.group(2))
+                    continue
+                # 字符类要求
+                for kw, name in (
+                    ("数字", "digit"), ("大写", "upper"), ("小写", "lower"),
+                    ("字母", "letter"), ("符号", "symbol"), ("特殊", "symbol"),
+                    ("数字与字母", "digit+letter"), ("字母数字", "digit+letter"),
+                    ("大小写", "upper+lower"), ("中文", "no_chinese"),
+                    ("不能带有中文", "no_chinese"),
+                ):
+                    if kw in t:
+                        if name not in hint["charset_hints"]:
+                            hint["charset_hints"].append(name)
+            self.my_logger.info(f"提示政策解析: {hint}")
+        except Exception as exc:
+            self.my_logger.debug(f"提示政策解析失败: {exc}")
+        return hint
+
     def length_limit_initial_password(self, restrictive_p):
         initial_password = ""
         char_dict = {

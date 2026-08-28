@@ -169,6 +169,18 @@ class SitePasswordPolicyTester:
                     "明确密码专属拒绝证据"
                 )
                 print("    ⚠ inline 负对照未成立，停止政策推断并回退仅分类")
+                # 提示政策解析：负对照虽不成立，但页面规则提示（gamersky
+                # "6-20位"等）含政策线索。先填一个短密码触发提示闪现，
+                # 再扫描页面文本。
+                try:
+                    _hint = self._tester.extract_hint_policy()
+                    if _hint.get("raw_texts"):
+                        password_policy["_hint_policy"] = _hint
+                        password_policy["_inconclusive_reason"] += (
+                            "；页面提示政策: {}".format(_hint))
+                        print(f"    页面提示政策: {_hint}")
+                except Exception:
+                    pass
                 return password_policy
 
             admissible = self._tester.find_admissible_password()
@@ -180,6 +192,17 @@ class SitePasswordPolicyTester:
                 password_policy["_inconclusive_reason"] = (
                     "admissible_password_not_found: 无法找到可接受的密码")
                 print("    ✗ 无法找到可接受的密码")
+                # 提示政策解析：admissible 找不到（可能误判连坐拒绝），
+                # 页面提示仍可作线索。
+                try:
+                    _hint = self._tester.extract_hint_policy()
+                    if _hint.get("raw_texts"):
+                        password_policy["_hint_policy"] = _hint
+                        password_policy["_inconclusive_reason"] += (
+                            "；页面提示政策: {}".format(_hint))
+                        print(f"    页面提示政策: {_hint}")
+                except Exception:
+                    pass
                 return password_policy
             print(f"    ✓ 可接受密码: {admissible}")
             uub.random_sleep([3, 5])

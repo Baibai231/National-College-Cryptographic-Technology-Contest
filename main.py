@@ -258,6 +258,49 @@ def _detect_method(driver, site_url, signup_url,
                         if not feedback:
                             feedback = "observer-detected"
                             break
+                    # ── field-state 通道兜底（与 test_one_password 一致）──
+                    # 部分站点（gamersky 等）的拒绝反馈不是通过 DOM 文本/
+                    # observer 呈现，而是密码框自身状态变化（validity 无效 /
+                    # aria-invalid / error class / 边框变红）。observer 无反馈
+                    # 时检查字段状态，避免漏判 inline 可用。
+                    if feedback is None:
+                        fs = driver.execute_script(
+                            "var el = arguments[0];"
+                            "var state = {rejected: false, reason: null};"
+                            "function isErr(c){var m=(c||'').match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/);"
+                            " if(!m) return false; var r=+m[1],g=+m[2],b=+m[3];"
+                            " return r>=170&&(r-g)>=80&&(r-b)>=80&&Math.abs(g-b)<=40;}"
+                            "if (el.validity && !el.validity.valid)"
+                            "  {state.rejected=true; state.reason='validity: '+(el.validationMessage||'').substring(0,60);}"
+                            "else if (el.getAttribute('aria-invalid')==='true')"
+                            "  {state.rejected=true; state.reason='aria-invalid=true';}"
+                            "if (!state.rejected) {"
+                            "  var cls=el.className||'';"
+                            "  if (/\\b(error|invalid|danger)\\b/i.test(cls))"
+                            "    {state.rejected=true; state.reason='class: '+cls.substring(0,40);}"
+                            "}"
+                            "if (!state.rejected) {"
+                            "  var node=el;"
+                            "  for (var lv=0; lv<3 && node; lv++){"
+                            "    var nc='';"
+                            "    try{nc=(typeof node.className==='string')?node.className:'';}catch(e){}"
+                            "    if (/\\b(error|invalid|danger)\\b/i.test(nc))"
+                            "      {state.rejected=true; state.reason='ancestor-class(lv='+lv+'): '+nc.substring(0,40); break;}"
+                            "    try{var cs=getComputedStyle(node);"
+                            "      if (cs && isErr(cs.borderColor))"
+                            "        {state.rejected=true; state.reason='ancestor-red(lv='+lv+')'; break;}"
+                            "    }catch(e){}"
+                            "    node=node.parentElement;"
+                            "  }"
+                            "}"
+                            "return state;",
+                            pwd_el,
+                        )
+                        if fs and fs.get("rejected"):
+                            logger.info(
+                                "内联反馈检测成功 (field-state: {})，使用 inline 方法".format(
+                                    fs.get("reason", "?")))
+                            return "inline", signup_url, email_xpath, password_xpath
                 except Exception:
                     pass
 
