@@ -1362,9 +1362,7 @@ _TASKS_PATH = _TASKS_DIR / "tasks.json"
 _TASK_LOCK = threading.Lock()
 _MAX_TASKS = 500  # 只保留最近 500 个任务
 
-# 后台测量线程（单 worker 串行，避免并发 Chrome 抢占；队列机制保证
-# 提交即返回，用户无需等待）。
-_TASK_WORKER = None  # type: ignore[assignment]  # threading.Thread
+# 后台测量线程池（并发 2，队列机制保证提交即返回，用户无需等待）。
 _TASK_WAKEUP = threading.Event()
 _TASK_QUEUE = []  # type: ignore[var-annotated]  # list[dict]
 
@@ -1464,7 +1462,10 @@ def _task_worker_loop() -> None:
         try:
             task["status"] = "running"
             task["started_at"] = datetime.now(timezone.utc).isoformat()
-            _save_tasks(_load_tasks() | {task["task_id"]: task})
+            with _TASK_LOCK:
+                tasks = _load_tasks()
+                tasks[task["task_id"]] = task
+                _save_tasks(tasks)
             try:
                 if task["kind"] == "policy":
                     # 口令政策：库中已有实测结果则直接返回，不重复测量
@@ -1502,17 +1503,91 @@ def _task_worker_loop() -> None:
             task["finished_at"] = datetime.now(timezone.utc).isoformat()
             with _TASK_LOCK:
                 tasks = _load_tasks()
+                # 任务已被删除/超时标记时不再覆盖（防止"删除的任务复活"）
+                latest = tasks.get(task["task_id"])
+                if latest is not None and latest.get("_removed"):
+                    return
                 tasks[task["task_id"]] = task
                 _save_tasks(tasks)
 
 
-def _ensure_task_worker() -> None:
-    global _TASK_WORKER
+# 任务超时（秒）：现场测量卡死（Chrome 崩溃/iframe 挂起）时标记为超时。
+# 后台线程即使仍存活，完成时发现任务已被标记为 error 也不会覆盖状态。
+_TASK_TIMEOUT = {"classify": 600, "policy": 1800}
+
+
+def _mark_stale_tasks() -> None:
+    """把超时未完成的 running 任务标记为 error（查询接口调用）。
+
+    后台线程真正卡死时无法强制终止，但状态标记为超时后：
+      1. 用户立即看到"失败（超时）"而非无限"测量中"；
+      2. worker 完成时检查到任务已是 error 不会覆盖（防复活）。
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        with _TASK_LOCK:
+            tasks = _load_tasks()
+            changed = False
+            for tid, t in tasks.items():
+                if t.get("status") != "running":
+                    continue
+                started = t.get("started_at")
+                if not started:
+                    continue
+                try:
+                    elapsed = (now - datetime.fromisoformat(started)).total_seconds()
+                except Exception:
+                    continue
+                limit = _TASK_TIMEOUT.get(t.get("kind"), 900)
+                if elapsed > limit:
+                    t["status"] = "error"
+                    t["error"] = "timeout: {}s 未完成，已标记为失败".format(int(elapsed))
+                    t["finished_at"] = now.isoformat()
+                    t["_removed"] = True  # 防止 worker 完成时覆盖
+                    changed = True
+            if changed:
+                _save_tasks(tasks)
+    except Exception:
+        pass
+
+
+def _recover_tasks_on_startup() -> None:
+    """服务重启恢复：running → error（中断），queued → 重新入队。
+
+    否则重启后 running 任务永久卡在"测量中"、queued 任务永久丢失。
+    """
     with _TASK_LOCK:
-        if _TASK_WORKER is None or not _TASK_WORKER.is_alive():
-            _TASK_WORKER = threading.Thread(
-                target=_task_worker_loop, daemon=True, name="task-worker")
-            _TASK_WORKER.start()
+        tasks = _load_tasks()
+        changed = False
+        for tid, t in tasks.items():
+            status = t.get("status")
+            if status == "running":
+                t["status"] = "error"
+                t["error"] = "interrupted by server restart"
+                t["finished_at"] = datetime.now(timezone.utc).isoformat()
+                changed = True
+            elif status == "queued":
+                _TASK_QUEUE.append(t)
+        if changed:
+            _save_tasks(tasks)
+
+
+# 后台测量线程数：并发 2 平衡吞吐与 Chrome 资源（policy 任务 5-15 分钟
+# 时单 worker 会让后续任务排长队；2 个 worker 且队列机制仍保证提交即返回）。
+_TASK_WORKERS: list = []
+_TASK_WORKERS_MAX = 2
+
+
+def _ensure_task_worker() -> None:
+    with _TASK_LOCK:
+        alive = [w for w in _TASK_WORKERS if w.is_alive()]
+        for _ in range(len(alive), _TASK_WORKERS_MAX):
+            w = threading.Thread(
+                target=_task_worker_loop, daemon=True,
+                name="task-worker-{}".format(len(alive) + 1))
+            w.start()
+            alive.append(w)
+        _TASK_WORKERS[:] = alive
 
 
 @app.post("/api/tasks")
@@ -1551,6 +1626,7 @@ def submit_task(req: TaskSubmitRequest):
 @app.get("/api/tasks/{task_id}")
 def task_status(task_id: str):
     """查询任务状态（queued / running / done / error）。"""
+    _mark_stale_tasks()
     tasks = _load_tasks()
     task = tasks.get(task_id)
     if not task:
@@ -1561,6 +1637,7 @@ def task_status(task_id: str):
 @app.get("/api/tasks")
 def task_list(limit: int = Query(20, ge=1, le=100)):
     """最近任务列表（按创建时间倒序）。"""
+    _mark_stale_tasks()
     tasks = _load_tasks()
     items = sorted(tasks.values(),
                    key=lambda t: t.get("created_at", ""), reverse=True)[:limit]
@@ -1585,13 +1662,22 @@ def cancel_task(task_id: str):
 
 @app.delete("/api/tasks/{task_id}")
 def delete_task(task_id: str):
-    """删除任务记录（含队列中/已完成/失败）。"""
+    """删除任务记录（含队列中/已完成/失败）。
+
+    running 任务无法强制终止后台线程，但标记 _removed 后：
+    worker 完成时检查到该标记不再写盘（防止删除的任务"复活"）。
+    """
     with _TASK_LOCK:
         _TASK_QUEUE[:] = [t for t in _TASK_QUEUE
                           if t.get("task_id") != task_id]
         tasks = _load_tasks()
         if task_id not in tasks:
             raise HTTPException(404, "任务不存在")
+        tasks[task_id]["_removed"] = True
         del tasks[task_id]
         _save_tasks(tasks)
     return {"task_id": task_id, "status": "deleted"}
+
+
+# 模块加载时恢复历史任务状态（running→中断，queued→重新入队）
+_recover_tasks_on_startup()

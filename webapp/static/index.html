@@ -826,16 +826,7 @@ document.getElementById('review-submit-btn').addEventListener('click', async () 
   hideReview();
 });
 
-// 现场分类
-let lastClassify = null;  // 最近一次现场分类结果（供入库）
-async function classifyOne(url, kind) {
-  const r = await fetch('/api/classify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, entry_kind: kind })
-  });
-  return await r.json();
-}
+// 现场分类结果辅助（异步任务模式；extraLines 供任务结果弹窗复用）
 function extraLines(d, kindLabel) {
   const srcTag = d && d.from_database
     ? '（数据库已有该站结果）'
@@ -847,33 +838,6 @@ function extraLines(d, kindLabel) {
     d && d.final_url ? '最终页：' + d.final_url : '',
   ].filter(Boolean).map(t => `<div class="small">${esc(t)}</div>`).join('');
   return `<div class="small text-muted mt-1">${kindLabel}${srcTag}${extra ? '<br>' + extra : ''}</div>`;
-}
-function classifyBoxHtml(d, kindLabel) {
-  const isLogin = d.entry_kind === 'login';
-  return `
-    <div class="alert alert-info py-2 mb-2">
-      <div><b>${kindLabel}</b></div>
-      <div class="mt-2">${reportTableHtml(
-        isLogin ? d : null, isLogin ? null : d, 'v4')}</div>
-      <div class="mt-2">${extraLines(d, kindLabel)}</div>
-    </div>`;
-}
-function addSiteBarHtml(btnLabel, tip) {
-  return `
-    <div class="mt-2 d-flex gap-2 align-items-center">
-      <input id="addsite-token" class="form-control form-control-sm" type="password" placeholder="管理员口令" style="max-width:160px">
-      <button class="btn btn-sm btn-primary" onclick="addSiteToDb()">${btnLabel}</button>
-      <span class="text-muted small">${tip}</span>
-    </div>`;
-}
-// 测试密码政策
-async function measurePolicy(url) {
-  const r = await fetch('/api/policy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, method: 'auto' })
-  });
-  return await r.json();
 }
 const PERM_CHAR_ZH = { p_space: '空格', p_unicd: 'Unicode 字符', p_emoji: 'Emoji',
   p_spn1: '@', p_spn2: '#', p_spn3: '!', p_spn4: '$' };
@@ -1211,60 +1175,6 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
-
-async function addSiteToDb() {
-  if (!lastClassify) return;
-  const token = document.getElementById('addsite-token').value;
-  // both 模式：lastClassify = {signup, login}；单入口：{kind, data}
-  let login = {}, signup = {}, url = '';
-  if (lastClassify.signup || lastClassify.login) {
-    url = lastClassify.signup?.url || lastClassify.login?.url || '';
-    for (const [kind, d] of Object.entries({signup: lastClassify.signup, login: lastClassify.login})) {
-      if (!d) continue;
-      const entry = {
-        flow_type: d.flow_type, flow_zh: d.flow_zh,
-        route: d.route || '', final_url: d.final_url || '',
-        steps: d.states || [], raw_states: d.states || [], policy: d.policy || {},
-        confidence: d.confidence, stop_reason: d.stop_reason,
-        primary_method: d.primary_method, evidence: d.evidence || [],
-        error: d.error || null, measured_at: d.measured_at
-      };
-      if (kind === 'login') login = entry; else signup = entry;
-    }
-  } else {
-    const d = lastClassify;
-    url = d.url || '';
-    // 实测口令政策（inline/full）：policy 存分类政策，pwd_policy 存实测口令规则
-    const isPwdMeasured = isPolicyMeasured(d);
-    const entry = {
-      flow_type: d.flow_type, flow_zh: d.flow_zh,
-      route: d.route || '', final_url: d.final_url || '',
-      steps: d.states || [], raw_states: d.states || [],
-      policy: isPwdMeasured ? (d.classification_policy || {}) : (d.policy || {}),
-      pwd_policy: isPwdMeasured ? (d.policy || {}) : {},
-      pwd_method: d.method_used,
-      confidence: d.confidence, stop_reason: d.stop_reason,
-      primary_method: d.primary_method, evidence: d.evidence || [],
-      error: d.error || null, measured_at: d.measured_at
-    };
-    if (d.entry_kind === 'login') login = entry; else signup = entry;
-  }
-  const host = (url || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-  const payload = {
-    hostname: host, url: url, version: 'v4',
-    login: login, signup: signup, admin_token: token
-  };
-  const r = await fetch('/api/sites', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const res = await r.json();
-  if (!r.ok) { alert(res.detail || '写入失败'); return; }
-  alert(res.message || '已写入数据库');
-  loadStats();
-  search('');
-}
 
 loadStats();
 search('');
