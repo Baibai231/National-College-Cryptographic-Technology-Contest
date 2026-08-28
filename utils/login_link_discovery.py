@@ -969,6 +969,17 @@ class LoginLinkDiscovery:
             self._wait_for_page_ready(timeout=6)
         except Exception:
             pass
+        # 轮询等待认证信号（慢渲染站：阿里云/京东/链家等无头下登录弹窗
+        # 渲染可能 >5s，固定 sleep 会误判 auth_entry_no_auth_state）。
+        # 检查输入框(密码/邮箱/手机)或弹窗出现，最多 8s。
+        try:
+            deadline = time.time() + 8
+            while time.time() < deadline:
+                if self._page_has_auth_signal():
+                    break
+                time.sleep(0.5)
+        except Exception:
+            pass
         try:
             self._wait_for_spa_render(timeout=3)
         except Exception:
