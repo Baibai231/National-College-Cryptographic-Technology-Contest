@@ -1476,3 +1476,17 @@ def cancel_task(task_id: str):
                 _save_tasks(tasks)
                 return {"task_id": task_id, "status": "cancelled"}
     raise HTTPException(404, "任务不在队列中（可能已开始或已完成）")
+
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task(task_id: str):
+    """删除任务记录（含队列中/已完成/失败）。"""
+    with _TASK_LOCK:
+        _TASK_QUEUE[:] = [t for t in _TASK_QUEUE
+                          if t.get("task_id") != task_id]
+        tasks = _load_tasks()
+        if task_id not in tasks:
+            raise HTTPException(404, "任务不存在")
+        del tasks[task_id]
+        _save_tasks(tasks)
+    return {"task_id": task_id, "status": "deleted"}

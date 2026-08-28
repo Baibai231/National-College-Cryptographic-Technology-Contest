@@ -103,7 +103,6 @@
       <strong>我的测量任务</strong>
       <button class="btn btn-sm btn-outline-secondary" onclick="loadTasks()">刷新</button>
     </div>
-    <div class="small text-muted mb-2">任务后台执行，刷新页面不影响；完成后点击查看结果。</div>
     <div id="task-list" class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
         <thead><tr>
@@ -112,7 +111,7 @@
           <th style="width:90px">类型</th>
           <th style="width:100px">状态</th>
           <th style="width:130px">提交时间</th>
-          <th style="width:70px"></th>
+          <th style="width:230px"></th>
         </tr></thead>
         <tbody id="task-tbody">
           <tr><td colspan="6" class="text-muted text-center">加载中…</td></tr>
@@ -1029,7 +1028,11 @@ async function loadTasks() {
         <td><span class="badge bg-${badge}">${running ? '<span class="spinner-border spinner-border-sm me-1"></span>' : ''}${TASK_STATUS_ZH[t.status] || t.status}</span></td>
         <td class="small text-muted">${fmtTime(t.created_at)}</td>
         <td class="text-end">
-          ${t.status === 'done' ? `<button class="btn btn-sm btn-outline-primary" onclick="showTaskResult('${t.task_id}')">查看</button>` : ''}
+          ${t.status === 'done' ? `
+            <button class="btn btn-sm btn-outline-primary" onclick="showTaskResult('${t.task_id}')">查看</button>
+            <button class="btn btn-sm btn-outline-success" onclick="addTaskToDb('${t.task_id}')">加入数据库</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('${t.task_id}')">删除</button>
+          ` : ''}
           ${t.status === 'queued' ? `<button class="btn btn-sm btn-outline-secondary" onclick="cancelTask('${t.task_id}')">取消</button>` : ''}
         </td>
       </tr>`;
@@ -1054,6 +1057,51 @@ function clearTaskPoll() {
 async function cancelTask(taskId) {
   await fetch(`/api/tasks/${taskId}/cancel`, { method: 'POST' });
   loadTasks();
+}
+async function deleteTask(taskId) {
+  if (!confirm('确定删除该任务记录？')) return;
+  const r = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+  if (!r.ok) { const d = await r.json(); alert(d.detail || '删除失败'); return; }
+  loadTasks();
+}
+async function addTaskToDb(taskId) {
+  const r = await fetch(`/api/tasks/${taskId}`);
+  const t = await r.json();
+  if (t.status !== 'done' || !t.result) { alert('任务未完成，无法入库'); return; }
+  const d = t.result;
+  // 与 addSiteToDb 相同的入库格式：policy 存分类政策，pwd_policy 存实测口令规则
+  const isPwdMeasured = isPolicyMeasured(d);
+  const entry = {
+    flow_type: d.flow_type, flow_zh: d.flow_zh,
+    route: d.route || '', final_url: d.final_url || '',
+    steps: d.states || [], raw_states: d.states || [],
+    policy: isPwdMeasured ? (d.classification_policy || {}) : (d.policy || {}),
+    pwd_policy: isPwdMeasured ? (d.policy || {}) : {},
+    pwd_method: d.method_used,
+    confidence: d.confidence, stop_reason: d.stop_reason,
+    primary_method: d.primary_method, evidence: d.evidence || [],
+    error: d.error || null, measured_at: d.measured_at
+  };
+  const kind = d.entry_kind === 'login' ? 'login' : 'signup';
+  const login = kind === 'login' ? entry : {};
+  const signup = kind === 'signup' ? entry : {};
+  const url = d.url || t.url || '';
+  const host = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  const token = prompt('请输入管理员口令：', '');
+  if (token === null) return;
+  const res = await fetch('/api/sites', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      hostname: host, url: url, version: 'v4',
+      login: login, signup: signup, admin_token: token
+    })
+  });
+  const resp = await res.json();
+  if (!res.ok) { alert(resp.detail || '写入失败'); return; }
+  alert(resp.message || '已写入数据库');
+  loadStats();
+  search('');
 }
 async function showTaskResult(taskId) {
   const r = await fetch(`/api/tasks/${taskId}`);
