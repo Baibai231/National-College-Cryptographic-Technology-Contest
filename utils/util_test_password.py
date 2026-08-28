@@ -2309,13 +2309,23 @@ class TestPassword(object):
                 pass
             texts = driver.execute_script("""
                 var out = [];
-                document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
-                  var t = (e.innerText || '').trim();
-                  if (t && t.length >= 4 && t.length < 100
-                      && /密码|口令|password|passwd/i.test(t)
-                      && e.children.length === 0) out.push(t);
+                var scan = function(doc) {
+                  doc.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
+                    var t = (e.innerText || '').trim();
+                    if (t && t.length >= 4 && t.length < 100
+                        && /密码|口令|password|passwd/i.test(t)
+                        && e.children.length === 0) out.push(t);
+                  });
+                };
+                scan(document);
+                // 遍历可见 iframe（caixin u.caixinglobal.com 注册页实测：
+                // 密码框和提示在 iframe 内，主文档扫描不到）
+                document.querySelectorAll('iframe').forEach(function(f) {
+                  try {
+                    if (f.contentDocument && f.contentDocument.body) scan(f.contentDocument);
+                  } catch(e) {}
                 });
-                return out.slice(0, 15);
+                return out.slice(0, 20);
             """)
             if not texts:
                 return hint
