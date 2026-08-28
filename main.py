@@ -633,6 +633,22 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             )
             result["method_used"] = "classified_only"
             result["policy"] = classification.get("policy", {}) if classification else {}
+            # 提示政策解析：inline 无法建立反馈时，页面规则提示
+            # （"密码不能带有中文，并且个数在6-20位！"）仍含政策线索。
+            # 先填一个短密码触发提示闪现，再扫描页面文本。
+            if unsupported:
+                try:
+                    from utils.util_test_password import TestPassword
+                    _hint_parser = TestPassword(
+                        get_logger(host), host, driver=driver,
+                        password_xpath=password_xpath or "")
+                    _hint = _hint_parser.extract_hint_policy()
+                    if _hint.get("raw_texts"):
+                        result["policy"]["_hint_policy"] = _hint
+                        result["note"] = (result.get("note") or "") + (
+                            " 页面提示政策: {}".format(_hint))
+                except Exception:
+                    pass
             if not result.get("note"):
                 if unsupported:
                     result["note"] = (
