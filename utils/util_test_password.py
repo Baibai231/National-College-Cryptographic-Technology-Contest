@@ -2320,6 +2320,12 @@ class TestPassword(object):
             if not texts:
                 return hint
             for t in texts:
+                # 过滤纯导航/链接文本（"密码登录/忘记密码/密码重置"无规则信息）
+                if not _re.search(
+                        r'长度|位数|字符|至少|必须|不能|不允许|禁止|至少|不少于|'
+                        r'不得|6-20|\d+\s*[-~至到]\s*\d+|个字符|字母|数字|符号|'
+                        r'大小写|开头|下划线|组合', t):
+                    continue
                 hint["raw_texts"].append(t[:120])
                 # 长度区间：6-20位 / 8~16个字符 / 至少6位 / 最长20位
                 m = _re.search(r'(\d+)\s*[-~至到]\s*(\d+)\s*[位个]', t)
