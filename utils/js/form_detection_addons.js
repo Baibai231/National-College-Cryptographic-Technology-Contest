@@ -1543,6 +1543,33 @@ function watchPasswordFeedback(passwordXPath) {
         if (feedback.message && __pwdFeedbackBaseline[feedback.message]) {
             return false;
         }
+        // ── 邻近度过滤（12306 实测）──
+        // 12306 的用户名框提示"6-30位字母、数字或_,字母开头"不含"用户名"
+        // 字样，关键词无法过滤；但提示元素离密码框远（用户名框在上方）。
+        // 反馈元素必须在密码框的祖先链或 3 层以内的兄弟容器内才可信。
+        if (feedback.element) {
+            var _near = false;
+            try {
+                var pwdEl = __pwdFeedbackPasswordEl;
+                if (pwdEl) {
+                    var node = feedback.element;
+                    var hops = 0;
+                    while (node && hops < 8) {
+                        if (node === pwdEl) { _near = true; break; }
+                        // 同一 form / 同一父容器
+                        var pwdParent = pwdEl.parentElement;
+                        if (node === pwdParent || pwdParent && node.parentElement === pwdParent) {
+                            _near = true; break;
+                        }
+                        node = node.parentElement;
+                        hops++;
+                    }
+                }
+            } catch(e) {}
+            if (!_near) {
+                return false;
+            }
+        }
         // 按 message 去重
         for (var i = 0; i < __pwdFeedbackResults.length; i++) {
             if (__pwdFeedbackResults[i].message === feedback.message) {
@@ -1631,7 +1658,8 @@ function watchPasswordFeedback(passwordXPath) {
                 // 密码专属闸门：必须是密码政策错误，过滤协议勾选/手机号等其它字段错误
                 if (!_looksLikePwdFeedback(txt)) return false;
                 return recordFeedback({ hasFeedback: true, rejected: true,
-                    type: 'observer-added-el', message: txt.substring(0, 300) });
+                    type: 'observer-added-el', message: txt.substring(0, 300),
+                    element: el });
             }
         } catch(e) {}
         if (txt.length <= 200 && _looksLikePwdFeedback(txt)) {
@@ -1641,7 +1669,8 @@ function watchPasswordFeedback(passwordXPath) {
                 return false;
             }
             return recordFeedback({ hasFeedback: true, rejected: true,
-                type: 'observer-text-keyword', message: txt.substring(0, 300) });
+                type: 'observer-text-keyword', message: txt.substring(0, 300),
+                element: el });
         }
         return false;
     }
@@ -1681,7 +1710,8 @@ function watchPasswordFeedback(passwordXPath) {
                             if (pelErr) {
                                 if (recordFeedback({hasFeedback: true,
                                     rejected: true, type: 'observer-text-keyword',
-                                    message: ntext.substring(0, 300)})) return;
+                                    message: ntext.substring(0, 300),
+                                    element: pel})) return;
                             }
                         }
                         if (_tryRecordFeedbackEl(node.parentElement)) return;
