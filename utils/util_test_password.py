@@ -2330,20 +2330,53 @@ class TestPassword(object):
             if not texts:
                 # 跨域 iframe（caixin u.caixinglobal.com 实测）：JS 无法
                 # 访问 contentDocument。若口令框在 iframe 内，切进去再扫。
+                # 优先 password_frame_path，否则遍历所有可见 iframe。
+                _scanned = False
                 if self.password_frame_path:
-                    self._ensure_frame_context(driver)
-                    texts = driver.execute_script("""
-                        var out = [];
-                        document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
-                          var t = (e.innerText || '').trim();
-                          if (t && t.length >= 4 && t.length < 100
-                              && /密码|口令|password|passwd/i.test(t)
-                              && e.children.length === 0) out.push(t);
-                        });
-                        return out.slice(0, 20);
-                    """)
+                    if self._ensure_frame_context(driver):
+                        texts = driver.execute_script("""
+                            var out = [];
+                            document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
+                              var t = (e.innerText || '').trim();
+                              if (t && t.length >= 4 && t.length < 100
+                                  && /密码|口令|password|passwd/i.test(t)
+                                  && e.children.length === 0) out.push(t);
+                            });
+                            return out.slice(0, 20);
+                        """)
+                        _scanned = True
+                        try:
+                            driver.switch_to.default_content()
+                        except Exception:
+                            pass
+                if not _scanned or not texts:
+                    # 遍历所有可见 iframe 扫描（无 frame_path 时兜底）
                     try:
                         driver.switch_to.default_content()
+                        _frames = driver.find_elements(By.TAG_NAME, "iframe")
+                        for _f in _frames:
+                            try:
+                                driver.switch_to.frame(_f)
+                                _it = driver.execute_script("""
+                                    var out = [];
+                                    document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
+                                      var t = (e.innerText || '').trim();
+                                      if (t && t.length >= 4 && t.length < 100
+                                          && /密码|口令|password|passwd/i.test(t)
+                                          && e.children.length === 0) out.push(t);
+                                    });
+                                    return out.slice(0, 20);
+                                """)
+                                if _it:
+                                    texts = _it
+                                    break
+                            except Exception:
+                                continue
+                            finally:
+                                try:
+                                    driver.switch_to.default_content()
+                                except Exception:
+                                    pass
                     except Exception:
                         pass
             if not texts:
