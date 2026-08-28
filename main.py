@@ -640,7 +640,7 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
                 try:
                     from utils.util_test_password import TestPassword
                     _hint_parser = TestPassword(
-                        get_logger(host), host, driver=driver,
+                        get_logger(_site_host), _site_host, driver=driver,
                         password_xpath=password_xpath or "")
                     _hint = _hint_parser.extract_hint_policy()
                     if _hint.get("raw_texts"):
