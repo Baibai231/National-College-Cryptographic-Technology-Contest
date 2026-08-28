@@ -1444,6 +1444,7 @@ function detectPasswordFeedback(passwordXPath) {
 var __pwdFeedbackWatcher = null;
 var __pwdFeedbackResults = [];
 var __pwdFeedbackPasswordEl = null;
+var __pwdFeedbackBaseline = {};  // 启动时页面已有密码提示（基线过滤用）
 var __pwdFeedbackWatchingXPath = null;  // 保存原始 XPath（密码字段可能在 iframe 内，document.evaluate 找不到时用于兜底）
 // Element UI / Vue 等框架用 v-if + 过渡动画（如 el-zoom-in-top）插入错误 div：
 // 插入瞬间高度为 0、offsetParent 为 null、或文本尚未填入，MutationObserver 第一击
@@ -1504,6 +1505,24 @@ function watchPasswordFeedback(passwordXPath) {
     // 标记密码字段
     __pwdFeedbackPasswordEl.setAttribute('data-pwd-feedback-watching', 'true');
 
+    // ── 基线快照（12306 实测）──
+    // 12306 常驻提示"6-30位字母、数字或_,字母开头"是页面规则说明，不是
+    // 拒绝反馈；但 blur 时 React 重新渲染提示 → mutation 触发 → 误判为
+    // 动态反馈，导致 8 位合法密码全被拒。快照启动时页面已有的密码提示
+    // 文本，mutation 捕获到相同文本时跳过（只有基线外的文本才是新反馈）。
+    __pwdFeedbackBaseline = {};
+    try {
+        var baseEls = document.querySelectorAll(
+            'div,span,p,em,label,li,small,[class*=error],[class*=hint],[class*=tip]'
+        );
+        for (var bi = 0; bi < baseEls.length && bi < 300; bi++) {
+            var bt = (baseEls[bi].innerText || '').trim();
+            if (bt && bt.length >= 2 && bt.length < 100 && _looksLikePwdFeedback(bt)) {
+                __pwdFeedbackBaseline[bt] = true;
+            }
+        }
+    } catch(e) {}
+
     // 门控表单：aria-invalid / error class 可能来自"整表未完成"，不作为硬拒绝
     var gated = _isGatedForm(__pwdFeedbackPasswordEl);
 
@@ -1511,6 +1530,10 @@ function watchPasswordFeedback(passwordXPath) {
         // 跳过明显不是密码字段相关的错误（如"姓名为必填项"、"email is required"等）
         if (_isNonPwdFeedback(feedback.message)) {
             return false;  // 非密码字段错误，忽略
+        }
+        // 基线过滤：页面启动前就存在的提示不是新反馈（12306 常驻规则说明）
+        if (feedback.message && __pwdFeedbackBaseline[feedback.message]) {
+            return false;
         }
         // 按 message 去重
         for (var i = 0; i < __pwdFeedbackResults.length; i++) {
