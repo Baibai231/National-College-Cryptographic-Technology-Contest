@@ -143,6 +143,32 @@ or_rule_likely 并 inconclusive，但没有探测规则本身。本条把 OR 规
 
 验证：156 项测试全部通过。
 
+### 19. 全量验证 3 轮 + 无头批量密码测量修复（2026-08-28）
+
+背景：合并后的代码（登录→注册兜底、iframe 口令框测量、自洽校验等）需
+全量验证。发现批量脚本只分类不测密码、无头下 inline 反馈不触发两大问题。
+
+修复：
+- [x] `run_measurement.py`：`classify_one` 复用 `main.test_single_site`
+      完整流程（此前只跑分类器，批量结果 policy 恒为空、method_used 恒
+      None）；新增 `--measure-policy` 开关。
+- [x] 无头 blur 兜底：无头模式下 ActionChains 坐标点击不触发 blur 校验
+      （gitee 无头实测 inline 探针 3 次全无反馈），`_detect_method` 与
+      `test_one_password` 在真实鼠标点击后补 JS blur + blur 事件。
+- [x] 登录兜底快速预检：页面无可见登录入口文本时跳过兜底（无弹窗站
+      白白耗时 15s+ 导致 site_timeout），等待压缩（3s→1.5s 等）。
+
+三轮全量验证（无头，154 站 × signup/login = 308 条）：
+- 第 1 轮全量分类：308 条 / error 46（site_timeout 40 + worker 6），
+  与权威对比一致 177 差异 130（差异主因无头退化 human_blocked→unknown
+  ×26 及超时 ×45，CHANGELOG 第 14 条已记录无头退化）。
+- 第 2 轮 error 站重测：60 条 / 40 修复 / 7 仍超时。
+- 第 3 轮 direct_password 站密码测量：94 条 / 5 条测出完整政策
+  （cnblogs [8,50]、gitee [8,102]、kuwo [6,16]，均与已知政策吻合），
+  33 条因真实安全边界回退分类（2 滑块验证码 + 31 无内联反馈）。
+
+数据：`reports/archive/validation_round{1,2,3}_20260828.jsonl`。
+
 ### 14. v4 逐方法呈现（MultiMethod）+ unknown 攻坚（进行中）
 
 背景：35% 记录（106/302）观察到≥2种注册/登录方法，但分类/存储/展示全链路
