@@ -64,7 +64,10 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("classificationOnlyTableHtml", self.html)
         self.assertIn("注册与分类", self.html)
         self.assertIn("密码政策测试未完成，仅输出注册与分类结果", self.html)
-        self.assertIn("密码政策测试未完成，仅存注册分类结果", self.html)
+        # 现场分类已改异步任务队列：口令政策任务后台执行
+        self.assertIn("我的测量任务", self.html)
+        self.assertIn("/api/tasks", self.html)
+        self.assertIn("task-tbody", self.html)
 
     def test_policy_result_labels_measured_method_without_method_list(self):
         # 测到口令政策时，方法清单直接写"进行密码政策测试"
