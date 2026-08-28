@@ -2276,6 +2276,9 @@ class TestPassword(object):
         位！"）本身含政策信息。解析长度区间与字符类要求作为「线索政策」
         （_hint_policy），标注为提示而非实测，让用户至少看到站点自述规则。
 
+        提示可能在填密码后才闪现（gamersky 实测），扫描前先填一个短密码
+        并 blur 触发。
+
         :return: {"length_min": int|None, "length_max": int|None,
                   "charset_hints": [str], "raw_texts": [str]}
         """
@@ -2284,6 +2287,26 @@ class TestPassword(object):
                 "charset_hints": [], "raw_texts": []}
         try:
             driver = self._driver or _get_shared_driver()
+            # 填短密码触发提示闪现（gamersky 等站提示只在 blur 后出现）
+            try:
+                if self.password_xpath:
+                    el = driver.find_element(By.XPATH, self.password_xpath)
+                    if el.is_displayed():
+                        driver.execute_script(
+                            "arguments[0].value='';"
+                            "arguments[0].dispatchEvent(new Event('input',{bubbles:true}));"
+                            "arguments[0].focus();", el)
+                        try:
+                            el.send_keys("a")
+                        except Exception:
+                            pass
+                        time.sleep(0.4)
+                        driver.execute_script(
+                            "arguments[0].blur();"
+                            "arguments[0].dispatchEvent(new Event('blur',{bubbles:true}));", el)
+                        time.sleep(1.0)
+            except Exception:
+                pass
             texts = driver.execute_script("""
                 var out = [];
                 document.querySelectorAll('div,span,p,em,label,li,small').forEach(function(e) {
