@@ -218,12 +218,22 @@ def _detect_method(driver, site_url, signup_url,
                         "arguments[0].dispatchEvent(new Event('blur', {bubbles:true}))",
                         pwd_el)
                 else:
-                    # 真实鼠标移动到密码框右侧 30px 处点击（模拟"填写后点别处"）
-                    ActionChains(driver).move_to_element(
-                        pwd_el
-                    ).move_by_offset(
-                        pwd_el.size['width'] // 2 + 30, 5
-                    ).click().perform()
+                    # 真实鼠标移动到密码框右侧 30px 处点击（模拟"填写后点别处"）。
+                    # 无头模式下 ActionChains 坐标点击可能不触发 blur 校验
+                    # （gitee 无头实测：3 次探针全无反馈导致 inline_unsupported），
+                    # 点击后再补一次 JS blur 兜底，确保校验触发。
+                    try:
+                        ActionChains(driver).move_to_element(
+                            pwd_el
+                        ).move_by_offset(
+                            pwd_el.size['width'] // 2 + 30, 5
+                        ).click().perform()
+                    except Exception:
+                        pass
+                    driver.execute_script(
+                        "arguments[0].blur(); "
+                        "arguments[0].dispatchEvent(new Event('blur', {bubbles:true}))",
+                        pwd_el)
             except Exception:
                 pass
 

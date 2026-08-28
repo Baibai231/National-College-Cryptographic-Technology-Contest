@@ -805,6 +805,9 @@ class TestPassword(object):
                 # ── blur 触发内联校验 ──
                 # gitee 等站点在密码框失去焦点（blur）时才显示拒绝反馈，必须失焦。
                 # 用 Selenium ActionChains 真实鼠标移动：移动到密码框右侧空白区域点击。
+                # 无头模式下 ActionChains 坐标点击可能不触发 blur 校验
+                # （gitee 无头实测：inline 探针 3 次全无反馈），点击后再补一次
+                # JS blur 兜底，确保校验触发。
                 try:
                     time.sleep(0.2)
                     ActionChains(driver).move_to_element(
@@ -812,6 +815,13 @@ class TestPassword(object):
                     ).move_by_offset(
                         password_elem.size['width'] // 2 + 30, 5
                     ).click().perform()
+                except Exception:
+                    pass
+                try:
+                    driver.execute_script(
+                        "arguments[0].blur(); "
+                        "arguments[0].dispatchEvent(new Event('blur', {bubbles:true}))",
+                        password_elem)
                 except Exception:
                     pass
                 # ── 等待边框 CSS 过渡结束 ──
