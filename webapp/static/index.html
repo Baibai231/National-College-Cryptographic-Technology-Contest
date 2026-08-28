@@ -98,6 +98,29 @@
     <div id="classify-result" class="mt-3"></div>
   </div>
 
+  <div class="card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong>我的测量任务</strong>
+      <button class="btn btn-sm btn-outline-secondary" onclick="loadTasks()">刷新</button>
+    </div>
+    <div class="small text-muted mb-2">任务后台执行，刷新页面不影响；完成后点击查看结果。</div>
+    <div id="task-list" class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead><tr>
+          <th style="width:120px">任务 ID</th>
+          <th>网站</th>
+          <th style="width:90px">类型</th>
+          <th style="width:100px">状态</th>
+          <th style="width:130px">提交时间</th>
+          <th style="width:70px"></th>
+        </tr></thead>
+        <tbody id="task-tbody">
+          <tr><td colspan="6" class="text-muted text-center">加载中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="d-flex justify-content-between align-items-center mb-2">
     <strong>站点列表（<span id="list-count">-</span>）</strong>
     <div class="btn-group btn-group-sm" role="group">
@@ -964,57 +987,150 @@ function policyBoxHtml(d) {
       ${d.suspicious_login_form ? '<div class="alert alert-warning py-1 mt-1 mb-0">疑似在登录表单上测量，政策数据可能不可信</div>' : ''}
     </div>`;
 }
+// ── 我的测量任务（异步队列）──
+const TASK_STATUS_ZH = {
+  queued: '排队中', running: '测量中', done: '完成', error: '失败', cancelled: '已取消'
+};
+let taskPollTimer = null;
+
+function taskKindLabel(kind) {
+  return kind === 'policy' ? '口令政策' : (kind === 'classify' ? '分类' : kind);
+}
+function taskResultSummary(t) {
+  const r = t.result || {};
+  const p = r.policy || {};
+  const len = p.length && p.length[0] !== 0 ? `长度 [${p.length}]` : '';
+  const flow = r.flow_type || '';
+  return [flow, len, r.flow_zh || ''].filter(Boolean).join(' · ');
+}
+async function loadTasks() {
+  try {
+    const r = await fetch('/api/tasks?limit=20');
+    const d = await r.json();
+    const tbody = document.getElementById('task-tbody');
+    const tasks = d.tasks || [];
+    if (!tasks.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">还没有测量任务，在上方提交一个吧</td></tr>';
+      clearTaskPoll();
+      return;
+    }
+    tbody.innerHTML = tasks.map(t => {
+      const running = t.status === 'queued' || t.status === 'running';
+      const badge = t.status === 'done' ? 'success'
+        : t.status === 'error' ? 'danger'
+        : t.status === 'cancelled' ? 'secondary' : 'primary';
+      const summary = t.status === 'done'
+        ? `<span class="text-muted small">${esc(taskResultSummary(t))}</span>`
+        : (t.error ? `<span class="text-danger small">${esc(String(t.error).slice(0, 40))}</span>` : '');
+      return `<tr>
+        <td class="small"><code>${esc(t.task_id)}</code></td>
+        <td>${esc(t.url)}</td>
+        <td class="small">${taskKindLabel(t.kind)}</td>
+        <td><span class="badge bg-${badge}">${running ? '<span class="spinner-border spinner-border-sm me-1"></span>' : ''}${TASK_STATUS_ZH[t.status] || t.status}</span></td>
+        <td class="small text-muted">${fmtTime(t.created_at)}</td>
+        <td class="text-end">
+          ${t.status === 'done' ? `<button class="btn btn-sm btn-outline-primary" onclick="showTaskResult('${t.task_id}')">查看</button>` : ''}
+          ${t.status === 'queued' ? `<button class="btn btn-sm btn-outline-secondary" onclick="cancelTask('${t.task_id}')">取消</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+    // 有进行中任务时自动轮询（每 5 秒）
+    const hasRunning = tasks.some(t => t.status === 'queued' || t.status === 'running');
+    if (hasRunning) {
+      if (!taskPollTimer) {
+        taskPollTimer = setInterval(() => { loadTasks(); }, 5000);
+      }
+    } else {
+      clearTaskPoll();
+    }
+  } catch (err) {
+    document.getElementById('task-tbody').innerHTML =
+      `<tr><td colspan="6" class="text-danger text-center">任务列表加载失败: ${esc(String(err))}</td></tr>`;
+  }
+}
+function clearTaskPoll() {
+  if (taskPollTimer) { clearInterval(taskPollTimer); taskPollTimer = null; }
+}
+async function cancelTask(taskId) {
+  await fetch(`/api/tasks/${taskId}/cancel`, { method: 'POST' });
+  loadTasks();
+}
+async function showTaskResult(taskId) {
+  const r = await fetch(`/api/tasks/${taskId}`);
+  const t = await r.json();
+  const result = t.result || {};
+  let body;
+  if (t.kind === 'policy') {
+    const p = result.policy || {};
+    const len = p.length && p.length[0] !== 0 ? p.length : null;
+    body = `<div class="alert alert-info py-2">
+        <div><b>${esc(t.url)}</b> — ${t.status === 'done' ? '口令政策测量完成' : '未完成'}</div>
+        <div class="small text-muted">${fmtTime(t.created_at)} 提交 · ${fmtTime(t.finished_at)} 完成</div>
+      </div>
+      ${t.status === 'done' ? policyBoxHtml(result) : ''}
+      ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
+  } else {
+    body = `<div class="alert alert-info py-2">
+        <div><b>${esc(t.url)}</b> — ${TASK_STATUS_ZH[t.status] || t.status}</div>
+        <div class="small text-muted">${fmtTime(t.created_at)} 提交${t.finished_at ? ' · ' + fmtTime(t.finished_at) + ' 完成' : ''}</div>
+      </div>
+      ${t.status === 'done' ? reportTableHtml(
+        result.entry_kind === 'login' ? result : null,
+        result.entry_kind === 'signup' ? result : null, 'v4') : ''}
+      ${result.flow_type ? extraLines(result, '分类') : ''}
+      ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
+  }
+  document.getElementById('modal-title').textContent = '任务结果';
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('detailModal').style.display = 'flex';
+}
+loadTasks();
 document.getElementById('classify-btn').addEventListener('click', async () => {
   const url = document.getElementById('classify-url').value.trim();
   const kind = document.getElementById('classify-kind').value;
   if (!url) { alert('请输入网站 URL'); return; }
   const btn = document.getElementById('classify-btn');
-  btn.disabled = true;
   const box = document.getElementById('classify-result');
-  box.innerHTML = '<div class="spinner-border spinner-border-sm"></div> 正在访问并分类，请稍候…';
+  btn.disabled = true;
   try {
-    if (kind === 'both') {
-      btn.textContent = '分类注册中（约1-3分钟）…';
-      box.innerHTML = '<div class="spinner-border spinner-border-sm"></div> 正在分类注册…';
-      const d1 = await classifyOne(url, 'signup');
-      if (!d1.flow_type && d1.detail) { box.innerHTML = `<div class="alert alert-danger py-2">注册分类失败: ${d1.detail}</div>`; return; }
-      lastClassify = { signup: d1, login: null };
-      btn.textContent = '分类登录中（约1-3分钟）…';
-      box.innerHTML = '<div class="spinner-border spinner-border-sm"></div> 注册完成，正在分类登录…';
-      const d2 = await classifyOne(url, 'login');
-      if (!d2.flow_type && d2.detail) { box.innerHTML = `<div class="alert alert-danger py-2">登录分类失败: ${d2.detail}</div>`; return; }
-      lastClassify = { signup: d1, login: d2 };
-      box.innerHTML = `<div class="alert alert-info py-2 mb-2">
-        <div><b>注册+登录分类</b></div>
-        <div class="mt-2">${reportTableHtml(d2, d1, 'v4')}</div>
-        <div class="mt-2">${extraLines(d1, '注册')}${extraLines(d2, '登录')}</div>
-      </div>
-      ${addSiteBarHtml('两侧一起加入数据库', '登录和注册结果一起入库')}`;
-    } else if (kind === 'policy') {
-      btn.textContent = '测试密码政策中（约 1-3 分钟）…';
-      box.innerHTML = '<div class="spinner-border spinner-border-sm"></div> 正在访问并测量密码政策，请稍候…';
-      const d = await measurePolicy(url);
-      if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail || '测量失败')}</div>`; return; }
-      lastClassify = d;
-      const tip = isPolicyMeasured(d)
-        ? '注册分类 + 实测口令政策一起入库'
-        : (d.method_used === 'classified_only'
-          ? '无口令框，仅存注册分类结果'
-          : '密码政策测试未完成，仅存注册分类结果');
-      box.innerHTML = policyBoxHtml(d) + addSiteBarHtml('加入数据库', tip);
+    // 异步任务模式：提交立即返回 task_id，后台测量，刷新页面不影响。
+    if (kind === 'policy') {
+      const r = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, kind: 'policy', entry_kind: 'signup', method: 'auto' })
+      });
+      const d = await r.json();
+      if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
+      box.innerHTML = `<div class="alert alert-success py-2">
+        <div><b>口令政策测量任务已提交</b></div>
+        <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
+        <div class="small text-muted">后台测量中（约 1-15 分钟）。刷新页面不影响测量，完成后可在下方"我的测量任务"查看结果。</div>
+      </div>`;
     } else {
-      btn.textContent = '分类中（约 1-3 分钟）…';
-      const d = await classifyOne(url, kind);
-      if (!d.flow_type && d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${d.detail || '分类失败'}</div>`; return; }
-      lastClassify = d;
-      box.innerHTML = classifyBoxHtml(d, kind === 'signup' ? '注册' : '登录')
-        + (d.from_database ? '' : addSiteBarHtml('加入数据库', '只存当前结果，另一侧为空'));
+      const entryKind = kind === 'both' ? 'signup' : kind;
+      const r = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, kind: 'classify', entry_kind: entryKind })
+      });
+      const d = await r.json();
+      if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
+      const label = kind === 'both' ? '注册+登录' : (kind === 'signup' ? '注册' : '登录');
+      const hint = kind === 'both'
+        ? '注册分类完成后会自动追加登录分类任务。'
+        : '刷新页面不影响测量，完成后可在下方"我的测量任务"查看结果。';
+      box.innerHTML = `<div class="alert alert-success py-2">
+        <div><b>${label}分类任务已提交</b></div>
+        <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
+        <div class="small text-muted">${hint}</div>
+      </div>`;
     }
+    loadTasks();
   } catch (err) {
     box.innerHTML = `<div class="alert alert-danger py-2">请求失败: ${err}</div>`;
   } finally {
     btn.disabled = false;
-    btn.textContent = '开始分类';
   }
 });
 
