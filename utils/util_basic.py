@@ -91,12 +91,18 @@ def _site_filter(site_name):
 
 def get_logger(site_name):
     log_dir = get_absolute_dir_path() + "/../logs/"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    # 并发安全：多 worker 同时创建同一目录可能 FileExistsError（实测
+    # runoob/vercel/wix 并发跑时日志目录竞争），exist_ok=True 幂等。
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+    except Exception:
+        pass
 
     site_dir = log_dir + "/" + site_name + "/"
-    if not os.path.exists(site_dir):
-        os.makedirs(site_dir)
+    try:
+        os.makedirs(site_dir, exist_ok=True)
+    except Exception:
+        pass
 
     # 关键：先把当前线程绑定到该站点，sink 的 filter 据此路由日志。
     set_log_site(site_name)
