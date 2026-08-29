@@ -242,6 +242,28 @@ Amazon/Khan/Roblox/LinkedIn 等国际站），× signup/login = 300 条，
 - LinkedIn [6,None] 新代码完整测出（无上限站耗时 60 分钟，探针多+
   每探针 40s，数据完整可信）
 
+### 24. 无上限站耗时优化 + 303 站全量复测（2026-08-29）
+
+无上限站（LinkedIn/Khan/Roblox）长度二分顶到 128 需 15-25 分钟（每探针
+~45s 服务器），用户体验差。
+
+- [x] `binary_search_max` 无上限早停：`mi >= 110` 仍被接受且输入框无
+      maxlength 属性 → 判定无真实上限（max=None），提前结束二分。
+      LinkedIn 实测：60 分钟 → 655 秒（11 分钟），提速 5 倍，结果
+      [6,None] 完整可信。阈值 110 避开 gitee 实测 max=102 等真实上限站。
+
+303 站全量复测（misc 全部列表 + 权威数据合并去重，× signup/login =
+606 条，耗时 3 小时，失败仅 7）：
+- **17 个唯一站测出完整长度政策（33 条）**，31 条可信（qidian 2 条
+  or_rule_likely 诚实标记——起点 6 位单类被拒但模型无类要求，可能
+  OR 规则）。
+- 新增：ali213 [8,8]+dig=2（固定 8 位）、gitee login 稳定 [8,102]。
+- 国际站稳定复现：LinkedIn [6,None]、Khan [8,None]、Roblox [8,None]。
+- 分类分布：direct_password 97、human_blocked 122、unknown 274
+  （无网页认证站为主）、email_only 39、otp_only 29 等。
+
+数据：`reports/archive/full303_policy_20260829.jsonl`。
+
 ### 19. 全量验证 3 轮 + 无头批量密码测量修复（2026-08-28）
 
 背景：合并后的代码（登录→注册兜底、iframe 口令框测量、自洽校验等）需
