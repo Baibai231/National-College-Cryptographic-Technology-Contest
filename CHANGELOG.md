@@ -264,6 +264,26 @@ Amazon/Khan/Roblox/LinkedIn 等国际站），× signup/login = 300 条，
 
 数据：`reports/archive/full303_policy_20260829.jsonl`。
 
+### 25. GitHub 负对照恢复 + OR 规则阈值精确化（2026-08-29）
+
+问题：GitHub 负对照 "a" 变 inconclusive（8-28 修复 aria-invalid 后引入）——
+"Validation failed"（服务端校验完成且失败的最终态）被当 pending 永久等待，
+轮询结束无信号 → 负对照不成立 → 整站回退。
+
+修复：
+- [x] field-state 中 "Validation failed" 仍标 pending（可能瞬态），但
+      Python 轮询层持续 2 秒未变 valid → 判 rejected（"a" 实测
+      Validation failed 稳定 12 秒是最终拒绝态；合法密码立即 valid
+      不受影响）。最终复验不改判（transient 正则匹配）。
+- [x] 长度替代分支回溯已生效：GitHub `length_alternative` 从 16 精确到
+      **15**（14 拒、15 接受——精确还原 "≥15 位" 替代分支）。
+
+GitHub 本机完整实测（有头+代理）：
+- 分类 direct_password ✓；inline 负对照成立 ✓；长度 [8,72] ✓
+- _or_rule：8 位单类全拒、lower+digit=True、**length_alternative=15** ✓
+- 服务器端 GitHub 入口受 IP 反爬影响（no_web_signup/worker 崩溃），
+  属外部环境限制，非代码问题。
+
 ### 19. 全量验证 3 轮 + 无头批量密码测量修复（2026-08-28）
 
 背景：合并后的代码（登录→注册兜底、iframe 口令框测量、自洽校验等）需
