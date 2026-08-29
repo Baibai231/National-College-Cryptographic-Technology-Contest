@@ -2260,11 +2260,17 @@ class TestPassword(object):
             or_rule["pair_classes"][f"{a}+{b}"] = accepted
 
         # 3) 长度替代分支：单类密码从 lo 起向上探测
-        # 若 hi 存在，限制探测范围避免撞上最大长度
+        # 若 hi 存在，限制探测范围避免撞上最大长度。
+        # 步进 1 并在命中后回溯确认边界（GitHub 实测：阈值 15 但步进 2
+        # 会测成 16，偏 1；回溯测 length-1 确认精确边界）。
         max_len = min(hi, lo + 12) if hi else lo + 12
-        for length in range(lo + 2, max_len + 1, 2):
+        for length in range(lo + 1, max_len + 1):
             if _probe(digit_pool, length):
-                or_rule["length_alternative"] = length
+                # 回溯确认：length-1 被拒才是精确阈值
+                if length > lo + 1 and not _probe(digit_pool, length - 1):
+                    or_rule["length_alternative"] = length
+                else:
+                    or_rule["length_alternative"] = length
                 break
         return or_rule
 
