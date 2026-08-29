@@ -221,6 +221,27 @@ Amazon/Khan/Roblox/LinkedIn 等国际站），× signup/login = 300 条，
 
 数据：`reports/archive/expanded150_policy_20260829.jsonl`。
 
+### 23. 负对照判定修复 + 无上限站验证（2026-08-29）
+
+扩大测试后逐个攻破 direct_password 失败站，发现并修复：
+
+- [x] **aria-invalid=false 误判为接受信号**：Discord 等 blur 不校验的站，
+      "a" 填入后字段保持 aria-invalid=false → 被误判为"接受"→ 负对照
+      变成"接受成立"→ 整站不可信。aria-invalid=false 只是无错误标记，
+      不等于校验通过。修复：不 break 继续等 observer/错误文本；轮询
+      3 秒无信号提前结束走负对照差分判定。
+- [x] 负对照阶段（负对照未建立）不提前 break：GitHub 的 "a" 拒绝靠
+      observer 捕获（"Password is too short"），提前退出会漏捕获。
+      仅负对照已确认后的合法密码测试才 3s 提前 break。
+- [x] 服务器部署流程修复：push 后未重启 webapp 导致旧代码运行
+      （.deployed-head 落后），已补重启并更新标记。
+
+验证（服务器实测）：
+- 百度 [8,14] ✓、gitee [8,102] ✓（无回归）
+- Discord 负对照正确不成立 → 回退分类（修复生效）
+- LinkedIn [6,None] 新代码完整测出（无上限站耗时 60 分钟，探针多+
+  每探针 40s，数据完整可信）
+
 ### 19. 全量验证 3 轮 + 无头批量密码测量修复（2026-08-28）
 
 背景：合并后的代码（登录→注册兜底、iframe 口令框测量、自洽校验等）需
