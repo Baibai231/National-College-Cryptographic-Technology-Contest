@@ -1001,7 +1001,11 @@ class TestPassword(object):
                         # 由"负对照差分"逻辑在轮询结束后判定。
                         # 已过 3 秒仍无任何信号 → 提前结束轮询走差分判定
                         # （避免 aria-invalid=false 的站每测等满 8 秒）。
+                        # 负对照阶段（负对照未建立时）不提前 break：GitHub
+                        # 的 "a" 拒绝靠 observer 捕获（"Password is too
+                        # short"），提前退出会漏捕获导致负对照不成立。
                         if (field_state and field_state.get("reason") == "aria-invalid=false"
+                                and self._negative_control_confirmed
                                 and time.time() - _probe_start > 3.0):
                             break
                         # pending 状态（async-verifying）不 break，继续轮询等真实结果
