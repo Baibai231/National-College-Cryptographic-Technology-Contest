@@ -920,8 +920,9 @@ class TestPassword(object):
                                         reason: 'async-verifying: ' + vm.substring(0, 60)};
                             }
                             // GitHub 异步校验的通用失败消息 "Validation failed"：
-                            // 对合法密码是瞬态（服务端校验中），对非法密码是最终态。
-                            // 无法仅凭消息区分，必须标记 pending 让轮询等到最终态。
+                            // 对合法密码是瞬态（服务端校验中），对非法密码是
+                            // 最终态。无法仅凭消息区分：首次出现标 pending，
+                            // Python 轮询层若 2 秒后仍稳定则判 rejected。
                             if (/^validation failed$/i.test(vm.trim())
                                 && !/must|should|at least|at most|contain|required/i.test(vm)) {
                                 return {rejected: false, soft: false, gated: gated,
@@ -1009,8 +1010,16 @@ class TestPassword(object):
                                 and time.time() - _probe_start > 3.0):
                             break
                         # pending 状态（async-verifying）不 break，继续轮询等真实结果
-                        # 软信号（门控表单的 aria-invalid=true / error class）：
-                        # 不在此判拒绝，继续第二层用密码专属错误消息佐证。
+                        # GitHub "Validation failed" 稳定判定：首次出现是
+                        # pending（可能瞬态），但持续 2 秒以上未变 valid →
+                        # 服务端校验已完成且失败 → 判 rejected（"a" 实测
+                        # Validation failed 稳定 12 秒是最终拒绝态）。
+                        if (field_state and field_state.get("pending")
+                                and "validating-failed-state" in (field_state.get("reason") or "")
+                                and time.time() - _probe_start > 2.0):
+                            fb_result = {"rejected": True, "type": "field-state",
+                                         "message": "html5-invalid: Validation failed (stable)"}
+                            break
 
                         # 第二层：Observer/静态扫描反馈
                         # 只关注真正的错误消息（error-element / observer-added-el），
