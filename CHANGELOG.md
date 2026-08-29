@@ -198,6 +198,29 @@ inline 检测深度优化（依失败模式逐轮修复）：
 
 数据：`reports/archive/full150_policy_20260829.jsonl`。
 
+### 22. 扩大测试范围（+150 新站，含国际站）（2026-08-29）
+
+扩大范围：在 153 站基础上，合并 misc 全部列表（cn_new50/foreign100/
+sites_new_30 等）去掉已测，新增 149 站（含 Google/YouTube/Facebook/
+Amazon/Khan/Roblox/LinkedIn 等国际站），× signup/login = 300 条，
+耗时 1.4 小时，失败仅 9（97% 完成）。
+
+新增测出完整政策的站（7 个，国际站全部成功）：
+- 七牛 [8,32]、DNSPod [8,20]、起点 [6,18]、ali213 [8,20]
+- **LinkedIn [6,None]、Khan Academy [8,None]、Roblox [8,None]**（国际站）
+
+分类分布：unknown 143（无网页认证站为主，youth.cn 等实测无任何认证
+元素，unrecognized_page 是诚实记录）、human_blocked 56、direct_password
+43、email_only 33 等。
+
+修复：
+- [x] `get_logger` makedirs 并发竞争 FileExistsError（runoob/vercel/wix
+      实测多 worker 并发创建同目录），exist_ok=True 幂等化。
+- [x] OR 规则长度替代分支步进 1 + 回溯确认精确边界（GitHub 阈值 15
+      不再偏 1）。
+
+数据：`reports/archive/expanded150_policy_20260829.jsonl`。
+
 ### 19. 全量验证 3 轮 + 无头批量密码测量修复（2026-08-28）
 
 背景：合并后的代码（登录→注册兜底、iframe 口令框测量、自洽校验等）需
