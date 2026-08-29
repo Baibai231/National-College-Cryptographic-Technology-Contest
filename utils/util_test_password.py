@@ -2737,7 +2737,22 @@ class TestPassword(object):
                 f"binary_search_max: lo={lo}, hi={hi}, mi={mi}, "
                 f"testing '{modified_password}' (len={len(modified_password)})"
             )
-            if self.test_one_password(modified_password):
+            accepted = self.test_one_password(modified_password)
+            # ── 无上限早停（LinkedIn/Khan/Roblox 实测）──
+            # 长度上探到 110+ 仍被接受 + 输入框无 maxlength 属性 → 站点
+            # 几乎必然无真实上限（gitee 实测 max=102，真实站罕见 >110）。
+            # 此时继续顶到 128 每探针 ~45s 需 15+ 分钟，提前确认 max=None
+            # 省最后 2-3 轮。maxlength 属性是"强制截断上限"最权威来源。
+            if accepted and mi >= 110:
+                _ml = self._read_password_maxlength()
+                if _ml is not None:
+                    self.my_logger.info(
+                        f"输入框 maxlength={_ml} 即为长度上限，提前结束二分")
+                    return _ml
+                self.my_logger.info(
+                    f"长度上探到 {mi} 仍被接受且无 maxlength，判定无真实上限 (max=None)")
+                return None
+            if accepted:
                 lo = mi
             else:
                 # 验证性重试
