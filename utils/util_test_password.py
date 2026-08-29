@@ -885,6 +885,7 @@ class TestPassword(object):
                     self._gated_form = True
                 # 门控表单下等待时长可缩短（密码专属错误在 blur 后 1~2s 内渲染）
                 deadline = time.time() + (3 if gated_form else 8)
+                _probe_start = time.time()
                 while time.time() < deadline:
                     try:
                         # 第一层：密码字段自身状态（validity / :invalid / aria-invalid / class）
@@ -993,9 +994,15 @@ class TestPassword(object):
                             fb_result = {"rejected": True, "type": "field-state",
                                          "message": field_state.get("reason", "")}
                             break
-                        if field_state and field_state.get("reason") == "aria-invalid=false":
-                            fb_result = {"rejected": False, "type": "field-state",
-                                         "message": "aria-invalid=false"}
+                        # aria-invalid=false 只是"无错误标记"，不等于校验通过
+                        # （Discord 实测：blur 不校验时"a"也保持 false，误判为
+                        # 接受 → 负对照不可信 → 整站无法测）。不在此 break，
+                        # 继续轮询等 observer/错误文本证据；若始终无信号，
+                        # 由"负对照差分"逻辑在轮询结束后判定。
+                        # 已过 3 秒仍无任何信号 → 提前结束轮询走差分判定
+                        # （避免 aria-invalid=false 的站每测等满 8 秒）。
+                        if (field_state and field_state.get("reason") == "aria-invalid=false"
+                                and time.time() - _probe_start > 3.0):
                             break
                         # pending 状态（async-verifying）不 break，继续轮询等真实结果
                         # 软信号（门控表单的 aria-invalid=true / error class）：
