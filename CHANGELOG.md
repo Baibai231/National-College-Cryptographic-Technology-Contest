@@ -474,6 +474,14 @@ GitHub 本机完整实测（有头+代理）：
 
 | 日期时间 | 改动人 | 内容 | 相关文件 | 推送状态 |
 |---|---|---|---|---|
+| 2026-09-04 | cjx | inline 找不到 admissible 单点故障修复：降级为 maxlength 兜底（length[1]）+ _no_password_feedback 标记，与 full-form 口径对齐 | utils/site_agnostic_tester.py | 未推送 |
+| 2026-09-03 | cjx | inline 方法测试顺序调整（长度先于组合）+ 备选池扩充（加大小写/符号候选）；百度、腾讯云回归通过 | utils/site_agnostic_tester.py、utils/util_test_password.py | 未推送 |
+| 2026-09-03 | cjx | 游民星空 placeholder 误判修复：Layer 6 由拼接整段改为逐行检查，占位符「密码 (6-20位…」不再被无关「不能为空」干扰误判；gamersky 端到端验证 length[1]=20 + _no_password_feedback | full_form_tester/password_error_parser.py | 未推送 |
+| 2026-09-03 | cjx | Chrome 152/ChromeDriver 版本不匹配修复：去 version_main=150 硬编码、新增 _installed_chrome_major() 本机版本探测、_find_cached_chromedriver 版本感知查找、npmmirror 镜像下载 152 驱动 | utils/util_test_password.py | 未推送 |
+| 2026-08-23 | cjx | 游民星空 placeholder 误判诊断（待修：政策描述过滤/admissible 符号候选/单点故障） | full_form_tester/ | 未推送 |
+| 2026-08-23 | cjx | gitee 强度计误判 + xuetangx 参数矛盾修复 | full_form_tester/form_submitter.py、password_error_parser.py | 未推送 |
+| 2026-08-23 | cjx | 百度长度 min=32 误报修复（二分上界截断）+ 组合模型局限记录 | utils/util_test_password.py | 未推送 |
+| 2026-08-23 | cjx | 密码政策测量链路激活 + 首批 13 站实测（5 站出完整政策） | utils/site_agnostic_tester.py、utils/util_test_password.py、full_form_tester/ | 未推送 |
 | 2026-08-15 | Kimi（Mac） | 展示简化：类型名直白化（有口令框）、方法清单去状态词、删方法说明 | webapp/static/index.html、scripts/build_site_database.py、tests/ | 本次提交 |
 | 2026-08-15 | Kimi（Mac） | 数据层/展示层分离：reports/misc 回滚原始格式、组合式方法只由 webapp 计算（combo_methods）、删除 reaggregate 回写脚本、HANDOFF 记录铁律 | signup_flow_classifier/、webapp/、scripts/、reports/、tests/、HANDOFF.md | 本次提交 |
 | 2026-08-15 | Kimi（Mac） | 方法清单组合式改版：手机号+验证码/邮箱+密码组合、删除步骤 tab、类型行加主方法、状态三态解释、reaggregate_methods 离线重聚合 | signup_flow_classifier/、scripts/、webapp/、tests/ | 本次提交 |
@@ -1210,3 +1218,108 @@ none；未提密码框按 none），不覆盖原有方法与描述字段（已�
 - icourse163 诊断：登录/注册均判"有口令框"（爱课程账号+密码），检测到
   短信/邮箱 tab 但因 React 渲染时序点击瞬间元素消失（与 cctv/51 同类
   已记录边界），短信验证码/邮箱视图方法未抓到——分类正确，方法不全。
+
+### 42. 密码政策测量链路激活 + 首批 13 站实测（2026-08-18 ~ 08-23）
+
+激活「参赛代码」侧的密码政策测量（TestPassword + site_agnostic_tester）：
+- 流程：注册页发现 → 密码框定位 → 找可接受密码（admissible）→ 二分测长度
+  min/max → 组合测字符类型（大小写/数字/符号、"N 类取 M"）→ permissive
+  字符/序列/泄露密码。inline（内联实时反馈，判据=密码框变红/错误元素）为主，
+  full-form（提交读错误）兜底。
+- 输出 logs/<域名>/policy_<域名>.json（length + restrictive + permissive）。
+- 安全边界：不填身份信息、不点发送验证码、不真正提交注册、不创建账号。
+- 首批 13 站实测：5 站测出完整政策（百度 [8,14]、gitee [8,102]、学堂在线
+  [8,16]、网易 163 [8,16]、腾讯云 [8,20]），7 站仅流程分类（游民星空/3dmgame/
+  icourse163/知乎/bilibili/china/91），1 站无网页注册（aistudy666）。
+
+### 43. 百度长度误报 min=32 修复 + 组合模型局限记录（2026-08-23）
+
+- [x] 修复 `binary_search_min` 二分上界未截断导致的长度误报：百度真实长度
+  8~14，但二分在 [0,32] 区间把 16~32 的"太长被拒"误判成"太短被拒"，一路
+  顶到上界报 min=32。修复：上界截断到已确认合法的密码长度
+  （`hi = min(min_interval[1], initial_len)`）。复测 min=8/max=14 正确。
+- [x] 记录组合模型已知局限：百度真实政策为「字母/数字/标点至少包含 2 种」，
+  引擎的 r_cmb 枚举（14/24/34/44）无法表达"任意 N 类取 M"，被近似为
+  r_dig_min=1 + r_cmb34=True，代码注释标记为已知局限。
+
+### 44. gitee 强度计误判 + xuetangx 参数矛盾修复（2026-08-23）
+
+- [x] gitee 误落 full-form 且把"密码强度指示条"当拒绝信号：`_capture_dom_errors`
+  搜索范围从整页收窄到密码框 ancestor chain + 最近 form；强度指示器
+  （strength/强/弱/中）不再判为拒绝。稳定回 inline，结果 [8,102]。
+- [x] xuetangx 参数矛盾（r_cmb33 与 r_cmb44 同时为 True、长度误测 9-32）：
+  修复长度扩展时字符比例稀释导致的复杂度/长度混淆，复测 [8,16]。
+
+### 45. 游民星空 placeholder 误判诊断（2026-08-23，进行中）
+
+- [x] 诊断：游民星空密码框 placeholder「密码 (6-20位字母与数字、符号组合」
+  是常驻静态文本，不是错误；密码框无客户端实时校验（边框恒灰、无错误元素），
+  maxlength=20。该 placeholder 经提交前后 HTML diff（source_diff）泄漏进
+  PasswordErrorParser，被中文正则（密码+字母/数字/符号/组合）误判为拒绝。
+- [x] 待修 1：password_error_parser 加"政策描述型文本"过滤（`_is_policy_description`
+  区分声明式 placeholder「密码(N位…组合)」与祈使式错误「密码需包含…」）；
+  并修复 Layer 6 此前把 source_diff 多行拼成一段导致占位符被无关「不能为空」
+  动词干扰——改为逐行 `_check_password_error`。gamersky 端到端复测通过：
+  不再误报 `密码 (6-20位…`，最终走 maxlength 兜底得 `length[1]=20` +
+  `_no_password_feedback=True`（游民星空密码框确实无专属反馈）。
+- [x] 待修 2：find_admissible_password 候选池只含字母+数字（gen_random_str_no_symbol），
+  要求符号的站永远找不到合法密码（鸡生蛋）→ 已加含符号候选（见 47）。
+- [x] 待修 3：admissible 找不到时 run_password_policy_test 直接 return 空 policy
+  （单点故障）→ 已降级为 maxlength 兜底（见 48）。
+
+### 46. Chrome 152/ChromeDriver 版本不匹配修复（2026-09-03）
+
+- [x] 背景：`SessionNotCreatedException: This version of ChromeDriver only
+  supports Chrome version 150; Current browser version is 152.0.7977.65`。
+  根因 `_get_shared_driver` 硬编码 `version_main=150`，且 `_find_cached_chromedriver`
+  按文件大小选缓存（非版本匹配），拿到旧 150 驱动。
+- [x] 修复：
+  - 删除两处 `version_main=150` 硬编码，恢复 `uc.Chrome(options=...)` 默认；
+  - 新增 `_installed_chrome_major()`：Windows 优先解析 Chrome 安装目录下
+    `Application\<主版本>.<...>` 子目录名（比 BLBeacon 注册表可靠——后者常空），
+    Linux/macOS 回退 `chrome --version`；
+  - `_find_cached_chromedriver` 版本感知：命中缓存目录路径 `/<主版本>.<...>/`
+    且与本机 Chrome 主版本一致才采用；
+  - 经 npmmirror 镜像 `cdn.npmmirror.com/binaries/chrome-for-testing/` 下载
+    152.0.7977.75 驱动（Google CDN DNS 被墙，`googlechromelabs.github.io`
+    无法解析；本机无代理）。
+
+### 47. inline 方法测试顺序 + 备选池扩充（2026-09-03）
+
+背景：inline 方法此前先测组合（identify_combination_requirements）再测长度
+（identify_min_and_max_length_limitations），组合消歧最脆弱且每步都触发
+test_one_password（可能限速），放在长度前可能污染；同时备选池只有「小写+数字」，
+要求符号的站（如腾讯云「需同时包含数字、字母以及特殊符号」）永远找不到合法
+密码（鸡生蛋，即待修 2）。
+
+- [x] 顺序调整（utils/site_agnostic_tester.py）：`run_password_policy_test`
+  长度测试先于组合测试——长度是基础测量（二分 + 验证重试 + maxlength 兜底），
+  先定死；组合放后面。长度种子用 admissible（本就不读 r_cmb*），顺序交换
+  不污染长度种子。百度回归：min=8/max=14、r_dig_min=1 与改前一致。
+- [x] 备选池扩充（utils/util_test_password.py）：`admissible_password_list`
+  8/9/10 长度候选从「纯小写+数字」扩为四档——小写+数字（基础）、
+  大写+小写+数字、小写+数字+符号、大写+小写+数字+符号，并按「先基础后加符号」
+  排序（符号候选放末尾，避免污染不要求符号的站）。腾讯云回归：候选 1-8（无符号）
+  全被拒「需同时包含数字、字母以及特殊符号」，候选 9 `k4m2x9a!` 被接受，
+  最终 policy length=[8,20]、r_dig_min=1、r_sps_min=1、r_cmb24=True。
+- [x] 待修 2 关闭：find_admissible_password 候选池加含符号候选已完成。
+
+### 48. inline 找不到 admissible 单点故障修复（2026-09-04）
+
+背景：`site_agnostic_tester.py::run_password_policy_test` 在
+`find_admissible_password` 找不到合法密码时直接 `return` 空 policy（单点故障），
+丢失「至少测出长度上限」的机会。full-form 侧早已有成熟降级
+（`full_form_tester.py`：浏览器死 → 是否见过明确错误 → maxlength 兜底），
+inline 侧此前缺失对应处理。
+
+- [x] 修复（utils/site_agnostic_tester.py）：`not admissible` 分支改为三级降级——
+  (1) 浏览器死 → 标 `_browser_dead` 返回；(2) 有 maxlength → `length[1]=maxlen`
+  + `_no_password_feedback=True` + `_note`；(3) 无 maxlength → 按「是否见过密码
+  专属拒绝信号」给诚实 note（真实表单但组合超出备选池 / 无拒绝信号无法验证）。
+  输出字段（`_no_password_feedback`/`_note`/`length[1]`）与 full-form 口径对齐。
+- [x] 关键决策：只用 maxlength 兜底（浏览器强制截断的硬上限，属实际政策），
+  不解析 placeholder 里的「N-M位」——placeholder 是静态提示文本，违反
+  「以密码框变红拒绝为准」铁律。
+- [x] 验证：`py_compile` 通过；改动全在 `not admissible` 分支内，正常站点
+  （找到 admissible 的）结构性不受影响。降级分支端到端触发需
+  「inline 判定 + 备选池全失败」站点，当前环境无稳定目标，待实测触发。

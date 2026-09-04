@@ -173,10 +173,79 @@ def _is_real_chromedriver_binary(path):
     return False
 
 
+def _installed_chrome_major():
+    """返回本机 Chrome 主版本号（如 152），失败返回 None。
+
+    Windows 优先解析 Chrome 安装目录下的版本号子目录名（如
+    ``Application\\152.0.7977.65\\``）——比 BLBeacon 注册表可靠（后者常为空
+    或不存在）。Linux/macOS 退化为执行 ``chrome --version`` 解析。
+    """
+    ver_re = re.compile(r"^(\d+)\.\d+\.\d+\.\d+$")
+
+    # Windows：版本号目录名（Chrome 自动升级后目录名随版本变化）
+    if os.name == "nt":
+        bases = []
+        pf = os.environ.get("PROGRAMFILES", r"C:\Program Files")
+        pf86 = os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")
+        local = os.environ.get("LOCALAPPDATA", "")
+        bases += [
+            os.path.join(pf, "Google", "Chrome", "Application"),
+            os.path.join(pf86, "Google", "Chrome", "Application"),
+        ]
+        if local:
+            bases.append(os.path.join(local, "Google", "Chrome", "Application"))
+        majors = []
+        for base in bases:
+            if not os.path.isdir(base):
+                continue
+            try:
+                names = os.listdir(base)
+            except OSError:
+                continue
+            for name in names:
+                m = ver_re.match(name)
+                if m and os.path.isdir(os.path.join(base, name)):
+                    majors.append(int(m.group(1)))
+        if majors:
+            return max(majors)
+        return None
+
+    # Linux/macOS：执行 chrome --version（可能因 Chrome 已运行而被吞掉输出）
+    import subprocess
+    import shutil
+    chrome_bin = os.environ.get("SITES_CHROME_BIN")
+    cands = [c for c in (
+        chrome_bin,
+        shutil.which("google-chrome"),
+        shutil.which("google-chrome-stable"),
+        shutil.which("chromium"),
+        shutil.which("chromium-browser"),
+    ) if c]
+    for c in cands:
+        try:
+            out = subprocess.run(
+                [c, "--version"], capture_output=True, text=True, timeout=8
+            ).stdout
+            m = re.search(r"(\d+)\.\d+\.\d+\.\d+", out)
+            if m:
+                return int(m.group(1))
+        except Exception:
+            continue
+    return None
+
+
 def _find_cached_chromedriver():
-    """在 ~/.wdm 缓存中搜索真正的 chromedriver 二进制，自动 chmod +x"""
+    """在 ~/.wdm 缓存中搜索真正的 chromedriver 二进制，自动 chmod +x。
+
+    只返回与本机 Chrome 主版本一致的驱动——Chrome 自动升级后，旧版本驱动
+    会因 SessionNotCreatedException（版本不匹配）崩溃。没有匹配时返回 None，
+    交由 undetected_chromedriver 自行下载正确版本。
+    """
     candidates = []
     wdm_root = os.path.join(os.path.expanduser("~"), ".wdm", "drivers", "chromedriver")
+    chrome_major = _installed_chrome_major()
+    # 路径目录名中的主版本：.../win64/150.0.7871.124/chromedriver-win64/...
+    ver_dir_re = re.compile(r"/(\d+)\.\d+\.\d+\.\d+/")
     if os.path.isdir(wdm_root):
         for root, _dirs, files in os.walk(wdm_root):
             for f in files:
@@ -184,11 +253,17 @@ def _find_cached_chromedriver():
                     candidates.append(os.path.join(root, f))
     # 按文件大小降序排列——真正的 21MB 二进制远大于 1.3MB 文本文件
     for c in sorted(candidates, key=os.path.getsize, reverse=True):
-        if _is_real_chromedriver_binary(c):
-            st = os.stat(c)
-            if not (st.st_mode & stat.S_IXUSR):
-                os.chmod(c, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-            return c
+        if not _is_real_chromedriver_binary(c):
+            continue
+        # 版本匹配检查：仅当能确定本机 Chrome 版本时才过滤，否则退回原行为
+        if chrome_major is not None:
+            m = ver_dir_re.search(c.replace("\\", "/"))
+            if not m or int(m.group(1)) != chrome_major:
+                continue
+        st = os.stat(c)
+        if not (st.st_mode & stat.S_IXUSR):
+            os.chmod(c, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        return c
     return None
 
 
@@ -294,9 +369,9 @@ def _get_shared_driver():
         options.add_argument("--no-proxy-server")
 
     if _CHROMEDRIVER_BIN:
-        _SHARED_DRIVER = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN, version_main=150)
+        _SHARED_DRIVER = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN)
     else:
-        _SHARED_DRIVER = uc.Chrome(options=options, version_main=150)
+        _SHARED_DRIVER = uc.Chrome(options=options)
 
     _SHARED_DRIVER.maximize_window()
     _SHARED_DRIVER.set_page_load_timeout(25)
@@ -417,16 +492,25 @@ class TestPassword(object):
         # 2026-08 更新：GitHub 新政策为"至少15位，或至少8位+数字+小写"，
         # 且拒绝泄露密码与连续序列。旧密码池（2023年，6-10位）已全部失效。
         # 新候选已实测通过（非泄露、非序列）。
+        # 备选池按「宽松→严格」排序：小写+数字 在最前，随后补 大写 / 符号 / 四类。
+        # 宽松站（符号允许但非必需）仍命中首个候选，行为不变；要求大写/符号的站
+        # 才会走到后面的混合候选，避免「找不到 admissible → 空 policy」。
+        # 符号统一用 '!'（'@' 部分站当邮箱误判）。
         self.admissible_password_list = {
             "8": [
                 "k4m2x9a7", "v5n3b8q1", "p7c3w6z2", "t9f4d1s6",
-                "x6q1z9m3", "n2b7w4k8"
+                "x6q1z9m3", "n2b7w4k8",
+                "k4M2x9a7", "v5N3b8q1",
+                "k4m2x9a!", "v5n3b8q!",
+                "k4M2x9a!", "v5N3b8q!"
             ],
             "9": [
-                "k4m2x9a7t", "v5n3b8q1w"
+                "k4m2x9a7t", "v5n3b8q1w",
+                "k4M2x9a7t", "k4m2x9a7!", "k4M2x9a7!"
             ],
             "10": [
-                "k4m2x9a7ty", "v5n3b8q1wf"
+                "k4m2x9a7ty", "v5n3b8q1wf",
+                "k4M2x9a7ty", "k4m2x9a7t!", "k4M2x9a7t!"
             ]
         }
         self.my_logger = my_logger

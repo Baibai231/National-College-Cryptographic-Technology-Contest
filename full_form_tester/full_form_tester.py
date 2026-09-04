@@ -466,11 +466,22 @@ class FullFormPolicyTester:
                 self.admissible_password = cached
                 return cached
 
-        # 按长度递增搜索
+        # 按长度递增搜索：每个长度同时准备「无符号」(字母+数字) 和「含符号」(字母+数字+符号)
+        # 候选，覆盖要求符号的政策（如游民星空"字母与数字、符号组合"）。否则要求符号的站
+        # 永远找不到合法密码（鸡生蛋：找不到 admissible → 进不了后续符号测试 → 直接交白卷）。
+
+        def _with_symbol(base_len: int) -> str:
+            # 保证至少 1 小写 + 1 大写 + 1 数字 + 1 符号（'!'，经 permissive 测试确认
+            # 合法且不破坏 163 等站点），长度 = base_len。
+            return "Ab3" + uusg.gen_random_str_no_symbol(max(0, base_len - 4)) + "!"
+
         admissible_list = {
-            "8":  [uusg.gen_random_str_no_symbol(8), uusg.gen_random_str_no_symbol(8)],
-            "9":  [uusg.gen_random_str_no_symbol(9), uusg.gen_random_str_no_symbol(9)],
-            "10": [uusg.gen_random_str_no_symbol(10), uusg.gen_random_str_no_symbol(10)],
+            "8":  [uusg.gen_random_str_no_symbol(8), uusg.gen_random_str_no_symbol(8),
+                   _with_symbol(8)],
+            "9":  [uusg.gen_random_str_no_symbol(9), uusg.gen_random_str_no_symbol(9),
+                   _with_symbol(9)],
+            "10": [uusg.gen_random_str_no_symbol(10), uusg.gen_random_str_no_symbol(10),
+                   _with_symbol(10)],
         }
 
         # 限制最大搜索长度（超过此长度仍未找到 → 极可能是登录表单）
@@ -489,6 +500,7 @@ class FullFormPolicyTester:
                 candidates = [
                     admissible_list["10"][0] + suffix,
                     admissible_list["10"][1] + suffix,
+                    admissible_list["10"][2] + suffix,
                 ]
 
             for pwd in candidates:
@@ -794,18 +806,36 @@ class FullFormPolicyTester:
                     self.my_logger.warning(
                         "admissible 搜索失败，但见过明确错误消息 → 真实注册表单，非登录表单"
                     )
-                elif self._is_likely_login_form(policy):
-                    self.my_logger.warning(
-                        "admissible 搜索失败且默认策略全为零，疑似登录表单"
-                    )
-                    policy["_suspicious_login_form"] = True
-                    policy["_note"] = (
-                        "无法找到合法密码且默认策略全为零，"
-                        "且未检测到任何明确密码错误消息。"
-                        "当前页面可能是登录表单而非注册表单。"
-                        "密码政策测量结果不可信。"
-                    )
-                    return policy
+                else:
+                    # ── 无动态反馈站点降级：从静态 maxlength 提取硬上限 ──
+                    # 有些站（如游民星空）密码框内联/提交都不给专属错误，无法用
+                    # "填-看拒绝"测政策；但 maxlength 是浏览器强制硬上限，可作
+                    # length 上界兜底，避免交全零白卷，也避免被误判为登录表单。
+                    maxlen = self._read_password_maxlength()
+                    if maxlen:
+                        policy["length"][1] = maxlen
+                        policy["_no_password_feedback"] = True
+                        policy["_note"] = (
+                            "密码框无动态反馈（内联/提交均无专属错误），"
+                            f"仅从 maxlength 提取长度上界 {maxlen}，"
+                            "其余政策无法实测。"
+                        )
+                        self.my_logger.warning(
+                            f"无密码反馈站点：仅 maxlength={maxlen} 兜底，返回部分政策"
+                        )
+                        return policy
+                    if self._is_likely_login_form(policy):
+                        self.my_logger.warning(
+                            "admissible 搜索失败且默认策略全为零，疑似登录表单"
+                        )
+                        policy["_suspicious_login_form"] = True
+                        policy["_note"] = (
+                            "无法找到合法密码且默认策略全为零，"
+                            "且未检测到任何明确密码错误消息。"
+                            "当前页面可能是登录表单而非注册表单。"
+                            "密码政策测量结果不可信。"
+                        )
+                        return policy
                 self.my_logger.warning("Cannot find admissible password, returning empty policy.")
                 return policy
 
@@ -918,3 +948,33 @@ class FullFormPolicyTester:
                         return True
 
         return False
+
+    def _password_xpaths(self) -> List[str]:
+        """返回密码框的候选 XPath（字段检测结果 + 显式 password_xpath，去重）"""
+        xpaths: List[str] = []
+        pw = next(
+            (f for f in self._all_fields if f.get("field_type") == FIELD_PASSWORD), None
+        )
+        if pw and pw.get("xpath"):
+            xpaths.append(pw["xpath"])
+        if self.password_xpath and self.password_xpath not in xpaths:
+            xpaths.append(self.password_xpath)
+        return xpaths
+
+    def _read_password_maxlength(self) -> Optional[int]:
+        """从密码框读取 maxlength 属性（浏览器强制硬上限），无则返回 None。
+
+        用于"无动态反馈"站点（内联/提交都不给专属错误）的降级兜底：
+        maxlength 是浏览器在输入层强制执行的硬约束，属于真实政策，不是页面提示。
+        """
+        for xp in self._password_xpaths():
+            if not xp:
+                continue
+            try:
+                el = self.driver.find_element("xpath", xp)
+                ml = el.get_attribute("maxlength")
+                if ml and ml.strip().isdigit():
+                    return int(ml.strip())
+            except Exception:
+                continue
+        return None

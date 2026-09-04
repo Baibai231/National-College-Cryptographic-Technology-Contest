@@ -95,6 +95,13 @@ class PasswordErrorParser:
     _RE_PASSWORD_ERROR_CN: re.Pattern = re.compile(_PASSWORD_ERROR_CN, re.IGNORECASE)
     _RE_GENERIC_ERROR: re.Pattern = re.compile(_GENERIC_ERROR_KEYWORDS, re.IGNORECASE)
 
+    # 政策描述型文本（声明式 placeholder，如「密码 (6-20位字母与数字、符号组合」）
+    # 这类文本是常驻的规则说明，不是拒绝信号；特征是「密码/口令 + 括号内的长度范围」。
+    _POLICY_DESC_RANGE_RE: re.Pattern = re.compile(
+        r"(?:密码|口令|密碼|password|pwd)\s*[（(]\s*\d+\s*[-~—至]\s*\d+\s*(?:位|个?字符|字|character|char)",
+        re.IGNORECASE,
+    )
+
     # 纯强度指示器关键词（不含实际错误语义，仅描述密码质量等级）
     _STRENGTH_ONLY_PATTERNS: list = [
         re.compile(p, re.IGNORECASE) for p in [
@@ -209,15 +216,16 @@ class PasswordErrorParser:
                 return False, parsed
 
         # Layer 6: HTML diff (提交前后差异)
+        # 逐行检查，避免把「密码框占位符 + 手机/确认密码报错」等多行拼成一段，
+        # 导致占位符里的规则说明被无关的「不能为空」等动词干扰而误判为拒绝。
         source_diff = result.get("source_diff") or []
-        diff_text = "\n".join(source_diff)
-        if diff_text:
-            parsed = self._check_password_error(diff_text)
+        for line in source_diff:
+            parsed = self._check_password_error(line)
             if parsed:
                 return False, parsed
-            # diff 中存在成功关键词 → 注册成功
-            if self._RE_SUCCESS.search(diff_text):
-                return True, None
+        # diff 中存在成功关键词 → 注册成功
+        if source_diff and self._RE_SUCCESS.search("\n".join(source_diff)):
+            return True, None
 
         # Layer 7: 页面级成功提示
         all_text = " ".join(page_alerts + dom_errors)
@@ -252,7 +260,8 @@ class PasswordErrorParser:
         过滤规则（按优先级）：
           1. 命中 _NON_PASSWORD_TERMS → 非密码字段错误，返回 None
           2. 仅含强度指示器（strong/weak/密码强度）不含实际错误关键词 → 强度提示，返回 None
-          3. 正常匹配密码错误正则
+          3. 政策描述型文本（声明式 placeholder「密码(N-M位…组合」）→ 规则说明，返回 None
+          4. 正常匹配密码错误正则
         """
         if not text:
             return None
@@ -263,6 +272,10 @@ class PasswordErrorParser:
 
         # 过滤 2：纯强度指示器（不含实际错误语义）
         if self._is_strength_only(text):
+            return None
+
+        # 过滤 3：政策描述型文本（声明式 placeholder 规则说明）
+        if self._is_policy_description(text):
             return None
 
         m = self._RE_PASSWORD_ERROR_EN.search(text)
@@ -299,6 +312,28 @@ class PasswordErrorParser:
                 return True  # 仅有强度描述，无实际错误
 
         return False
+
+    def _is_policy_description(self, text: str) -> bool:
+        """检查文本是否只是「密码规则说明」而非「拒绝报错」
+
+        占位符/帮助文本常写成「密码 (6-20位字母与数字、符号组合」这种声明式
+        规则描述（密码 + 括号内长度范围 + 字符类别列举），会被中文错误正则
+        误匹配（含"字母/数字/符号/组合"关键词）。真正的拒绝报错是祈使式
+        （"密码太短/密码需包含…"）。区分依据：
+        - 含「密码(N-M位…」声明式范围说明；
+        - 且不含祈使式错误动词（错误/不正确/无效/太短/太长/必须/需/至少/不能…）。
+        """
+        if not self._POLICY_DESC_RANGE_RE.search(text):
+            return False
+        for kw in (
+            "错误", "不正确", "无效", "不对", "不匹配", "不符合",
+            "太短", "太长", "过长", "过短",
+            "必须", "必需", "需要", "需", "应", "应当",
+            "至少", "最少", "不能", "不得",
+        ):
+            if kw in text:
+                return False
+        return True
 
     def _is_success_url(self, url: str) -> bool:
         """判断 URL 是否暗示注册成功"""
