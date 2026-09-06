@@ -1392,6 +1392,7 @@ def _task_snapshot(task: dict) -> dict:
         "url": task.get("url"),
         "entry_kind": task.get("entry_kind"),
         "kind": task.get("kind"),
+        "force_retest": bool(task.get("force_retest", False)),
         "status": task.get("status"),
         "created_at": task.get("created_at"),
         "started_at": task.get("started_at"),
@@ -1406,6 +1407,7 @@ class TaskSubmitRequest(BaseModel):
     kind: Literal["classify", "policy"] = "classify"
     entry_kind: Literal["signup", "login", "both"] = "signup"
     method: Literal["auto", "inline", "full"] = "auto"
+    force_retest: bool = False
 
 
 def _run_task_classify(url: str, kind: str) -> dict:
@@ -1413,8 +1415,8 @@ def _run_task_classify(url: str, kind: str) -> dict:
     return _run_live_classification(url, kind)
 
 
-def _run_task_both(url: str) -> dict:
-    """注册+登录：已测侧用数据库结果，未测侧现场测，合并返回。
+def _run_task_both(url: str, force_retest: bool = False) -> dict:
+    """注册+登录：默认复用已测侧；强制重测时两侧都现场测量。
 
     结果结构：
     {
@@ -1427,7 +1429,7 @@ def _run_task_both(url: str) -> dict:
     host = urlparse(url).hostname or url
     parts = {}
     for kind in ("signup", "login"):
-        cached = _db_entry_for(host, kind)
+        cached = None if force_retest else _db_entry_for(host, kind)
         if cached:
             parts[kind] = cached
             parts[kind + "_from_database"] = True
@@ -1450,6 +1452,33 @@ def _run_task_both(url: str) -> dict:
     return result
 
 
+def _run_task_policy(url: str, method: str, force_retest: bool = False,
+                     entry_kind: str = "signup") -> dict:
+    """执行口令政策任务；强制重测时忽略数据库中的既有政策。"""
+    from urllib.parse import urlparse
+    host = urlparse(url).hostname or url
+    cached = None
+    if not force_retest:
+        cached = _db_entry_for(host, "signup") or _db_entry_for(host, "login")
+    if cached and (cached.get("pwd_policy") or {}).get("length", [0, 0]) != [0, 0]:
+        return {
+            "url": url,
+            "entry_kind": entry_kind,
+            "hostname": host,
+            "from_database": True,
+            "method_used": cached.get("pwd_method") or "inline",
+            "flow_type": cached.get("flow_type"),
+            "flow_zh": cached.get("flow_zh"),
+            "policy": cached.get("pwd_policy", {}),
+            "classification_policy": cached.get("policy", {}),
+            "policy_measured": True,
+            "measured_at": cached.get("measured_at"),
+        }
+    result = _run_live_policy(url, method)
+    result["hostname"] = host
+    return result
+
+
 def _task_worker_loop() -> None:
     """后台任务执行循环：取队首任务 → 执行 → 更新状态 → 写盘。"""
     while True:
@@ -1468,30 +1497,15 @@ def _task_worker_loop() -> None:
                 _save_tasks(tasks)
             try:
                 if task["kind"] == "policy":
-                    # 口令政策：库中已有实测结果则直接返回，不重复测量
-                    from urllib.parse import urlparse as _urlparse
-                    _host = _urlparse(task["url"]).hostname or task["url"]
-                    cached = _db_entry_for(_host, "signup") or _db_entry_for(_host, "login")
-                    if cached and (cached.get("pwd_policy") or {}).get("length", [0, 0]) != [0, 0]:
-                        result = {
-                            "url": task["url"],
-                            "entry_kind": task.get("entry_kind", "signup"),
-                            "hostname": _host,
-                            "from_database": True,
-                            "method_used": cached.get("pwd_method") or "inline",
-                            "flow_type": cached.get("flow_type"),
-                            "flow_zh": cached.get("flow_zh"),
-                            "policy": cached.get("pwd_policy", {}),
-                            "classification_policy": cached.get("policy", {}),
-                            "policy_measured": True,
-                            "measured_at": cached.get("measured_at"),
-                        }
-                    else:
-                        result = _run_live_policy(task["url"], task.get("method", "auto"))
-                        result["hostname"] = _host
+                    result = _run_task_policy(
+                        task["url"], task.get("method", "auto"),
+                        force_retest=bool(task.get("force_retest", False)),
+                        entry_kind=task.get("entry_kind", "signup"))
                 else:
                     if task.get("entry_kind") == "both":
-                        result = _run_task_both(task["url"])
+                        result = _run_task_both(
+                            task["url"],
+                            force_retest=bool(task.get("force_retest", False)))
                     else:
                         result = _run_task_classify(task["url"], task.get("entry_kind", "signup"))
                 task["status"] = "done"
@@ -1606,6 +1620,7 @@ def submit_task(req: TaskSubmitRequest):
         "entry_kind": req.entry_kind,
         "kind": req.kind,
         "method": req.method,
+        "force_retest": req.force_retest,
         "status": "queued",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "started_at": None,

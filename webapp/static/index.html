@@ -95,6 +95,11 @@
       </select>
       <button id="classify-btn" class="btn btn-success">开始分类</button>
     </div>
+    <div class="form-check mt-2">
+      <input id="force-retest" class="form-check-input" type="checkbox">
+      <label class="form-check-label" for="force-retest">重复测试（忽略数据库，重新打开网站测量）</label>
+      <div class="form-text">适合演示已收录的网站；新结果只保存在任务中，点击“加入数据库”后才会覆盖正式数据。</div>
+    </div>
     <div id="classify-result" class="mt-3"></div>
   </div>
 
@@ -1011,7 +1016,7 @@ async function loadTasks() {
       return `<tr>
         <td class="small"><code>${esc(t.task_id)}</code></td>
         <td>${esc(t.url)}</td>
-        <td class="small">${taskKindLabel(t.kind)}</td>
+        <td class="small">${taskKindLabel(t.kind)}${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">重复测试</div>' : ''}</td>
         <td><span class="badge bg-${badge}">${running ? '<span class="spinner-border spinner-border-sm me-1"></span>' : ''}${TASK_STATUS_ZH[t.status] || t.status}</span></td>
         <td class="small text-muted">${fmtTime(t.created_at)}</td>
         <td class="text-end">
@@ -1112,6 +1117,7 @@ async function showTaskResult(taskId) {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — ${t.status === 'done' ? '口令政策测量完成' : '未完成'}</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交 · ${fmtTime(t.finished_at)} 完成</div>
+        ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
         ${result.from_database ? '<div class="badge bg-secondary mt-1">数据库已有结果，未重复测量</div>' : ''}
       </div>
       ${t.status === 'done' ? policyBoxHtml(result) : ''}
@@ -1125,6 +1131,7 @@ async function showTaskResult(taskId) {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — 注册+登录分类</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交${t.finished_at ? ' · ' + fmtTime(t.finished_at) + ' 完成' : ''}</div>
+        ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
       </div>
       ${signup.flow_type ? `
         <div class="alert alert-info py-2 mb-2"><div><b>注册${signupTag}</b></div>
@@ -1141,6 +1148,7 @@ async function showTaskResult(taskId) {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — ${TASK_STATUS_ZH[t.status] || t.status}</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交${t.finished_at ? ' · ' + fmtTime(t.finished_at) + ' 完成' : ''}</div>
+        ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
       </div>
       ${t.status === 'done' ? reportTableHtml(
         result.entry_kind === 'login' ? result : null,
@@ -1156,6 +1164,7 @@ loadTasks();
 document.getElementById('classify-btn').addEventListener('click', async () => {
   const url = document.getElementById('classify-url').value.trim();
   const kind = document.getElementById('classify-kind').value;
+  const forceRetest = document.getElementById('force-retest').checked;
   if (!url) { alert('请输入网站 URL'); return; }
   const btn = document.getElementById('classify-btn');
   const box = document.getElementById('classify-result');
@@ -1166,21 +1175,21 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const r = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, kind: 'policy', entry_kind: 'signup', method: 'auto' })
+        body: JSON.stringify({ url, kind: 'policy', entry_kind: 'signup', method: 'auto', force_retest: forceRetest })
       });
       const d = await r.json();
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
       box.innerHTML = `<div class="alert alert-success py-2">
         <div><b>口令政策测量任务已提交</b></div>
         <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
-        <div class="small text-muted">后台测量中（约 1-15 分钟）。刷新页面不影响测量，完成后可在下方"我的测量任务"查看结果。</div>
+        <div class="small text-muted">${forceRetest ? '已忽略数据库并重新打开网站测量。' : '若数据库已有口令政策，将直接使用已有结果。'}后台任务约需 1-15 分钟，刷新页面不影响测量。</div>
       </div>`;
     } else {
       const entryKind = kind;  // 'both' 原样提交，后端分别查库/现场测
       const r = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, kind: 'classify', entry_kind: entryKind })
+        body: JSON.stringify({ url, kind: 'classify', entry_kind: entryKind, force_retest: forceRetest })
       });
       const d = await r.json();
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
@@ -1188,7 +1197,7 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       box.innerHTML = `<div class="alert alert-success py-2">
         <div><b>${label}任务已提交</b></div>
         <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
-        <div class="small text-muted">已测过的部分直接使用数据库结果，未测的部分后台测量。完成后在下方"我的测量任务"查看。</div>
+        <div class="small text-muted">${forceRetest ? '已忽略数据库，将重新打开网站测量。' : '已测过的部分直接使用数据库结果，未测的部分后台测量。'}完成后在下方"我的测量任务"查看。</div>
       </div>`;
     }
     loadTasks();

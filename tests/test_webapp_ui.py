@@ -73,6 +73,12 @@ class WebAppUiTests(unittest.TestCase):
         # 测到口令政策时，方法清单直接写"进行密码政策测试"
         self.assertIn("进行密码政策测试", self.html)
 
+    def test_repeat_measurement_control_bypasses_database_cache(self):
+        self.assertIn('id="force-retest"', self.html)
+        self.assertIn("重复测试（忽略数据库，重新打开网站测量）", self.html)
+        self.assertIn("force_retest: forceRetest", self.html)
+        self.assertIn("点击“加入数据库”后才会覆盖正式数据", self.html)
+
     def test_db_policy_table_uses_two_columns_when_measured(self):
         # 实测口令政策入库后，详情表只保留"密码政策测试"两列，不加登录/注册
         self.assertIn('colspan="2" class="text-center">密码政策测试', self.html)
