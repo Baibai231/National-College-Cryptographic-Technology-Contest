@@ -38,14 +38,18 @@ class FakeElement:
     """最小 WebElement 桩：只提供 classify_input_type 需要的属性。"""
 
     def __init__(self, input_type="", name="", placeholder="", element_id="",
-                 aria_label=""):
+                 aria_label="", autocomplete="", inputmode="",
+                 accessible_name=""):
         self._attrs = {
             "type": input_type,
             "name": name,
             "placeholder": placeholder,
             "id": element_id,
             "aria-label": aria_label,
+            "autocomplete": autocomplete,
+            "inputmode": inputmode,
         }
+        self.accessible_name = accessible_name
 
     def get_attribute(self, key):
         return self._attrs.get(key, "")
@@ -96,6 +100,44 @@ class FieldSemanticPriorityTests(unittest.TestCase):
         el = FakeElement(input_type="email", name="email",
                          placeholder="user@example.com")
         self.assertEqual(classify_input_type(el), "email")
+
+    def test_autocomplete_exposes_text_password_widget(self):
+        el = FakeElement(input_type="text", name="credential",
+                         autocomplete="new-password")
+        self.assertEqual(classify_input_type(el), "password")
+
+    def test_autocomplete_username_is_identifier(self):
+        el = FakeElement(input_type="text", name="account",
+                         autocomplete="section-signup username")
+        self.assertEqual(classify_input_type(el), "identifier")
+
+    def test_tel_otp_is_code_not_phone(self):
+        el = FakeElement(input_type="tel", name="mobile",
+                         placeholder="短信验证码")
+        self.assertEqual(classify_input_type(el), "code")
+
+    def test_one_time_code_overrides_tel_keyboard_hint(self):
+        el = FakeElement(input_type="tel", name="mobile",
+                         autocomplete="one-time-code", inputmode="numeric")
+        self.assertEqual(classify_input_type(el), "code")
+
+    def test_inputmode_email_is_email(self):
+        el = FakeElement(input_type="text", name="identity", inputmode="email")
+        self.assertEqual(classify_input_type(el), "email")
+
+    def test_accessible_name_from_associated_label(self):
+        el = FakeElement(input_type="text", name="identity",
+                         accessible_name="Email address")
+        self.assertEqual(classify_input_type(el), "email")
+
+    def test_search_input_is_not_auth_field(self):
+        el = FakeElement(input_type="search", name="login_search",
+                         placeholder="搜索账号")
+        self.assertEqual(classify_input_type(el), "other")
+
+    def test_type_email_wins_over_identifier_name(self):
+        self.assertEqual(
+            _classify_combined("email username", "email"), "email")
 
 
 class MultilingualCapabilityTests(unittest.TestCase):

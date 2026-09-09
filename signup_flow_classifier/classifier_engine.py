@@ -19,6 +19,7 @@ from loguru import logger
 from signup_flow_classifier.flow_types import FlowResult, FlowType, StopReason
 from signup_flow_classifier.page_detector import (
     _detect_page_semantics,
+    classify_input_type,
     configure_performance_optimizations,
     detect_blockers,
     detect_fields_all_frames,
@@ -1138,16 +1139,51 @@ class SignupFlowClassifierEngine:
         "注册上下文出现口令框"时调用，随结果返回给表单填写器，避免下游
         拿到一个不含 iframe 上下文的 XPath 而误操作主文档里的隐藏登录框。
 
-        不少站点的注册口令框藏在跨域 iframe 里（icourse163 的
+        同时支持标准 ``type=password`` 和用 ``autocomplete`` 声明用途的
+        兼容型文本控件。不少站点的注册口令框藏在跨域 iframe 里（icourse163 的
         reg.icourse163.org/index_reg2_new.html 实测），主文档里只有隐藏的
         登录口令框。这里先查主文档可见口令框，查不到再逐个进入可见认证
         iframe 查（复用 page_detector 的 frame path 原语，支持嵌套）。
         """
+        def visible_password_inputs():
+            """同时覆盖 type=password 与 autocomplete 标注的兼容控件。"""
+            try:
+                candidates = self.driver.find_elements(By.TAG_NAME, "input")
+            except Exception:
+                return []
+            matched = []
+            for el in candidates:
+                try:
+                    if (el.is_displayed() and el.is_enabled()
+                            and classify_input_type(el) == "password"):
+                        matched.append(el)
+                except Exception:
+                    continue
+            # 注册测量优先 new-password；同页同时存在登录和注册表单时，避免
+            # DOM 顺序靠前的 current-password 抢占注册口令框。
+            def priority(el):
+                try:
+                    tokens = {
+                        token.lower().replace("_", "-")
+                        for token in (el.get_attribute("autocomplete") or "").split()
+                    }
+                    if "new-password" in tokens:
+                        return 0
+                    if "current-password" in tokens:
+                        return 2
+                except Exception:
+                    pass
+                return 1
+
+            return sorted(matched, key=priority)
+
         try:
-            pwds = self.driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
-            for el in pwds:
-                if el.is_displayed() and el.is_enabled():
-                    return {"xpath": self._make_xpath(el), "frame_path": ()}
+            self.driver.switch_to.default_content()
+        except Exception:
+            pass
+        try:
+            for el in visible_password_inputs():
+                return {"xpath": self._make_xpath(el), "frame_path": ()}
         except Exception:
             pass
         try:
@@ -1157,11 +1193,8 @@ class SignupFlowClassifierEngine:
                 if not _switch_to_frame_path(self.driver, path):
                     continue
                 try:
-                    pwds = self.driver.find_elements(
-                        By.CSS_SELECTOR, "input[type='password']")
-                    for el in pwds:
-                        if el.is_displayed() and el.is_enabled():
-                            return {"xpath": self._make_xpath(el), "frame_path": path}
+                    for el in visible_password_inputs():
+                        return {"xpath": self._make_xpath(el), "frame_path": path}
                 finally:
                     self.driver.switch_to.default_content()
         except Exception:
@@ -1399,26 +1432,76 @@ class SignupFlowClassifierEngine:
         return False
 
     @staticmethod
+    def _xpath_literal(value: str) -> str:
+        """把任意属性值安全编码为 XPath 字符串字面量。"""
+        if "'" not in value:
+            return "'{}'".format(value)
+        if '"' not in value:
+            return '"{}"'.format(value)
+        parts = value.split("'")
+        args = []
+        for index, part in enumerate(parts):
+            if part:
+                args.append("'{}'".format(part))
+            if index < len(parts) - 1:
+                args.append('"\'"')
+        return "concat({})".format(",".join(args))
+
+    @staticmethod
     def _make_xpath(el) -> str:
         """为元素构造简单 XPath。
 
-        口令框优先加 @type='password' 限定：部分站点把注册口令框误标为
-        name='email'（icourse163 实测），不加 type 限定会让
-        //input[@name='email'] 命中真邮箱框而非口令框。
+        口令框优先加 type 或 autocomplete 语义限定：部分站点把注册口令框
+        误标为 name='email'（icourse163 实测），缺少限定会让 XPath 命中
+        真邮箱框。所有来自页面的属性值均编码为 XPath 字面量。
         """
         try:
-            if (el.get_attribute("type") or "").lower() == "password":
+            input_type = (el.get_attribute("type") or "").lower()
+            autocomplete = el.get_attribute("autocomplete") or ""
+            ac_tokens = autocomplete.split()
+            normalized_ac_tokens = [
+                token.lower().replace("_", "-") for token in ac_tokens
+            ]
+            semantic_predicate = ""
+            if input_type == "password":
+                semantic_predicate = (
+                    "translate(@type,'ABCDEFGHIJKLMNOPQRSTUVWXYZ',"
+                    "'abcdefghijklmnopqrstuvwxyz')='password'")
+            elif "new-password" in normalized_ac_tokens:
+                token = ac_tokens[normalized_ac_tokens.index("new-password")]
+                semantic_predicate = (
+                    "contains(concat(' ',normalize-space(@autocomplete),' '),"
+                    "{})".format(
+                        SignupFlowClassifierEngine._xpath_literal(
+                            " {} ".format(token)))
+                )
+            elif "current-password" in normalized_ac_tokens:
+                token = ac_tokens[normalized_ac_tokens.index("current-password")]
+                semantic_predicate = (
+                    "contains(concat(' ',normalize-space(@autocomplete),' '),"
+                    "{})".format(
+                        SignupFlowClassifierEngine._xpath_literal(
+                            " {} ".format(token)))
+                )
+            if semantic_predicate:
                 val = el.get_attribute("id")
                 if val:
-                    return "//input[@type='password' and @id='{}']".format(val)
+                    return "//input[{} and @id={}]".format(
+                        semantic_predicate,
+                        SignupFlowClassifierEngine._xpath_literal(val),
+                    )
                 val = el.get_attribute("name")
                 if val:
-                    return "//input[@type='password' and @name='{}']".format(val)
-                return "//input[@type='password']"
+                    return "//input[{} and @name={}]".format(
+                        semantic_predicate,
+                        SignupFlowClassifierEngine._xpath_literal(val),
+                    )
+                return "//input[{}]".format(semantic_predicate)
             for attr in ("id", "name"):
                 val = el.get_attribute(attr)
                 if val:
-                    return "//input[@{}='{}']".format(attr, val)
+                    return "//input[@{}={}]".format(
+                        attr, SignupFlowClassifierEngine._xpath_literal(val))
         except Exception:
             pass
         return "//input[@type='password']"

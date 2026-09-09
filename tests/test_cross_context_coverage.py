@@ -57,8 +57,12 @@ class _CrossFrameFieldDriver:
             return True
         if "JSON.stringify(out)" in script:
             if self.context == "root":
-                return json.dumps([["email", "email", "", "", "", True]])
-            return json.dumps([["password", "password", "", "", "", True]])
+                return json.dumps([
+                    ["email", "email", "", "", "", "", "", "", True]
+                ])
+            return json.dumps([
+                ["password", "password", "", "", "", "", "", "", True]
+            ])
         return ""
 
 

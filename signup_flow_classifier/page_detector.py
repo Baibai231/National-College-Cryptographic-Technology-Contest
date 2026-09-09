@@ -237,26 +237,67 @@ def _control_label(el) -> str:
     return next((value.strip() for value in values if value and value.strip()), "")
 
 
-def _classify_combined(combined: str, t: str, visible: str = "") -> str:
-    """根据 type/name/placeholder/id 组合分类输入框类型（与 classify_input_type 一致）。
+_NON_AUTH_INPUT_TYPES = {
+    "hidden", "submit", "button", "checkbox", "radio", "reset", "image",
+    "file", "color", "range", "search",
+}
 
-    visible 传用户可见语义（placeholder/aria-label），用于纠正 name/id
-    与界面文案不一致的站点（如 imooc 注册手机号框 name="email"）。
+
+def _autocomplete_field_type(autocomplete: str) -> Optional[str]:
+    """把标准 autocomplete token 映射为认证字段类型。"""
+    tokens = {
+        token.strip().lower().replace("_", "-")
+        for token in (autocomplete or "").split()
+        if token.strip()
+    }
+    if tokens & {"current-password", "new-password"}:
+        return "password"
+    if "one-time-code" in tokens:
+        return "code"
+    if "email" in tokens:
+        return "email"
+    if tokens & {"tel", "tel-national", "tel-local"}:
+        return "phone"
+    if tokens & {"username", "nickname"}:
+        return "identifier"
+    return None
+
+
+def _classify_combined(combined: str, t: str, visible: str = "",
+                       autocomplete: str = "", inputmode: str = "") -> str:
+    """根据标准属性和可访问名称分类输入框（与 classify_input_type 一致）。
+
+    ``visible`` 传 placeholder、aria-label、aria-labelledby 与关联 label
+    等用户可见语义，用于纠正 name/id 与界面文案不一致的网站。
     """
+    t = (t or "").lower()
+    if t in _NON_AUTH_INPUT_TYPES:
+        return "other"
     if t == "password":
         return "password"
+    autocomplete_type = _autocomplete_field_type(autocomplete)
+    if autocomplete_type:
+        return autocomplete_type
+    if t == "email":
+        return "email"
+    # OTP 控件经常用 type=tel/inputmode=numeric 召唤数字键盘；明确的
+    # “验证码”可见语义应先于 tel/inputmode 的手机号兜底。
+    if _match_any(combined, _CODE_HINTS):
+        return "code"
+    if t == "tel":
+        return "phone"
+    normalized_inputmode = (inputmode or "").strip().lower()
+    if normalized_inputmode == "email":
+        return "email"
+    if normalized_inputmode == "tel":
+        return "phone"
     # 复合命名消歧（语言无关）：type 非 password、且 id/name 同时含
     # password 与 account/user/login 等账号字样（iam.nankai 的
     # password_account_input 实测，英文界面），是"某体系下的账号框"，
     # 不是口令框——需在口令关键词之前判定。
-    if _match_any(combined, _IDENTIFIER_HINTS):
+    if (_match_any(combined, _PASSWORD_HINTS)
+            and _match_any(combined, _IDENTIFIER_HINTS)):
         return "identifier"
-    if t == "email":
-        return "email"
-    if t == "tel":
-        return "phone"
-    if _match_any(combined, _CODE_HINTS):
-        return "code"
     # 用户可见语义优先：placeholder/aria-label 明确说是手机号/邮箱时，
     # 不受 name/id 里过时字段名误导（imooc 注册手机号框 name="email" 实测）。
     if visible:
@@ -280,13 +321,14 @@ def classify_input_type(el) -> str:
     """判断可见输入框的语义类型。
 
     判定优先级（2026-08-17 南开 iam 实测教训）：
-      1. type 属性（password/email/tel）——HTML 标准语义，语言无关
+      1. password 类型——最强的口令字段证据
       2. autocomplete 属性——浏览器密码管理器依赖的标准语义
-      3. 用户可见文字（placeholder/aria-label）
-      4. 复合命名消歧：id 同时含 password 与 account/login 等字样时，
+      3. email 类型、验证码语义与 tel/inputmode 等标准提示
+      4. 用户可见文字（placeholder/aria-label/关联 label）
+      5. 复合命名消歧：id 同时含 password 与 account/login 等字样时，
          （如 iam.nankai 的 password_account_i）按账号框处理——这是
          "某登录体系下的账号框"，不是口令框
-      5. 关键词兜底
+      6. 关键词兜底
     """
     input_type = (el.get_attribute("type") or "").lower()
     name = el.get_attribute("name") or ""
@@ -294,38 +336,42 @@ def classify_input_type(el) -> str:
     element_id = el.get_attribute("id") or ""
     aria_label = el.get_attribute("aria-label") or ""
     autocomplete = (el.get_attribute("autocomplete") or "").lower()
-    combined = f"{input_type} {name} {placeholder} {element_id} {aria_label}"
-    semantic_name = f"{name} {element_id} {aria_label}"
+    inputmode = (el.get_attribute("inputmode") or "").lower()
+    try:
+        accessible_name = getattr(el, "accessible_name", "") or ""
+    except Exception:
+        accessible_name = ""
+    combined = (
+        f"{input_type} {name} {placeholder} {element_id} {aria_label} "
+        f"{accessible_name}"
+    )
+    semantic_name = f"{name} {element_id} {aria_label} {accessible_name}"
 
+    if input_type in _NON_AUTH_INPUT_TYPES:
+        return "other"
     if input_type == "password":
         return "password"
+    autocomplete_type = _autocomplete_field_type(autocomplete)
+    if autocomplete_type:
+        return autocomplete_type
     if input_type == "email":
         return "email"
-    if input_type == "tel":
-        return "phone"
-    # autocomplete 是 W3C 标准化的字段用途声明（密码管理器依赖它），
-    # 与界面语言无关，优先于一切文字猜测。
-    if autocomplete:
-        ac = autocomplete.replace("_", "-")
-        if "current-password" in ac or "new-password" in ac:
-            return "password"
-        if "email" in ac:
-            return "email"
-        if "tel" in ac:
-            return "phone"
-        if "username" in ac or "nickname" in ac:
-            return "identifier"
-    # 验证码先于普通文本判断（避免与邮箱/手机号关键词互相污染）
+    # 验证码先于 tel/inputmode：不少 OTP 框用 tel 仅为弹出数字键盘。
     if _match_any(combined, _CODE_HINTS):
         return "code"
+    if input_type == "tel":
+        return "phone"
+    if inputmode == "email":
+        return "email"
+    if inputmode == "tel":
+        return "phone"
     # 复合命名消歧：id 同时含 password 与 account/user/login 字样的文本框
     # （iam.nankai 的 password_account_i 实测），是账号框不是口令框；
     # 需在口令关键词检查之前判定。
-    if _match_any(semantic_name, _IDENTIFIER_HINTS):
-        pw_conflict = "password" in semantic_name.lower() or "passwd" in semantic_name.lower()
-        if not pw_conflict:
-            return "identifier"
-    visible = f"{placeholder} {aria_label}".strip()
+    if (_match_any(semantic_name, _PASSWORD_HINTS)
+            and _match_any(semantic_name, _IDENTIFIER_HINTS)):
+        return "identifier"
+    visible = f"{placeholder} {aria_label} {accessible_name}".strip()
     if visible:
         v_phone = _match_any(visible, _PHONE_HINTS)
         v_email = _match_any(visible, _EMAIL_HINTS)
@@ -360,9 +406,9 @@ def _visible_inputs(driver: WebDriver):
     inputs = []
     for el in driver.find_elements(By.TAG_NAME, "input"):
         try:
-            if _is_visible_enabled(el) and (el.get_attribute("type") or "").lower() not in {
-                "hidden", "submit", "button", "checkbox", "radio", "reset", "image",
-            }:
+            if (_is_visible_enabled(el)
+                    and (el.get_attribute("type") or "").lower()
+                    not in _NON_AUTH_INPUT_TYPES):
                 inputs.append(el)
         except Exception:
             continue
@@ -780,9 +826,28 @@ def _detect_fields_deep_current_context(driver: WebDriver):
             "const out = [];"
             "const seen = new Set();"
             "function visible(el) {"
-            "  try { const r=el.getBoundingClientRect(), s=getComputedStyle(el);"
+            "  try { const r=el.getBoundingClientRect(),"
+            "    w=el.ownerDocument.defaultView||window, s=w.getComputedStyle(el);"
             "    return r.width>0 && r.height>0 && s.display!=='none' && s.visibility!=='hidden';"
             "  } catch(e) { return false; }"
+            "}"
+            "function accessible(el) {"
+            "  const parts=[];"
+            "  const aria=el.getAttribute('aria-label'); if (aria) parts.push(aria);"
+            "  const root=el.getRootNode ? el.getRootNode() : el.ownerDocument;"
+            "  for (const id of (el.getAttribute('aria-labelledby')||'').split(/\\s+/)) {"
+            "    if (!id) continue;"
+            "    let ref=null;"
+            "    try { ref=(root.getElementById&&root.getElementById(id))||"
+            "      el.ownerDocument.getElementById(id); } catch(e) {}"
+            "    if (ref) parts.push(ref.innerText||ref.textContent||'');"
+            "  }"
+            "  try { for (const label of (el.labels||[]))"
+            "    parts.push(label.innerText||label.textContent||''); } catch(e) {}"
+            "  try { const label=el.closest('label');"
+            "    if (label) parts.push(label.innerText||label.textContent||''); } catch(e) {}"
+            "  return [...new Set(parts.map(x=>(x||'').trim()).filter(Boolean))]"
+            "    .join(' ').slice(0,500);"
             "}"
             "function scan(root) {"
             "  if (!root || seen.has(root)) return; seen.add(root);"
@@ -790,7 +855,9 @@ def _detect_fields_deep_current_context(driver: WebDriver):
             "    let vis = false;"
             "    try { vis = visible(el); } catch(e) {}"
             "    out.push([el.type||'', el.name||'', el.placeholder||'', el.id||'',"
-            "      el.getAttribute('aria-label')||'', vis]);"
+            "      el.getAttribute('aria-label')||'',"
+            "      el.getAttribute('autocomplete')||'',"
+            "      el.getAttribute('inputmode')||'', accessible(el), vis]);"
             "  }"
             "  for (const el of root.querySelectorAll('*')) {"
             "    if (el.shadowRoot) scan(el.shadowRoot);"
@@ -803,14 +870,17 @@ def _detect_fields_deep_current_context(driver: WebDriver):
             "return JSON.stringify(out);"
         )
         import json as _json
-        for t, name, ph, el_id, aria, vis in _json.loads(raw or "[]"):
+        for t, name, ph, el_id, aria, autocomplete, inputmode, label, vis in \
+                _json.loads(raw or "[]"):
             if not vis:
                 continue
-            if (t or "").lower() in {"", "text"}:
+            if ((t or "").lower() in {"", "text"}
+                    and (t or "").lower() not in _NON_AUTH_INPUT_TYPES):
                 fathom_candidate_seen = True
             ft = _classify_combined(
-                f"{t} {name} {ph} {el_id} {aria}", t,
-                visible=f"{ph} {aria}",
+                f"{t} {name} {ph} {el_id} {aria} {label}", t,
+                visible=f"{ph} {aria} {label}",
+                autocomplete=autocomplete, inputmode=inputmode,
             )
             if ft != "other" and ft not in fields:
                 fields.append(ft)
