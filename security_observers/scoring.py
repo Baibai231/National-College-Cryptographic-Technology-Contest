@@ -434,10 +434,14 @@ def build_security_assessment(analyzers, password_policy=None,
 
 def attach_security_assessment(bundle, password_policy=None,
                                password_policy_measured=False) -> dict:
-    """Attach or refresh the assessment on a security-observation bundle."""
+    """Attach or refresh the score and evidence-bounded maturity summary."""
     if not isinstance(bundle, dict):
         return bundle
     bundle["assessment"] = build_security_assessment(
+        bundle.get("analyzers") or {}, password_policy,
+        password_policy_measured=password_policy_measured)
+    from security_observers.maturity import build_cpam_maturity
+    bundle["maturity"] = build_cpam_maturity(
         bundle.get("analyzers") or {}, password_policy,
         password_policy_measured=password_policy_measured)
     return bundle

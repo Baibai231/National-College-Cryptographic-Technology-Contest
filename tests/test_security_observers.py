@@ -6,6 +6,7 @@ import unittest
 from scripts.site_data_store import measurement_record
 from scripts.build_site_database import build_sites
 from security_observers import collect_security_observations
+from security_observers.maturity import build_cpam_maturity
 from security_observers.scoring import (
     attach_security_assessment, build_security_assessment,
 )
@@ -346,6 +347,52 @@ class SecurityAssessmentTests(unittest.TestCase):
             ["password_policy"]["status"], "unknown")
 
 
+class CpamMaturityTests(unittest.TestCase):
+    def test_password_capability_supports_only_level_one(self):
+        maturity = build_cpam_maturity({
+            "mfa": {"factor_capabilities": ["password"]},
+            "webauthn": {"site_capability_observed": False},
+        })
+        overall = maturity["overall"]
+        self.assertEqual(overall["evidence_supported_level"], 1)
+        self.assertEqual(overall["highest_observed_capability_level"], 1)
+        self.assertFalse(overall["complete_maturity_rating"])
+        self.assertEqual(maturity["levels"][2]["status"], "unknown")
+
+    def test_passkey_signal_is_not_promoted_to_complete_level_five(self):
+        maturity = build_cpam_maturity({
+            "mfa": {"factor_capabilities": ["password", "webauthn_or_passkey"],
+                    "mfa_enforcement": "not_determined",
+                    "completed_multi_factor_sequence": False},
+            "webauthn": {"site_capability_observed": True,
+                         "registration_or_signature_verified": False},
+        })
+        overall = maturity["overall"]
+        self.assertEqual(overall["evidence_supported_level"], 1)
+        self.assertEqual(overall["highest_observed_capability_level"], 5)
+        self.assertTrue(overall["higher_capability_is_not_contiguous_maturity"])
+        self.assertEqual(overall["unknown_prerequisite_levels"], [2, 3, 4])
+        self.assertEqual(maturity["levels"][3]["status"], "unverified")
+        self.assertEqual(maturity["levels"][5]["status"], "capability_observed")
+
+    def test_parallel_factors_do_not_prove_mfa(self):
+        maturity = build_cpam_maturity({
+            "mfa": {"factor_capabilities": ["password", "sms_otp"],
+                    "mfa_enforcement": "not_determined",
+                    "completed_multi_factor_sequence": False},
+        })
+        self.assertEqual(maturity["levels"][3]["status"], "unverified")
+        self.assertEqual(
+            maturity["overall"]["highest_observed_capability_level"], 1)
+
+    def test_assessment_refresh_also_refreshes_maturity(self):
+        bundle = {"analyzers": {}}
+        attach_security_assessment(
+            bundle, {"length": [12, 64]}, password_policy_measured=True)
+        self.assertEqual(
+            bundle["maturity"]["overall"]["evidence_supported_level"], 1)
+
+
 class _FakeDriver:
     current_url = "https://app.example/login?one-time-secret=hidden"
 
@@ -383,6 +430,7 @@ class ObservationBundleTests(unittest.TestCase):
         self.assertTrue(bundle["privacy"]["extra_network_request_sent"] is False)
         self.assertIn("transport_security", bundle["analyzers"])
         self.assertIn("http_security_headers", bundle["analyzers"])
+        self.assertIn("maturity", bundle)
         serialized = json.dumps(bundle)
         for secret in ("hidden-client", "hidden-state", "hidden-cookie", "one-time-secret"):
             self.assertNotIn(secret, serialized)

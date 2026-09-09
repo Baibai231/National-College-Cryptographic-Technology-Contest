@@ -856,7 +856,9 @@ function extraLines(d, kindLabel) {
 function securityObservationsHtml(bundle, label = '') {
   const analyzers = (bundle && bundle.analyzers) || {};
   const assessment = (bundle && bundle.assessment) || {};
-  if (!Object.keys(analyzers).length && !Object.keys(assessment).length) return '';
+  const maturity = (bundle && bundle.maturity) || {};
+  if (!Object.keys(analyzers).length && !Object.keys(assessment).length
+      && !Object.keys(maturity).length) return '';
   const lines = [];
   const oauth = analyzers.oauth_oidc || {};
   if (oauth.status === 'observed') {
@@ -880,6 +882,30 @@ function securityObservationsHtml(bundle, label = '') {
   if ((mfa.factor_capabilities || []).length) {
     const factors = mfa.factor_capabilities.map(item => FACTOR_ZH[item] || item).join('、');
     lines.push(`认证能力：${factors}；MFA是否强制：未确定`);
+  }
+  const maturityOverall = maturity.overall || {};
+  const maturityLevels = Object.fromEntries(
+    (maturity.levels || []).map(item => [item.level, item.name]));
+  const CPAM_ZH = {
+    no_password_protection: '无口令保护',
+    basic_password_authentication: '基础口令认证',
+    secure_password_storage: '安全口令存储',
+    multi_factor_authentication: '多因素认证',
+    risk_based_authentication: '风险认证',
+    public_key_authentication: '公钥认证',
+    zero_trust_authentication: '零信任认证'
+  };
+  const supportedLevel = maturityOverall.evidence_supported_level;
+  const highestCapability = maturityOverall.highest_observed_capability_level;
+  if (Number.isInteger(supportedLevel) || Number.isInteger(highestCapability)) {
+    const pieces = [];
+    if (Number.isInteger(supportedLevel)) {
+      pieces.push(`连续证据支持 Level ${supportedLevel}（${CPAM_ZH[maturityLevels[supportedLevel]] || '能力已观察'}）`);
+    }
+    if (Number.isInteger(highestCapability) && highestCapability !== supportedLevel) {
+      pieces.push(`另观察到 Level ${highestCapability} 方向能力（${CPAM_ZH[maturityLevels[highestCapability]] || '能力已观察'}）`);
+    }
+    lines.push(`CPAM：${pieces.join('；')}；非完整成熟度等级`);
   }
   const session = analyzers.session_cookies || {};
   if (session.status === 'observed') {

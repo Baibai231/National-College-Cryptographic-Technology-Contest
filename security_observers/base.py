@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from security_observers.jwt import analyze_jwt_metadata
+from security_observers.maturity import build_cpam_maturity
 from security_observers.mfa import analyze_mfa_evidence
 from security_observers.oauth import analyze_oauth_urls
 from security_observers.scoring import build_security_assessment
@@ -142,6 +143,7 @@ def collect_security_observations(driver, *, states=None, methods=None) -> dict:
         "observers_with_evidence": observed,
         "analyzers": analyzers,
         "assessment": build_security_assessment(analyzers),
+        "maturity": build_cpam_maturity(analyzers),
         "collection_errors": errors,
         "privacy": {
             "raw_tokens_stored": False,

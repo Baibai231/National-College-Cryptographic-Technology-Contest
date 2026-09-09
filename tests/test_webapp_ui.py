@@ -90,6 +90,8 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("已知证据得分", self.html)
         self.assertIn("未知项不扣分", self.html)
         self.assertIn("不同覆盖率的分数不可直接比较", self.html)
+        self.assertIn("CPAM：", self.html)
+        self.assertIn("非完整成熟度等级", self.html)
 
     def test_db_policy_table_uses_two_columns_when_measured(self):
         # 实测口令政策入库后，详情表只保留"密码政策测试"两列，不加登录/注册

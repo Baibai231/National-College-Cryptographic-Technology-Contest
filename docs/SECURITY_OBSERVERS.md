@@ -27,7 +27,8 @@ Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎�
       "transport_security": {},
       "http_security_headers": {}
     },
-    "assessment": {}
+    "assessment": {},
+    "maturity": {}
   }
 }
 ```
@@ -81,6 +82,22 @@ Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎�
 
 该评分是 CryptoScope 的内部、可复现测量指标，用于同口径研究和筛选人工复核目标，
 不是漏洞证明、合规认证或对网站整体安全性的保证。
+
+## CPAM 证据成熟度
+
+`maturity` 使用 `cpam_evidence_ladder_v1`，对应方案中的 Level 0--6，但将
+“连续证据支持等级”与“更高层能力信号”分开：
+
+- `evidence_supported_level` 只沿已确认的连续层级上升；当前认证前测量通常最多确认
+  Level 1 的基础口令认证。
+- `highest_observed_capability_level` 可以记录更高层的非连续能力。例如页面明确提供
+  Passkey/WebAuthn 时可观察到 Level 5 方向能力，但不会因此声称网站已达到 Level 5。
+- Level 2 的服务端口令存储、Level 3 的 MFA 强制执行、Level 4 的风险认证和
+  Level 6 的零信任架构无法由认证前页面可靠推断，保持 `unknown` 或 `unverified`。
+- 并列的口令、短信、联合登录选项不是 MFA 已启用的证据；只有完成且确认强制的多因素
+  序列才能支持 Level 3。
+
+网页同时显示证据支持等级和更高能力方向，并固定标注“非完整成熟度等级”。
 
 因此，“未观察到”不等于网站不支持该能力，“观察到”也不等于该机制已正确实施或通过
 密码安全验证。后续风险评分必须同时显示证据覆盖率和未知维度。
