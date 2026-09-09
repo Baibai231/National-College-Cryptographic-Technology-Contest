@@ -9,6 +9,7 @@
 启动:
   .venv/bin/python -m uvicorn webapp.app:app --host 0.0.0.0 --port 8000
 """
+import hmac
 import ipaddress
 import json
 import os
@@ -52,11 +53,20 @@ DATA_LOCK_PATH = Path(os.environ.get(
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI(title="注册流程测量平台", version="1.0")
+
+# Same-origin browser requests do not need CORS.  Cross-origin access must be
+# explicitly opted in with a comma-separated allow-list instead of exposing
+# the browser-driving API to every website by default.
+_CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("SITES_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_CORS_ORIGINS,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type", "X-Admin-Token", "X-Measure-Token"],
 )
 
 try:
@@ -155,6 +165,9 @@ def _row_to_site(row):
             "steps": details.get("login_steps", []),
             "raw_states": login_states,
             "policy": details.get("login_policy", {}),
+            "security_observations": details.get(
+                "login_security_observations",
+                login_record.get("security_observations", {})),
             "pwd_policy": details.get("login_pwd_policy", {}),
             "pwd_method": details.get("login_pwd_method"),
             "stop_reason": login_record.get("stop_reason"),
@@ -173,6 +186,9 @@ def _row_to_site(row):
             "steps": details.get("signup_steps", []),
             "raw_states": signup_states,
             "policy": details.get("signup_policy", {}),
+            "security_observations": details.get(
+                "signup_security_observations",
+                signup_record.get("security_observations", {})),
             "pwd_policy": details.get("signup_pwd_policy", {}),
             "pwd_method": details.get("signup_pwd_method"),
             "stop_reason": signup_record.get("stop_reason"),
@@ -376,6 +392,8 @@ def add_site(req: AddSiteRequest):
             details_obj[f"{kind}_steps"] = states
             details_obj[f"{kind}_raw_states"] = states
             details_obj[f"{kind}_policy"] = record.get("policy") or {}
+            details_obj[f"{kind}_security_observations"] = record.get(
+                "security_observations") or {}
             details_obj[f"{kind}_pwd_policy"] = record.get("pwd_policy") or {}
             details_obj[f"{kind}_pwd_method"] = record.get("pwd_method")
             details_obj[f"{kind}_error"] = record.get("error")
@@ -1102,6 +1120,34 @@ def _validated_classify_url(raw_url: str, *, resolve: bool) -> tuple[str, str]:
     return url, host
 
 
+def _measurement_access_is_public() -> bool:
+    return os.environ.get("SITES_ALLOW_PUBLIC_MEASUREMENT", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
+def _require_measure_access(measure_token: str) -> None:
+    """Protect endpoints that launch browsers or expose task results.
+
+    A dedicated token is preferred.  Falling back to the existing admin token
+    keeps older deployments usable while they migrate.  An installation must
+    explicitly opt in if it truly wants an unauthenticated public worker.
+    """
+    expected = (
+        os.environ.get("SITES_MEASURE_TOKEN", "").strip()
+        or os.environ.get("SITES_ADMIN_TOKEN", "").strip()
+    )
+    if not expected:
+        if _measurement_access_is_public():
+            return
+        raise HTTPException(
+            503,
+            "服务器未设置 SITES_MEASURE_TOKEN，现场测量功能已安全关闭",
+        )
+    if not hmac.compare_digest(measure_token, expected):
+        raise HTTPException(403, "测量口令错误")
+
+
 def _combo_methods_for(states, flow_type, entry_kind=""):
     """展示层：从状态序列计算组合式方法清单（不落盘）。
 
@@ -1135,6 +1181,7 @@ def _classification_response(url: str, entry_kind: str, result: dict) -> dict:
         "methods": _combo_methods_for(states, flow_type, entry_kind),
         "evidence": result.get("evidence") or [],
         "policy": result.get("classification_policy") or result.get("policy") or {},
+        "security_observations": result.get("security_observations") or {},
         "error": result.get("error"),
         "measured_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -1186,6 +1233,10 @@ def _run_live_classification(url: str, kind: str) -> dict:
     from utils.login_link_discovery import LoginLinkDiscovery
     from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
 
+    # Resolve again immediately before Chrome starts.  This closes the gap
+    # between asynchronous task submission and execution and rejects a target
+    # whose DNS answer has changed to a private/reserved address meanwhile.
+    url, _host = _validated_classify_url(url, resolve=True)
     driver = _get_new_driver()
     try:
         discovery = LoginLinkDiscovery(driver)
@@ -1212,11 +1263,14 @@ def _run_live_classification(url: str, kind: str) -> dict:
 
 
 @app.post("/api/classify")
-def classify_site(req: ClassifyRequest):
+def classify_site(
+        req: ClassifyRequest,
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """输入网站主页 → 实时分类注册流程（复用测量工具，安全只读）。
 
     先查数据库：该域名已测过则直接返回库中结果，避免重复跑 Chrome。
     """
+    _require_measure_access(measure_token)
     url, host = _validated_classify_url(req.url, resolve=False)
     kind = req.entry_kind
 
@@ -1249,6 +1303,8 @@ def classify_site(req: ClassifyRequest):
                     entry.get("flow_type"), kind),
                 "evidence": entry.get("evidence", []),
                 "policy": entry.get("policy", {}),
+                "security_observations": entry.get(
+                    "security_observations", {}),
                 "error": entry.get("error"),
                 "measured_at": entry.get("measured_at"),
                 "route": entry.get("route"),
@@ -1282,6 +1338,9 @@ def _run_live_policy(url: str, method: str) -> dict:
     无口令框时（method_used == classified_only / 无注册界面）不测量，
     输出与「注册分类」完全一致（复用 _classification_response）。
     """
+    # A queued task may run long after it was accepted, so resolve immediately
+    # before starting the browser rather than trusting the old DNS result.
+    url, _host = _validated_classify_url(url, resolve=True)
     from main import test_single_site
     result = test_single_site(url, method=method)
     policy = result.get("policy") or {}
@@ -1308,6 +1367,7 @@ def _run_live_policy(url: str, method: str) -> dict:
         "final_url": result.get("final_url"),
         # 分类政策元数据（供「加入数据库」时 policy 字段存分类政策）
         "classification_policy": result.get("classification_policy") or {},
+        "security_observations": result.get("security_observations") or {},
         "error": result.get("error"),
         "note": result.get("note"),
         "suspicious_login_form": result.get("suspicious_login_form", False),
@@ -1318,8 +1378,11 @@ def _run_live_policy(url: str, method: str) -> dict:
 
 
 @app.post("/api/policy")
-def measure_policy(req: PolicyRequest):
+def measure_policy(
+        req: PolicyRequest,
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """输入网站主页 → 完整测量密码政策（安全只读：只填口令框、不填身份信息）。"""
+    _require_measure_access(measure_token)
     url, host = _validated_classify_url(req.url, resolve=False)
     if not _POLICY_SEMAPHORE.acquire(blocking=False):
         raise HTTPException(429, "服务器正在执行其他密码政策测试，请稍后重试")
@@ -1361,6 +1424,10 @@ _TASKS_DIR = Path(__file__).resolve().parent
 _TASKS_PATH = _TASKS_DIR / "tasks.json"
 _TASK_LOCK = threading.Lock()
 _MAX_TASKS = 500  # 只保留最近 500 个任务
+try:
+    _TASK_QUEUE_MAX = max(1, int(os.environ.get("SITES_TASK_QUEUE_MAX", "20")))
+except ValueError:
+    _TASK_QUEUE_MAX = 20
 
 # 后台测量线程池（并发 2，队列机制保证提交即返回，用户无需等待）。
 _TASK_WAKEUP = threading.Event()
@@ -1471,12 +1538,31 @@ def _run_task_policy(url: str, method: str, force_retest: bool = False,
             "flow_zh": cached.get("flow_zh"),
             "policy": cached.get("pwd_policy", {}),
             "classification_policy": cached.get("policy", {}),
+            "security_observations": cached.get(
+                "security_observations", {}),
             "policy_measured": True,
             "measured_at": cached.get("measured_at"),
         }
     result = _run_live_policy(url, method)
     result["hostname"] = host
     return result
+
+
+def _persist_finished_task(task: dict) -> bool:
+    """Persist a worker result unless the task was deleted or timed out.
+
+    Returning ``False`` only skips this result; it must not terminate the
+    long-lived worker thread.  A missing record is a deletion tombstone because
+    every accepted task is written before it is placed on the in-memory queue.
+    """
+    with _TASK_LOCK:
+        tasks = _load_tasks()
+        latest = tasks.get(task["task_id"])
+        if latest is None or latest.get("_removed"):
+            return False
+        tasks[task["task_id"]] = task
+        _save_tasks(tasks)
+    return True
 
 
 def _task_worker_loop() -> None:
@@ -1515,14 +1601,9 @@ def _task_worker_loop() -> None:
                 task["error"] = "{}: {}".format(type(exc).__name__, str(exc)[:300])
         finally:
             task["finished_at"] = datetime.now(timezone.utc).isoformat()
-            with _TASK_LOCK:
-                tasks = _load_tasks()
-                # 任务已被删除/超时标记时不再覆盖（防止"删除的任务复活"）
-                latest = tasks.get(task["task_id"])
-                if latest is not None and latest.get("_removed"):
-                    return
-                tasks[task["task_id"]] = task
-                _save_tasks(tasks)
+            # A deleted/timed-out task must not be resurrected, but skipping it
+            # must also leave this long-lived worker available for later jobs.
+            _persist_finished_task(task)
 
 
 # 任务超时（秒）：现场测量卡死（Chrome 崩溃/iframe 挂起）时标记为超时。
@@ -1581,7 +1662,13 @@ def _recover_tasks_on_startup() -> None:
                 t["finished_at"] = datetime.now(timezone.utc).isoformat()
                 changed = True
             elif status == "queued":
-                _TASK_QUEUE.append(t)
+                if len(_TASK_QUEUE) < _TASK_QUEUE_MAX:
+                    _TASK_QUEUE.append(t)
+                else:
+                    t["status"] = "error"
+                    t["error"] = "server restart: 待恢复任务超过队列上限"
+                    t["finished_at"] = datetime.now(timezone.utc).isoformat()
+                    changed = True
         if changed:
             _save_tasks(tasks)
 
@@ -1605,13 +1692,18 @@ def _ensure_task_worker() -> None:
 
 
 @app.post("/api/tasks")
-def submit_task(req: TaskSubmitRequest):
+def submit_task(
+        req: TaskSubmitRequest,
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """提交异步测量任务，立即返回 task_id（不阻塞）。
 
     用户可刷新页面/离开，任务在后台线程执行；
     通过 GET /api/tasks/{task_id} 轮询状态。
     """
-    url, host = _validated_classify_url(req.url, resolve=False)
+    _require_measure_access(measure_token)
+    # Reject unresolvable and private/reserved destinations before consuming a
+    # queue slot.  Execution performs the same check again to limit DNS rebinding.
+    url, host = _validated_classify_url(req.url, resolve=True)
     task_id = uuid.uuid4().hex[:12]
     task = {
         "task_id": task_id,
@@ -1629,6 +1721,12 @@ def submit_task(req: TaskSubmitRequest):
         "error": None,
     }
     with _TASK_LOCK:
+        if len(_TASK_QUEUE) >= _TASK_QUEUE_MAX:
+            raise HTTPException(
+                429,
+                "测量队列已满（最多 {} 个待执行任务），请稍后重试".format(
+                    _TASK_QUEUE_MAX),
+            )
         tasks = _load_tasks()
         tasks[task_id] = task
         _save_tasks(tasks)
@@ -1639,8 +1737,11 @@ def submit_task(req: TaskSubmitRequest):
 
 
 @app.get("/api/tasks/{task_id}")
-def task_status(task_id: str):
+def task_status(
+        task_id: str,
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """查询任务状态（queued / running / done / error）。"""
+    _require_measure_access(measure_token)
     _mark_stale_tasks()
     tasks = _load_tasks()
     task = tasks.get(task_id)
@@ -1650,8 +1751,11 @@ def task_status(task_id: str):
 
 
 @app.get("/api/tasks")
-def task_list(limit: int = Query(20, ge=1, le=100)):
+def task_list(
+        limit: int = Query(20, ge=1, le=100),
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """最近任务列表（按创建时间倒序）。"""
+    _require_measure_access(measure_token)
     _mark_stale_tasks()
     tasks = _load_tasks()
     items = sorted(tasks.values(),
@@ -1660,8 +1764,11 @@ def task_list(limit: int = Query(20, ge=1, le=100)):
 
 
 @app.post("/api/tasks/{task_id}/cancel")
-def cancel_task(task_id: str):
+def cancel_task(
+        task_id: str,
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """取消排队中（未开始）的任务。"""
+    _require_measure_access(measure_token)
     with _TASK_LOCK:
         for i, task in enumerate(_TASK_QUEUE):
             if task.get("task_id") == task_id:
@@ -1676,12 +1783,15 @@ def cancel_task(task_id: str):
 
 
 @app.delete("/api/tasks/{task_id}")
-def delete_task(task_id: str):
+def delete_task(
+        task_id: str,
+        measure_token: str = Header("", alias="X-Measure-Token")):
     """删除任务记录（含队列中/已完成/失败）。
 
     running 任务无法强制终止后台线程，但标记 _removed 后：
     worker 完成时检查到该标记不再写盘（防止删除的任务"复活"）。
     """
+    _require_measure_access(measure_token)
     with _TASK_LOCK:
         _TASK_QUEUE[:] = [t for t in _TASK_QUEUE
                           if t.get("task_id") != task_id]

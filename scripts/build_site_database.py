@@ -12,7 +12,7 @@ import os
 import sqlite3
 import sys
 from collections import defaultdict
-from contextlib import nullcontext
+from contextlib import closing, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -173,6 +173,8 @@ def build_sites(groups):
                 "raw_states": (login or {}).get("states", []),
                 "measured_at": (login or {}).get("measured_at", ""),
                 "policy": (login or {}).get("policy", {}),
+                "security_observations": (login or {}).get(
+                    "security_observations", {}),
                 "pwd_policy": (login or {}).get("pwd_policy", {}),
                 "pwd_method": (login or {}).get("pwd_method"),
                 "error": (login or {}).get("error"),
@@ -192,6 +194,8 @@ def build_sites(groups):
                 "raw_states": (signup or {}).get("states", []),
                 "measured_at": (signup or {}).get("measured_at", ""),
                 "policy": (signup or {}).get("policy", {}),
+                "security_observations": (signup or {}).get(
+                    "security_observations", {}),
                 "pwd_policy": (signup or {}).get("pwd_policy", {}),
                 "pwd_method": (signup or {}).get("pwd_method"),
                 "error": (signup or {}).get("error"),
@@ -271,6 +275,8 @@ def build_history(groups, sites):
                     "details_json": json.dumps({
                         "steps": _summary(r.get("states", [])),
                         "policy": r.get("policy", {}),
+                        "security_observations": r.get(
+                            "security_observations", {}),
                     }, ensure_ascii=False),
                 })
     return history
@@ -282,7 +288,10 @@ def create_db(sites, db_path, history=None):
     pending_rows = []
     if os.path.exists(db_path):
         try:
-            with sqlite3.connect(db_path, timeout=15) as old:
+            # sqlite3.Connection.__exit__ commits/rolls back but does not
+            # close the handle.  Explicit closing is required before the
+            # database file can be atomically replaced on Windows.
+            with closing(sqlite3.connect(db_path, timeout=15)) as old:
                 old.row_factory = sqlite3.Row
                 table = old.execute(
                     "SELECT 1 FROM sqlite_master "
@@ -304,7 +313,8 @@ def create_db(sites, db_path, history=None):
         os.remove(build_path)
     conn = sqlite3.connect(build_path)
     cur = conn.cursor()
-    cur.execute("""
+    try:
+        cur.execute("""
         CREATE TABLE sites (
             hostname TEXT PRIMARY KEY,
             url TEXT,
@@ -321,9 +331,9 @@ def create_db(sites, db_path, history=None):
             login_pwd_test TEXT, signup_pwd_test TEXT, overall_pwd_test TEXT,
             details_json TEXT
         )
-    """)
-    # 程序各版本历史结果（同站同入口可多条，按 version 区分）
-    cur.execute("""
+        """)
+        # 程序各版本历史结果（同站同入口可多条，按 version 区分）
+        cur.execute("""
         CREATE TABLE IF NOT EXISTS site_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             hostname TEXT NOT NULL,
@@ -333,9 +343,9 @@ def create_db(sites, db_path, history=None):
             route TEXT, measured_at TEXT,
             details_json TEXT
         )
-    """)
-    # 组员提交的人工观察（待审核）
-    cur.execute("""
+        """)
+        # 组员提交的人工观察（待审核）
+        cur.execute("""
         CREATE TABLE IF NOT EXISTS reviews_pending (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             hostname TEXT NOT NULL,
@@ -347,15 +357,19 @@ def create_db(sites, db_path, history=None):
             submitted_at TEXT,
             structured_json TEXT DEFAULT '{}'
         )
-    """)
-    for s in sites:
-        details = {
+        """)
+        for s in sites:
+            details = {
             "login_steps": s["login"]["steps"],
             "signup_steps": s["signup"]["steps"],
             "login_raw_states": s["login"]["raw_states"],
             "signup_raw_states": s["signup"]["raw_states"],
             "login_policy": s["login"]["policy"],
             "signup_policy": s["signup"]["policy"],
+            "login_security_observations": s["login"].get(
+                "security_observations", {}),
+            "signup_security_observations": s["signup"].get(
+                "security_observations", {}),
             "login_pwd_policy": s["login"].get("pwd_policy", {}),
             "signup_pwd_policy": s["signup"].get("pwd_policy", {}),
             "login_pwd_method": s["login"].get("pwd_method"),
@@ -365,12 +379,12 @@ def create_db(sites, db_path, history=None):
             "login_record": s["login"].get("record", {}),
             "signup_record": s["signup"].get("record", {}),
             "manual_structured": s["manual"].get("structured", {}),
-        }
-        cur.execute("""
+            }
+            cur.execute("""
             INSERT INTO sites VALUES (
                 ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )
-        """, (
+            """, (
             s["hostname"], s["url"], json.dumps(s["keywords"], ensure_ascii=False),
             s.get("version", ""),
             s["login"]["flow_type"], s["login"]["flow_zh"], s["login"]["route"],
@@ -385,33 +399,35 @@ def create_db(sites, db_path, history=None):
             s["manual"]["pwd_testability"].get("signup", ""),
             s["manual"]["pwd_testability"].get("overall", ""),
             json.dumps(details, ensure_ascii=False),
-        ))
-    cur.execute(
-        "CREATE INDEX idx_hostname ON sites(hostname);"
-    )
-    if history:
-        cur.executemany(
-            "INSERT INTO site_history (hostname, entry_kind, version, flow_type, "
-            "stop_reason, primary_method, route, measured_at, details_json) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
-            [(h["hostname"], h["entry_kind"], h["version"], h["flow_type"],
-              h["stop_reason"], h["primary_method"], h["route"],
-              h["measured_at"], h["details_json"])
-             for h in history],
+            ))
+        cur.execute(
+            "CREATE INDEX idx_hostname ON sites(hostname);"
         )
-    if pending_rows:
-        columns = (
-            "id", "hostname", "login", "signup", "note", "submitter",
-            "review_type", "submitted_at", "structured_json")
-        cur.executemany(
-            "INSERT INTO reviews_pending (" + ",".join(columns) + ") "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
-            [tuple(row.get(column, "{}" if column == "structured_json" else "")
-                   for column in columns)
-             for row in pending_rows],
-        )
-    conn.commit()
-    conn.close()
+        if history:
+            cur.executemany(
+                "INSERT INTO site_history (hostname, entry_kind, version, flow_type, "
+                "stop_reason, primary_method, route, measured_at, details_json) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                [(h["hostname"], h["entry_kind"], h["version"], h["flow_type"],
+                  h["stop_reason"], h["primary_method"], h["route"],
+                  h["measured_at"], h["details_json"])
+                 for h in history],
+            )
+        if pending_rows:
+            columns = (
+                "id", "hostname", "login", "signup", "note", "submitter",
+                "review_type", "submitted_at", "structured_json")
+            cur.executemany(
+                "INSERT INTO reviews_pending (" + ",".join(columns) + ") "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                [tuple(row.get(column, "{}" if column == "structured_json" else "")
+                       for column in columns)
+                 for row in pending_rows],
+            )
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
     os.replace(build_path, db_path)
 
 
@@ -422,7 +438,7 @@ def _load_old_db_records(db_path):
         return []
     records = []
     try:
-        with sqlite3.connect(db_path, timeout=15) as old:
+        with closing(sqlite3.connect(db_path, timeout=15)) as old:
             old.row_factory = sqlite3.Row
             rows = old.execute(
                 "SELECT hostname, details_json FROM sites").fetchall()

@@ -95,6 +95,13 @@
       </select>
       <button id="classify-btn" class="btn btn-success">开始分类</button>
     </div>
+    <div class="d-flex align-items-center gap-2 mt-2">
+      <label for="measure-token" class="form-label small text-muted mb-0">测量口令</label>
+      <input id="measure-token" class="form-control form-control-sm" type="password"
+             autocomplete="current-password" placeholder="SITES_MEASURE_TOKEN"
+             style="max-width:260px">
+      <span class="form-text mt-0">仅保存在当前浏览器标签页中</span>
+    </div>
     <div class="form-check mt-2">
       <input id="force-retest" class="form-check-input" type="checkbox">
       <label class="form-check-label" for="force-retest">重复测试（忽略数据库，重新打开网站测量）</label>
@@ -704,6 +711,8 @@ async function showDetail(host) {
   document.getElementById('modal-body').innerHTML = `
     ${policyTestTableHtml(loginWithPwd, signupWithPwd, s.version)}
     ${measuredPwdHtml(s.login.pwd_policy, s.signup.pwd_policy)}
+    ${securityObservationsHtml(s.login.security_observations, '登录')}
+    ${securityObservationsHtml(s.signup.security_observations, '注册')}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
@@ -844,6 +853,155 @@ function extraLines(d, kindLabel) {
   ].filter(Boolean).map(t => `<div class="small">${esc(t)}</div>`).join('');
   return `<div class="small text-muted mt-1">${kindLabel}${srcTag}${extra ? '<br>' + extra : ''}</div>`;
 }
+function securityObservationsHtml(bundle, label = '') {
+  const analyzers = (bundle && bundle.analyzers) || {};
+  const assessment = (bundle && bundle.assessment) || {};
+  if (!Object.keys(analyzers).length && !Object.keys(assessment).length) return '';
+  const lines = [];
+  const oauth = analyzers.oauth_oidc || {};
+  if (oauth.status === 'observed') {
+    const state = oauth.state && oauth.state.non_empty_observed ? 'state参数' : '未观察到非空state';
+    const pkce = oauth.pkce && oauth.pkce.code_challenge_observed
+      ? `PKCE${(oauth.pkce.methods || []).length ? ' ' + oauth.pkce.methods.join('/') : ''}` : '未观察到PKCE';
+    lines.push(`OAuth/OIDC：${oauth.authorization_endpoint_count || 1} 个授权端点，${state}，${pkce}`);
+  }
+  const jwt = analyzers.jwt || {};
+  if (jwt.status === 'observed') {
+    lines.push(`JWT：观察到 ${jwt.token_count || 0} 个脱敏元数据，算法 ${(jwt.algorithms || []).join('/') || '未知'}，exp${jwt.expiration_claim_present_for_all ? '均存在' : '并非全部存在'}`);
+  }
+  const webauthn = analyzers.webauthn || {};
+  if (webauthn.site_capability_observed) {
+    lines.push(`WebAuthn/Passkey：页面能力已观察（${webauthn.confidence || 'unknown'} 置信度）`);
+  }
+  const mfa = analyzers.mfa || {};
+  const FACTOR_ZH = { password: '口令', sms_otp: '短信验证码', email_otp: '邮箱验证码',
+    qr_or_app_confirmation: '扫码/App确认', federated_identity: '联合身份',
+    webauthn_or_passkey: 'WebAuthn/Passkey' };
+  if ((mfa.factor_capabilities || []).length) {
+    const factors = mfa.factor_capabilities.map(item => FACTOR_ZH[item] || item).join('、');
+    lines.push(`认证能力：${factors}；MFA是否强制：未确定`);
+  }
+  const session = analyzers.session_cookies || {};
+  if (session.status === 'observed') {
+    const all = session.all_cookies || {};
+    const likely = session.session_like_cookies || {};
+    lines.push(`Cookie：共 ${all.count || 0} 个，疑似会话 Cookie ${likely.count || 0} 个（仅统计属性）`);
+  }
+  const transport = analyzers.transport_security || {};
+  if (transport.status === 'observed') {
+    const tls = transport.tls || {};
+    const redirects = transport.redirects || {};
+    const pieces = [transport.https_page_observed ? 'HTTPS' : (transport.final_page_scheme || '协议未知')];
+    if (tls.metadata_observed) pieces.push(tls.version || 'TLS版本未知');
+    if (transport.http_protocol && transport.http_protocol !== 'unknown') pieces.push(transport.http_protocol);
+    if (redirects.http_to_https_observed) pieces.push('观察到HTTP→HTTPS跳转');
+    if (tls.certificate_valid_to_utc) pieces.push('证书有效至 ' + tls.certificate_valid_to_utc.slice(0, 10));
+    lines.push(`传输安全：${pieces.join('，')}`);
+  }
+  const headers = analyzers.http_security_headers || {};
+  if (headers.status === 'observed') {
+    const csp = headers.content_security_policy || {};
+    const framing = headers.anti_framing || {};
+    const present = [];
+    if (headers.strict_transport_security && headers.strict_transport_security.present) present.push('HSTS');
+    if (csp.enforced_present) present.push('CSP');
+    if (headers.x_content_type_options_nosniff) present.push('nosniff');
+    if (framing.x_frame_options !== 'not_observed' || framing.csp_frame_ancestors) present.push('防嵌套策略');
+    if (headers.referrer_policy && headers.referrer_policy !== 'not_observed') present.push('Referrer-Policy');
+    if (headers.permissions_policy_present) present.push('Permissions-Policy');
+    lines.push(`安全响应头：${present.length ? present.join('、') : '未观察到所检查的安全响应头'}`);
+  }
+  const FINDING_ZH = {
+    unsigned_algorithm_observed: 'JWT使用none算法',
+    expiration_claim_missing_in_observed_token: '观察到的JWT并非全部含exp',
+    session_like_cookie_without_secure: '疑似会话Cookie缺少Secure',
+    session_like_cookie_without_http_only: '疑似会话Cookie缺少HttpOnly',
+    plaintext_final_page_observed: '最终页面仍使用HTTP',
+    https_to_http_downgrade_observed: '观察到HTTPS降级到HTTP',
+    legacy_tls_version_observed: '观察到旧版TLS',
+    certificate_expired: '证书已过期',
+    certificate_expires_within_30_days: '证书将在30天内到期',
+    certificate_name_mismatch: '证书名称与当前主机不匹配',
+    browser_reported_insecure_transport: '浏览器报告传输不安全',
+    hsts_not_observed: 'HTTPS响应未观察到HSTS',
+    content_security_policy_not_observed: '未观察到CSP',
+    csp_allows_unsafe_inline: 'CSP允许unsafe-inline',
+    csp_allows_unsafe_eval: 'CSP允许unsafe-eval',
+    anti_framing_policy_not_observed: '未观察到防嵌套策略',
+    nosniff_not_observed: '未观察到nosniff',
+    referrer_policy_not_observed: '未观察到Referrer-Policy',
+  };
+  const findings = [jwt, session, transport, headers]
+    .flatMap(item => item.findings || [])
+    .map(item => FINDING_ZH[item] || item);
+  if (findings.length) lines.push(`需复核：${findings.join('、')}`);
+  const dimensions = assessment.dimensions || {};
+  const overall = assessment.overall || {};
+  const DIMENSION_ZH = {
+    password_policy: '口令策略', authentication: '认证机制',
+    session_cookies: '会话 Cookie', transport_security: '传输安全',
+    http_security_headers: '安全响应头'
+  };
+  const POSTURE_ZH = { strong: '较强', moderate: '中等', weak: '需改进', unknown: '未知' };
+  const RISK_ZH = { high: '已观察到高风险项', medium: '已观察到中风险项',
+    review: '存在待复核项', none_observed: '已覆盖证据中未发现明显风险', unknown: '未知' };
+  const RECOMMENDATION_ZH = {
+    review_minimum_password_length: '复核并提高最小口令长度',
+    allow_longer_passwords: '允许使用更长口令',
+    consider_breached_password_screening: '考虑拦截已泄露口令',
+    verify_oauth_state_generation_manually: '人工验证 OAuth state 的动态生成与校验',
+    verify_pkce_for_oauth_code_flow_manually: '人工验证 OAuth 授权码流程的 PKCE',
+    mfa_enforcement_requires_authenticated_review: '登录后人工确认 MFA 是否强制',
+    authenticated_session_cookie_review_required: '登录后复核真实会话 Cookie',
+    verify_authenticated_session_cookie_attributes: '登录后复核会话 Cookie 属性',
+    set_secure_on_session_cookies: '为会话 Cookie 设置 Secure',
+    set_http_only_on_session_cookies: '为会话 Cookie 设置 HttpOnly',
+    serve_authentication_pages_over_https: '认证页面应仅通过 HTTPS 提供',
+    disable_legacy_tls_versions: '停用旧版 TLS',
+    renew_tls_certificate: '续期 TLS 证书',
+    fix_certificate_name_coverage: '修复证书主机名覆盖',
+    consider_hsts_for_https_authentication_pages: '为 HTTPS 认证页面评估启用 HSTS',
+    deploy_content_security_policy: '部署 Content-Security-Policy',
+    reduce_csp_unsafe_inline: '减少 CSP unsafe-inline',
+    remove_csp_unsafe_eval: '移除 CSP unsafe-eval',
+    deploy_anti_framing_policy: '部署防页面嵌套策略',
+    set_x_content_type_options_nosniff: '设置 X-Content-Type-Options: nosniff',
+    set_referrer_policy: '设置 Referrer-Policy'
+  };
+  let assessmentHtml = '';
+  if (Object.keys(dimensions).length) {
+    const rows = Object.entries(dimensions).map(([name, value]) => {
+      const score = value.score == null ? '—' : `${value.score}/100`;
+      const coverage = Number.isFinite(value.coverage_percent) ? `${value.coverage_percent}%` : '—';
+      return `<tr><td>${esc(DIMENSION_ZH[name] || name)}</td><td>${esc(score)}</td>` +
+        `<td>${esc(coverage)}</td><td>${esc(POSTURE_ZH[value.posture] || value.posture || '未知')}</td></tr>`;
+    }).join('');
+    const scoreText = overall.score == null ? '已知证据不足，暂不计算得分'
+      : `已知证据得分 ${overall.score}/100`;
+    const gradeText = overall.grade ? `等级 ${overall.grade}`
+      : `覆盖率未达到 ${overall.grade_minimum_coverage_percent || 70}%，暂不评级`;
+    const recommendations = [...new Set(Object.values(dimensions)
+      .flatMap(value => value.recommendations || []))]
+      .map(item => RECOMMENDATION_ZH[item] || item).slice(0, 5);
+    assessmentHtml = `<div class="mt-2">
+      <div class="small"><b>${esc(scoreText)}</b>；证据覆盖率 ${esc(overall.coverage_percent == null ? '—' : overall.coverage_percent + '%')}；${esc(gradeText)}</div>
+      <div class="small">风险提示：${esc(RISK_ZH[overall.observed_risk_level] || '未知')}</div>
+      <table class="table table-sm table-bordered mt-1 mb-1">
+        <thead><tr><th>维度</th><th>已知证据得分</th><th>覆盖率</th><th>已知项表现</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${recommendations.length ? `<div class="small"><b>建议：</b>${recommendations.map(esc).join('；')}</div>` : ''}
+      <div class="small text-muted">分数只基于已观察证据，未知项不扣分；不同覆盖率的分数不可直接比较。</div>
+    </div>`;
+  }
+  if (!lines.length && !assessmentHtml) return '';
+  return `<div class="alert alert-light border py-2 mt-2 mb-2">
+    <div><b>${esc(label ? label + '安全能力被动观察' : '安全能力被动观察')}</b></div>
+    ${lines.map(line => `<div class="small">${esc(line)}</div>`).join('')}
+    ${assessmentHtml}
+    <div class="small text-muted">只读、认证前及现有导航证据；不额外请求网站。“未观察到”不等于“不支持”，也不代表已完成安全验证。</div>
+  </div>`;
+}
 const PERM_CHAR_ZH = { p_space: '空格', p_unicd: 'Unicode 字符', p_emoji: 'Emoji',
   p_spn1: '@', p_spn2: '#', p_spn3: '!', p_spn4: '$' };
 const PERM_SEQ_ZH = { p_rep: '重复字符', p_seq: '连续字符', p_dict: '字典词' };
@@ -983,6 +1141,19 @@ const TASK_STATUS_ZH = {
   queued: '排队中', running: '测量中', done: '完成', error: '失败', cancelled: '已取消'
 };
 let taskPollTimer = null;
+const measureTokenInput = document.getElementById('measure-token');
+measureTokenInput.value = sessionStorage.getItem('sites-measure-token') || '';
+measureTokenInput.addEventListener('input', () => {
+  sessionStorage.setItem('sites-measure-token', measureTokenInput.value);
+});
+
+function measureHeaders(includeJson = false) {
+  const headers = {};
+  if (includeJson) headers['Content-Type'] = 'application/json';
+  const token = measureTokenInput.value.trim();
+  if (token) headers['X-Measure-Token'] = token;
+  return headers;
+}
 
 function taskKindLabel(kind) {
   return kind === 'policy' ? '口令政策' : (kind === 'classify' ? '分类' : kind);
@@ -996,9 +1167,12 @@ function taskResultSummary(t) {
 }
 async function loadTasks() {
   try {
-    const r = await fetch('/api/tasks?limit=20');
+    const r = await fetch('/api/tasks?limit=20', { headers: measureHeaders() });
     const d = await r.json();
     const tbody = document.getElementById('task-tbody');
+    if (!r.ok) {
+      throw new Error(d.detail || '服务器拒绝访问任务列表');
+    }
     const tasks = d.tasks || [];
     if (!tasks.length) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">还没有测量任务，在上方提交一个吧</td></tr>';
@@ -1047,18 +1221,24 @@ function clearTaskPoll() {
   if (taskPollTimer) { clearInterval(taskPollTimer); taskPollTimer = null; }
 }
 async function cancelTask(taskId) {
-  await fetch(`/api/tasks/${taskId}/cancel`, { method: 'POST' });
+  const r = await fetch(`/api/tasks/${taskId}/cancel`, {
+    method: 'POST', headers: measureHeaders()
+  });
+  if (!r.ok) { const d = await r.json(); alert(d.detail || '取消失败'); return; }
   loadTasks();
 }
 async function deleteTask(taskId) {
   if (!confirm('确定删除该任务记录？')) return;
-  const r = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+  const r = await fetch(`/api/tasks/${taskId}`, {
+    method: 'DELETE', headers: measureHeaders()
+  });
   if (!r.ok) { const d = await r.json(); alert(d.detail || '删除失败'); return; }
   loadTasks();
 }
 async function addTaskToDb(taskId) {
-  const r = await fetch(`/api/tasks/${taskId}`);
+  const r = await fetch(`/api/tasks/${taskId}`, { headers: measureHeaders() });
   const t = await r.json();
+  if (!r.ok) { alert(t.detail || '读取任务失败'); return; }
   if (t.status !== 'done' || !t.result) { alert('任务未完成，无法入库'); return; }
   const d = t.result;
   let login = {}, signup = {}, url = '';
@@ -1073,6 +1253,7 @@ async function addTaskToDb(taskId) {
       pwd_method: x.method_used,
       confidence: x.confidence, stop_reason: x.stop_reason,
       primary_method: x.primary_method, evidence: x.evidence || [],
+      security_observations: x.security_observations || {},
       error: x.error || null, measured_at: x.measured_at
     };
   };
@@ -1107,8 +1288,9 @@ async function addTaskToDb(taskId) {
   search('');
 }
 async function showTaskResult(taskId) {
-  const r = await fetch(`/api/tasks/${taskId}`);
+  const r = await fetch(`/api/tasks/${taskId}`, { headers: measureHeaders() });
   const t = await r.json();
+  if (!r.ok) { alert(t.detail || '读取任务失败'); return; }
   const result = t.result || {};
   let body;
   if (t.kind === 'policy') {
@@ -1121,6 +1303,7 @@ async function showTaskResult(taskId) {
         ${result.from_database ? '<div class="badge bg-secondary mt-1">数据库已有结果，未重复测量</div>' : ''}
       </div>
       ${t.status === 'done' ? policyBoxHtml(result) : ''}
+      ${securityObservationsHtml(result.security_observations)}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   } else if (result.entry_kind === 'both') {
     // 注册+登录合并结果：已测侧标注"数据库已有"，未测侧为现场结果
@@ -1137,11 +1320,13 @@ async function showTaskResult(taskId) {
         <div class="alert alert-info py-2 mb-2"><div><b>注册${signupTag}</b></div>
           <div class="mt-2">${reportTableHtml(null, signup, 'v4')}</div>
           <div class="mt-2">${extraLines(signup, '注册')}</div>
+          ${securityObservationsHtml(signup.security_observations, '注册')}
         </div>` : (signup.error ? `<div class="alert alert-danger py-2">注册失败: ${esc(signup.error)}</div>` : '')}
       ${login.flow_type ? `
         <div class="alert alert-info py-2 mb-2"><div><b>登录${loginTag}</b></div>
           <div class="mt-2">${reportTableHtml(login, null, 'v4')}</div>
           <div class="mt-2">${extraLines(login, '登录')}</div>
+          ${securityObservationsHtml(login.security_observations, '登录')}
         </div>` : (login.error ? `<div class="alert alert-danger py-2">登录失败: ${esc(login.error)}</div>` : '')}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   } else {
@@ -1154,6 +1339,7 @@ async function showTaskResult(taskId) {
         result.entry_kind === 'login' ? result : null,
         result.entry_kind === 'signup' ? result : null, 'v4') : ''}
       ${result.flow_type ? extraLines(result, '分类') : ''}
+      ${securityObservationsHtml(result.security_observations)}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   }
   document.getElementById('modal-title').textContent = '任务结果';
@@ -1174,7 +1360,7 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
     if (kind === 'policy') {
       const r = await fetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: measureHeaders(true),
         body: JSON.stringify({ url, kind: 'policy', entry_kind: 'signup', method: 'auto', force_retest: forceRetest })
       });
       const d = await r.json();
@@ -1188,7 +1374,7 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const entryKind = kind;  // 'both' 原样提交，后端分别查库/现场测
       const r = await fetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: measureHeaders(true),
         body: JSON.stringify({ url, kind: 'classify', entry_kind: entryKind, force_retest: forceRetest })
       });
       const d = await r.json();

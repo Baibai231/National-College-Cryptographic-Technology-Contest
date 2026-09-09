@@ -34,7 +34,7 @@ cd ~/measure
 
 # Python 3.9+ 虚拟环境
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt fastapi uvicorn 2>&1 | tail -1
+.venv/bin/pip install -r webapp/requirements-server.txt 2>&1 | tail -1
 
 # Chrome 浏览器（实时分类必需）
 sudo apt update
@@ -70,7 +70,9 @@ After=network.target
 WorkingDirectory=/home/USER/measure
 Environment=SITES_HEADLESS=1
 Environment=SITES_ADMIN_TOKEN=请替换为高强度随机口令
+Environment=SITES_MEASURE_TOKEN=请替换为另一条高强度随机口令
 Environment=SITES_CLASSIFY_CONCURRENCY=2
+Environment=SITES_TASK_QUEUE_MAX=20
 ExecStart=/home/USER/measure/.venv/bin/python -m uvicorn webapp.app:app --host 0.0.0.0 --port 8000
 Restart=always
 
@@ -135,9 +137,19 @@ crontab -e
 
 ## 注意事项
 
+- 浏览器测量和任务接口默认要求请求头 `X-Measure-Token`；网页中的“测量口令”输入框
+  会在当前标签页会话内保存并自动发送。部署时设置 `SITES_MEASURE_TOKEN`；兼容旧部署，
+  未设置它时会回退使用 `SITES_ADMIN_TOKEN`。两个变量都未设置时测量功能默认关闭。
+  只有明确接受滥用风险时才设置 `SITES_ALLOW_PUBLIC_MEASUREMENT=1` 开放匿名测量。
+- 默认不允许跨域调用。确有独立前端时，用逗号分隔的精确来源配置
+  `SITES_CORS_ORIGINS=https://frontend.example.com`，不要配置通配符 `*`。
+- 异步等待队列默认最多 20 项，可用 `SITES_TASK_QUEUE_MAX` 调整。这个上限只限制等待
+  任务；Chrome 并发仍由分类/政策并发配置控制。
 - 实时分类接口在服务器上跑 Chrome（单次约 1-3 分钟），默认最多同时 2 个；超出时
   返回“稍后重试”，可用 `SITES_CLASSIFY_CONCURRENCY` 保守调整。接口拒绝本机、内网、
-  保留地址和非 80/443 端口，避免公网页面被用于访问服务器内部服务。
-- 当前公网地址仍是 HTTP；管理员口令会明文经过网络。正式长期使用应在域名备案后配置
-  HTTPS/Nginx，未启用 HTTPS 前不要在不可信网络中输入管理员口令。
+  保留地址和非 80/443 端口，并在排队执行前重新解析域名。浏览器仍可能跟随恶意公网
+  站点的重定向，因此生产部署还应把服务放入无法访问云元数据地址、数据库和办公内网的
+  容器/子网，不能只依赖应用层 URL 检查。
+- 当前公网地址仍是 HTTP；管理员口令和测量口令会明文经过网络。正式长期使用应在域名
+  备案后配置 HTTPS/Nginx，未启用 HTTPS 前不要在不可信网络中输入任何口令。
 - 不提交任何真实身份信息：平台只观察和分类。

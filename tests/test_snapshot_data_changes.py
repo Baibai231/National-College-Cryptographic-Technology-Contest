@@ -80,7 +80,8 @@ class SnapshotDataChangesTests(unittest.TestCase):
             upsert_records(target, delta)
             merged = {
                 (r["hostname"], r["entry_kind"]): r
-                for r in map(json.loads, target.read_text().splitlines())
+                for r in map(
+                    json.loads, target.read_text(encoding="utf-8").splitlines())
             }
         self.assertEqual(
             merged[("mac-updated.example", "login")]["flow_type"],

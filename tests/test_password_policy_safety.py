@@ -7,6 +7,17 @@ from utils.util_test_password import ProbeOutcome, TestPassword
 
 
 class PasswordPolicySafetyTests(unittest.TestCase):
+    @staticmethod
+    def _empty_restrictive_policy():
+        return {
+            "r_no_a_sps": False, "r_2_word": False,
+            "r_l_start": False, "r_dig_min": 0,
+            "r_upp_min": 0, "r_low_min": 0, "r_sps_min": 0,
+            "r_cmb13": False, "r_cmb23": False, "r_cmb33": False,
+            "r_cmb14": False, "r_cmb24": False,
+            "r_cmb34": False, "r_cmb44": False,
+        }
+
     def test_stratified_candidates_cover_common_character_classes(self):
         candidates = TestPassword._stratified_candidates(15)
         self.assertTrue(all(len(candidate) == 15 for candidate in candidates))
@@ -56,6 +67,64 @@ class PasswordPolicySafetyTests(unittest.TestCase):
         policy = tester.run_full_test()
         self.assertTrue(policy["_full_form_unauthorized"])
         self.assertTrue(policy["_inconclusive"])
+
+    def test_inline_breached_password_flag_is_true_after_rejections(self):
+        tester = TestPassword.__new__(TestPassword)
+        tester.my_logger = mock.MagicMock()
+        tester.test_one_password = mock.MagicMock(return_value=False)
+        leaked = "\n".join(["password"] * 20)
+
+        with mock.patch("builtins.open", mock.mock_open(read_data=leaked)):
+            result = tester.identify_breached_passwords(
+                self._empty_restrictive_policy(), [8, 16])
+
+        self.assertTrue(result["p_br"])
+        self.assertEqual(tester.test_one_password.call_count, 20)
+
+    def test_inline_breached_password_flag_is_false_when_one_is_accepted(self):
+        tester = TestPassword.__new__(TestPassword)
+        tester.my_logger = mock.MagicMock()
+        tester.test_one_password = mock.MagicMock(return_value=True)
+
+        with mock.patch("builtins.open", mock.mock_open(read_data="password\n")):
+            result = tester.identify_breached_passwords(
+                self._empty_restrictive_policy(), [8, 16])
+
+        self.assertFalse(result["p_br"])
+
+    def test_full_form_length_probes_preserve_known_composition(self):
+        tester = FullFormPolicyTester.__new__(FullFormPolicyTester)
+        tester.my_logger = mock.MagicMock()
+        tester.rate_ctrl = mock.MagicMock()
+        tester.admissible_password = "Abcdef1!"
+        rp = self._empty_restrictive_policy()
+        rp.update({
+            "r_low_min": 1, "r_upp_min": 1,
+            "r_dig_min": 1, "r_sps_min": 1,
+            "r_cmb44": True,
+        })
+
+        def accepted(candidate, _label):
+            return (
+                8 <= len(candidate) <= 16
+                and any(char.islower() for char in candidate)
+                and any(char.isupper() for char in candidate)
+                and any(char.isdigit() for char in candidate)
+                and any(not char.isalnum() for char in candidate)
+            )
+
+        tester.test_one_password = mock.MagicMock(side_effect=accepted)
+        limits = tester.identify_min_and_max_length_limitations(
+            rp, [0, 32], [6, 128])
+
+        self.assertEqual(limits, (8, 16))
+        self.assertTrue(all(
+            any(char.islower() for char in call.args[0])
+            and any(char.isupper() for char in call.args[0])
+            and any(char.isdigit() for char in call.args[0])
+            and any(not char.isalnum() for char in call.args[0])
+            for call in tester.test_one_password.call_args_list
+        ))
 
     # ── P3 自洽校验：OR 规则检测 ──
     def test_self_consistency_detects_or_rule_when_single_class_rejected(self):

@@ -13,10 +13,20 @@ site_agnostic_tester.py
   4. 返回完整的 password_policy
 """
 
+import sys
 import time
 import utils.util_basic as uub
 from utils.login_link_discovery import LoginLinkDiscovery
 from utils.util_test_password import TestPassword, BrowserDeadError
+
+
+def _safe_print(message) -> None:
+    """Print without crashing on legacy Windows console encodings."""
+    text = str(message)
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding:
+        text = text.encode(encoding, errors="replace").decode(encoding)
+    print(text)
 
 
 class SitePasswordPolicyTester:
@@ -45,40 +55,40 @@ class SitePasswordPolicyTester:
 
     def discover_signup_page(self) -> bool:
         """运行 Node.js 表单检测，获取注册 URL 和字段 XPath"""
-        print(f"[*] Phase 1+2: Node.js 表单检测 {self.site_url} ...")
+        _safe_print(f"[*] Phase 1+2: Node.js 表单检测 {self.site_url} ...")
 
         # Node.js detector 一次性返回 URL + 字段
         self.signup_url = self.link_discovery.navigate_to_signup(self.site_url)
 
         if not self.signup_url:
-            print("    ✗ 未发现注册页面")
+            _safe_print("    ✗ 未发现注册页面")
             return False
 
-        print(f"    ✓ 注册页面: {self.signup_url}")
+        _safe_print(f"    ✓ 注册页面: {self.signup_url}")
 
         # 获取缓存的字段检测结果
         email_xpath, password_xpath = self.link_discovery.find_signup_fields()
 
         if email_xpath:
             self.email_xpath = email_xpath
-            print(f"    ✓ 邮箱字段: {email_xpath}")
+            _safe_print(f"    ✓ 邮箱字段: {email_xpath}")
         else:
-            print(f"    ✗ 未检测到邮箱字段")
+            _safe_print("    ✗ 未检测到邮箱字段")
 
         if password_xpath:
             self.password_xpath = password_xpath
-            print(f"    ✓ 密码字段: {password_xpath}")
+            _safe_print(f"    ✓ 密码字段: {password_xpath}")
         else:
-            print(f"    ✗ 未检测到密码字段")
+            _safe_print("    ✗ 未检测到密码字段")
 
         # Selenium 导航到 Node.js 发现的注册页面
         if self.signup_url:
-            print(f"    Selenium 导航到: {self.signup_url}")
+            _safe_print(f"    Selenium 导航到: {self.signup_url}")
             try:
                 self.driver.get(self.signup_url)
                 time.sleep(2)
             except Exception as e:
-                print(f"    ⚠ 导航警告: {e}")
+                _safe_print(f"    ⚠ 导航警告: {e}")
 
         return bool(self.password_xpath)
 
@@ -124,7 +134,7 @@ class SitePasswordPolicyTester:
                 f"signup_url={self.signup_url}, password_xpath={self.password_xpath}"
             )
 
-        print(f"[*] Phase 3: 执行密码政策测试...")
+        _safe_print("[*] Phase 3: 执行密码政策测试...")
         my_logger = uub.get_logger(self.test_site)
 
         self._tester = TestPassword(
@@ -168,7 +178,7 @@ class SitePasswordPolicyTester:
                     "negative_control_not_rejected: inline 表单未对一字符密码给出"
                     "明确密码专属拒绝证据"
                 )
-                print("    ⚠ inline 负对照未成立，停止政策推断并回退仅分类")
+                _safe_print("    ⚠ inline 负对照未成立，停止政策推断并回退仅分类")
                 # 提示政策解析：负对照虽不成立，但页面规则提示（gamersky
                 # "6-20位"等）含政策线索。先填一个短密码触发提示闪现，
                 # 再扫描页面文本。
@@ -178,7 +188,7 @@ class SitePasswordPolicyTester:
                         password_policy["_hint_policy"] = _hint
                         password_policy["_inconclusive_reason"] += (
                             "；页面提示政策: {}".format(_hint))
-                        print(f"    页面提示政策: {_hint}")
+                        _safe_print(f"    页面提示政策: {_hint}")
                 except Exception:
                     pass
                 return password_policy
@@ -191,7 +201,7 @@ class SitePasswordPolicyTester:
                 password_policy["_inconclusive"] = True
                 password_policy["_inconclusive_reason"] = (
                     "admissible_password_not_found: 无法找到可接受的密码")
-                print("    ✗ 无法找到可接受的密码")
+                _safe_print("    ✗ 无法找到可接受的密码")
                 # 提示政策解析：admissible 找不到（可能误判连坐拒绝），
                 # 页面提示仍可作线索。
                 try:
@@ -200,11 +210,11 @@ class SitePasswordPolicyTester:
                         password_policy["_hint_policy"] = _hint
                         password_policy["_inconclusive_reason"] += (
                             "；页面提示政策: {}".format(_hint))
-                        print(f"    页面提示政策: {_hint}")
+                        _safe_print(f"    页面提示政策: {_hint}")
                 except Exception:
                     pass
                 return password_policy
-            print(f"    ✓ 可接受密码: {admissible}")
+            _safe_print(f"    ✓ 可接受密码: {admissible}")
             uub.random_sleep([3, 5])
 
             rp = password_policy["restrictive"]
@@ -220,13 +230,13 @@ class SitePasswordPolicyTester:
                 return True
 
             rp["r_no_a_sps"] = self._tester.check_special_symbols(admissible)
-            print(f"    r_no_a_sps: {rp['r_no_a_sps']}")
+            _safe_print(f"    r_no_a_sps: {rp['r_no_a_sps']}")
 
             rp["r_2_word"] = self._tester.change_and_test_2_word_password()
-            print(f"    r_2_word: {rp['r_2_word']}")
+            _safe_print(f"    r_2_word: {rp['r_2_word']}")
 
             rp["r_l_start"] = self._tester.change_and_test_letter_start_password(rp["r_2_word"])
-            print(f"    r_l_start: {rp['r_l_start']}")
+            _safe_print(f"    r_l_start: {rp['r_l_start']}")
 
             if not _control_pair("phase control: revalidate after letter-start"):
                 password_policy["_inconclusive"] = True
@@ -235,7 +245,7 @@ class SitePasswordPolicyTester:
                 return password_policy
 
             rp["r_dig_min"] = self._tester.change_and_test_digit_minimum(rp["r_no_a_sps"])
-            print(f"    r_dig_min: {rp['r_dig_min']}")
+            _safe_print(f"    r_dig_min: {rp['r_dig_min']}")
 
             if not _control_pair("phase control: revalidate after digit-minimum"):
                 password_policy["_inconclusive"] = True
@@ -244,13 +254,13 @@ class SitePasswordPolicyTester:
                 return password_policy
 
             rp["r_upp_min"] = self._tester.change_and_test_lower_upper_minimum(True, rp["r_no_a_sps"])
-            print(f"    r_upp_min: {rp['r_upp_min']}")
+            _safe_print(f"    r_upp_min: {rp['r_upp_min']}")
 
             rp["r_low_min"] = self._tester.change_and_test_lower_upper_minimum(False, rp["r_no_a_sps"])
-            print(f"    r_low_min: {rp['r_low_min']}")
+            _safe_print(f"    r_low_min: {rp['r_low_min']}")
 
             rp["r_sps_min"] = self._tester.change_and_test_symbol_minimum(rp["r_no_a_sps"])
-            print(f"    r_sps_min: {rp['r_sps_min']}")
+            _safe_print(f"    r_sps_min: {rp['r_sps_min']}")
 
             # 固定顺序的连续突变可能积累页面状态或触发策略切换。进入长度阶段前
             # 重新跑“负对照 + 已知基准”配对，二者任一漂移就停止推断。
@@ -262,7 +272,9 @@ class SitePasswordPolicyTester:
 
             password_policy["length"][0], password_policy["length"][1] = \
                 self._tester.identify_min_and_max_length_limitations(rp, [0, 32], [6, 128])
-            print(f"    长度: min={password_policy['length'][0]}, max={password_policy['length'][1]}")
+            _safe_print(
+                f"    长度: min={password_policy['length'][0]}, "
+                f"max={password_policy['length'][1]}")
             self._checkpoint_policy(password_policy, "length_done")
 
             # 方案 A 联动：max 未检出（None）时，下游 permissive 测试仍需要一个可用
@@ -288,8 +300,9 @@ class SitePasswordPolicyTester:
                 rp["r_cmb13"], rp["r_cmb23"], rp["r_cmb33"],
                 rp["r_cmb14"], rp["r_cmb24"], rp["r_cmb34"], rp["r_cmb44"]
             ] = self._tester.identify_combination_requirements(rp, _eff_length)
-            print(f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
-                  f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
+            _safe_print(
+                f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
+                f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
 
             # ── P3 自洽校验：用已推断约束反推密码验证模型一致性 ──
             # 模型是 AND 语义，无法表达 OR 规则（如 GitHub "≥15位 或
@@ -303,12 +316,12 @@ class SitePasswordPolicyTester:
                 password_policy["_inconclusive_reason"] = _consistency_note
                 if _or_rule:
                     password_policy["_or_rule"] = _or_rule
-                    print(f"    ⚠ 自洽校验失败(OR规则): {_consistency_note}")
-                    print(f"    _or_rule: {_or_rule}")
+                    _safe_print(f"    ⚠ 自洽校验失败(OR规则): {_consistency_note}")
+                    _safe_print(f"    _or_rule: {_or_rule}")
                 else:
-                    print(f"    ⚠ 自洽校验失败: {_consistency_note}")
+                    _safe_print(f"    ⚠ 自洽校验失败: {_consistency_note}")
                 return password_policy
-            print(f"    自洽校验: {_consistency_note}")
+            _safe_print(f"    自洽校验: {_consistency_note}")
 
             if not self._tester.establish_inline_control() or not \
                     self._tester.test_one_password(
@@ -329,10 +342,10 @@ class SitePasswordPolicyTester:
                 self._tester.identify_permitted_sequences(rp, _eff_length)
 
         except BrowserDeadError as e:
-            print(f"    ✗ 浏览器会话终止，测量中止: {e}")
+            _safe_print(f"    ✗ 浏览器会话终止，测量中止: {e}")
             password_policy["_browser_dead"] = True
         except Exception as e:
-            print(f"    ✗ 测试过程出错: {e}")
+            _safe_print(f"    ✗ 测试过程出错: {e}")
             import traceback
             traceback.print_exc()
             if getattr(self._tester, "_browser_dead", False):
@@ -347,7 +360,7 @@ class SitePasswordPolicyTester:
         if getattr(self._tester, '_gated_form', False) and \
                 not getattr(self._tester, '_saw_pwd_specific_reject', False):
             password_policy["_gated_form_unverifiable"] = True
-            print("    ⚠ 门控表单：全程无密码专属拒绝信号，政策可能无法据此验证")
+            _safe_print("    ⚠ 门控表单：全程无密码专属拒绝信号，政策可能无法据此验证")
 
         if getattr(self._tester, '_had_inconclusive', False):
             password_policy["_inconclusive"] = True
@@ -355,7 +368,7 @@ class SitePasswordPolicyTester:
                 "_inconclusive_reason",
                 "at_least_one_password_probe_lacked_accept_or_reject_evidence",
             )
-            print("    ⚠ 至少一个候选缺少明确证据，整份政策降级为无法判断")
+            _safe_print("    ⚠ 至少一个候选缺少明确证据，整份政策降级为无法判断")
 
         return password_policy
 
@@ -366,9 +379,9 @@ class SitePasswordPolicyTester:
     def run_full_test(self) -> dict:
         """一键运行完整测试流程"""
         if not self.discover_signup_page():
-            print("[!] 无法发现注册页面")
+            _safe_print("[!] 无法发现注册页面")
             return {}
         if not self.discover_form_fields():
-            print("[!] 无法检测表单字段")
+            _safe_print("[!] 无法检测表单字段")
             return {}
         return self.run_password_policy_test()

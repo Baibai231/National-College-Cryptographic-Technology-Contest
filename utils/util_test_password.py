@@ -14,7 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from loguru import logger
 from enum import Enum
 import faker
-import pandas as pd
 
 import utils.util_basic as uub
 import utils.util_str_generator as uusg
@@ -297,6 +296,17 @@ def _get_proxy_config():
     return None
 
 
+def _enable_passive_network_logging(options):
+    """Capture metadata for requests the browser already makes.
+
+    ``security_observers`` consumes these events after classification to derive
+    TLS and response-header posture.  Enabling the log does not issue a request
+    and does not persist the raw events.
+    """
+    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    options.add_experimental_option("perfLoggingPrefs", {"enableNetwork": True})
+
+
 def _inject_form_detection_js(driver):
     """通过 CDP 注入 form_detection_addons.js + scripts.js (Fathom)。
 
@@ -351,6 +361,7 @@ def _get_shared_driver():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
+    _enable_passive_network_logging(options)
     # undetected-chromedriver 自动处理以下反检测补丁:
     #   --disable-blink-features=AutomationControlled
     #   excludeSwitches: enable-automation
@@ -402,6 +413,7 @@ def _get_new_driver():
     # 注意: excludeSwitches / useAutomationExtension 与 undetected-chromedriver
     #       不兼容（后者内部已处理），只保留 Chrome flag 级别选项
     options.add_argument("--disable-blink-features=AutomationControlled")
+    _enable_passive_network_logging(options)
 
     proxy_url = _get_proxy_config()
     if proxy_url:
@@ -3113,10 +3125,14 @@ class TestPassword(object):
             if not (check_policy(tmp_pw, restrictive_pr, password_length)):
                 continue
             if self.test_one_password(tmp_pw, f"Testing breached passwords: {tmp_pw}"):
-                ret_dict["p_br"] = True
+                # p_br means "the site blocks breached passwords".  One
+                # accepted breached password is sufficient to disprove that
+                # property, so keep False and stop probing.
+                ret_dict["p_br"] = False
                 break
             consecutive_rejected += 1
             if consecutive_rejected >= MAX_REJECTED_SAMPLE:
+                ret_dict["p_br"] = True
                 self.my_logger.info(
                     f"{MAX_REJECTED_SAMPLE} 条泄露密码均被拒绝，判定该网站拒绝泄露密码（停止遍历）")
                 break

@@ -110,7 +110,7 @@ class SiteDataStoreTests(unittest.TestCase):
 
             self.assertEqual(errors, [])
             rows = [json.loads(line) for line in
-                    reports_path.read_text().splitlines()]
+                    reports_path.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(
                 {row["entry_kind"] for row in rows}, {"login", "signup"})
             conn = sqlite3.connect(db_path)
@@ -140,7 +140,11 @@ class SiteDataStoreTests(unittest.TestCase):
                     login={"flow_type": "direct_password", "flow_zh": "直接口令",
                            "route": "账号 → 口令",
                            "states": [{"step": 1, "fields": ["password"]}],
-                           "confidence": "high", "evidence": ["password"]}))
+                           "confidence": "high", "evidence": ["password"],
+                           "security_observations": {
+                               "schema_version": "1.0",
+                               "collection_mode": "passive",
+                           }}))
                 web_app.add_site(web_app.AddSiteRequest(
                     hostname="example.com", url="https://example.com", version="v3",
                     admin_token="test-token",
@@ -156,8 +160,14 @@ class SiteDataStoreTests(unittest.TestCase):
                 else:
                     os.environ["SITES_ADMIN_TOKEN"] = old_token
 
-            rows = [json.loads(line) for line in reports_path.read_text().splitlines()]
+            rows = [json.loads(line) for line in
+                    reports_path.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(len(rows), 2)
+            login_record = next(
+                item for item in rows if item["entry_kind"] == "login")
+            self.assertEqual(
+                login_record["security_observations"]["collection_mode"],
+                "passive")
             conn = sqlite3.connect(db_path)
             row = conn.execute(
                 "SELECT login_flow, signup_flow, details_json FROM sites "
@@ -166,6 +176,9 @@ class SiteDataStoreTests(unittest.TestCase):
             self.assertEqual(row[:2], ("direct_password", "otp_only"))
             details = json.loads(row[2])
             self.assertEqual(details["login_record"]["confidence"], "high")
+            self.assertEqual(
+                details["login_security_observations"]["schema_version"],
+                "1.0")
             self.assertEqual(
                 details["signup_record"]["stop_reason"], "verification_required")
 
@@ -187,7 +200,8 @@ class SiteDataStoreTests(unittest.TestCase):
                 {"flow_type": "sso_only", "primary_method": "sso",
                  "states": []})
             result = upsert_records(path, [replacement])
-            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            rows = [json.loads(line) for line in
+                    path.read_text(encoding="utf-8").splitlines()]
 
             self.assertEqual(result, {"added": 0, "updated": 1, "total": 2})
             self.assertEqual({row["entry_kind"] for row in rows}, {"login", "signup"})
@@ -234,7 +248,8 @@ class SiteDataStoreTests(unittest.TestCase):
 
             saved = {
                 (row["hostname"], row["entry_kind"]): row
-                for row in map(json.loads, target.read_text().splitlines())
+                for row in map(
+                    json.loads, target.read_text(encoding="utf-8").splitlines())
             }
             self.assertEqual(len(saved), 2)
             self.assertEqual(
@@ -257,7 +272,7 @@ class SiteDataStoreTests(unittest.TestCase):
                 path, "second.example", signup="短信注册",
                 structured={"signup": {"otp": True}},
                 reviewed_from="web@test")
-            saved = json.loads(path.read_text())
+            saved = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(
                 saved["sites"]["first.example"]["manual_login"], "原登录")
             self.assertEqual(
@@ -301,7 +316,7 @@ class SiteDataStoreTests(unittest.TestCase):
                 else:
                     os.environ["SITES_DATA_LOCK"] = old_lock
 
-            saved = json.loads(manual_path.read_text())
+            saved = json.loads(manual_path.read_text(encoding="utf-8"))
             self.assertIn("manual.example", saved["sites"])
             self.assertNotIn("feedback.example", saved["sites"])
             self.assertTrue(saved["sites"]["manual.example"]["structured"]
@@ -322,7 +337,7 @@ class SiteDataStoreTests(unittest.TestCase):
                 "server.example": {"manual_signup": "服务器"},
                 "shared.example": {"manual_login": "服务器新值"},
             }, "updated_at": "2026-08-14T12:00:00Z"})
-            saved = json.loads(path.read_text())
+            saved = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(result, {"updated": 2, "total": 3})
             self.assertEqual(saved["sites"]["mac.example"]["manual_login"], "Mac")
             self.assertEqual(
@@ -342,7 +357,8 @@ class SiteDataStoreTests(unittest.TestCase):
                 "updated_at": "2026-08-14T00:00:00+00:00",
             })
             self.assertEqual(result, {"updated": 0, "total": 1})
-            self.assertEqual(json.loads(path.read_text()), current)
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8")), current)
             self.assertEqual(path.stat().st_mtime_ns, before)
 
     def test_database_rebuild_preserves_pending_reviews(self):
@@ -432,13 +448,16 @@ class SiteDataStoreTests(unittest.TestCase):
 
             self.assertEqual(site["signup_match"], "match")
             self.assertTrue(site["manual"]["structured"]["signup"]["password"])
-            saved = json.loads(manual_path.read_text())
+            saved = json.loads(manual_path.read_text(encoding="utf-8"))
             self.assertTrue(saved["sites"]["example.com"]["structured"]
                             ["signup"]["password"])
 
     def test_pending_review_details_require_admin_token(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = str(Path(tmp) / "sites.db")
+            manual_path = Path(tmp) / "manual_review.json"
+            data_lock_path = Path(tmp) / ".data-sync.lock"
+            manual_path.write_text('{"sites": {}}', encoding="utf-8")
             create_db([], db_path)
             conn = sqlite3.connect(db_path)
             conn.execute(
@@ -453,9 +472,12 @@ class SiteDataStoreTests(unittest.TestCase):
                  "direct_password", "direct_password", "{}"))
             conn.commit()
             conn.close()
-            old_db = web_app.DB_PATH
+            old_values = (web_app.DB_PATH, web_app.MANUAL_PATH,
+                          web_app.DATA_LOCK_PATH)
             old_token = os.environ.get("SITES_ADMIN_TOKEN")
             web_app.DB_PATH = db_path
+            web_app.MANUAL_PATH = manual_path
+            web_app.DATA_LOCK_PATH = data_lock_path
             os.environ["SITES_ADMIN_TOKEN"] = "test-token"
             try:
                 # 2026-08-16 规则：待审核列表所有人可见（含完整内容）
@@ -473,7 +495,8 @@ class SiteDataStoreTests(unittest.TestCase):
                                             admin_token="test-token")
                 self.assertTrue(ok["ok"])
             finally:
-                web_app.DB_PATH = old_db
+                (web_app.DB_PATH, web_app.MANUAL_PATH,
+                 web_app.DATA_LOCK_PATH) = old_values
                 if old_token is None:
                     os.environ.pop("SITES_ADMIN_TOKEN", None)
                 else:

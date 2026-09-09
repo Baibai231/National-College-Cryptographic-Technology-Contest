@@ -46,7 +46,8 @@ def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
         "version": _CURRENT_VERSION,
         "flow_type": None, "confidence": None, "stop_reason": None,
         "primary_method": None, "ui_type": None, "final_url": None,
-        "states": [], "policy": {}, "evidence": [], "error": None,
+        "states": [], "policy": {}, "security_observations": {},
+        "evidence": [], "error": None,
     }
     try:
         if measure_policy:
@@ -60,7 +61,7 @@ def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
             for key in (
                 "flow_type", "confidence", "stop_reason", "primary_method",
                 "ui_type", "final_url", "states", "methods", "policy",
-                "evidence", "method_used", "note", "error",
+                "security_observations", "evidence", "method_used", "note", "error",
             ):
                 if key in result:
                     record[key] = result[key]
@@ -87,6 +88,7 @@ def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
         record["states"] = result.get("states", [])
         record["methods"] = result.get("methods", [])
         record["policy"] = result.get("policy", {})
+        record["security_observations"] = result.get("security_observations", {})
         record["evidence"] = result.get("evidence", [])
         record["start_url"] = result.get("start_url")
     except Exception as exc:

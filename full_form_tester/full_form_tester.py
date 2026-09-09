@@ -646,7 +646,9 @@ class FullFormPolicyTester:
         # 最小长度 → 从短到长测试
         min_len = r_min[1]
         for l in range(r_min[0], r_min[1] + 1):
-            test = uusg.gen_random_str_no_symbol(l)
+            test = self._length_probe_password(l, rp)
+            if test is None:
+                continue
             if self.test_one_password(test, f"test min length {l}"):
                 min_len = l
                 break
@@ -655,13 +657,100 @@ class FullFormPolicyTester:
         # 最大长度 → 从长到短测试
         max_len = r_max[1]
         for l in range(r_max[1], r_max[0] - 1, -1):
-            test = uusg.gen_random_str_no_symbol(l)
+            test = self._length_probe_password(l, rp)
+            if test is None:
+                continue
             if self.test_one_password(test, f"test max length {l}"):
                 max_len = l
                 break
             self.rate_ctrl.delay_between_tests()
 
         return min_len, max_len
+
+    @staticmethod
+    def _length_probe_password(length: int, rp: dict) -> Optional[str]:
+        """Build an exact-length candidate satisfying known non-length rules.
+
+        A length probe must vary only length.  Returning ``None`` means that
+        the requested length cannot express the already-known composition
+        requirements and therefore must not be used as length evidence.
+        """
+        if length < 0:
+            return None
+
+        counts = {
+            "lower": max(0, int(rp.get("r_low_min", 0) or 0)),
+            "upper": max(0, int(rp.get("r_upp_min", 0) or 0)),
+            "digit": max(0, int(rp.get("r_dig_min", 0) or 0)),
+            "symbol": max(0, int(rp.get("r_sps_min", 0) or 0)),
+        }
+        symbols_allowed = not bool(rp.get("r_no_a_sps"))
+        if not symbols_allowed and counts["symbol"]:
+            return None
+
+        cr3 = next((n for n in (3, 2, 1)
+                    if rp.get(f"r_cmb{n}3")), 0)
+        cr4 = next((n for n in (4, 3, 2, 1)
+                    if rp.get(f"r_cmb{n}4")), 0)
+
+        def active(name: str) -> bool:
+            return counts[name] > 0
+
+        # cr4 distinguishes lower/upper/digit/symbol.
+        four_classes = ["lower", "upper", "digit"]
+        if symbols_allowed:
+            four_classes.append("symbol")
+        for name in four_classes:
+            if sum(active(item) for item in four_classes) >= cr4:
+                break
+            counts[name] = max(1, counts[name])
+        if sum(active(item) for item in four_classes) < cr4:
+            return None
+
+        # cr3 groups both letter cases as one class: letter/digit/symbol.
+        def active_three() -> int:
+            return sum((active("lower") or active("upper"),
+                        active("digit"), active("symbol")))
+
+        for name in ("lower", "digit", "symbol"):
+            if active_three() >= cr3:
+                break
+            if name == "symbol" and not symbols_allowed:
+                continue
+            counts[name] = max(1, counts[name])
+        if active_three() < cr3:
+            return None
+
+        if rp.get("r_l_start") and not (active("lower") or active("upper")):
+            counts["lower"] = 1
+
+        # The legacy r_2_word model expects at least six letters plus a
+        # digit/symbol separator.  Preserve that model during length probes.
+        if rp.get("r_2_word"):
+            counts["lower"] = max(6, counts["lower"])
+            separator = "symbol" if symbols_allowed else "digit"
+            counts[separator] = max(1, counts[separator])
+
+        required = sum(counts.values())
+        if required > length:
+            return None
+        counts["lower"] += length - required
+
+        if rp.get("r_2_word"):
+            separator_name = "symbol" if symbols_allowed else "digit"
+            separator = "!" if separator_name == "symbol" else "3"
+            counts["lower"] -= 6
+            counts[separator_name] -= 1
+            candidate = "abc" + separator + "def"
+        else:
+            candidate = ""
+        candidate += (
+            uusg.gen_random_lower_character(counts["lower"])
+            + uusg.gen_random_upper_character(counts["upper"])
+            + uusg.gen_random_digit(counts["digit"])
+            + ("!" * counts["symbol"])
+        )
+        return candidate
 
     def identify_permissive_characters(self, length: list) -> dict:
         """识别允许的字符类型（空格/Unicode/Emoji/特殊符号）"""

@@ -76,6 +76,7 @@ def measurement_record(hostname: str, site_url: str, version: str,
         "states": states,
         "methods": entry.get("methods") or [],
         "policy": entry.get("policy") or {},
+        "security_observations": entry.get("security_observations") or {},
         # 实测口令政策（length/restrictive/permissive），与分类 policy 分开存
         "pwd_policy": entry.get("pwd_policy") or {},
         # 实测方法（inline/full/classified_only 等），供详情表回显「类型」

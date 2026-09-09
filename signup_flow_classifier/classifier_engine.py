@@ -1489,4 +1489,26 @@ class SignupFlowClassifierEngine:
         d["password_field"] = None
         if getattr(result, "signup_password_reached", False):
             d["password_field"] = self._locate_password_field()
+        # Passive-only protocol/capability observations are attached at the
+        # single classification exit point so CLI, batch and web callers share
+        # exactly the same evidence.  Observer failure never changes the flow
+        # classification result.
+        try:
+            from security_observers import collect_security_observations
+            d["security_observations"] = collect_security_observations(
+                self.driver, states=d.get("states"), methods=d.get("methods"))
+        except Exception as exc:
+            d["security_observations"] = {
+                "schema_version": "1.0",
+                "collection_mode": "passive",
+                "observed_capabilities": [],
+                "analyzers": {},
+                "collection_errors": ["observer:{}".format(type(exc).__name__)],
+                "privacy": {"raw_tokens_stored": False,
+                            "raw_cookie_values_stored": False,
+                            "extra_network_request_sent": False,
+                            "raw_urls_stored": False,
+                            "raw_header_values_stored": False,
+                            "raw_certificates_stored": False},
+            }
         return d

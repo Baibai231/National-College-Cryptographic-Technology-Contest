@@ -79,6 +79,18 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("force_retest: forceRetest", self.html)
         self.assertIn("点击“加入数据库”后才会覆盖正式数据", self.html)
 
+    def test_passive_security_observations_are_labeled_with_evidence_boundary(self):
+        self.assertIn("securityObservationsHtml", self.html)
+        self.assertIn("安全能力被动观察", self.html)
+        self.assertIn("MFA是否强制：未确定", self.html)
+        self.assertIn("传输安全：", self.html)
+        self.assertIn("安全响应头：", self.html)
+        self.assertIn("不额外请求网站", self.html)
+        self.assertIn("“未观察到”不等于“不支持”", self.html)
+        self.assertIn("已知证据得分", self.html)
+        self.assertIn("未知项不扣分", self.html)
+        self.assertIn("不同覆盖率的分数不可直接比较", self.html)
+
     def test_db_policy_table_uses_two_columns_when_measured(self):
         # 实测口令政策入库后，详情表只保留"密码政策测试"两列，不加登录/注册
         self.assertIn('colspan="2" class="text-center">密码政策测试', self.html)

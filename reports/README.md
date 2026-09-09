@@ -21,3 +21,7 @@
 网页“加入数据库”会先原子更新 `sites_latest.jsonl` 再更新 SQLite，并保留没有重测的
 另一侧记录。全量回归先写入 `archive/`，通过两轮对比、差异复测和人工抽查后才提升为
 正式 `sites_latest.jsonl`；SQLite 只是可重建的服务索引。
+
+新测量记录还可包含 `security_observations`，用于保存 OAuth/OIDC、JWT、WebAuthn、
+MFA 和会话 Cookie 的脱敏被动证据。字段含义和结论边界见
+[被动密码技术观察器](../docs/SECURITY_OBSERVERS.md)。

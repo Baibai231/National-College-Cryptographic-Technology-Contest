@@ -372,6 +372,8 @@ def _apply_classification_to_result(result: dict, classification: dict) -> None:
     result["states"] = classification.get("states", [])
     result["evidence"] = classification.get("evidence", [])
     result["final_url"] = classification.get("final_url", "")
+    result["security_observations"] = classification.get(
+        "security_observations", {})
     # 分类政策元数据（authentication/measurement），与实测口令政策
     # （length/restrictive/permissive，存 result["policy"]）区分
     result["classification_policy"] = classification.get("policy", {})
@@ -425,6 +427,33 @@ def _fallback_to_classification(result: dict, classification: dict, note: str = 
     if note and not result.get("note"):
         result["note"] = note
     return result
+
+
+def _refresh_result_security_assessment(result: dict) -> None:
+    """Refresh the evidence score after optional password-policy probing.
+
+    Classification attaches the passive browser evidence first.  This final
+    pass adds password-policy evidence only when the policy measurement is
+    usable; classification-only or inconclusive output remains unknown rather
+    than receiving a failing score.
+    """
+    bundle = result.get("security_observations")
+    if not isinstance(bundle, dict):
+        return
+    policy = result.get("policy")
+    measured = (
+        result.get("method_used") in {"inline", "full", "partial_browser_dead"}
+        and _policy_is_usable(policy)
+    )
+    try:
+        from security_observers.scoring import attach_security_assessment
+        attach_security_assessment(
+            bundle, password_policy=policy,
+            password_policy_measured=measured)
+    except Exception:
+        # Scoring is presentation metadata and must never invalidate a
+        # successfully collected policy or flow classification.
+        pass
 
 
 # ================================================================
@@ -826,6 +855,7 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         else:
             result["error"] = str(e)
     finally:
+        _refresh_result_security_assessment(result)
         if driver:
             try:
                 driver.quit()
@@ -910,6 +940,7 @@ def save_result(site_url: str, result: dict):
         "error": result.get("error"),
         "policy": result.get("policy", {}),
         "classification_policy": result.get("classification_policy", {}),
+        "security_observations": result.get("security_observations", {}),
         "states": result.get("states", []),
         "evidence": result.get("evidence", []),
         "final_url": result.get("final_url", ""),
