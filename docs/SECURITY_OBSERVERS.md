@@ -1,7 +1,7 @@
 # 被动密码技术观察器
 
 本模块把 CryptoScope AI v3.0 方案中的 OAuth/OIDC、JWT、WebAuthn、MFA、
-Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎，同时保持原有安全
+账户恢复、Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎，同时保持原有安全
 边界：不登录、不填写身份字段、不发送验证码、不完成第三方授权、不创建账号。
 
 ## 输出位置
@@ -23,6 +23,7 @@ Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎�
       "jwt": {},
       "webauthn": {},
       "mfa": {},
+      "account_recovery": {},
       "session_cookies": {},
       "transport_security": {},
       "http_security_headers": {}
@@ -43,6 +44,9 @@ Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎�
   能力；浏览器支持 `PublicKeyCredential` 本身不算站点证据。
 - MFA：报告观察到的认证因素或并列认证方式，但在未完成认证流程时始终将
   `mfa_enforcement` 标为 `not_determined`。
+- Account Recovery：只识别当前页可见的“忘记密码/重置密码”等入口、目标协议统计和
+  邮箱/短信/人工渠道提示；不点击入口、不发送消息、不验证重置 Token，也不测试网站是否
+  会返回原口令。输出不保存恢复 URL。
 - Session：只统计 Cookie 安全属性及疑似会话 Cookie 数量，不保存 Cookie 名和值；
   认证前 Cookie 不能代表登录后会话安全。
 - Transport：复用 Chrome 已发生导航的性能事件，记录最终页协议、HTTP 协议、
@@ -55,6 +59,9 @@ Session、TLS 和 HTTP 安全响应头分析能力接入现有 v4 测量引擎�
 
 `privacy.extra_network_request_sent=false` 表示观察器只消费测量流程本来就产生的导航
 证据；它不会为了获取 Header 或证书再请求一次网站。
+
+页面快照对开放 Shadow DOM 和同源 iframe 做有界扫描；跨域 iframe 仍受浏览器同源策略
+限制，并由分类器的 WebDriver frame 聚合提供认证方式证据。
 
 ## 证据覆盖率与分维度评估
 

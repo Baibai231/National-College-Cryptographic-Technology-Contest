@@ -13,6 +13,7 @@ from security_observers.scoring import (
 from security_observers.jwt import analyze_jwt_metadata
 from security_observers.mfa import analyze_mfa_evidence
 from security_observers.oauth import analyze_oauth_urls
+from security_observers.recovery import analyze_recovery_signals
 from security_observers.session import analyze_cookie_posture
 from security_observers.transport import analyze_network_security
 from security_observers.webauthn import analyze_webauthn_signals
@@ -43,6 +44,31 @@ class OAuthObserverTests(unittest.TestCase):
     def test_unrelated_links_are_not_oauth(self):
         report = analyze_oauth_urls(["https://example.com/articles/oauth-explained"])
         self.assertEqual(report["status"], "not_observed")
+
+
+class RecoveryObserverTests(unittest.TestCase):
+    def test_recovery_metadata_is_sanitized_and_non_interactive(self):
+        report = analyze_recovery_signals({
+            "entry_count": 2,
+            "same_origin_target_count": 1,
+            "cross_origin_target_count": 1,
+            "https_target_count": 1,
+            "http_target_count": 1,
+            "channel_hints": ["email", "sms_or_phone", "secret-channel"],
+            "url": "https://example.test/reset?token=must-not-survive",
+        })
+        self.assertEqual(report["status"], "observed")
+        self.assertEqual(report["channel_hints"], ["email", "sms_or_phone"])
+        self.assertIn("http_recovery_target_observed", report["findings"])
+        self.assertFalse(report["flow_followed"])
+        self.assertFalse(report["message_sent"])
+        self.assertFalse(report["original_password_disclosure_tested"])
+        self.assertNotIn("must-not-survive", json.dumps(report))
+
+    def test_missing_recovery_entry_stays_not_observed(self):
+        report = analyze_recovery_signals({})
+        self.assertEqual(report["status"], "not_observed")
+        self.assertEqual(report["recovery_entry_count"], 0)
 
 
 class JwtObserverTests(unittest.TestCase):
@@ -430,6 +456,7 @@ class ObservationBundleTests(unittest.TestCase):
         self.assertTrue(bundle["privacy"]["extra_network_request_sent"] is False)
         self.assertIn("transport_security", bundle["analyzers"])
         self.assertIn("http_security_headers", bundle["analyzers"])
+        self.assertIn("account_recovery", bundle["analyzers"])
         self.assertIn("maturity", bundle)
         serialized = json.dumps(bundle)
         for secret in ("hidden-client", "hidden-state", "hidden-cookie", "one-time-secret"):

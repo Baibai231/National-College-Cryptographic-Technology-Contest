@@ -85,6 +85,8 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("MFA是否强制：未确定", self.html)
         self.assertIn("传输安全：", self.html)
         self.assertIn("安全响应头：", self.html)
+        self.assertIn("账户恢复：", self.html)
+        self.assertIn("未进入恢复流程", self.html)
         self.assertIn("不额外请求网站", self.html)
         self.assertIn("“未观察到”不等于“不支持”", self.html)
         self.assertIn("已知证据得分", self.html)

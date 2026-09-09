@@ -883,6 +883,21 @@ function securityObservationsHtml(bundle, label = '') {
     const factors = mfa.factor_capabilities.map(item => FACTOR_ZH[item] || item).join('、');
     lines.push(`认证能力：${factors}；MFA是否强制：未确定`);
   }
+  const recovery = analyzers.account_recovery || {};
+  if (recovery.status === 'observed') {
+    const RECOVERY_CHANNEL_ZH = {
+      email: '邮箱', sms_or_phone: '短信/手机', support_or_manual: '客服/人工'
+    };
+    const channels = (recovery.channel_hints || [])
+      .map(item => RECOVERY_CHANNEL_ZH[item] || item);
+    const targetCount = (recovery.same_origin_target_count || 0)
+      + (recovery.cross_origin_target_count || 0);
+    lines.push(`账户恢复：观察到 ${recovery.recovery_entry_count || 0} 个入口`
+      + `${channels.length ? '，渠道提示 ' + channels.join('、') : ''}`
+      + `${targetCount ? '，含目标元数据 ' + targetCount + ' 个' : ''}`
+      + `${recovery.http_target_count ? '，HTTP目标需复核' : ''}`
+      + '；未进入恢复流程');
+  }
   const maturityOverall = maturity.overall || {};
   const maturityLevels = Object.fromEntries(
     (maturity.levels || []).map(item => [item.level, item.name]));

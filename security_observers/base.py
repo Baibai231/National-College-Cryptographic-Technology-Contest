@@ -6,6 +6,7 @@ from security_observers.jwt import analyze_jwt_metadata
 from security_observers.maturity import build_cpam_maturity
 from security_observers.mfa import analyze_mfa_evidence
 from security_observers.oauth import analyze_oauth_urls
+from security_observers.recovery import analyze_recovery_signals
 from security_observers.scoring import build_security_assessment
 from security_observers.session import analyze_cookie_posture
 from security_observers.transport import analyze_network_security
@@ -14,13 +15,78 @@ from security_observers.webauthn import analyze_webauthn_signals
 
 _PAGE_SNAPSHOT_SCRIPT = r"""
 return (() => {
-  const urls = [];
-  for (const node of Array.from(document.querySelectorAll('a[href],form[action]')).slice(0, 500)) {
+  const roots = [document], seenRoots = new Set();
+  const visible = node => {
     try {
-      const value = node.href || node.action || '';
-      if (value) urls.push(String(value).slice(0, 8192));
-    } catch (_) {}
+      const rect = node.getBoundingClientRect();
+      const view = node.ownerDocument.defaultView || window;
+      const style = view.getComputedStyle(node);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
+        style.visibility !== 'hidden';
+    } catch (_) { return false; }
+  };
+  for (let index = 0; index < roots.length && index < 100; index++) {
+    const root = roots[index];
+    if (!root || seenRoots.has(root)) continue;
+    seenRoots.add(root);
+    for (const node of root.querySelectorAll('*')) {
+      if (node.shadowRoot) roots.push(node.shadowRoot);
+    }
+    for (const frame of root.querySelectorAll('iframe')) {
+      try {
+        if (visible(frame) && frame.contentDocument) roots.push(frame.contentDocument);
+      } catch (_) {}
+    }
   }
+
+  const urls = [];
+  for (const root of roots) {
+    for (const node of root.querySelectorAll('a[href],form[action]')) {
+      if (urls.length >= 500) break;
+      try {
+        const value = node.href || node.action || '';
+        if (value) urls.push(String(value).slice(0, 8192));
+      } catch (_) {}
+    }
+  }
+
+  const recovery = {
+    entry_count: 0, same_origin_target_count: 0,
+    cross_origin_target_count: 0, https_target_count: 0,
+    http_target_count: 0, channel_hints: []
+  };
+  const recoveryChannels = new Set();
+  const recoveryText = /忘记密码|忘了密码|找回密码|重置密码|密码找回|无法登录|forgot\s+(?:your\s+)?password|reset\s+password|password\s+reset|recover\s+(?:your\s+)?password|can't\s+(?:log|sign)\s+in/i;
+  const recoveryPath = /\/(?:forgot|recover|reset)[-_/]?(?:password|passwd|account)|\/(?:password|passwd)[-_/]?(?:forgot|recover|reset)/i;
+  for (const root of roots) {
+    for (const node of root.querySelectorAll("a,button,[role='button'],form")) {
+      if (recovery.entry_count >= 100 || !visible(node) || node.closest('article')) continue;
+      const label = String(node.innerText || node.textContent ||
+        node.getAttribute('aria-label') || node.getAttribute('title') || '')
+        .replace(/\s+/g, ' ').trim().slice(0, 160);
+      const rawTarget = node.href || node.action || node.getAttribute('href') ||
+        node.getAttribute('action') || '';
+      let target = null;
+      try { if (rawTarget) target = new URL(rawTarget, location.href); } catch (_) {}
+      // 普通登录 form 会包含“忘记密码”子按钮；只计按钮/链接本身，
+      // form 只有 action 明确指向恢复路径时才单独计数，避免父子重复。
+      const labelMatches = node.tagName !== 'FORM' && recoveryText.test(label);
+      if (!labelMatches && !(target && recoveryPath.test(target.pathname))) continue;
+      recovery.entry_count++;
+      if (target) {
+        if (target.origin === location.origin) recovery.same_origin_target_count++;
+        else recovery.cross_origin_target_count++;
+        if (target.protocol === 'https:') recovery.https_target_count++;
+        else if (target.protocol === 'http:') recovery.http_target_count++;
+      }
+      const nearby = String(node.closest('form')?.innerText ||
+        node.parentElement?.innerText || label).slice(0, 500);
+      if (/邮箱|邮件|email|e-mail|mail/i.test(nearby)) recoveryChannels.add('email');
+      if (/手机|短信|手机号|phone|mobile|sms/i.test(nearby)) recoveryChannels.add('sms_or_phone');
+      if (/客服|人工|申诉|support|help\s*desk|contact/i.test(nearby)) recoveryChannels.add('support_or_manual');
+    }
+  }
+  recovery.channel_hints = Array.from(recoveryChannels).sort();
 
   const jwtMetadata = [];
   function decodePart(part) {
@@ -55,11 +121,16 @@ return (() => {
   try { inspectStorage(window.sessionStorage, 'session_storage'); } catch (_) {}
 
   let text = '';
-  try { text = String(document.body ? document.body.innerText : '').slice(0, 100000); } catch (_) {}
+  try {
+    text = roots.map(root => String(root.body ? root.body.innerText : root.textContent || ''))
+      .join(' ').slice(0, 100000);
+  } catch (_) {}
   let autocompleteWebauthn = false;
   try {
-    autocompleteWebauthn = Array.from(document.querySelectorAll('[autocomplete]')).some(node =>
-      String(node.getAttribute('autocomplete') || '').toLowerCase().split(/\s+/).includes('webauthn'));
+    autocompleteWebauthn = roots.some(root =>
+      Array.from(root.querySelectorAll('[autocomplete]')).some(node =>
+        String(node.getAttribute('autocomplete') || '').toLowerCase()
+          .split(/\s+/).includes('webauthn')));
   } catch (_) {}
   let navigation = {};
   try {
@@ -73,6 +144,7 @@ return (() => {
     urls,
     jwt_metadata: jwtMetadata,
     navigation,
+    recovery,
     webauthn: {
       public_key_credential_api: typeof window.PublicKeyCredential === 'function',
       autocomplete_webauthn: autocompleteWebauthn,
@@ -118,6 +190,7 @@ def collect_security_observations(driver, *, states=None, methods=None) -> dict:
     oauth = analyze_oauth_urls(snapshot.get("urls") or [])
     jwt = analyze_jwt_metadata(snapshot.get("jwt_metadata") or [])
     webauthn = analyze_webauthn_signals(snapshot.get("webauthn") or {})
+    recovery = analyze_recovery_signals(snapshot.get("recovery") or {})
     mfa = analyze_mfa_evidence(states or [], methods or [], webauthn)
     session = analyze_cookie_posture(cookies, page_url)
     network = analyze_network_security(
@@ -127,13 +200,16 @@ def collect_security_observations(driver, *, states=None, methods=None) -> dict:
         "jwt": jwt,
         "webauthn": webauthn,
         "mfa": mfa,
+        "account_recovery": recovery,
         "session_cookies": session,
         "transport_security": network["transport_security"],
         "http_security_headers": network["http_security_headers"],
     }
     observed = [name for name, report in analyzers.items()
                 if report.get("status") == "observed"]
-    capabilities = [name for name in ("oauth_oidc", "webauthn", "mfa")
+    capabilities = [name for name in (
+        "oauth_oidc", "webauthn", "mfa", "account_recovery",
+    )
                     if analyzers[name].get("status") == "observed"]
     return {
         "schema_version": "1.0",
@@ -150,6 +226,7 @@ def collect_security_observations(driver, *, states=None, methods=None) -> dict:
             "raw_cookie_values_stored": False,
             "authorization_followed": False,
             "verification_message_sent": False,
+            "recovery_flow_followed": False,
             "extra_network_request_sent": False,
             "raw_urls_stored": False,
             "raw_header_values_stored": False,
