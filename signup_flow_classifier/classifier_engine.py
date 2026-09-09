@@ -31,6 +31,7 @@ from signup_flow_classifier.navigator import (
     MAX_STEPS,
     detect_entry_button,
     safe_advance,
+    safe_dismiss_cookie_banner,
     safe_click_entry,
     safe_click_tab,
     safe_click_auth_mode_switch,
@@ -191,6 +192,12 @@ class SignupFlowClassifierEngine:
             self.driver.execute_script("window.scrollTo(0, 0);")
         except Exception:
             pass
+        # Cookie/GDPR 横幅会遮住页头登录/注册入口，尤其影响海外站点。
+        # 只执行“仅必要/全部拒绝/关闭”三类隐私保护动作，绝不接受全部。
+        cookie_outcome = safe_dismiss_cookie_banner(self.driver)
+        if cookie_outcome.clicked:
+            record_evidence(result, cookie_outcome.reason)
+            self._wait_for_page_stable(self.driver, timeout=2)
         # 空壳注册页回退：navigate 到的 signup URL 页面无任何认证内容
         # （喜马拉雅 /signup、中华会计网校 register.html 实测是空壳页），
         # 回退到站首页重新找真实入口（首页可能有登录弹窗）。
@@ -212,6 +219,9 @@ class SignupFlowClassifierEngine:
                         result,
                         "empty_signup_url_fallback_to_home:{}".format(home))
                     self._wait_for_page_stable(self.driver, timeout=6)
+                    cookie_outcome = safe_dismiss_cookie_banner(self.driver)
+                    if cookie_outcome.clicked:
+                        record_evidence(result, cookie_outcome.reason)
                     signup_url = home
             except Exception:
                 pass
@@ -247,6 +257,11 @@ class SignupFlowClassifierEngine:
                 self._wait_for_any_auth_signal(self.driver, timeout=10)
         except Exception:
             pass
+        # 延迟挂载的 CMP 可能在初次检查后才出现；再安全检查一次。
+        if not cookie_outcome.clicked:
+            late_cookie_outcome = safe_dismiss_cookie_banner(self.driver)
+            if late_cookie_outcome.clicked:
+                record_evidence(result, late_cookie_outcome.reason)
 
         for step in range(1, effective_max_steps + 3):
             if step > step_limit:

@@ -1,5 +1,6 @@
 """受控导航：只执行明确、安全的下一步操作。"""
 import json
+import re
 import time
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
@@ -357,6 +358,163 @@ def _frame_paths(driver: WebDriver, max_depth: int = 3) -> List[Tuple[int, ...]]
     except Exception:
         pass
     return paths
+
+
+_COOKIE_CONTEXT_HINTS = (
+    "cookie", "cookies", "cookiebot", "gdpr", "ccpa", "隐私偏好",
+    "隐私设置", "cookie 设置", "쿠키", "クッキー", "куки", "galleta",
+)
+
+
+def _cookie_action_kind(label: str) -> Optional[str]:
+    """识别隐私保护型 Cookie 横幅操作；有歧义或“全部接受”均不匹配。"""
+    text = re.sub(r"\s+", " ", (label or "")).strip().lower()
+    text = text.strip(" .,:;!！。:：")
+    if not text:
+        return None
+
+    necessary_patterns = (
+        r"^(?:use |accept )?(?:only )?(?:strictly )?(?:necessary|essential)"
+        r"(?: cookies?)?(?: only)?$",
+        r"^(?:仅|只)(?:使用|允许|接受)?(?:必要|必需)(?:的)?(?: cookie)?$",
+        r"^nur notwendige(?: cookies)?$",
+        r"^(?:cookies? )?strictement nécessaires(?: uniquement)?$",
+        r"^solo (?:cookies? )?(?:necesarias|esenciales)$",
+    )
+    reject_patterns = (
+        r"^(?:reject|decline|deny|refuse)(?: all)?(?: cookies?)?$",
+        r"^continue without accepting$",
+        r"^(?:拒绝|不同意)(?:全部|所有)?(?: cookie)?$",
+        r"^(?:全部|所有)(?:拒绝|不同意)$",
+        r"^(?:tout refuser|refuser tout)$",
+        r"^(?:rechazar todo|rechazar todas)$",
+        r"^(?:alle ablehnen|alles ablehnen)$",
+        r"^(?:rifiuta tutto|rejeitar tudo|alles weigeren)$",
+        r"^(?:すべて拒否|全て拒否|모두 거부|отклонить все)$",
+    )
+    close_labels = {
+        "close", "dismiss", "close banner", "dismiss banner", "×", "✕",
+        "关闭", "关闭横幅", "fermer", "cerrar", "schließen", "chiudi",
+        "fechar", "閉じる", "닫기", "закрыть",
+    }
+    if any(re.fullmatch(pattern, text, flags=re.IGNORECASE)
+           for pattern in necessary_patterns):
+        return "necessary_only"
+    if any(re.fullmatch(pattern, text, flags=re.IGNORECASE)
+           for pattern in reject_patterns):
+        return "reject_all"
+    if text in close_labels:
+        return "close"
+    return None
+
+
+def _cookie_context_is_explicit(container, action_kind: str) -> bool:
+    """要求按钮位于明确 Cookie/CMP 容器内，避免误点普通协议弹窗。"""
+    try:
+        structural = " ".join([
+            container.get_attribute("id") or "",
+            container.get_attribute("class") or "",
+            container.get_attribute("aria-label") or "",
+            container.get_attribute("data-testid") or "",
+        ]).lower()
+        text = (container.text or "")[:2000].lower()
+    except Exception:
+        return False
+    semantic = "{} {}".format(structural, text)
+    if any(hint in semantic for hint in _COOKIE_CONTEXT_HINTS):
+        return True
+    # 一些 CMP 只在 class/id 中写 consent/cmp，界面只显示“全部拒绝”。
+    # 此弱规则仅允许隐私保护型操作，绝不用于通用“关闭”。
+    return (action_kind in {"necessary_only", "reject_all"}
+            and any(hint in structural for hint in ("consent", "cmp")))
+
+
+def safe_dismiss_cookie_banner(driver: WebDriver) -> NavigationOutcome:
+    """关闭阻挡认证入口的 Cookie/GDPR 横幅，优先保护隐私。
+
+    仅点击“仅必要”“全部拒绝”或明确 Cookie 容器中的关闭按钮；不会点击
+    “接受全部”、保存偏好、注册协议或任何表单提交控件。扫描主文档及可见
+    iframe，点击后始终恢复到主文档上下文。
+    """
+    container_selector = (
+        "[role='dialog'],[role='alertdialog'],"
+        "[class*='cookie' i],[id*='cookie' i],"
+        "[class*='consent' i],[id*='consent' i],"
+        "[class*='gdpr' i],[id*='gdpr' i],"
+        "[class*='cmp' i],[id*='cmp' i]"
+    )
+    control_selector = (
+        "button,a,[role='button'],input[type='button'],input[type='submit']"
+    )
+    try:
+        frame_paths = _frame_paths(driver)
+    except Exception:
+        frame_paths = [tuple()]
+
+    try:
+        for frame_path in frame_paths:
+            if not _switch_to_frame_path(driver, frame_path):
+                continue
+            candidates = []
+            try:
+                containers = driver.find_elements(By.CSS_SELECTOR, container_selector)
+            except Exception:
+                containers = []
+            for container in containers[:80]:
+                try:
+                    if not container.is_displayed():
+                        continue
+                    controls = container.find_elements(By.CSS_SELECTOR, control_selector)
+                except Exception:
+                    continue
+                for control in controls[:80]:
+                    try:
+                        if not control.is_displayed() or not control.is_enabled():
+                            continue
+                        labels = [
+                            control.text or "",
+                            control.get_attribute("aria-label") or "",
+                            control.get_attribute("title") or "",
+                            control.get_attribute("value") or "",
+                        ]
+                    except Exception:
+                        continue
+                    action_kind = next(
+                        (kind for kind in map(_cookie_action_kind, labels) if kind),
+                        None,
+                    )
+                    if (not action_kind
+                            or not _cookie_context_is_explicit(
+                                container, action_kind)):
+                        continue
+                    priority = {
+                        "necessary_only": 0, "reject_all": 1, "close": 2,
+                    }[action_kind]
+                    candidates.append((priority, action_kind, control, container))
+            if not candidates:
+                continue
+            _, action_kind, control, container = min(
+                candidates, key=lambda item: item[0])
+            try:
+                control.click()
+            except Exception:
+                return NavigationOutcome(
+                    False, False, "cookie_banner_native_click_failed")
+            try:
+                changed = not container.is_displayed()
+            except Exception:
+                # 成功关闭后容器常立即从 DOM 移除并变成 stale，这本身就是变化。
+                changed = True
+            return NavigationOutcome(
+                True, changed, "cookie_banner_{}".format(action_kind))
+    except Exception:
+        return NavigationOutcome(False, False, "cookie_banner_scan_failed")
+    finally:
+        try:
+            driver.switch_to.default_content()
+        except Exception:
+            pass
+    return NavigationOutcome(False, False, "no_cookie_banner_action")
 
 
 def _mark_entry_in_current_context(driver: WebDriver, kind: str,
