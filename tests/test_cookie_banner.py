@@ -6,9 +6,13 @@ from signup_flow_classifier.navigator import (
     _cookie_action_kind,
     safe_dismiss_cookie_banner,
 )
+from config.config import Config
 
 
 class CookieLabelTests(unittest.TestCase):
+    def test_default_cmp_policy_is_privacy_preserving(self):
+        self.assertEqual(Config.CMP_ACTION, "REJECT_ALL")
+
     def test_privacy_preserving_actions_are_recognized(self):
         cases = {
             "Only necessary cookies": "necessary_only",

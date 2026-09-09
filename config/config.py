@@ -35,7 +35,7 @@ class Config(object):
     # --- 反爬 / CMP 配置 ---
     ENABLE_ANTI_BOT: bool = True           # 启用反自动化检测（notABot.js）
     ENABLE_CMP_DETECTION: bool = True      # 启用 CMP 弹窗检测（Consent-O-Matic）
-    CMP_ACTION: str = "ACCEPT_ALL"         # CMP 处理策略: NO_ACTION | ACCEPT_ALL | REJECT_ALL
+    CMP_ACTION: str = "REJECT_ALL"         # 隐私保护默认值；分类器不会自动 ACCEPT_ALL
     CMP_MAX_WAIT_SECONDS: float = 6.0      # CMP 检测最长等待（秒）
     CMP_POLL_INTERVAL_SECONDS: float = 0.3 # CMP 轮询间隔（秒）
 

@@ -194,8 +194,12 @@ class SignupFlowClassifierEngine:
             pass
         # Cookie/GDPR 横幅会遮住页头登录/注册入口，尤其影响海外站点。
         # 只执行“仅必要/全部拒绝/关闭”三类隐私保护动作，绝不接受全部。
-        cookie_outcome = safe_dismiss_cookie_banner(self.driver)
-        if cookie_outcome.clicked:
+        from config.config import Config
+        cookie_outcome = (
+            safe_dismiss_cookie_banner(self.driver)
+            if Config.ENABLE_CMP_DETECTION else None
+        )
+        if cookie_outcome and cookie_outcome.clicked:
             record_evidence(result, cookie_outcome.reason)
             self._wait_for_page_stable(self.driver, timeout=2)
         # 空壳注册页回退：navigate 到的 signup URL 页面无任何认证内容
@@ -219,8 +223,11 @@ class SignupFlowClassifierEngine:
                         result,
                         "empty_signup_url_fallback_to_home:{}".format(home))
                     self._wait_for_page_stable(self.driver, timeout=6)
-                    cookie_outcome = safe_dismiss_cookie_banner(self.driver)
-                    if cookie_outcome.clicked:
+                    cookie_outcome = (
+                        safe_dismiss_cookie_banner(self.driver)
+                        if Config.ENABLE_CMP_DETECTION else None
+                    )
+                    if cookie_outcome and cookie_outcome.clicked:
                         record_evidence(result, cookie_outcome.reason)
                     signup_url = home
             except Exception:
@@ -258,7 +265,8 @@ class SignupFlowClassifierEngine:
         except Exception:
             pass
         # 延迟挂载的 CMP 可能在初次检查后才出现；再安全检查一次。
-        if not cookie_outcome.clicked:
+        if (Config.ENABLE_CMP_DETECTION
+                and not (cookie_outcome and cookie_outcome.clicked)):
             late_cookie_outcome = safe_dismiss_cookie_banner(self.driver)
             if late_cookie_outcome.clicked:
                 record_evidence(result, late_cookie_outcome.reason)
