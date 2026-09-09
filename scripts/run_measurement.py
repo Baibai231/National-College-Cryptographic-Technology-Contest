@@ -28,12 +28,32 @@ if _PROJECT_ROOT not in sys.path:
 from utils.util_test_password import _get_new_driver
 from utils.login_link_discovery import LoginLinkDiscovery
 from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
+from signup_flow_classifier.browser_failures import is_retryable_browser_failure
 
 _CURRENT_VERSION = "unknown"
 _version_path = os.path.join(_PROJECT_ROOT, "misc", "measure_version.txt")
 if os.path.isfile(_version_path):
     with open(_version_path, encoding="utf-8") as _fh:
         _CURRENT_VERSION = _fh.read().strip() or "unknown"
+
+
+def _is_bad_record(record: dict) -> bool:
+    return bool(record.get("error")) or record.get("flow_type") in (
+        None, "unknown", "error",
+    )
+
+
+def _is_retry_candidate(record: dict) -> bool:
+    """只重试可能由浏览器/网络/SPA 瞬态导致的不稳定记录。"""
+    if not _is_bad_record(record):
+        return False
+    reason = record.get("stop_reason")
+    if reason:
+        return is_retryable_browser_failure(reason)
+    # 进程看门狗和 worker 异常记录可能还没有 stop_reason。
+    return bool(record.get("error")) or record.get("flow_type") in (
+        None, "unknown", "error",
+    )
 
 
 def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
@@ -327,7 +347,7 @@ def main():
 
 
 def _stabilize_unknown(args, sites, kinds):
-    """对输出里的 unknown/error 记录自动重跑 N 轮，多数投票取稳定结果。"""
+    """对可恢复的 unknown/error 自动重跑，多数投票取稳定结果。"""
     from collections import Counter
 
     def load_records():
@@ -338,10 +358,8 @@ def _stabilize_unknown(args, sites, kinds):
                     recs.append(json.loads(line))
         return recs
 
-    def is_bad(rec):
-        return bool(rec.get("error")) or rec.get("flow_type") in (None, "unknown", "error")
-
     all_keys = {(urlparse(s).hostname or s, k) for s in sites for k in kinds}
+    site_by_host = {(urlparse(s).hostname or s): s for s in sites}
     votes = {}   # key -> list of records
 
     def collect_votes():
@@ -351,33 +369,60 @@ def _stabilize_unknown(args, sites, kinds):
                 votes.setdefault(key, []).append(rec)
 
     collect_votes()
-    unstable = [k for k in all_keys if is_bad(votes.get(k, [{}])[-1])]
-    print(f"\n[稳定] 初始 unknown/error {len(unstable)} 条，自动重跑 {args.retry_unknown} 轮…")
+    unstable = [
+        key for key in all_keys
+        if _is_retry_candidate(votes.get(key, [{}])[-1])
+    ]
+    skipped = sum(
+        1 for key in all_keys
+        if _is_bad_record(votes.get(key, [{}])[-1]) and key not in unstable
+    )
+    print(f"\n[稳定] 可恢复 unknown/error {len(unstable)} 条，"
+          f"不重试确定性门槛 {skipped} 条，自动重跑 {args.retry_unknown} 轮…")
     t1 = time.time()
     for round_idx in range(1, args.retry_unknown + 1):
         if not unstable:
             break
         tasks = unstable
         new_recs = {}
-        with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = {pool.submit(
-                classify_one, "https://" + h + "/", k,
-                measure_policy=args.measure_policy): (h, k)
-                for h, k in tasks}
-            for future in as_completed(futures):
-                h, k = futures[future]
-                try:
-                    new_recs[(h, k)] = future.result()
-                except Exception as exc:
-                    new_recs[(h, k)] = {"hostname": h, "entry_kind": k,
-                                        "error": str(exc)[:120]}
+        retry_tasks = [(site_by_host.get(h, "https://" + h + "/"), k)
+                       for h, k in tasks]
+        if getattr(args, "site_timeout", 0) > 0:
+            records = _iter_with_site_timeout(
+                retry_tasks, args.workers, args.site_timeout,
+                measure_policy=getattr(args, "measure_policy", False),
+            )
+            for record in records:
+                record_site = record.get("site") or ""
+                h = (record.get("hostname")
+                     or urlparse(record_site).hostname or record_site)
+                k = record.get("entry_kind")
+                new_recs[(h, k)] = record
+        else:
+            with ThreadPoolExecutor(max_workers=args.workers) as pool:
+                futures = {
+                    pool.submit(
+                        classify_one, site, k,
+                        measure_policy=getattr(args, "measure_policy", False),
+                    ): (h, k)
+                    for (h, k), (site, _) in zip(tasks, retry_tasks)
+                }
+                for future in as_completed(futures):
+                    h, k = futures[future]
+                    try:
+                        new_recs[(h, k)] = future.result()
+                    except Exception as exc:
+                        new_recs[(h, k)] = {
+                            "hostname": h, "entry_kind": k,
+                            "error": str(exc)[:120],
+                        }
         for key, rec in new_recs.items():
             votes.setdefault(key, []).append(rec)
         # 每轮后对仍不稳定的键做多数判定
         still = []
         for key in tasks:
             recs = votes[key]
-            valid = [r for r in recs if not is_bad(r)]
+            valid = [r for r in recs if not _is_bad_record(r)]
             if valid:
                 flows = Counter(r.get("flow_type") for r in valid)
                 top = max(flows.values())
@@ -389,7 +434,14 @@ def _stabilize_unknown(args, sites, kinds):
                     print(f"  [稳定] 第{round_idx}轮 {key[0]} {key[1]} "
                           f"-> {best[0]} ({top}/{len(valid)})")
                     continue
-            still.append(key)
+                # 已得到一次有效结果但还没有第二次确认，继续投票。
+                still.append(key)
+                continue
+            if _is_retry_candidate(recs[-1]):
+                still.append(key)
+            else:
+                # 新一轮给出了确定性访问门槛，停止无意义重试并保留该记录。
+                votes[key] = [recs[-1]]
         unstable = still
     # 重写输出：仍不稳定的保留最新记录
     _write_stabilized(args.output, votes, unstable, elapsed_sec=time.time() - t1)

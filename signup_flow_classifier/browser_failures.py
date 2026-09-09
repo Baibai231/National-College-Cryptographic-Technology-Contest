@@ -282,4 +282,17 @@ def detect_blank_auth_page(driver) -> Optional[str]:
 
 
 def is_retryable_browser_failure(reason: str) -> bool:
-    return reason == StopReason.BROWSER_CRASHED.value
+    """是否属于更换浏览器会话/稍后重试可能恢复的失败。
+
+    人机验证、访问拒绝、无注册入口和无安全动作是测量结论或人工门槛，
+    自动重试通常只会增加站点压力；浏览器崩溃、网络基础设施、超时、
+    导航瞬态故障以及 SPA 未完成渲染则适合有限重试。
+    """
+    return reason in {
+        StopReason.BROWSER_CRASHED.value,
+        StopReason.INFRASTRUCTURE_ERROR.value,
+        StopReason.TIMEOUT.value,
+        StopReason.NAVIGATION_ERROR.value,
+        StopReason.UNRECOGNIZED_PAGE.value,
+        StopReason.AUTH_ENTRY_NO_AUTH_STATE.value,
+    }

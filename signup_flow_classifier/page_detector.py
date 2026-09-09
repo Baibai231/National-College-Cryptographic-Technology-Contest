@@ -766,15 +766,14 @@ def _visible_frame_paths(driver: WebDriver, max_depth: int = 3):
     return paths
 
 
-def detect_fields_all_frames(driver: WebDriver) -> List[str]:
-    """主文档 + 开放 Shadow DOM + iframe 内的输入框。
+def _detect_fields_deep_current_context(driver: WebDriver):
+    """扫描当前 browsing context、开放 Shadow DOM 与同源子 frame。
 
-    混合方案：
-    1) 单条 JS 递归扫描主文档、开放 Shadow DOM 和所有**同源** iframe
-       （毫秒级，避免逐个切换）
-    2) JS 无结果时，Python 切换进入**尺寸较大的可见** iframe 逐个检测
-       （覆盖跨域登录 iframe，如 163；小广告/统计 iframe 会被尺寸过滤跳过）
+    返回 ``(fields, has_unclassified_text_input)``。该内部函数也可在
+    WebDriver 已切入跨域 iframe 后调用，从而让跨域 frame 内的 Web
+    Components 不再退化为只扫描 light DOM。
     """
+    fields: List[str] = []
     fathom_candidate_seen = False
     try:
         raw = driver.execute_script(
@@ -804,7 +803,6 @@ def detect_fields_all_frames(driver: WebDriver) -> List[str]:
             "return JSON.stringify(out);"
         )
         import json as _json
-        fields: List[str] = []
         for t, name, ph, el_id, aria, vis in _json.loads(raw or "[]"):
             if not vis:
                 continue
@@ -816,17 +814,33 @@ def detect_fields_all_frames(driver: WebDriver) -> List[str]:
             )
             if ft != "other" and ft not in fields:
                 fields.append(ft)
-        if fields:
-            return fields
     except Exception:
         pass
+    return fields, fathom_candidate_seen
 
-    # 跨域/独立 file origin iframe 回退：递归进入认证相关或尺寸较大的可见 iframe。
+
+def detect_fields_all_frames(driver: WebDriver) -> List[str]:
+    """主文档 + 开放 Shadow DOM + 同源/跨域 iframe 内的输入框。
+
+    混合方案：
+    1) 单条 JS 递归扫描主文档、开放 Shadow DOM 和所有**同源** iframe
+       （毫秒级，避免逐个切换）
+    2) 再由 WebDriver 切换进入**尺寸较大的可见** iframe 聚合检测
+       （覆盖跨域登录 iframe，如 163；小广告/统计 iframe 会被尺寸过滤跳过）
+
+    第二步必须始终执行。主页面的搜索框/订阅邮箱框与跨域认证 iframe
+    可以同时存在；过去只要主页面先识别到任意字段就提前返回，会漏掉
+    frame 内的 password/code 字段。
+    """
+    fields, fathom_candidate_seen = _detect_fields_deep_current_context(driver)
+
+    # 跨域/独立 file origin iframe：递归进入认证相关或尺寸较大的可见 iframe。
     for path in _visible_frame_paths(driver):
         try:
             if not _switch_to_frame_path(driver, path):
                 continue
-            inner = detect_fields(driver)
+            inner, inner_candidate_seen = _detect_fields_deep_current_context(driver)
+            fathom_candidate_seen = fathom_candidate_seen or inner_candidate_seen
             driver.switch_to.default_content()
             if inner:
                 fields.extend(f for f in inner if f not in fields)
@@ -1164,13 +1178,15 @@ def detect_page_state(driver: WebDriver, step: int) -> PageState:
         return state
     semantics = _detect_page_semantics(driver, state.fields)
     # 浏览器 JS 受同源策略限制，跨域认证 iframe 的文字需由 WebDriver 切入后
-    # 再执行同一条快速扫描（例如什么值得买的扫码登录 iframe）。
-    if semantics and not semantics.get("blockers"):
+    # 再执行同一条快速扫描（例如什么值得买的扫码登录 iframe）。无论主文档
+    # 是否已发现字段/blocker 都要聚合，否则主页面协议或订阅框会遮蔽真正的
+    # 跨域认证证据。
+    if semantics:
         for path in _visible_frame_paths(driver):
             try:
                 if not _switch_to_frame_path(driver, path):
                     continue
-                inner_fields = detect_fields(driver)
+                inner_fields, _ = _detect_fields_deep_current_context(driver)
                 inner = _detect_page_semantics(driver, inner_fields)
                 for key in ("blockers", "methods", "actions", "tabs"):
                     current = semantics.setdefault(key, [])

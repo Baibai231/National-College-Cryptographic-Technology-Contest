@@ -71,28 +71,48 @@ def _semantic_controls(driver: WebDriver) -> List[list]:
 
 
 def page_fingerprint(driver: WebDriver) -> str:
-    """轻量页面指纹：URL + 标题 + 可见输入框签名 + 按钮/弹窗数量。
+    """轻量页面指纹：URL + 可见认证控件/状态签名。
 
     用单条 JS 在浏览器内计算（之前遍历全部 DOM + Python 序列化单次约 1.6s，
     是每步耗时十几秒的元凶；JS 版本毫秒级）。
     输入框签名能区分 SPA 视图切换（短信视图=phone+code，密码视图=username+password）。
+    扫描开放 Shadow DOM 与同源 iframe；同时纳入 ``aria-expanded`` /
+    ``aria-selected``，覆盖 URL 和按钮文字均不变化的 SPA tab/弹窗切换。
+    不读取输入值，避免把用户数据带入内存指纹。
     """
     try:
         return driver.execute_script(
-            "return JSON.stringify({"
-            "u: location.href,"
-            "t: document.title,"
-            "i: [...document.querySelectorAll('input')].filter(e=>e.offsetParent!==null)"
-            "   .map(e=>(e.type||'')+':'+(e.name||'')+':'+(e.placeholder||'')).sort(),"
-            "b: [...document.querySelectorAll('button,a,[role=button]')]"
-            "   .filter(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);"
-            "     return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'})"
-            "   .map(e=>(e.innerText||e.getAttribute('aria-label')||e.getAttribute('title')||'').trim())"
-            "   .sort(),"
-            "d: document.querySelectorAll('[role=dialog]').length,"
-            "f: [...document.querySelectorAll('iframe')].filter(e=>e.offsetParent!==null)"
-            "   .map(e=>(e.src||e.id||'').split('?')[0]).sort()"
-            "});"
+            r"""
+const roots=[document],seen=new Set(),inputs=[],buttons=[],dialogs=[],frames=[];
+const visible=el=>{try{const r=el.getBoundingClientRect();
+ const view=el.ownerDocument?.defaultView||window,s=view.getComputedStyle(el);
+ return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden';
+ }catch(e){return false;}};
+for(let i=0;i<roots.length&&i<100;i++){
+ const root=roots[i]; if(!root||seen.has(root))continue; seen.add(root);
+ for(const el of root.querySelectorAll('*'))if(el.shadowRoot)roots.push(el.shadowRoot);
+ for(const el of root.querySelectorAll('input,select,textarea'))if(visible(el)){
+  inputs.push([el.tagName,el.type||'',el.name||'',el.id||'',el.placeholder||'',
+   el.getAttribute('aria-label')||'',el.getAttribute('autocomplete')||''].join(':'));
+ }
+ for(const el of root.querySelectorAll("button,a,[role='button'],[role='tab']"))if(visible(el)){
+  const label=(el.innerText||el.textContent||el.getAttribute('aria-label')
+   ||el.getAttribute('title')||'').replace(/\s+/g,' ').trim().slice(0,160);
+  buttons.push([el.tagName,label,el.getAttribute('role')||'',
+   el.getAttribute('aria-expanded')||'',el.getAttribute('aria-selected')||'',
+   el.disabled?'disabled':''].join(':'));
+ }
+ for(const el of root.querySelectorAll("[role='dialog'],[aria-modal='true']"))if(visible(el)){
+  dialogs.push((el.innerText||el.textContent||'').replace(/\s+/g,' ').trim().slice(0,200));
+ }
+ for(const frame of root.querySelectorAll('iframe'))if(visible(frame)){
+  frames.push((frame.src||frame.id||frame.title||'').split('?')[0]);
+  try{if(frame.contentDocument)roots.push(frame.contentDocument);}catch(e){}
+ }
+}
+return JSON.stringify({u:location.href,t:document.title,i:inputs.slice(0,300).sort(),
+ b:buttons.slice(0,300).sort(),d:dialogs.slice(0,30).sort(),f:frames.slice(0,100).sort()});
+"""
         ) or ""
     except Exception:
         return ""
@@ -100,11 +120,32 @@ def page_fingerprint(driver: WebDriver) -> str:
 
 def wait_page_change(driver: WebDriver, old_fingerprint: str,
                      timeout: float = CHANGE_TIMEOUT,
-                     old_window_handles=None) -> bool:
+                     old_window_handles=None,
+                     watched_context=None) -> bool:
+    """等待主文档、新窗口或指定 iframe browsing context 发生变化。
+
+    ``watched_context`` 为 ``(frame_path, old_fingerprint)``。跨域 iframe
+    无法由顶层 JS 读取，点击发生在 frame 内时必须单独观察该上下文。
+    """
     deadline = time.time() + timeout
     while time.time() < deadline:
         if page_fingerprint(driver) != old_fingerprint:
             return True
+        if watched_context is not None:
+            frame_path, context_fingerprint = watched_context
+            try:
+                if not _switch_to_frame_path(driver, frame_path):
+                    return True
+                changed = page_fingerprint(driver) != context_fingerprint
+            except Exception:
+                changed = True
+            finally:
+                try:
+                    driver.switch_to.default_content()
+                except Exception:
+                    pass
+            if changed:
+                return True
         if old_window_handles is not None:
             try:
                 if set(driver.window_handles) != set(old_window_handles):
@@ -572,6 +613,7 @@ def safe_click_entry(
     if target is None:
         return NavigationOutcome(False, False, "no_entry_button")
     old_fp = page_fingerprint(driver)
+    old_target_fp = None
     try:
         old_window_handles = driver.window_handles
     except Exception:
@@ -583,6 +625,7 @@ def safe_click_entry(
         if btn is None:
             driver.switch_to.default_content()
             return NavigationOutcome(False, False, "entry_target_missing")
+        old_target_fp = page_fingerprint(driver)
         # 用 ActionChains 点击（真实鼠标事件）：React hover 型登录弹窗
         # （掘金/力扣实测）只响应真实鼠标，原生 click 后弹窗不保持打开。
         # iframe 内元素先切回主文档再按坐标点击，避免 iframe 上下文
@@ -592,16 +635,10 @@ def safe_click_entry(
             ActionChains(driver).move_to_element(btn).click().perform()
         except Exception:
             try:
-                driver.switch_to.default_content()
-                ActionChains(driver).move_to_element(btn).click().perform()
+                btn.click()
             except Exception:
-                try:
-                    driver.switch_to.frame(btn)
-                    btn.click()
-                    driver.switch_to.default_content()
-                except Exception:
-                    driver.switch_to.default_content()
-                    btn.click()
+                driver.switch_to.default_content()
+                raise
         # 保留 data-ap-entry-token 供调用方做"链接 href 兜底导航"读取，
         # 读取方负责清理；这里不再移除。
         driver.switch_to.default_content()
@@ -612,7 +649,9 @@ def safe_click_entry(
             pass
         return NavigationOutcome(False, False, "entry_native_click_failed")
     changed = wait_page_change(
-        driver, old_fp, old_window_handles=old_window_handles
+        driver, old_fp, old_window_handles=old_window_handles,
+        watched_context=(target.frame_path, old_target_fp)
+        if target.frame_path and old_target_fp is not None else None,
     )
     if not changed:
         return NavigationOutcome(True, False, "entry_clicked_no_change")
@@ -713,71 +752,72 @@ def safe_click_tab(driver: WebDriver, kind: str) -> NavigationOutcome:
     hints = [h.rstrip("!") for h in _TAB_KINDS.get(kind, [])]
     if not hints:
         return NavigationOutcome(False, False, f"no_{kind}")
-    quoted = "[" + ",".join(json.dumps(h) for h in hints) + "]"
-    js = (
-        "const targets = " + quoted + ";" +
-        "const norm = s => s.replace(/帐/g, '账').replace(/\\s+/g, '');" +
-        "const visible = e => { const r=e.getBoundingClientRect(),s=getComputedStyle(e);"
-        "  return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'; };" +
-        "const tokenMatch = (text, tn) => {" +
-        "  const normed = norm(text);" +
-        "  if (normed === tn) return true;" +
-        "  if (normed.includes(tn)) return true;" +
-        "  const toks = text.split(/[\\s,，、/·|:：]+/).map(norm).filter(Boolean);" +
-        "  return toks.some(t => t === tn || t.includes(tn));" +
-        "};" +
-        "const els = [...document.querySelectorAll("
-        "\"div, span, li, a, button, [role='tab'], [class*='tab'], [class*='Tab']\")];" +
-        "for (const t of targets) {" +
-        "  const tn = norm(t);" +
-        "  const matches = els.filter(e => visible(e) && tokenMatch(e.textContent.trim(), tn));" +
-        "  if (matches.length) {" +
-        "    const el = matches.sort((a,b) => a.children.length - b.children.length)[0];" +
-        "    const target = el.closest(\"button, a, [role='tab'], [role='button'], li\") || el;" +
-        "    target.scrollIntoView({block: 'center'});" +
-        "    target.setAttribute('data-ap-tab-target', '1');" +
-        "    return true;" +
-        "  }" +
-        "}"
-        "return false;"
-    )
+    js = r"""
+const targets=arguments[0];
+const norm=s=>(s||'').replace(/帐/g,'账').replace(/\s+/g,'');
+const visible=e=>{try{const r=e.getBoundingClientRect();
+ const view=e.ownerDocument?.defaultView||window,s=view.getComputedStyle(e);
+ return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'
+  &&!e.disabled&&e.getAttribute('aria-disabled')!=='true';}catch(err){return false;}};
+const tokenMatch=(text,tn)=>{const normed=norm(text);if(normed===tn)return true;
+ if(normed.includes(tn))return true;
+ const toks=(text||'').split(/[\s,，、/·|:：]+/).map(norm).filter(Boolean);
+ return toks.some(t=>t===tn||t.includes(tn));};
+const roots=[document],els=[];
+for(let i=0;i<roots.length&&i<100;i++){
+ const root=roots[i];
+ for(const el of root.querySelectorAll('*'))if(el.shadowRoot)roots.push(el.shadowRoot);
+ for(const el of root.querySelectorAll(
+  "div,span,li,a,button,[role='tab'],[role='button'],[class*='tab'],[class*='Tab']"))els.push(el);
+}
+for(const text of targets){const targetText=norm(text);
+ const matches=els.filter(el=>visible(el)&&tokenMatch(el.textContent||'',targetText));
+ if(matches.length){const leaf=matches.sort((a,b)=>a.children.length-b.children.length)[0];
+  const target=leaf.closest("button,a,[role='tab'],[role='button'],li")||leaf;
+  target.scrollIntoView({block:'center'});return target;}}
+return null;
+"""
 
-    def _trusted_click() -> NavigationOutcome:
+    def _trusted_click(frame_path: Tuple[int, ...]) -> NavigationOutcome:
         try:
-            if not driver.execute_script(js):
+            if not _switch_to_frame_path(driver, frame_path):
                 return NavigationOutcome(False, False, f"no_{kind}")
-            from selenium.webdriver.common.by import By
-            el = driver.find_element(By.CSS_SELECTOR, "[data-ap-tab-target='1']")
-            old_fp = page_fingerprint(driver)
-            el.click()
-            driver.execute_script("document.querySelector('[data-ap-tab-target]')?.removeAttribute('data-ap-tab-target');")
-            changed = wait_page_change(driver, old_fp, timeout=2.0)
+            element = driver.execute_script(js, hints)
+            if element is None:
+                driver.switch_to.default_content()
+                return NavigationOutcome(False, False, f"no_{kind}")
+            old_context_fp = page_fingerprint(driver)
+            if frame_path:
+                driver.switch_to.default_content()
+                old_main_fp = page_fingerprint(driver)
+                if not _switch_to_frame_path(driver, frame_path):
+                    return NavigationOutcome(False, False, f"no_{kind}")
+            else:
+                old_main_fp = old_context_fp
+            element.click()
+            driver.switch_to.default_content()
+            changed = wait_page_change(
+                driver, old_main_fp, timeout=2.0,
+                watched_context=(frame_path, old_context_fp) if frame_path else None,
+            )
             reason = f"{kind}_clicked_and_changed" if changed else f"{kind}_clicked_no_change"
             return NavigationOutcome(True, changed, reason)
         except Exception:
             try:
-                driver.execute_script("document.querySelector('[data-ap-tab-target]')?.removeAttribute('data-ap-tab-target');")
+                driver.switch_to.default_content()
             except Exception:
                 pass
             return NavigationOutcome(False, False, f"{kind}_native_click_failed")
 
-    outcome = _trusted_click()
-    if outcome.clicked:
-        return outcome
-    for frame in driver.find_elements(By.TAG_NAME, "iframe"):
-        try:
-            driver.switch_to.frame(frame)
-            outcome = _trusted_click()
-            if outcome.clicked:
-                driver.switch_to.default_content()
+    for frame_path in _frame_paths(driver):
+        outcome = _trusted_click(frame_path)
+        if outcome.clicked:
+            if frame_path:
                 suffix = "_and_changed" if outcome.changed else "_no_change"
-                return NavigationOutcome(True, outcome.changed, f"{kind}_clicked_in_iframe{suffix}")
-            driver.switch_to.default_content()
-        except Exception:
-            try:
-                driver.switch_to.default_content()
-            except Exception:
-                pass
+                return NavigationOutcome(
+                    True, outcome.changed, f"{kind}_clicked_in_iframe{suffix}"
+                )
+            return outcome
     return NavigationOutcome(False, False, f"no_{kind}")
 
 
@@ -795,9 +835,7 @@ def safe_click_auth_mode_switch(
     供 signup 展开选项后再次寻找明确注册入口；不会点击“账号/手机登录”。
     """
     base_url = driver.current_url
-    marker = f"ap-auth-mode-{int(time.time() * 1000)}"
     config = {
-        "marker": marker,
         "labels": [] if structural_only else [
             "使用手机登录", "手机登录", "账号", "账户",
             "账号登录", "账户登录",
@@ -860,10 +898,10 @@ for(let i=0;i<roots.length&&i<100;i++){
 rows.sort((a,b)=>b.score-a.score);
 if(!rows.length)return null;
 const row=rows[0];
-row.el.setAttribute('data-ap-auth-mode',cfg.marker);
-return {href:row.href,reason:row.reason};
+return {element:row.el,href:row.href,reason:row.reason};
 """
 
+    old_main_fp = page_fingerprint(driver)
     for frame_path in _frame_paths(driver):
         try:
             if not _switch_to_frame_path(driver, frame_path):
@@ -871,26 +909,21 @@ return {href:row.href,reason:row.reason};
             marked = driver.execute_script(script, config)
             if not marked:
                 continue
-            element = driver.find_element(
-                By.CSS_SELECTOR, f"[data-ap-auth-mode='{marker}']"
-            )
+            element = marked.get("element")
+            if element is None:
+                continue
             href = marked.get("href") or ""
             target_url = urljoin(base_url, href) if href else ""
             if href and not _same_site(base_url, target_url):
-                driver.execute_script(
-                    "arguments[0].removeAttribute('data-ap-auth-mode')", element
-                )
                 continue
-            old_fp = page_fingerprint(driver)
+            old_context_fp = page_fingerprint(driver)
             element.click()
-            try:
-                driver.execute_script(
-                    "arguments[0].removeAttribute('data-ap-auth-mode')", element
-                )
-            except Exception:
-                pass
             driver.switch_to.default_content()
-            changed = wait_page_change(driver, old_fp, timeout=3.0)
+            changed = wait_page_change(
+                driver, old_main_fp, timeout=3.0,
+                watched_context=(frame_path, old_context_fp)
+                if frame_path else None,
+            )
             suffix = "and_changed" if changed else "no_change"
             return NavigationOutcome(
                 True, changed,
@@ -901,6 +934,10 @@ return {href:row.href,reason:row.reason};
                 driver.switch_to.default_content()
             except Exception:
                 pass
+    try:
+        driver.switch_to.default_content()
+    except Exception:
+        pass
     return NavigationOutcome(False, False, "no_safe_auth_mode_switch")
 
 
