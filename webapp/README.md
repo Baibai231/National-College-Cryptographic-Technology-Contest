@@ -19,6 +19,7 @@
 脚本会自动完成以下工作：
 
 - 首次运行时创建 `.venv` 并安装 Web 服务依赖；
+- 浏览器驱动缓存到项目 `.cache`；Windows 没有 Chrome 时自动使用 Microsoft Edge；
 - 用 `reports/sites/sites_latest.jsonl` 重建 SQLite 展示库；
 - 自动合并 `reports/archive` 中最新一份全量口令策略实测结果；
 - 仅在本机 `127.0.0.1:8000` 启动服务并打开浏览器；

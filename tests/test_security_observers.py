@@ -245,6 +245,13 @@ class NetworkSecurityObserverTests(unittest.TestCase):
         self.assertEqual(
             options.experimental["perfLoggingPrefs"], {"enableNetwork": True})
 
+        edge_options = FakeOptions()
+        _enable_passive_network_logging(
+            edge_options, capability="ms:loggingPrefs")
+        self.assertEqual(
+            edge_options.capabilities["ms:loggingPrefs"],
+            {"performance": "ALL"})
+
 
 class SecurityAssessmentTests(unittest.TestCase):
     @staticmethod

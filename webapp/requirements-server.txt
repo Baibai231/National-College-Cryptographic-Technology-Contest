@@ -4,6 +4,9 @@ loguru>=0.6
 selenium>=4.16
 webdriver_manager>=4.0
 undetected-chromedriver>=3.5
+# Python 3.12 removed stdlib distutils; undetected-chromedriver 3.5 still
+# imports distutils.version.  Setuptools provides the maintained shim.
+setuptools>=68
 Faker>=18
 requests>=2.31
 tldextract>=3.2

@@ -154,6 +154,100 @@ def padding_pw_suitable(pw, pass_len, is_2_word, add_pw, after_pw):
 _SHARED_DRIVER = None
 
 
+def _driver_cache_path(name):
+    """Return a writable, project-local browser-driver cache directory."""
+    configured = os.environ.get("SITES_DRIVER_CACHE_DIR", "").strip()
+    root = configured or os.path.join(str(Config.PROJECT_ROOT), ".cache")
+    path = os.path.abspath(os.path.join(os.path.expanduser(root), name))
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def _configure_uc_data_path(uc):
+    """Keep undetected-chromedriver patches out of a possibly unwritable HOME."""
+    path = _driver_cache_path("undetected_chromedriver")
+    uc.Patcher.data_path = path
+    return path
+
+
+def _find_browser_binary(browser):
+    """Find a Chrome or Edge binary, honoring explicit server overrides."""
+    import shutil
+
+    env_name = "SITES_CHROME_BIN" if browser == "chrome" else "SITES_EDGE_BIN"
+    configured = os.environ.get(env_name, "").strip()
+    candidates = [configured] if configured else []
+    if os.name == "nt":
+        pf = os.environ.get("PROGRAMFILES", r"C:\Program Files")
+        pf86 = os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")
+        local = os.environ.get("LOCALAPPDATA", "")
+        if browser == "chrome":
+            candidates.extend([
+                os.path.join(pf, "Google", "Chrome", "Application", "chrome.exe"),
+                os.path.join(pf86, "Google", "Chrome", "Application", "chrome.exe"),
+                os.path.join(local, "Google", "Chrome", "Application", "chrome.exe"),
+            ])
+        else:
+            candidates.extend([
+                os.path.join(pf86, "Microsoft", "Edge", "Application", "msedge.exe"),
+                os.path.join(pf, "Microsoft", "Edge", "Application", "msedge.exe"),
+                os.path.join(local, "Microsoft", "Edge", "Application", "msedge.exe"),
+            ])
+    else:
+        names = (("google-chrome", "google-chrome-stable", "chromium",
+                  "chromium-browser") if browser == "chrome"
+                 else ("microsoft-edge", "microsoft-edge-stable"))
+        candidates.extend(filter(None, (shutil.which(name) for name in names)))
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return os.path.abspath(candidate)
+    return None
+
+
+def _create_edge_driver(edge_binary, *, shared=False):
+    """Create a Selenium Edge session when Chrome is unavailable on Windows."""
+    from selenium.webdriver.common.selenium_manager import SeleniumManager
+    from selenium.webdriver.edge.options import Options as EdgeOptions
+    from selenium.webdriver.edge.service import Service as EdgeService
+
+    options = EdgeOptions()
+    options.binary_location = edge_binary
+    for argument in (
+            "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu",
+            "--disable-blink-features=AutomationControlled"):
+        options.add_argument(argument)
+    _enable_passive_network_logging(options, capability="ms:loggingPrefs")
+
+    proxy_url = _get_proxy_config()
+    if proxy_url:
+        masked = proxy_url.split("@")[-1] if "@" in proxy_url else proxy_url
+        logger.info(f"Edge 使用代理: {masked}")
+        options.add_argument(f"--proxy-server={proxy_url}")
+    else:
+        options.add_argument("--no-proxy-server")
+    if os.environ.get("SITES_HEADLESS"):
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1440,900")
+
+    driver_binary = os.environ.get("SITES_EDGEDRIVER", "").strip()
+    if not driver_binary or not os.path.isfile(driver_binary):
+        manager_args = [
+            "--browser", "edge", "--browser-path", edge_binary,
+            "--cache-path", _driver_cache_path("selenium"), "--avoid-stats",
+        ]
+        if proxy_url:
+            manager_args.extend(["--proxy", proxy_url])
+        driver_binary = SeleniumManager().binary_paths(manager_args)["driver_path"]
+
+    driver = webdriver.Edge(
+        options=options, service=EdgeService(executable_path=driver_binary))
+    driver.maximize_window()
+    driver.set_page_load_timeout(25 if shared else 30)
+    driver.set_script_timeout(10)
+    _inject_form_detection_js(driver)
+    return driver
+
+
 def _is_real_chromedriver_binary(path):
     """通过 ELF (Linux) / Mach-O (macOS) / PE (Windows) magic bytes 识别
     真正的 chromedriver 二进制，排除 THIRD_PARTY_NOTICES 等文本文件。"""
@@ -300,14 +394,14 @@ def _get_proxy_config():
     return None
 
 
-def _enable_passive_network_logging(options):
+def _enable_passive_network_logging(options, capability="goog:loggingPrefs"):
     """Capture metadata for requests the browser already makes.
 
     ``security_observers`` consumes these events after classification to derive
     TLS and response-header posture.  Enabling the log does not issue a request
     and does not persist the raw events.
     """
-    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    options.set_capability(capability, {"performance": "ALL"})
     options.add_experimental_option("perfLoggingPrefs", {"enableNetwork": True})
 
 
@@ -359,7 +453,16 @@ def _get_shared_driver():
         except Exception:
             _SHARED_DRIVER = None
 
+    chrome_binary = _find_browser_binary("chrome")
+    if not chrome_binary:
+        edge_binary = _find_browser_binary("edge")
+        if edge_binary:
+            logger.info("未找到 Chrome，回退使用本机 Microsoft Edge")
+            _SHARED_DRIVER = _create_edge_driver(edge_binary, shared=True)
+            return _SHARED_DRIVER
+
     import undetected_chromedriver as uc
+    _configure_uc_data_path(uc)
 
     options = Options()
     options.add_argument('--no-sandbox')
@@ -382,6 +485,9 @@ def _get_shared_driver():
         options.add_argument(f"--proxy-server={proxy_url}")
     else:
         options.add_argument("--no-proxy-server")
+
+    if chrome_binary:
+        options.binary_location = chrome_binary
 
     if _CHROMEDRIVER_BIN:
         _SHARED_DRIVER = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN)
@@ -407,7 +513,15 @@ def _get_new_driver():
     包含反自动化检测标志 + notABot.js CDP 注入，
     与 CAPDriver 保持一致的隐身级别。
     """
+    chrome_binary = _find_browser_binary("chrome")
+    if not chrome_binary:
+        edge_binary = _find_browser_binary("edge")
+        if edge_binary:
+            logger.info("未找到 Chrome，回退使用本机 Microsoft Edge")
+            return _create_edge_driver(edge_binary)
+
     import undetected_chromedriver as uc
+    _configure_uc_data_path(uc)
 
     options = Options()
     options.add_argument('--no-sandbox')
@@ -436,7 +550,7 @@ def _get_new_driver():
 
     # 服务器自定义 Chrome 二进制：SITES_CHROME_BIN 指向 chrome 可执行文件
     # （部署时从 Mac 下载 linux 版 Chrome 传到服务器后设置）
-    chrome_bin = os.environ.get("SITES_CHROME_BIN")
+    chrome_bin = chrome_binary or os.environ.get("SITES_CHROME_BIN")
     if chrome_bin and os.path.isfile(chrome_bin):
         options.binary_location = chrome_bin
 

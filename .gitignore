@@ -44,6 +44,8 @@ urls_*.txt
 *.pid
 test_diag*.py
 test_inject*.py
+/.cache/
+/webapp/tasks.json
 
 # Test coverage
 .pytest_cache/

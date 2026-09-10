@@ -73,7 +73,7 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
 }
 
 if (-not $SkipInstall) {
-    & $venvPython -c "import fastapi, selenium, uvicorn" 2>$null
+    & $venvPython -c "import fastapi, selenium, setuptools, undetected_chromedriver, uvicorn" 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Host "首次运行：正在安装项目依赖……"
         & $venvPython -m pip install -r "webapp\requirements-server.txt"

@@ -1544,8 +1544,20 @@ def _run_task_policy(url: str, method: str, force_retest: bool = False,
             "measured_at": cached.get("measured_at"),
         }
     result = _run_live_policy(url, method)
+    embedded_error = _policy_task_result_error(result)
+    if embedded_error:
+        raise RuntimeError(embedded_error)
     result["hostname"] = host
     return result
+
+
+def _policy_task_result_error(result: dict) -> Optional[str]:
+    """Promote infrastructure failures embedded by the legacy CLI to task errors."""
+    if (isinstance(result, dict)
+            and result.get("policy_measured") is not True
+            and result.get("error")):
+        return str(result["error"])[:300]
+    return None
 
 
 def _persist_finished_task(task: dict) -> bool:
@@ -1668,6 +1680,12 @@ def _recover_tasks_on_startup() -> None:
                     t["status"] = "error"
                     t["error"] = "server restart: 待恢复任务超过队列上限"
                     t["finished_at"] = datetime.now(timezone.utc).isoformat()
+                    changed = True
+            elif status == "done":
+                embedded_error = _policy_task_result_error(t.get("result") or {})
+                if t.get("kind") == "policy" and embedded_error:
+                    t["status"] = "error"
+                    t["error"] = embedded_error
                     changed = True
         if changed:
             _save_tasks(tasks)

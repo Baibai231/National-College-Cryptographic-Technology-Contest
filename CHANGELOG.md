@@ -7,6 +7,23 @@
 
 ## v4 进行中（2026-08-15）
 
+### 62. Python 3.12 本地浏览器驱动兼容（2026-09-10）
+
+- [x] 修复实时测量启动浏览器时报 `No module named 'distutils'`：Python 3.12 已从
+      标准库移除 distutils，而 undetected-chromedriver 3.5 仍导入其版本模块；
+      服务依赖显式加入 `setuptools>=68` 提供兼容实现。
+- [x] 本地一键脚本的依赖健康检查加入 setuptools 与 undetected-chromedriver，
+      已有 `.venv` 缺少兼容层时也会自动补装，而不是直到提交任务才失败。
+- [x] 驱动缓存改到项目 `.cache`，避免受限环境无法写入 `%APPDATA%`；Windows 未安装
+      Chrome 时自动回退到本机 Edge，并用同一项目缓存管理匹配的 EdgeDriver。
+- [x] Edge 使用 `ms:loggingPrefs` 启用性能网络日志，Chrome 保持
+      `goog:loggingPrefs`，避免 EdgeDriver 因日志能力命名不匹配拒绝创建会话。
+- [x] 基础设施异常不再包装成“测量完成”；旧版 CLI 返回值中携带的错误会提升为任务
+      `error` 状态，服务重启时也会迁移此前误标为 `done` 的失败任务。
+- [x] 新增 Python 3.12 依赖、项目缓存、Edge 发现和任务错误语义测试，并实际验证
+      distutils、浏览器驱动导入、EdgeDriver 下载与 GitHub 真实外网任务；完整 239 项
+      回归测试及编译检查通过。
+
 ### 61. Windows 本地一键展示与历史口令策略入库（2026-09-10）
 
 - [x] 新增 `webapp/run_local.ps1`：首次运行自动建立 `.venv`、安装缺失依赖，

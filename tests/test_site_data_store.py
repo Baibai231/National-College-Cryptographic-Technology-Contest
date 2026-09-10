@@ -24,6 +24,19 @@ import webapp.app as web_app
 
 
 class SiteDataStoreTests(unittest.TestCase):
+    def test_embedded_policy_infrastructure_error_fails_task(self):
+        self.assertEqual(
+            web_app._policy_task_result_error({
+                "policy_measured": False,
+                "error": "No module named 'distutils'",
+            }),
+            "No module named 'distutils'",
+        )
+        self.assertIsNone(web_app._policy_task_result_error({
+            "policy_measured": True,
+            "error": "partial evidence warning",
+        }))
+
     def test_old_database_records_are_merged_idempotently(self):
         from collections import defaultdict
 
