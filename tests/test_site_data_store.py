@@ -9,7 +9,11 @@ from unittest.mock import patch
 
 from fastapi import HTTPException
 from pydantic import ValidationError
-from scripts.build_site_database import create_db
+from scripts.build_site_database import (
+    _merge_unique_records,
+    build_sites,
+    create_db,
+)
 from scripts import merge_reviews
 from scripts.finalize_measurement_data import finalize
 from scripts.site_data_store import (
@@ -20,6 +24,71 @@ import webapp.app as web_app
 
 
 class SiteDataStoreTests(unittest.TestCase):
+    def test_old_database_records_are_merged_idempotently(self):
+        from collections import defaultdict
+
+        groups = defaultdict(lambda: defaultdict(list))
+        current = {
+            "hostname": "example.com", "entry_kind": "signup",
+            "version": "v4", "flow_type": "direct_password",
+        }
+        historic = {
+            "hostname": "example.com", "entry_kind": "signup",
+            "version": "v3", "flow_type": "unknown",
+        }
+        groups["example.com"]["signup"].append(current)
+
+        self.assertEqual(
+            _merge_unique_records(groups, [dict(current), historic]), 1)
+        self.assertEqual(
+            _merge_unique_records(groups, [dict(current), dict(historic)]), 0)
+        self.assertEqual(len(groups["example.com"]["signup"]), 2)
+
+    def test_legacy_measured_policy_is_exposed_as_password_policy(self):
+        measured = {
+            "site": "https://example.com", "hostname": "example.com",
+            "entry_kind": "signup", "version": "v4",
+            "flow_type": "direct_password", "method_used": "inline",
+            "policy": {
+                "length": [8, 16],
+                "restrictive": {"r_cmb34": True},
+                "permissive": {"permitted_characters": {}},
+            },
+            "states": [{"step": 1, "fields": ["password"]}],
+        }
+        site = build_sites({"example.com": {"signup": [measured]}})[0]
+        self.assertEqual(site["signup"]["policy"], {})
+        self.assertEqual(site["signup"]["pwd_policy"]["length"], [8, 16])
+        self.assertEqual(site["signup"]["pwd_method"], "inline")
+
+    def test_classification_policy_is_not_mistaken_for_measured_policy(self):
+        classified = measurement_record(
+            "example.com", "https://example.com", "v4", "signup", {
+                "flow_type": "direct_password",
+                "policy": {"schema_version": "1.0", "authentication": {
+                    "password_status": "password_observed"
+                }},
+            })
+        site = build_sites({"example.com": {"signup": [classified]}})[0]
+        self.assertEqual(site["signup"]["policy"]["schema_version"], "1.0")
+        self.assertEqual(site["signup"]["pwd_policy"], {})
+
+    def test_explicit_password_policy_never_leaks_into_classification_policy(self):
+        measured = {
+            "site": "https://example.com", "hostname": "example.com",
+            "entry_kind": "signup", "version": "v4",
+            "flow_type": "direct_password", "pwd_method": "inline",
+            "policy": {
+                "length": [8, 16], "restrictive": {}, "permissive": {},
+            },
+            "pwd_policy": {
+                "length": [10, 32], "restrictive": {}, "permissive": {},
+            },
+        }
+        site = build_sites({"example.com": {"signup": [measured]}})[0]
+        self.assertEqual(site["signup"]["policy"], {})
+        self.assertEqual(site["signup"]["pwd_policy"]["length"], [10, 32])
+
     def test_v4_write_contract_accepts_current_version(self):
         # v4 起：网页写入模型接受 v3/v4（默认 v4），v5 及以上应拒绝
         req = web_app.AddSiteRequest(hostname="example.com", version="v4")

@@ -68,6 +68,8 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("我的测量任务", self.html)
         self.assertIn("/api/tasks", self.html)
         self.assertIn("task-tbody", self.html)
+        self.assertIn("填写上方测量口令后可查看和管理实时任务", self.html)
+        self.assertIn("if (!measureTokenInput.value.trim())", self.html)
 
     def test_policy_result_labels_measured_method_without_method_list(self):
         # 测到口令政策时，方法清单直接写"进行密码政策测试"

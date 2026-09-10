@@ -8,10 +8,37 @@
 - **详情**：每站展示程序测量（类型/路线/字段/阻断/步骤证据）+ 人工复核对照
 - **实时分类**：输入任意网站主页 URL → 复用测量工具现场分类（安全只读）
 
-## 本地运行
+## Windows 本地一键运行（推荐）
+
+在仓库根目录打开 PowerShell：
+
+```powershell
+.\webapp\run_local.ps1
+```
+
+脚本会自动完成以下工作：
+
+- 首次运行时创建 `.venv` 并安装 Web 服务依赖；
+- 用 `reports/sites/sites_latest.jsonl` 重建 SQLite 展示库；
+- 自动合并 `reports/archive` 中最新一份全量口令策略实测结果；
+- 仅在本机 `127.0.0.1:8000` 启动服务并打开浏览器；
+- 生成本次实时测量所需的随机 `X-Measure-Token`，显示在终端中。
+
+以后代码或数据更新后，再运行同一条命令即可重建并重启。常用选项：
+
+```powershell
+.\webapp\run_local.ps1 -NoBrowser       # 启动但不自动打开浏览器
+.\webapp\run_local.ps1 -Port 8080       # 改用其他本地端口
+.\webapp\run_local.ps1 -Stop            # 停止本地服务
+```
+
+脚本只会停止 PID 文件中、且可执行路径确认为本项目 `.venv` Python 的进程，
+不会按端口或进程名批量结束其他程序。
+
+## Linux/macOS 手动运行
 
 ```bash
-# 1. 构建数据库（final 测量结果 + 人工复核 → SQLite）
+# 1. 构建数据库（正式测量结果 + 人工复核 → SQLite）
 .venv/bin/python scripts/build_site_database.py
 
 # 2. 启动服务
@@ -43,7 +70,13 @@ chmod +x webapp/run_server.sh
 
 ## 数据更新流程
 
-每轮新测量后：
+Windows 上每轮新测量或拉取新代码后重新运行：
+
+```powershell
+.\webapp\run_local.ps1
+```
+
+Linux/macOS 手动重建：
 
 ```bash
 .venv/bin/python scripts/build_site_database.py   # 重建数据库
@@ -51,6 +84,10 @@ chmod +x webapp/run_server.sh
 ```
 
 人工复核结果维护在 `misc/manual_review.json`，重建数据库时自动合并。
+
+历史批量口令测量的兼容格式为 `policy + method_used`；当前格式为
+`pwd_policy + pwd_method`。数据库构建器会将二者统一为 Dashboard 的
+`pwd_policy`，不会把流程分类中的 `policy` 误当成已测口令规则。
 
 ## 安全说明
 

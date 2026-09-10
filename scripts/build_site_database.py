@@ -147,12 +147,46 @@ def _pick_latest(records):
     return max(records, key=ver_key)
 
 
+def _record_policies(record):
+    """Return ``(classification_policy, password_policy, method)``.
+
+    Current web writes keep the two policy types separate.  Legacy batch
+    policy runs stored an actually measured password policy directly in the
+    ``policy`` field, so older measurements were silently omitted from the
+    dashboard's dedicated password-policy table.  Detect that legacy shape by
+    structure, never by a positive/negative policy value.
+    """
+    record = record or {}
+    raw_policy = record.get("policy") or {}
+    classification_policy = record.get("classification_policy") or {}
+    password_policy = record.get("pwd_policy") or {}
+    measured_shape = (
+        isinstance(raw_policy, dict)
+        and "restrictive" in raw_policy
+        and "permissive" in raw_policy
+        and "length" in raw_policy
+    )
+    if measured_shape:
+        if not password_policy:
+            password_policy = raw_policy
+    elif not classification_policy:
+        classification_policy = raw_policy
+    method = record.get("pwd_method")
+    if password_policy and not method:
+        legacy_method = record.get("method_used")
+        if legacy_method in {"inline", "full", "partial_browser_dead"}:
+            method = legacy_method
+    return classification_policy, password_policy, method
+
+
 def build_sites(groups):
     sites = []
     for host in sorted(h for h in groups if h):
         kinds = groups[host]
         login = _pick_latest(kinds.get("login"))
         signup = _pick_latest(kinds.get("signup"))
+        login_policy, login_pwd_policy, login_pwd_method = _record_policies(login)
+        signup_policy, signup_pwd_policy, signup_pwd_method = _record_policies(signup)
         login_flow = "error" if (login or {}).get("error") else (login or {}).get("flow_type")
         signup_flow = "error" if (signup or {}).get("error") else (signup or {}).get("flow_type")
         site = {
@@ -172,11 +206,11 @@ def build_sites(groups):
                 "steps": _summary((login or {}).get("states", [])),
                 "raw_states": (login or {}).get("states", []),
                 "measured_at": (login or {}).get("measured_at", ""),
-                "policy": (login or {}).get("policy", {}),
+                "policy": login_policy,
                 "security_observations": (login or {}).get(
                     "security_observations", {}),
-                "pwd_policy": (login or {}).get("pwd_policy", {}),
-                "pwd_method": (login or {}).get("pwd_method"),
+                "pwd_policy": login_pwd_policy,
+                "pwd_method": login_pwd_method,
                 "error": (login or {}).get("error"),
                 "record": login or {},
             },
@@ -193,11 +227,11 @@ def build_sites(groups):
                 "steps": _summary((signup or {}).get("states", [])),
                 "raw_states": (signup or {}).get("states", []),
                 "measured_at": (signup or {}).get("measured_at", ""),
-                "policy": (signup or {}).get("policy", {}),
+                "policy": signup_policy,
                 "security_observations": (signup or {}).get(
                     "security_observations", {}),
-                "pwd_policy": (signup or {}).get("pwd_policy", {}),
-                "pwd_method": (signup or {}).get("pwd_method"),
+                "pwd_policy": signup_pwd_policy,
+                "pwd_method": signup_pwd_method,
                 "error": (signup or {}).get("error"),
                 "record": signup or {},
             },
@@ -263,6 +297,7 @@ def build_history(groups, sites):
                 # 跳过与当前版本相同的（sites 表已有）
                 if v == cur_ver:
                     continue
+                classification_policy, pwd_policy, pwd_method = _record_policies(r)
                 history.append({
                     "hostname": host,
                     "entry_kind": kind,
@@ -274,7 +309,9 @@ def build_history(groups, sites):
                     "measured_at": r.get("measured_at", ""),
                     "details_json": json.dumps({
                         "steps": _summary(r.get("states", [])),
-                        "policy": r.get("policy", {}),
+                        "policy": classification_policy,
+                        "pwd_policy": pwd_policy,
+                        "pwd_method": pwd_method,
                         "security_observations": r.get(
                             "security_observations", {}),
                     }, ensure_ascii=False),
@@ -454,6 +491,33 @@ def _load_old_db_records(db_path):
     return records
 
 
+def _merge_unique_records(groups, records):
+    """Merge old-DB records without re-adding exact source records.
+
+    Rebuilding the Dashboard repeatedly should not make the in-memory input set
+    grow by two records per site.  Canonical JSON is appropriate here because
+    old records are the complete raw dictionaries previously selected from the
+    same JSONL sources.
+    """
+    seen = {
+        json.dumps(record, ensure_ascii=False, sort_keys=True,
+                   separators=(",", ":"))
+        for host_groups in groups.values()
+        for kind_records in host_groups.values()
+        for record in kind_records
+    }
+    added = 0
+    for record in records:
+        fingerprint = json.dumps(
+            record, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        if fingerprint in seen:
+            continue
+        groups[record["hostname"]][record["entry_kind"]].append(record)
+        seen.add(fingerprint)
+        added += 1
+    return added
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", action="append", default=[],
@@ -481,8 +545,7 @@ def main():
             if path not in inputs:
                 inputs.append(path)
         groups = load_records(inputs)
-        for rec in _load_old_db_records(args.output):
-            groups[rec["hostname"]][rec["entry_kind"]].append(rec)
+        _merge_unique_records(groups, _load_old_db_records(args.output))
         print(f"加载 {sum(len(k) for h in groups for k in groups[h].values())} 条测量记录（{len(inputs)} 个文件）")
         sites = attach_manual(build_sites(groups), args.manual, args.keywords)
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)

@@ -1186,7 +1186,9 @@ const measureTokenInput = document.getElementById('measure-token');
 measureTokenInput.value = sessionStorage.getItem('sites-measure-token') || '';
 measureTokenInput.addEventListener('input', () => {
   sessionStorage.setItem('sites-measure-token', measureTokenInput.value);
+  if (!measureTokenInput.value.trim()) loadTasks();
 });
+measureTokenInput.addEventListener('change', () => loadTasks());
 
 function measureHeaders(includeJson = false) {
   const headers = {};
@@ -1207,10 +1209,15 @@ function taskResultSummary(t) {
   return [flow, len, r.flow_zh || ''].filter(Boolean).join(' · ');
 }
 async function loadTasks() {
+  const tbody = document.getElementById('task-tbody');
+  if (!measureTokenInput.value.trim()) {
+    clearTaskPoll();
+    tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">填写上方测量口令后可查看和管理实时任务</td></tr>';
+    return;
+  }
   try {
     const r = await fetch('/api/tasks?limit=20', { headers: measureHeaders() });
     const d = await r.json();
-    const tbody = document.getElementById('task-tbody');
     if (!r.ok) {
       throw new Error(d.detail || '服务器拒绝访问任务列表');
     }

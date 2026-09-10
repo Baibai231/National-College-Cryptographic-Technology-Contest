@@ -41,6 +41,7 @@ urls_*.txt
 # Temporary & debug files
 *.tmp
 *.log
+*.pid
 test_diag*.py
 test_inject*.py
 
