@@ -32,6 +32,13 @@ class Config(object):
     MAX_RETRIES_PER_URL: int = 2           # 每个 URL 最大重试次数
     CRAWLER_TIMEOUT_SECONDS: int = 300     # 单站点超时（秒）
 
+    # --- 口令政策探测预算 ---
+    # 现代站点可能要求 14/16 位以上。候选按常见边界优先、随后补齐全部
+    # 长度；时间预算仍会限制真实提交次数，避免长期占用或过度请求。
+    ADMISSIBLE_MIN_LENGTH: int = 8
+    ADMISSIBLE_MAX_LENGTH: int = 64
+    ADMISSIBLE_SEARCH_SECONDS: int = 120
+
     # --- 反爬 / CMP 配置 ---
     ENABLE_ANTI_BOT: bool = True           # 启用反自动化检测（notABot.js）
     ENABLE_CMP_DETECTION: bool = True      # 启用 CMP 弹窗检测（Consent-O-Matic）

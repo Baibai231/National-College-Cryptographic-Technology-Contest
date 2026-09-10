@@ -26,7 +26,12 @@ from selenium.common.exceptions import InvalidSessionIdException, NoSuchWindowEx
 
 import utils.util_basic as uub
 import utils.util_str_generator as uusg
+from config.config import Config
 from utils.login_link_discovery import LoginLinkDiscovery
+from utils.password_candidates import (
+    admissible_candidate_lengths,
+    stratified_password_candidates,
+)
 
 from .rate_controller import RateController
 from .data_generator import DataGenerator
@@ -466,44 +471,14 @@ class FullFormPolicyTester:
                 self.admissible_password = cached
                 return cached
 
-        # 按长度递增搜索：每个长度同时准备「无符号」(字母+数字) 和「含符号」(字母+数字+符号)
-        # 候选，覆盖要求符号的政策（如游民星空"字母与数字、符号组合"）。否则要求符号的站
-        # 永远找不到合法密码（鸡生蛋：找不到 admissible → 进不了后续符号测试 → 直接交白卷）。
-
-        def _with_symbol(base_len: int) -> str:
-            # 保证至少 1 小写 + 1 大写 + 1 数字 + 1 符号（'!'，经 permissive 测试确认
-            # 合法且不破坏 163 等站点），长度 = base_len。
-            return "Ab3" + uusg.gen_random_str_no_symbol(max(0, base_len - 4)) + "!"
-
-        admissible_list = {
-            "8":  [uusg.gen_random_str_no_symbol(8), uusg.gen_random_str_no_symbol(8),
-                   _with_symbol(8)],
-            "9":  [uusg.gen_random_str_no_symbol(9), uusg.gen_random_str_no_symbol(9),
-                   _with_symbol(9)],
-            "10": [uusg.gen_random_str_no_symbol(10), uusg.gen_random_str_no_symbol(10),
-                   _with_symbol(10)],
-        }
-
-        # 限制最大搜索长度（超过此长度仍未找到 → 极可能是登录表单）
-        MAX_SEARCH_LENGTH = 12
-
         # 时间预算：防止在登录表单等"无密码反馈"的页面上空转
         # （登录表单不会给注册密码反馈，逐长度试探永远被拒，只能靠时间兜底退出）
-        ADMISSIBLE_DEADLINE_SECONDS = 120
+        ADMISSIBLE_DEADLINE_SECONDS = Config.ADMISSIBLE_SEARCH_SECONDS
         deadline = time.monotonic() + ADMISSIBLE_DEADLINE_SECONDS
 
-        for length in range(8, min(33, MAX_SEARCH_LENGTH + 1)):
-            if length <= 10:
-                candidates = admissible_list[str(length)]
-            else:
-                suffix = uusg.gen_random_str_no_symbol(length - 10)
-                candidates = [
-                    admissible_list["10"][0] + suffix,
-                    admissible_list["10"][1] + suffix,
-                    admissible_list["10"][2] + suffix,
-                ]
-
-            for pwd in candidates:
+        for length in admissible_candidate_lengths(
+                Config.ADMISSIBLE_MIN_LENGTH, Config.ADMISSIBLE_MAX_LENGTH):
+            for pwd in stratified_password_candidates(length):
                 if time.monotonic() > deadline:
                     self.my_logger.warning(
                         f"Admissible search exceeded {ADMISSIBLE_DEADLINE_SECONDS}s budget, "

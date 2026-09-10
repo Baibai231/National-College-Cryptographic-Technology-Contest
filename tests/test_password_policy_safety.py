@@ -3,6 +3,10 @@ from unittest import mock
 
 from full_form_tester.full_form_tester import FullFormPolicyTester
 from utils.site_agnostic_tester import SitePasswordPolicyTester
+from utils.password_candidates import (
+    admissible_candidate_lengths,
+    stratified_password_candidates,
+)
 from utils.util_test_password import ProbeOutcome, TestPassword
 
 
@@ -27,6 +31,41 @@ class PasswordPolicySafetyTests(unittest.TestCase):
             any(c.isupper() for c in p) and any(not c.isalnum() for c in p)
             for p in candidates
         ))
+
+    def test_admissible_length_plan_prioritizes_common_modern_boundaries(self):
+        lengths = admissible_candidate_lengths(8, 64)
+        self.assertEqual(lengths[:4], [8, 10, 12, 16])
+        self.assertEqual(set(lengths), set(range(8, 65)))
+        self.assertEqual(len(lengths), len(set(lengths)))
+
+    def test_shared_candidates_preserve_exact_length(self):
+        for length in (8, 16, 32, 64):
+            candidates = stratified_password_candidates(length)
+            self.assertTrue(candidates)
+            self.assertTrue(all(len(candidate) == length for candidate in candidates))
+
+    def test_full_form_admissible_search_reaches_sixteen_character_policy(self):
+        tester = FullFormPolicyTester.__new__(FullFormPolicyTester)
+        tester.test_site = "example.com"
+        tester._site_no_value = False
+        tester.my_logger = mock.MagicMock()
+        tester.rate_ctrl = mock.MagicMock()
+        tester.admissible_password = ""
+        tester.test_one_password = mock.MagicMock(
+            side_effect=lambda candidate, _label: len(candidate) == 16
+        )
+
+        with mock.patch(
+            "full_form_tester.full_form_tester._admissible_cache_path",
+            return_value="admissible-test.txt",
+        ), mock.patch(
+            "full_form_tester.full_form_tester.os.path.isfile", return_value=False
+        ), mock.patch("builtins.open", mock.mock_open()):
+            password = tester.find_admissible_password()
+
+        self.assertEqual(len(password), 16)
+        tried_lengths = [len(call.args[0]) for call in tester.test_one_password.call_args_list]
+        self.assertEqual(set(tried_lengths), {8, 10, 12, 16})
 
     def test_probe_outcome_records_inconclusive(self):
         tester = TestPassword(mock.MagicMock(), "example.com")

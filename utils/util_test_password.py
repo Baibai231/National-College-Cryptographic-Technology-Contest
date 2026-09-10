@@ -18,6 +18,10 @@ import faker
 import utils.util_basic as uub
 import utils.util_str_generator as uusg
 from config.config import Config
+from utils.password_candidates import (
+    admissible_candidate_lengths,
+    stratified_password_candidates,
+)
 
 
 def _admissible_cache_path(test_site: str, strength: str = None) -> str:
@@ -592,19 +596,7 @@ class TestPassword(object):
     @staticmethod
     def _stratified_candidates(length: int):
         """生成覆盖常见字符类别要求、但不依赖错误文案的基准候选。"""
-        if length < 4:
-            return []
-        filler = ("kqmxvzptnryfbw" * 3)[:length]
-
-        def build(prefix: str) -> str:
-            return (prefix + filler)[:length]
-
-        return list(dict.fromkeys([
-            build("a3"),       # 小写 + 数字
-            build("Aa3"),      # 大写 + 小写 + 数字
-            build("a3!"),      # 小写 + 数字 + 符号
-            build("Aa3!"),     # 四类字符
-        ]))
+        return stratified_password_candidates(length)
 
     @logger.catch
     def find_admissible_password(self):
@@ -613,6 +605,8 @@ class TestPassword(object):
         :return: return admissible password
         """
         self.my_logger.info(f"Begin finding the admissible password for {self.test_site}.")
+        search_lengths = admissible_candidate_lengths(
+            Config.ADMISSIBLE_MIN_LENGTH, Config.ADMISSIBLE_MAX_LENGTH)
         cache_path = _admissible_cache_path(self.test_site)
         if os.path.isfile(cache_path):
             with open(cache_path, "r", encoding="utf-8") as cache_file:
@@ -650,7 +644,7 @@ class TestPassword(object):
                 if not any(k in _lm for k in ['不能', '不允许', '禁止', '不含', 'not allowed', 'cannot']):
                     _need_symbol = True
             if _need_symbol:
-                for i in range(8, 33):
+                for i in search_lengths:
                     symbol_candidates = [
                         "a3!" + uusg.gen_random_lower_character(i - 3),
                         "aB3!" + uusg.gen_random_lower_character(i - 4),
@@ -665,10 +659,10 @@ class TestPassword(object):
                     if ret:
                         break
 
-        # Phase C：11-32 位分层扩展。每个长度同时覆盖 2/3/4 类字符，
+        # Phase C：扩展到配置上限。常见边界优先，之后补齐全部长度；
         # 不再依赖网站错误文案是否恰好提到“大写/符号”。
         if not flag:
-            for i in range(11, 33):
+            for i in (n for n in search_lengths if n not in (8, 9, 10)):
                 test_pwd_list = self._stratified_candidates(i)
                 ret = False
                 for pwd in test_pwd_list:

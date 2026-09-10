@@ -43,7 +43,12 @@ def _has_auto_signup(states) -> bool:
     return any(
         "auto_signup" in getattr(state, "methods", []) for state in states)
 from signup_flow_classifier.classifier import classify, primary_method
-from signup_flow_classifier.evidence import finalize, record_evidence, record_step
+from signup_flow_classifier.evidence import (
+    finalize,
+    record_evidence,
+    record_step,
+    semantic_state_key,
+)
 from signup_flow_classifier.browser_failures import (
     classify_exception,
     detect_access_block,
@@ -249,6 +254,22 @@ class SignupFlowClassifierEngine:
             signup_entry_clicked = False
         tab_clicks_left = 5
         visited_tabs = set()   # 全视图探索：已切换过的 tab 种类
+        # 状态图边去重：同一个语义页面上的同一动作最多执行一次。与
+        # visited_tabs（全局分支覆盖）互补，避免短信/密码视图来回振荡。
+        attempted_transitions = set()
+
+        def claim_transition(current_state, action: str) -> bool:
+            edge = (semantic_state_key(current_state), action)
+            if edge in attempted_transitions:
+                record_evidence(
+                    result,
+                    "step={};transition_skipped={}".format(
+                        getattr(current_state, "step", 0), action,
+                    ),
+                )
+                return False
+            attempted_transitions.add(edge)
+            return True
         auth_mode_clicks_left = 2 if entry_kind == "login" else 0
         signup_mode_switches_left = 1 if entry_kind == "signup" else 0
         step_limit = effective_max_steps
@@ -303,9 +324,11 @@ class SignupFlowClassifierEngine:
                         result, "human_blocked", "high", StopReason.HUMAN_BLOCKED.value)
                 return self._done(result, "unknown", "high", StopReason.ACCESS_BLOCKED.value)
 
-            # 记录本步状态
-            record_step(result, state)
-            result.final_url = state.url
+            # 记录本步状态。语义重复时 record_step 返回首次快照，但 final_url
+            # 仍应保留本轮真实 URL（包括服务端刚写入的查询参数）。
+            observed_url = state.url
+            state = record_step(result, state)
+            result.final_url = observed_url
             record_evidence(
                 result,
                 "step={};fields={};blockers={};methods={};actions={}".format(
@@ -464,8 +487,11 @@ class SignupFlowClassifierEngine:
                     continue
             if (not login_page_during_signup and not signup_entry_failed
                     and "password" not in state.fields and tab_clicks_left > 0
-                    and desired_password_tab in state.tabs):
+                    and desired_password_tab in state.tabs
+                    and claim_transition(
+                        state, "tab:{}".format(desired_password_tab))):
                 tab_outcome = safe_click_tab(self.driver, desired_password_tab)
+                visited_tabs.add(desired_password_tab)
                 tab_clicks_left -= 1
                 state.note = tab_outcome.reason
                 state.actions.append("tab_click" if tab_outcome.clicked else "none")
@@ -483,7 +509,8 @@ class SignupFlowClassifierEngine:
             # 不限于阻断场景，只要 tab 存在且当前无字段就尝试。
             if (tab_clicks_left > 0 and "sms_tab" in state.tabs
                     and not state.fields
-                    and "code" not in state.fields):
+                    and "code" not in state.fields
+                    and claim_transition(state, "tab:sms_tab")):
                 tab_outcome = safe_click_tab(self.driver, "sms_tab")
                 visited_tabs.add("sms_tab")
                 tab_clicks_left -= 1
@@ -580,6 +607,10 @@ class SignupFlowClassifierEngine:
                             if cand in state.tabs and cand not in visited_tabs:
                                 next_tab = cand
                                 break
+                    if next_tab is not None:
+                        if not claim_transition(
+                                state, "tab:{}".format(next_tab)):
+                            next_tab = None
                     if next_tab is not None:
                         tab_outcome = safe_click_tab(
                             self.driver, next_tab)
@@ -1235,6 +1266,16 @@ class SignupFlowClassifierEngine:
         """
         field = self._locate_password_field()
         return field["xpath"] if field else None
+
+    def get_current_password_field(self) -> Optional[dict]:
+        """Return the live password-field target, including its frame path.
+
+        Unlike the serialized classification result this always observes the
+        current browsing context.  Callers can therefore hand the exact live
+        target to the policy probe without reopening an SPA modal or replaying
+        the complete discovery flow.
+        """
+        return self._locate_password_field()
 
     # ------------------------------------------------------------------
     # 内部方法

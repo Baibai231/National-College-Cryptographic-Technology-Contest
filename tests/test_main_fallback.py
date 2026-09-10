@@ -162,6 +162,104 @@ class MainFallbackTests(unittest.TestCase):
         self.assertEqual(result["policy"], classification["policy"])
         self.assertIn("回退输出注册流程分类结果", result["note"])
 
+    def test_live_password_target_is_handed_off_without_reopening_form(self):
+        classification = {
+            "flow_type": "direct_password", "confidence": "high",
+            "stop_reason": "password_step_reached", "primary_method": "password",
+            "ui_type": "modal", "methods": [],
+            "states": [{"step": 1, "fields": ["password"]}],
+            "evidence": ["original-classification"],
+            "final_url": "https://example.com/", "policy": {"schema_version": "1.0"},
+            "signup_password_reached": True, "password_field": None,
+            "should_proceed": True,
+        }
+        live_target = {"xpath": "//input[@id='live-password']", "frame_path": (2,)}
+        usable_policy = {
+            "length": [8, 64],
+            "restrictive": {"r_dig_min": 1},
+            "permissive": {"permitted_characters": {}, "permitted_sequences": {}},
+        }
+        driver = mock.MagicMock()
+        driver.current_url = "https://example.com/"
+        discovery = mock.MagicMock()
+        discovery.navigate_to_signup.return_value = "https://example.com/"
+        discovery._entry_clicked = True
+        engine = mock.MagicMock()
+        engine.classify.return_value = classification
+        engine.get_current_password_field.return_value = live_target
+        tester = mock.MagicMock()
+        tester.discover_form_fields.return_value = True
+        tester.run_password_policy_test.return_value = usable_policy
+
+        with mock.patch.object(main, "_get_new_driver", return_value=driver), \
+                mock.patch.object(main, "LoginLinkDiscovery", return_value=discovery), \
+                mock.patch.object(main, "SignupFlowClassifierEngine", return_value=engine), \
+                mock.patch.object(main, "SitePasswordPolicyTester", return_value=tester), \
+                mock.patch.object(
+                    main, "_detect_method",
+                    return_value=("inline", "https://example.com/", None, live_target["xpath"]),
+                ) as detect_method:
+            result = main.test_single_site("https://example.com", "auto")
+
+        self.assertEqual(result["method_used"], "inline")
+        self.assertEqual(result["policy"], usable_policy)
+        discovery.ensure_form_visible.assert_not_called()
+        discovery.find_signup_fields.assert_not_called()
+        engine.classify.assert_called_once()
+        self.assertEqual(tester.password_xpath, live_target["xpath"])
+        self.assertEqual(tester.password_frame_path, (2,))
+        self.assertEqual(detect_method.call_args.kwargs["password_frame_path"], (2,))
+
+    def test_relocation_does_not_replace_original_classification_evidence(self):
+        original = {
+            "flow_type": "direct_password", "confidence": "high",
+            "stop_reason": "password_step_reached", "primary_method": "password",
+            "ui_type": "modal", "methods": [{"method": "password"}],
+            "states": [{"step": 1, "fields": ["password"], "tabs": ["sms_tab"]}],
+            "evidence": ["original-full-view"],
+            "final_url": "https://example.com/", "policy": {"schema_version": "1.0"},
+            "signup_password_reached": True, "password_field": None,
+            "should_proceed": True,
+        }
+        relocated = dict(original)
+        relocated.update({
+            "states": [{"step": 1, "fields": ["password"]}],
+            "evidence": ["short-relocation"],
+            "password_field": {"xpath": "//input[@id='relocated']", "frame_path": ()},
+        })
+        usable_policy = {
+            "length": [8, 32], "restrictive": {"r_dig_min": 1},
+            "permissive": {"permitted_characters": {}, "permitted_sequences": {}},
+        }
+        driver = mock.MagicMock()
+        driver.current_url = "https://example.com/"
+        discovery = mock.MagicMock()
+        discovery.navigate_to_signup.return_value = "https://example.com/"
+        discovery._entry_clicked = True
+        engine = mock.MagicMock()
+        engine.classify.side_effect = [original, relocated]
+        engine.get_current_password_field.return_value = None
+        tester = mock.MagicMock()
+        tester.discover_form_fields.return_value = True
+        tester.run_password_policy_test.return_value = usable_policy
+
+        with mock.patch.object(main, "_get_new_driver", return_value=driver), \
+                mock.patch.object(main, "LoginLinkDiscovery", return_value=discovery), \
+                mock.patch.object(main, "SignupFlowClassifierEngine", return_value=engine), \
+                mock.patch.object(main, "SitePasswordPolicyTester", return_value=tester), \
+                mock.patch.object(
+                    main, "_detect_method",
+                    return_value=("inline", "https://example.com/", None, "//input[@id='relocated']"),
+                ):
+            result = main.test_single_site("https://example.com", "auto")
+
+        self.assertEqual(result["states"], original["states"])
+        self.assertEqual(result["methods"], original["methods"])
+        self.assertIn("original-full-view", result["evidence"])
+        self.assertIn("measurement_context_relocated", result["evidence"])
+        self.assertNotIn("short-relocation", result["evidence"])
+        discovery.ensure_form_visible.assert_not_called()
+
     def test_no_signup_fallback_unknown_becomes_classified_only(self):
         classification = {
             "flow_type": "unknown",

@@ -584,36 +584,49 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
             )
         )
 
-        # ── 重走定位口令框 ──
-        # 全视图探索（classify 内）会把浏览器切到随机 tab（短信/邮箱/注册），
-        # 返回时不一定停在口令视图。若当前拿不到口令字段，就复用完整分类
-        # 流程重走一次（不传 entry_already_clicked，从入口发现重新开始），
-        # 带 stop_at_password=True，让 classify 一直运行到口令框出现就停。
-        if not engine.get_current_password_field_xpath():
-            logger.info("有口令框但当前不在口令视图，重走分类流程定位口令框")
-            # 捕获重走结果：stop_at_password 停在口令视图时，_done 已记录
-            # password_field（XPath + iframe 路径），供 Phase 3 直接使用。
-            classification = engine.classify(
-                signup_url, entry_kind="signup", stop_at_password=True)
+        # ── 分类现场直接交接给口令策略测量 ──
+        # 分类器与测量器共享同一 WebDriver。优先读取当前页面上的活口令字段，
+        # 不重新打开 SPA 模态框，也不覆盖已经收集完整分支的 classification。
+        measurement_field = engine.get_current_password_field()
+        if not measurement_field:
+            logger.info("有口令框但当前不在口令视图，仅重定位测量现场")
+            try:
+                relocation_url = driver.current_url or signup_url
+            except Exception:
+                relocation_url = signup_url
+            relocation = engine.classify(
+                relocation_url, entry_kind="signup", stop_at_password=True)
+            measurement_field = (
+                relocation.get("password_field")
+                if relocation.get("signup_password_reached") else None
+            )
+            if measurement_field:
+                result.setdefault("evidence", []).append(
+                    "measurement_context_relocated"
+                )
 
         # ================================================================
         # Phase 3: 确定 inline/full 方法
         # ================================================================
-        # 对于 SPA 模态框站点，Phase 2 分类可能耗时较长导致模态框关闭。
-        # 在检测字段前尝试重新打开模态框，确保注册表单可见。
-        if not discovery.ensure_form_visible():
-            logger.debug("无法恢复模态框，使用当前页面状态继续")
-
-        email_xpath, password_xpath = discovery.find_signup_fields()
-        # 分类流程已在 signup_password_reached 时记录口令框的 XPath + iframe 路径，
-        # 优先采用它（避免 find_signup_fields 返回全视图探索后失效的旧 XPath 缓存，
-        # 且 password_field 带 iframe 路径，供下游切进跨域注册 iframe）。
+        email_xpath = None
+        password_xpath = None
         password_frame_path = None
-        if classification is not None:
-            eng_field = classification.get("password_field")
-            if eng_field:
-                password_xpath = eng_field.get("xpath") or password_xpath
-                password_frame_path = eng_field.get("frame_path")
+        if measurement_field:
+            # 现场目标是权威来源；find_signup_fields 的旧缓存不能覆盖它。
+            password_xpath = measurement_field.get("xpath")
+            password_frame_path = measurement_field.get("frame_path")
+        else:
+            # 仅当现场确实丢失时才允许入口发现器恢复表单。这个分支可能点击
+            # 页面，因此不能在已经定位成功的 SPA/iframe 上无条件执行。
+            if not discovery.ensure_form_visible():
+                logger.debug("无法恢复模态框，使用当前页面状态继续")
+            email_xpath, password_xpath = discovery.find_signup_fields()
+
+        # full-form 需要更多身份字段；它是显式授权模式，可以在不改变已锁定
+        # 口令目标的前提下补充邮箱字段。安全 inline 模式只需要口令框。
+        if method == "full" and measurement_field:
+            detected_email, _detected_password = discovery.find_signup_fields()
+            email_xpath = detected_email
 
         # 兜底：重走定位后仍无口令字段 → 输出分类结果（classified_only）
         if not password_xpath:
