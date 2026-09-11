@@ -1053,7 +1053,8 @@ function listTrueZh(dict, zhMap) {
 function adaptivePolicyHtml(policy) {
   const a = (policy || {})._adaptive;
   const c = (policy || {})._adaptive_composition;
-  if ((!a || !a.engine) && (!c || !c.engine)) return '';
+  const d = (policy || {})._adaptive_conditional;
+  if ((!a || !a.engine) && (!c || !c.engine) && (!d || !d.engine)) return '';
   const boundary = (label, item) => {
     item = item || {};
     const value = item.value == null
@@ -1118,20 +1119,56 @@ function adaptivePolicyHtml(policy) {
         <tbody>${compositionTrace}</tbody></table></div>` : ''}
     </div>`;
   })() : '';
+  const conditionalSummary = d && d.engine && d.status !== 'not_applicable' ? (() => {
+    const statusZh = { detected: '检测到分段 OR 规则',
+      not_observed_within_range: '搜索范围内未观察到组成放宽',
+      inconclusive: '证据不足' };
+    const strict = d.strict_branch || {};
+    const relaxed = d.relaxed_branch || {};
+    const ruleText = d.status === 'detected'
+      ? `${strict.min_length} 位起需至少 ${strict.minimum_character_classes} 类；` +
+        `${relaxed.min_length} 位起，${classList(relaxed.accepted_character_classes)}单类/子集也可接受`
+      : (d.status === 'not_observed_within_range'
+          ? `搜索至 ${d.searched_to || '?'} 位，${classList(d.relaxed_subset)}仍未出现放宽`
+          : `条件阈值无法可靠判断：${d.stop_reason || 'unknown'}`);
+    const conditionalTrace = (d.decision_trace || []).map(step => {
+      const profile = step.candidate || {};
+      const structure = profile.length == null ? ''
+        : `${profile.length} 位 / ${classList(profile.classes || [])}`;
+      return `<tr>
+        <td>${esc(step.phase || '')}</td><td>${esc(step.target_length)}</td>
+        <td>${esc(classList(step.target_classes || []))}</td>
+        <td>${esc(outcomeZh[step.outcome] || step.outcome || '')}</td>
+        <td>${esc(structure)}</td><td>${esc(step.decision || '')}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="mt-2 pt-2 border-top">
+      <div class="small"><b>长度×组成条件政策：</b>${esc(statusZh[d.status] || d.status || '')}；
+        实际探测 ${esc(d.probes_used || 0)} 次</div>
+      <div class="small">${esc(ruleText)}</div>
+      <div class="small text-muted">阈值接受结果使用第二个同结构候选复验；未观察到只代表当前搜索范围。</div>
+      ${conditionalTrace ? `<div class="table-responsive mt-2"><table class="table table-sm table-bordered mb-0">
+        <thead><tr><th>阶段</th><th>长度</th><th>放宽候选</th><th>结果</th><th>候选结构</th><th>下一步决策</th></tr></thead>
+        <tbody>${conditionalTrace}</tbody></table></div>` : ''}
+    </div>`;
+  })() : '';
   const probeSummary = [
     a && a.engine ? `长度 ${a.probes_used || 0} 次` : '',
     c && c.engine ? `字符组成 ${c.probes_used || 0} 次` : '',
+    d && d.engine && d.probes_used ? `条件规则 ${d.probes_used} 次` : '',
   ].filter(Boolean).join('，');
   return `<details class="mt-2">
     <summary><b>自适应探测证据</b>：${esc(probeSummary)}${a && a.engine
       ? `，长度探测相比最坏线性扫描减少约 ${esc(a.probes_saved_vs_worst_case || 0)} 次` : ''}</summary>
     <div class="border rounded p-2 mt-1 bg-white">
-      <div class="small">引擎：${esc([a && a.engine, c && c.engine].filter(Boolean).join(' + '))}；此决策证据不保存候选口令原文</div>
+      <div class="small">引擎：${esc([a && a.engine, c && c.engine,
+        d && d.status !== 'not_applicable' && d.engine].filter(Boolean).join(' + '))}；此决策证据不保存候选口令原文</div>
       ${a && a.engine ? `<div class="small mt-1">${boundary('最小长度', a.minimum)}${boundary('最大长度', a.maximum)}</div>` : ''}
       ${trace ? `<div class="table-responsive mt-2"><table class="table table-sm table-bordered mb-0">
         <thead><tr><th>阶段</th><th>长度</th><th>结果</th><th>搜索区间</th><th>下一步决策</th></tr></thead>
         <tbody>${trace}</tbody></table></div>` : ''}
       ${compositionSummary}
+      ${conditionalSummary}
     </div>
   </details>`;
 }
@@ -1155,21 +1192,32 @@ function measuredPolicyHtml(policy, methodUsed) {
   const length = policy.length || [];
   const r = policy.restrictive || {};
   const p = policy.permissive || {};
+  const adaptiveConditional = policy._adaptive_conditional || {};
+  const conditionalDetected = adaptiveConditional.status === 'detected';
   const lines = [];
   const lenParts = [];
   if (length[0] > 0) lenParts.push('最小 ' + length[0] + ' 位');
   if (length[1] > 0) lenParts.push('最大 ' + length[1] + ' 位');
   lines.push('<b>长度：</b>' + (lenParts.length ? lenParts.join('，') : '未确定'));
   const reqs = [];
-  if (r.r_dig_min) reqs.push('至少 ' + r.r_dig_min + ' 个数字');
-  if (r.r_upp_min) reqs.push('至少 ' + r.r_upp_min + ' 个大写字母');
-  if (r.r_low_min) reqs.push('至少 ' + r.r_low_min + ' 个小写字母');
-  if (r.r_sps_min) reqs.push('至少 ' + r.r_sps_min + ' 个特殊符号');
+  if (!conditionalDetected && r.r_dig_min) reqs.push('至少 ' + r.r_dig_min + ' 个数字');
+  if (!conditionalDetected && r.r_upp_min) reqs.push('至少 ' + r.r_upp_min + ' 个大写字母');
+  if (!conditionalDetected && r.r_low_min) reqs.push('至少 ' + r.r_low_min + ' 个小写字母');
+  if (!conditionalDetected && r.r_sps_min) reqs.push('至少 ' + r.r_sps_min + ' 个特殊符号');
   if (r.r_l_start) reqs.push('必须以字母开头');
   if (r.r_2_word) reqs.push('需多词结构');
   if (r.r_no_a_sps) reqs.push('不允许特殊符号');
   const adaptiveComposition = policy._adaptive_composition || {};
-  if (adaptiveComposition.minimum_character_classes > 0) {
+  if (conditionalDetected) {
+    const strict = adaptiveConditional.strict_branch || {};
+    const relaxed = adaptiveConditional.relaxed_branch || {};
+    const label = { lower: '小写字母', upper: '大写字母',
+      digit: '数字', symbol: '特殊符号' };
+    const relaxedClasses = (relaxed.accepted_character_classes || [])
+      .map(name => label[name] || name).join('＋');
+    reqs.push(`${strict.min_length} 位起至少使用 ${strict.minimum_character_classes} 类，` +
+      `或达到 ${relaxed.min_length} 位后允许 ${relaxedClasses}单类/子集`);
+  } else if (adaptiveComposition.minimum_character_classes > 0) {
     reqs.push('至少使用 ' + adaptiveComposition.minimum_character_classes + ' 类字符');
   } else if (r.r_cmb44) reqs.push('需含大小写字母+数字+特殊符号四类');
   else if (r.r_cmb34) reqs.push('需含大小写字母/数字/特殊符号中三类');

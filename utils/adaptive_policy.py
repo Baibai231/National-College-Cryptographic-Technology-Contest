@@ -647,6 +647,276 @@ def apply_composition_to_restrictive(
 
 
 @dataclass
+class AdaptiveConditionalPolicyPlanner:
+    """Detect a length threshold that relaxes composition requirements.
+
+    The planner reuses a character-class subset rejected during composition
+    inference, verifies it at the measured minimum length, then uses
+    exponential expansion and binary search to find the first length where the
+    same subset becomes acceptable.  A second candidate confirms the final
+    acceptance so a transient signal does not become an OR-policy claim.
+    """
+
+    probe: Callable[[str, str], Any]
+    accepted_anchor: str
+    length_summary: Dict[str, Any]
+    composition_summary: Dict[str, Any]
+    structural_rules: Optional[Dict[str, Any]] = None
+    probe_budget: int = 16
+    search_span: int = 64
+    trace: List[Dict[str, Any]] = field(default_factory=list)
+    probes_used: int = 0
+    _stop_reason: str = ""
+
+    def _select_relaxed_subset(self) -> Optional[Tuple[str, ...]]:
+        rejected: List[Tuple[str, ...]] = []
+        for item in self.composition_summary.get("decision_trace") or []:
+            classes = tuple(item.get("target_classes") or ())
+            if (item.get("phase") == "class_subset"
+                    and item.get("outcome") == REJECTED and classes):
+                rejected.append(classes)
+        if not rejected:
+            return None
+        preference = {"lower": 0, "upper": 1, "digit": 2, "symbol": 3}
+        rejected.sort(key=lambda classes: (
+            len(classes),
+            sum(preference.get(name, 9) for name in classes),
+            tuple(classes),
+        ))
+        return rejected[0]
+
+    def _reusable_base_rejection(
+        self, subset: Tuple[str, ...], base_length: int
+    ) -> bool:
+        for item in self.composition_summary.get("decision_trace") or []:
+            candidate = item.get("candidate") or {}
+            if (item.get("phase") == "class_subset"
+                    and item.get("outcome") == REJECTED
+                    and set(item.get("target_classes") or ()) == set(subset)
+                    and candidate.get("length") == base_length):
+                self.trace.append({
+                    "phase": "base_rejection",
+                    "target_length": base_length,
+                    "target_classes": list(subset),
+                    "candidate": candidate,
+                    "outcome": REJECTED,
+                    "decision": "reuse composition-phase rejection",
+                    "reused_evidence": True,
+                })
+                return True
+        return False
+
+    def _observe(
+        self,
+        length: int,
+        subset: Tuple[str, ...],
+        phase: str,
+        variant: int = 0,
+    ) -> str:
+        if self.probes_used >= self.probe_budget:
+            self._stop_reason = "probe_budget_exhausted"
+            return INCONCLUSIVE
+        candidate = build_class_subset_candidate(
+            length, subset, self.structural_rules, variant=variant)
+        if candidate is None:
+            self._stop_reason = f"candidate_not_constructible_at_{length}"
+            self.trace.append({
+                "phase": phase,
+                "target_length": length,
+                "target_classes": list(subset),
+                "outcome": "not_constructible",
+                "decision": "stop: structural conditions cannot fit candidate",
+            })
+            return "not_constructible"
+        outcome = normalize_outcome(self.probe(
+            candidate,
+            "adaptive conditional {} length={} subset={}".format(
+                phase, length, "+".join(subset)),
+        ))
+        self.probes_used += 1
+        self.trace.append({
+            "probe_index": self.probes_used,
+            "phase": phase,
+            "target_length": length,
+            "target_classes": list(subset),
+            "candidate": candidate_profile(candidate),
+            "outcome": outcome,
+            "decision": "",
+        })
+        if outcome == INCONCLUSIVE:
+            self._stop_reason = f"{phase}_inconclusive_at_{length}"
+        return outcome
+
+    def _search_ceiling(self, base_length: int) -> int:
+        maximum = self.length_summary.get("maximum") or {}
+        ceiling = maximum.get("value")
+        if ceiling is None:
+            ceiling = maximum.get("searched_to")
+        try:
+            ceiling = int(ceiling)
+        except (TypeError, ValueError):
+            ceiling = base_length + min(32, self.search_span)
+        return max(base_length, min(ceiling, base_length + self.search_span))
+
+    def infer(self) -> Dict[str, Any]:
+        minimum = self.length_summary.get("minimum") or {}
+        try:
+            base_length = int(minimum.get("value"))
+        except (TypeError, ValueError):
+            base_length = 0
+        strict_minimum_classes = self.composition_summary.get(
+            "minimum_character_classes")
+        subset = self._select_relaxed_subset()
+        if (base_length <= 0 or not strict_minimum_classes or subset is None
+                or (self.structural_rules or {}).get("r_2_word")):
+            self._stop_reason = "no_constructible_rejected_relaxation_candidate"
+            return self._summary(
+                "not_applicable", base_length or None, subset, None,
+                searched_to=base_length or None)
+
+        if not self._reusable_base_rejection(subset, base_length):
+            base_outcome = self._observe(
+                base_length, subset, "base_rejection")
+            if base_outcome == ACCEPTED:
+                self._stop_reason = "composition_constraint_not_reproduced_at_base"
+                return self._summary(
+                    "inconclusive", base_length, subset, None,
+                    searched_to=base_length)
+            if base_outcome != REJECTED:
+                return self._summary(
+                    "inconclusive", base_length, subset, None,
+                    searched_to=base_length)
+            confirmation = self._observe(
+                base_length, subset, "base_rejection_confirmation", variant=1)
+            if confirmation != REJECTED:
+                self._stop_reason = "base_rejection_not_confirmed"
+                return self._summary(
+                    "inconclusive", base_length, subset, None,
+                    searched_to=base_length)
+
+        ceiling = self._search_ceiling(base_length)
+        if ceiling <= base_length:
+            self._stop_reason = "no_length_range_available_for_relaxation_search"
+            return self._summary(
+                "not_observed_within_range", base_length, subset, None,
+                searched_to=ceiling)
+
+        rejected_length = base_length
+        accepted_length: Optional[int] = None
+        step = 1
+        while rejected_length < ceiling:
+            target = min(base_length + step, ceiling)
+            if target <= rejected_length:
+                target = min(ceiling, rejected_length + 1)
+            outcome = self._observe(target, subset, "relaxation_expansion")
+            if outcome == ACCEPTED:
+                self.trace[-1]["decision"] = (
+                    f"accepted upper bound found at {target}")
+                accepted_length = target
+                break
+            if outcome == REJECTED:
+                rejected_length = target
+                self.trace[-1]["decision"] = (
+                    f"still strict through {rejected_length}")
+            else:
+                return self._summary(
+                    "inconclusive", base_length, subset, None,
+                    searched_to=target)
+            if target >= ceiling:
+                break
+            step *= 2
+
+        if accepted_length is None:
+            self._stop_reason = "relaxation_not_observed_within_range"
+            return self._summary(
+                "not_observed_within_range", base_length, subset, None,
+                searched_to=ceiling)
+
+        low, high = rejected_length, accepted_length
+        while low + 1 < high:
+            middle = (low + high) // 2
+            outcome = self._observe(middle, subset, "relaxation_boundary")
+            if outcome == ACCEPTED:
+                high = middle
+                self.trace[-1]["decision"] = f"accepted: upper bound -> {high}"
+            elif outcome == REJECTED:
+                low = middle
+                self.trace[-1]["decision"] = f"rejected: lower bound -> {low}"
+            else:
+                return self._summary(
+                    "inconclusive", base_length, subset, None,
+                    searched_to=middle)
+
+        confirmation = self._observe(
+            high, subset, "relaxation_confirmation", variant=1)
+        if confirmation != ACCEPTED:
+            self._stop_reason = "relaxation_acceptance_not_confirmed"
+            return self._summary(
+                "inconclusive", base_length, subset, None,
+                searched_to=high)
+        self.trace[-1]["decision"] = "second candidate accepted; OR threshold confirmed"
+        self._stop_reason = "completed"
+        return self._summary(
+            "detected", base_length, subset, high, searched_to=high)
+
+    def _summary(
+        self,
+        status: str,
+        base_length: Optional[int],
+        subset: Optional[Tuple[str, ...]],
+        threshold: Optional[int],
+        searched_to: Optional[int],
+    ) -> Dict[str, Any]:
+        strict_branch = {
+            "min_length": base_length,
+            "minimum_character_classes": self.composition_summary.get(
+                "minimum_character_classes"),
+            "required_classes": self.composition_summary.get(
+                "required_classes") or [],
+            "accepted_minimal_sets": self.composition_summary.get(
+                "accepted_minimal_sets") or [],
+        }
+        relaxed_branch = {
+            "min_length": threshold,
+            "accepted_character_classes": list(subset or ()),
+            "minimum_character_classes": len(subset or ()),
+        }
+        rule = None
+        if status == "detected":
+            rule = {
+                "operator": "or",
+                "branches": [strict_branch, relaxed_branch],
+                "source": "adaptive-conditional-v1",
+            }
+        return {
+            "engine": "adaptive-conditional-v1",
+            "status": status,
+            "confidence": {
+                "detected": 0.95,
+                "not_observed_within_range": 0.85,
+                "not_applicable": 0.9,
+                "inconclusive": 0.0,
+            }.get(status, 0.0),
+            "probe_budget": self.probe_budget,
+            "probes_used": self.probes_used,
+            "candidate_values_stored": False,
+            "base_min_length": base_length,
+            "relaxed_subset": list(subset or ()),
+            "relaxed_length_threshold": threshold,
+            "searched_to": searched_to,
+            "strict_branch": strict_branch,
+            "relaxed_branch": relaxed_branch,
+            "rule": rule,
+            "stop_reason": self._stop_reason or "completed",
+            "assumptions": [
+                "acceptance of the relaxed subset is monotonic with length",
+                "the site policy remains stable throughout the probe phase",
+            ],
+            "decision_trace": self.trace,
+        }
+
+
+@dataclass
 class BoundaryResult:
     value: Optional[int]
     status: str

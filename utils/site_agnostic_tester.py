@@ -307,6 +307,34 @@ class SitePasswordPolicyTester:
                     "control_pair_drifted_after_adaptive_probe_phases"
                 return password_policy
 
+            # 主动寻找“短口令要求严格组成，较长口令放宽组成”的 OR 分支。
+            # 这是独立扩展维度；它的证据不足不撤销已经完成的长度/组成结论。
+            _had_inconclusive_before_conditional = getattr(
+                self._tester, "_had_inconclusive", False)
+            conditional = self._tester.identify_adaptive_conditional_policy(
+                rp, adaptive, composition)
+            password_policy["_adaptive_conditional"] = conditional
+            if conditional.get("status") == "detected":
+                password_policy["_or_rule"] = conditional.get("rule")
+                _safe_print(
+                    "    条件政策: {}位起放宽为{}类({}), 探针={}".format(
+                        conditional.get("relaxed_length_threshold"),
+                        len(conditional.get("relaxed_subset") or []),
+                        conditional.get("relaxed_subset"),
+                        conditional.get("probes_used"),
+                    ))
+            elif conditional.get("status") == "inconclusive":
+                password_policy["_conditional_inconclusive"] = True
+                self._tester._had_inconclusive = \
+                    _had_inconclusive_before_conditional
+
+            if conditional.get("probes_used", 0) > 0 and not _control_pair(
+                    "phase control: revalidate after conditional policy probes"):
+                password_policy["_inconclusive"] = True
+                password_policy["_inconclusive_reason"] = \
+                    "control_pair_drifted_after_conditional_policy_phase"
+                return password_policy
+
             # ── P3 自洽校验：用已推断约束反推密码验证模型一致性 ──
             # 模型是 AND 语义，无法表达 OR 规则（如 GitHub "≥15位 或
             # ≥8位含数字+小写"）。若反推密码与推断约束矛盾，说明模型
@@ -318,7 +346,7 @@ class SitePasswordPolicyTester:
                 password_policy["_inconclusive"] = True
                 password_policy["_inconclusive_reason"] = _consistency_note
                 if _or_rule:
-                    password_policy["_or_rule"] = _or_rule
+                    password_policy.setdefault("_or_rule", _or_rule)
                     _safe_print(f"    ⚠ 自洽校验失败(OR规则): {_consistency_note}")
                     _safe_print(f"    _or_rule: {_or_rule}")
                 else:

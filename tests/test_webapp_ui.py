@@ -83,6 +83,9 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("_adaptive_composition", self.html)
         self.assertIn("已接受的最小组合", self.html)
         self.assertIn("固定必需类", self.html)
+        self.assertIn("_adaptive_conditional", self.html)
+        self.assertIn("长度×组成条件政策", self.html)
+        self.assertIn("阈值接受结果使用第二个同结构候选复验", self.html)
 
     def test_repeat_measurement_control_bypasses_database_cache(self):
         self.assertIn('id="force-retest"', self.html)

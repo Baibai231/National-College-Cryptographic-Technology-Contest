@@ -24,6 +24,7 @@ from utils.password_candidates import (
 )
 from utils.adaptive_policy import (
     AdaptiveCompositionPlanner,
+    AdaptiveConditionalPolicyPlanner,
     AdaptiveLengthPlanner,
     apply_composition_to_restrictive,
     build_length_candidate,
@@ -689,6 +690,7 @@ class TestPassword(object):
         self._had_inconclusive = False
         self._adaptive_summary = {}
         self._adaptive_composition_summary = {}
+        self._adaptive_conditional_summary = {}
 
     def _record_probe(self, password: str, outcome: ProbeOutcome,
                       evidence: str) -> None:
@@ -3014,6 +3016,37 @@ class TestPassword(object):
                 summary.get("required_classes"),
                 summary.get("probes_used"),
                 summary.get("status"),
+            ))
+        return summary
+
+    def identify_adaptive_conditional_policy(
+        self, restrictive_parameters, length_summary=None,
+        composition_summary=None,
+    ):
+        """Detect whether greater length relaxes character requirements."""
+        def observe(candidate, purpose):
+            accepted = self.test_one_password(candidate, purpose)
+            outcome = getattr(self, "_last_probe_outcome", None)
+            return accepted if outcome is None else outcome
+
+        planner = AdaptiveConditionalPolicyPlanner(
+            probe=observe,
+            accepted_anchor=self.admissible_password,
+            length_summary=length_summary or self._adaptive_summary,
+            composition_summary=(
+                composition_summary or self._adaptive_composition_summary),
+            structural_rules=restrictive_parameters,
+            probe_budget=16,
+        )
+        summary = planner.infer()
+        self._adaptive_conditional_summary = summary
+        self.my_logger.info(
+            "Adaptive conditional result: status={} relaxed_threshold={} "
+            "subset={} probes={}".format(
+                summary.get("status"),
+                summary.get("relaxed_length_threshold"),
+                summary.get("relaxed_subset"),
+                summary.get("probes_used"),
             ))
         return summary
 

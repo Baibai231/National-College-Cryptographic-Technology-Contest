@@ -37,6 +37,7 @@ from utils.adaptive_policy import (
     INCONCLUSIVE,
     REJECTED,
     AdaptiveCompositionPlanner,
+    AdaptiveConditionalPolicyPlanner,
     AdaptiveLengthPlanner,
     apply_composition_to_restrictive,
     build_length_candidate,
@@ -121,6 +122,7 @@ class FullFormPolicyTester:
         self._had_inconclusive: bool = False
         self._adaptive_summary: Dict = {}
         self._adaptive_composition_summary: Dict = {}
+        self._adaptive_conditional_summary: Dict = {}
 
         # 日志
         self.my_logger = uub.get_logger(self.test_site)
@@ -767,6 +769,40 @@ class FullFormPolicyTester:
             ))
         return summary
 
+    def identify_adaptive_conditional_policy(
+        self, rp: dict, length_summary: Optional[Dict] = None,
+        composition_summary: Optional[Dict] = None,
+    ) -> dict:
+        """Detect a length-triggered relaxation of class requirements."""
+        def observe(candidate: str, purpose: str):
+            try:
+                accepted = self.test_one_password(candidate, purpose)
+                outcome = getattr(self, "_last_probe_outcome", None)
+                return accepted if outcome is None else outcome
+            finally:
+                self.rate_ctrl.delay_between_tests()
+
+        planner = AdaptiveConditionalPolicyPlanner(
+            probe=observe,
+            accepted_anchor=self.admissible_password,
+            length_summary=length_summary or self._adaptive_summary,
+            composition_summary=(
+                composition_summary or self._adaptive_composition_summary),
+            structural_rules=rp,
+            probe_budget=16,
+        )
+        summary = planner.infer()
+        self._adaptive_conditional_summary = summary
+        self.my_logger.info(
+            "Adaptive conditional result: status={} relaxed_threshold={} "
+            "subset={} probes={}".format(
+                summary.get("status"),
+                summary.get("relaxed_length_threshold"),
+                summary.get("relaxed_subset"),
+                summary.get("probes_used"),
+            ))
+        return summary
+
     def identify_min_and_max_length_limitations(self, rp: dict, r_min: list, r_max: list) -> tuple:
         """Infer length boundaries with a budgeted adaptive search.
 
@@ -1041,6 +1077,35 @@ class FullFormPolicyTester:
                         + str(self._adaptive_summary.get("stop_reason") or "unknown")
                     )
                     return policy
+
+            if not self.test_one_password(
+                    admissible,
+                    "phase control: revalidate anchor before conditional policy"):
+                policy["_inconclusive"] = True
+                policy["_inconclusive_reason"] = \
+                    "accepted_anchor_drifted_before_conditional_policy_phase"
+                return policy
+            self.rate_ctrl.delay_between_tests()
+
+            had_inconclusive_before_conditional = self._had_inconclusive
+            conditional = self.identify_adaptive_conditional_policy(
+                rp, self._adaptive_summary, composition)
+            policy["_adaptive_conditional"] = conditional
+            if conditional.get("status") == "detected":
+                policy["_or_rule"] = conditional.get("rule")
+            elif conditional.get("status") == "inconclusive":
+                policy["_conditional_inconclusive"] = True
+                self._had_inconclusive = had_inconclusive_before_conditional
+
+            if conditional.get("probes_used", 0) > 0:
+                if not self.test_one_password(
+                        admissible,
+                        "phase control: revalidate after conditional policy probes"):
+                    policy["_inconclusive"] = True
+                    policy["_inconclusive_reason"] = \
+                        "accepted_anchor_drifted_after_conditional_policy_phase"
+                    return policy
+                self.rate_ctrl.delay_between_tests()
 
             policy["permissive"]["permitted_characters"] = \
                 self.identify_permissive_characters(policy["length"])

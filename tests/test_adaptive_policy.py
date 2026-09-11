@@ -2,10 +2,12 @@ import unittest
 from unittest import mock
 
 from full_form_tester.full_form_tester import FullFormPolicyTester
+from utils.util_test_password import TestPassword
 from utils.adaptive_policy import (
     ACCEPTED,
     INCONCLUSIVE,
     AdaptiveCompositionPlanner,
+    AdaptiveConditionalPolicyPlanner,
     AdaptiveLengthPlanner,
     apply_composition_to_restrictive,
     build_class_count_candidate,
@@ -304,6 +306,150 @@ class AdaptivePolicyTests(unittest.TestCase):
         self.assertEqual(result["engine"], "adaptive-composition-v1")
         self.assertEqual(result["minimum_character_classes"], 2)
         self.assertTrue(restrictive["r_cmb24"])
+
+    @staticmethod
+    def _length_summary(minimum=8, maximum=64):
+        return {
+            "minimum": {"value": minimum, "status": "measured"},
+            "maximum": {
+                "value": maximum, "status": "measured",
+                "searched_to": maximum,
+            },
+        }
+
+    def test_conditional_planner_finds_github_style_eight_or_fifteen_rule(self):
+        tested = []
+
+        def policy(candidate, _purpose):
+            tested.append(candidate)
+            classes = candidate_profile(candidate)["classes"]
+            return (
+                len(candidate) >= 15
+                or (len(candidate) >= 8
+                    and "lower" in classes and "digit" in classes)
+            )
+
+        anchor = "kqmxvz73"
+        composition = AdaptiveCompositionPlanner(
+            probe=policy, accepted_anchor=anchor).infer()
+        tested.clear()
+        result = AdaptiveConditionalPolicyPlanner(
+            probe=policy,
+            accepted_anchor=anchor,
+            length_summary=self._length_summary(),
+            composition_summary=composition,
+        ).infer()
+
+        self.assertEqual(result["status"], "detected")
+        self.assertEqual(result["base_min_length"], 8)
+        self.assertEqual(result["relaxed_subset"], ["lower"])
+        self.assertEqual(result["relaxed_length_threshold"], 15)
+        self.assertEqual(result["rule"]["operator"], "or")
+        self.assertLessEqual(result["probes_used"], 8)
+        for candidate in tested:
+            self.assertNotIn(candidate, str(result["decision_trace"]))
+
+    def test_conditional_planner_reports_no_relaxation_within_range(self):
+        def strict(candidate, _purpose):
+            classes = candidate_profile(candidate)["classes"]
+            return "lower" in classes and "digit" in classes
+
+        anchor = "kqmxvz73"
+        composition = AdaptiveCompositionPlanner(
+            probe=strict, accepted_anchor=anchor).infer()
+        result = AdaptiveConditionalPolicyPlanner(
+            probe=strict,
+            accepted_anchor=anchor,
+            length_summary=self._length_summary(maximum=32),
+            composition_summary=composition,
+        ).infer()
+
+        self.assertEqual(result["status"], "not_observed_within_range")
+        self.assertIsNone(result["relaxed_length_threshold"])
+        self.assertEqual(result["searched_to"], 32)
+
+    def test_conditional_planner_keeps_uncertain_feedback_inconclusive(self):
+        def strict(candidate, _purpose):
+            classes = candidate_profile(candidate)["classes"]
+            return "lower" in classes and "digit" in classes
+
+        anchor = "kqmxvz73"
+        composition = AdaptiveCompositionPlanner(
+            probe=strict, accepted_anchor=anchor).infer()
+        result = AdaptiveConditionalPolicyPlanner(
+            probe=lambda _candidate, _purpose: INCONCLUSIVE,
+            accepted_anchor=anchor,
+            length_summary=self._length_summary(),
+            composition_summary=composition,
+        ).infer()
+
+        self.assertEqual(result["status"], "inconclusive")
+        self.assertIsNone(result["rule"])
+
+    def test_conditional_planner_skips_when_composition_has_no_rejection(self):
+        anchor = "kqmxvzpt"
+        composition = AdaptiveCompositionPlanner(
+            probe=lambda _candidate, _purpose: True,
+            accepted_anchor=anchor,
+        ).infer()
+        result = AdaptiveConditionalPolicyPlanner(
+            probe=lambda _candidate, _purpose: True,
+            accepted_anchor=anchor,
+            length_summary=self._length_summary(),
+            composition_summary=composition,
+        ).infer()
+
+        self.assertEqual(result["status"], "not_applicable")
+        self.assertEqual(result["probes_used"], 0)
+
+    def test_full_form_conditional_measurement_uses_shared_planner(self):
+        def policy(candidate, _purpose):
+            classes = candidate_profile(candidate)["classes"]
+            return (
+                len(candidate) >= 15
+                or (len(candidate) >= 8
+                    and "lower" in classes and "digit" in classes)
+            )
+
+        anchor = "kqmxvz73"
+        composition = AdaptiveCompositionPlanner(
+            probe=policy, accepted_anchor=anchor).infer()
+        tester = FullFormPolicyTester.__new__(FullFormPolicyTester)
+        tester.my_logger = mock.MagicMock()
+        tester.rate_ctrl = mock.MagicMock()
+        tester.admissible_password = anchor
+        tester.test_one_password = mock.MagicMock(side_effect=policy)
+
+        result = tester.identify_adaptive_conditional_policy(
+            self._rules(), self._length_summary(), composition)
+
+        self.assertEqual(result["engine"], "adaptive-conditional-v1")
+        self.assertEqual(result["status"], "detected")
+        self.assertEqual(result["relaxed_length_threshold"], 15)
+
+    def test_inline_conditional_measurement_uses_shared_planner(self):
+        def policy(candidate, _purpose):
+            classes = candidate_profile(candidate)["classes"]
+            return (
+                len(candidate) >= 15
+                or (len(candidate) >= 8
+                    and "lower" in classes and "digit" in classes)
+            )
+
+        anchor = "kqmxvz73"
+        composition = AdaptiveCompositionPlanner(
+            probe=policy, accepted_anchor=anchor).infer()
+        tester = TestPassword.__new__(TestPassword)
+        tester.my_logger = mock.MagicMock()
+        tester.admissible_password = anchor
+        tester.test_one_password = mock.MagicMock(side_effect=policy)
+
+        result = tester.identify_adaptive_conditional_policy(
+            self._rules(), self._length_summary(), composition)
+
+        self.assertEqual(result["engine"], "adaptive-conditional-v1")
+        self.assertEqual(result["status"], "detected")
+        self.assertEqual(result["relaxed_length_threshold"], 15)
 
 
 if __name__ == "__main__":
