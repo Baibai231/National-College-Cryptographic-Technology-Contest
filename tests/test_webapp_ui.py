@@ -75,6 +75,12 @@ class WebAppUiTests(unittest.TestCase):
         # 测到口令政策时，方法清单直接写"进行密码政策测试"
         self.assertIn("进行密码政策测试", self.html)
 
+    def test_policy_result_exposes_adaptive_probe_evidence(self):
+        self.assertIn("adaptivePolicyHtml", self.html)
+        self.assertIn("自适应探测证据", self.html)
+        self.assertIn("此决策证据不保存候选口令原文", self.html)
+        self.assertIn("probes_saved_vs_worst_case", self.html)
+
     def test_repeat_measurement_control_bypasses_database_cache(self):
         self.assertIn('id="force-retest"', self.html)
         self.assertIn("重复测试（忽略数据库，重新打开网站测量）", self.html)

@@ -1050,6 +1050,41 @@ function listTrueZh(dict, zhMap) {
   return Object.keys(dict || {}).filter(k => dict[k] === true)
     .map(k => zhMap[k] || k).join('、');
 }
+function adaptivePolicyHtml(policy) {
+  const a = (policy || {})._adaptive;
+  if (!a || !a.engine) return '';
+  const boundary = (label, item) => {
+    item = item || {};
+    const value = item.value == null
+      ? (item.status === 'not_observed_within_range'
+          ? `搜索至 ${item.searched_to || '?'} 位仍未观察到上限` : '无法判断')
+      : `${item.value} 位`;
+    const confidence = Number.isFinite(Number(item.confidence))
+      ? `，置信度 ${Math.round(Number(item.confidence) * 100)}%` : '';
+    return `<div>${label}：${esc(value)}${confidence}</div>`;
+  };
+  const outcomeZh = { accepted: '接受', rejected: '拒绝',
+    inconclusive: '证据不足', not_constructible: '无法构造' };
+  const trace = (a.decision_trace || []).map(step => {
+    const bounds = (step.bounds_before || []).join('～');
+    return `<tr>
+      <td>${esc(step.phase || '')}</td><td>${esc(step.target_length)}</td>
+      <td>${esc(outcomeZh[step.outcome] || step.outcome || '')}</td>
+      <td>${esc(bounds)}</td><td>${esc(step.decision || '')}</td>
+    </tr>`;
+  }).join('');
+  return `<details class="mt-2">
+    <summary><b>自适应探测证据</b>：实际 ${esc(a.probes_used || 0)} 次，
+      相比最坏线性扫描减少约 ${esc(a.probes_saved_vs_worst_case || 0)} 次</summary>
+    <div class="border rounded p-2 mt-1 bg-white">
+      <div class="small">引擎：${esc(a.engine)}；探测预算：${esc(a.probe_budget)}；此决策证据不保存候选口令原文</div>
+      <div class="small mt-1">${boundary('最小长度', a.minimum)}${boundary('最大长度', a.maximum)}</div>
+      ${trace ? `<div class="table-responsive mt-2"><table class="table table-sm table-bordered mb-0">
+        <thead><tr><th>阶段</th><th>长度</th><th>结果</th><th>搜索区间</th><th>下一步决策</th></tr></thead>
+        <tbody>${trace}</tbody></table></div>` : ''}
+    </div>
+  </details>`;
+}
 function measuredPolicyHtml(policy, methodUsed) {
   const hint = (policy || {})._hint_policy;
   const hintHtml = hint && hint.raw_texts && hint.raw_texts.length
@@ -1099,7 +1134,8 @@ function measuredPolicyHtml(policy, methodUsed) {
   if (slParts.length) perm.push(slParts.join('、'));
   if (p.breached_password && p.breached_password.p_br) perm.push('拦截泄密口令');
   lines.push('<b>允许：</b>' + (perm.length ? perm.join('；') : '未检测'));
-  return '<div class="small">' + lines.join('<br>') + '</div>';
+  return '<div class="small">' + lines.join('<br>') + '</div>' +
+    adaptivePolicyHtml(policy);
 }
 function measuredPwdHtml(loginPwd, signupPwd) {
   // 站点详情里仅在存在实测口令规则时显示（避免每站都多一行噪音）

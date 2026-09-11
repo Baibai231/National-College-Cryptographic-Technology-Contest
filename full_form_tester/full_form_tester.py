@@ -32,6 +32,15 @@ from utils.password_candidates import (
     admissible_candidate_lengths,
     stratified_password_candidates,
 )
+from utils.adaptive_policy import (
+    ACCEPTED,
+    INCONCLUSIVE,
+    REJECTED,
+    AdaptiveLengthPlanner,
+    build_length_candidate,
+    candidate_profile,
+    normalize_outcome,
+)
 
 from .rate_controller import RateController
 from .data_generator import DataGenerator
@@ -104,12 +113,34 @@ class FullFormPolicyTester:
         self._site_no_value: bool = False  # 多步表单超限 → 无研究价值
         self._seen_specific_error: bool = False  # 是否见过明确错误消息（用于登录表单判断）
         self._browser_dead: bool = False  # 浏览器会话已终止（崩溃/被关闭）
+        self._last_probe_outcome: str = INCONCLUSIVE
+        self._last_probe_evidence: str = "not_started"
+        self._probe_evidence: List[Dict] = []
+        self._had_inconclusive: bool = False
+        self._adaptive_summary: Dict = {}
 
         # 日志
         self.my_logger = uub.get_logger(self.test_site)
 
         # CDP eval 函数（从 login_link_discovery 借用模式）
         self._cdp_eval = self._make_cdp_eval()
+
+    def _record_probe(self, password: str, outcome, evidence: str,
+                      purpose: str = "") -> None:
+        """Store a redacted three-state observation for later audit."""
+        normalized = normalize_outcome(outcome)
+        self._last_probe_outcome = normalized
+        self._last_probe_evidence = str(evidence or "")[:300]
+        if normalized == INCONCLUSIVE:
+            self._had_inconclusive = True
+        if not hasattr(self, "_probe_evidence"):
+            self._probe_evidence = []
+        self._probe_evidence.append({
+            "purpose": str(purpose or "")[:160],
+            "candidate": candidate_profile(password),
+            "outcome": normalized,
+            "evidence": self._last_probe_evidence,
+        })
 
     # ================================================================
     # CDP 工具
@@ -389,6 +420,11 @@ class FullFormPolicyTester:
                         f"NO_VALUE: 经过 {steps} 页表单仍无密码反馈，"
                         f"标记 {self.test_site} 为无研究价值")
                     self._site_no_value = True
+                    self._record_probe(
+                        test_password, INCONCLUSIVE,
+                        f"multi_step_form_without_password_feedback_after_{steps}_steps",
+                        info_name,
+                    )
                     return False
 
                 # 补充 source diff
@@ -403,12 +439,23 @@ class FullFormPolicyTester:
                 if accepted:
                     self.my_logger.success(f"The tested password {test_password} is accepted.")
                     self.rate_ctrl.record_success()
+                    self._record_probe(
+                        test_password, ACCEPTED,
+                        "form_or_server_feedback_accepted", info_name)
                     return True
                 else:
                     reason = error_text or "no specific error detected"
                     if error_text:
                         self._seen_specific_error = True
                     self.my_logger.warning(f"Password {test_password} rejected: {reason}")
+                    # A parser result without password-specific feedback is not
+                    # proof of rejection; keep it as an explicit third state.
+                    self._record_probe(
+                        test_password,
+                        REJECTED if error_text else INCONCLUSIVE,
+                        error_text or "no_password_specific_feedback",
+                        info_name,
+                    )
                     self._reset_page()
                     self.rate_ctrl.delay_between_tests()
                     return False
@@ -419,6 +466,9 @@ class FullFormPolicyTester:
                 self.my_logger.error(
                     f"浏览器会话终止: {type(e).__name__}，标记为 browser_dead"
                 )
+                self._record_probe(
+                    test_password, INCONCLUSIVE,
+                    f"browser_session_terminated:{type(e).__name__}", info_name)
                 return False
             except Exception as e:
                 self.my_logger.error(f"Test failed: {str(e)[:200]}")
@@ -427,7 +477,11 @@ class FullFormPolicyTester:
                 self._reset_page()
                 self.rate_ctrl.record_failure()
 
-        self.my_logger.warning(f"Password {test_password}: all retries exhausted, treat as rejected.")
+        self.my_logger.warning(
+            f"Password {test_password}: all retries exhausted, mark as inconclusive.")
+        self._record_probe(
+            test_password, INCONCLUSIVE,
+            "all_form_submission_retries_exhausted", info_name)
         return False
 
     # ================================================================
@@ -616,31 +670,43 @@ class FullFormPolicyTester:
         return uusg.gen_random_str_no_symbol(length)
 
     def identify_min_and_max_length_limitations(self, rp: dict, r_min: list, r_max: list) -> tuple:
-        """识别最小/最大长度限制"""
-        self.my_logger.info("Identifying length limitations.")
-        # 最小长度 → 从短到长测试
-        min_len = r_min[1]
-        for l in range(r_min[0], r_min[1] + 1):
-            test = self._length_probe_password(l, rp)
-            if test is None:
-                continue
-            if self.test_one_password(test, f"test min length {l}"):
-                min_len = l
-                break
-            self.rate_ctrl.delay_between_tests()
+        """Infer length boundaries with a budgeted adaptive search.
 
-        # 最大长度 → 从长到短测试
-        max_len = r_max[1]
-        for l in range(r_max[1], r_max[0] - 1, -1):
-            test = self._length_probe_password(l, rp)
-            if test is None:
-                continue
-            if self.test_one_password(test, f"test max length {l}"):
-                max_len = l
-                break
-            self.rate_ctrl.delay_between_tests()
+        Full-form observations may submit a form, so the historical linear
+        scan was especially expensive.  The accepted password is used as an
+        invariant and each next length halves the remaining search interval.
+        """
+        self.my_logger.info("Identifying length limitations with adaptive search.")
 
-        return min_len, max_len
+        def observe(candidate: str, purpose: str):
+            accepted = self.test_one_password(candidate, purpose)
+            outcome = getattr(self, "_last_probe_outcome", None)
+            if normalize_outcome(outcome) != INCONCLUSIVE or outcome is not None:
+                return outcome
+            # Unit-test doubles and older adapters only expose bool results.
+            return accepted
+
+        known_maximum = self._read_password_maxlength()
+        planner = AdaptiveLengthPlanner(
+            probe=observe,
+            candidate_factory=lambda length: build_length_candidate(
+                length, rp, self.admissible_password),
+            accepted_anchor=self.admissible_password,
+            minimum_range=(int(r_min[0]), int(r_min[1])),
+            maximum_range=(int(r_max[0]), int(r_max[1])),
+            probe_budget=24,
+            known_maximum=known_maximum,
+        )
+        summary = planner.infer()
+        self._adaptive_summary = summary
+        minimum = summary["minimum"].get("value")
+        maximum = summary["maximum"].get("value")
+        self.my_logger.info(
+            "Adaptive length result: min={} max={} probes={} saved_vs_worst_case={}".format(
+                minimum, maximum, summary["probes_used"],
+                summary["probes_saved_vs_worst_case"],
+            ))
+        return minimum or 0, maximum
 
     @staticmethod
     def _length_probe_password(length: int, rp: dict) -> Optional[str]:
@@ -650,82 +716,7 @@ class FullFormPolicyTester:
         the requested length cannot express the already-known composition
         requirements and therefore must not be used as length evidence.
         """
-        if length < 0:
-            return None
-
-        counts = {
-            "lower": max(0, int(rp.get("r_low_min", 0) or 0)),
-            "upper": max(0, int(rp.get("r_upp_min", 0) or 0)),
-            "digit": max(0, int(rp.get("r_dig_min", 0) or 0)),
-            "symbol": max(0, int(rp.get("r_sps_min", 0) or 0)),
-        }
-        symbols_allowed = not bool(rp.get("r_no_a_sps"))
-        if not symbols_allowed and counts["symbol"]:
-            return None
-
-        cr3 = next((n for n in (3, 2, 1)
-                    if rp.get(f"r_cmb{n}3")), 0)
-        cr4 = next((n for n in (4, 3, 2, 1)
-                    if rp.get(f"r_cmb{n}4")), 0)
-
-        def active(name: str) -> bool:
-            return counts[name] > 0
-
-        # cr4 distinguishes lower/upper/digit/symbol.
-        four_classes = ["lower", "upper", "digit"]
-        if symbols_allowed:
-            four_classes.append("symbol")
-        for name in four_classes:
-            if sum(active(item) for item in four_classes) >= cr4:
-                break
-            counts[name] = max(1, counts[name])
-        if sum(active(item) for item in four_classes) < cr4:
-            return None
-
-        # cr3 groups both letter cases as one class: letter/digit/symbol.
-        def active_three() -> int:
-            return sum((active("lower") or active("upper"),
-                        active("digit"), active("symbol")))
-
-        for name in ("lower", "digit", "symbol"):
-            if active_three() >= cr3:
-                break
-            if name == "symbol" and not symbols_allowed:
-                continue
-            counts[name] = max(1, counts[name])
-        if active_three() < cr3:
-            return None
-
-        if rp.get("r_l_start") and not (active("lower") or active("upper")):
-            counts["lower"] = 1
-
-        # The legacy r_2_word model expects at least six letters plus a
-        # digit/symbol separator.  Preserve that model during length probes.
-        if rp.get("r_2_word"):
-            counts["lower"] = max(6, counts["lower"])
-            separator = "symbol" if symbols_allowed else "digit"
-            counts[separator] = max(1, counts[separator])
-
-        required = sum(counts.values())
-        if required > length:
-            return None
-        counts["lower"] += length - required
-
-        if rp.get("r_2_word"):
-            separator_name = "symbol" if symbols_allowed else "digit"
-            separator = "!" if separator_name == "symbol" else "3"
-            counts["lower"] -= 6
-            counts[separator_name] -= 1
-            candidate = "abc" + separator + "def"
-        else:
-            candidate = ""
-        candidate += (
-            uusg.gen_random_lower_character(counts["lower"])
-            + uusg.gen_random_upper_character(counts["upper"])
-            + uusg.gen_random_digit(counts["digit"])
-            + ("!" * counts["symbol"])
-        )
-        return candidate
+        return build_length_candidate(length, rp)
 
     def identify_permissive_characters(self, length: list) -> dict:
         """识别允许的字符类型（空格/Unicode/Emoji/特殊符号）"""
@@ -935,6 +926,19 @@ class FullFormPolicyTester:
 
             policy["length"][0], policy["length"][1] = \
                 self.identify_min_and_max_length_limitations(rp, [0, 32], [6, 128])
+            if self._adaptive_summary:
+                policy["_adaptive"] = self._adaptive_summary
+                boundary_states = {
+                    self._adaptive_summary["minimum"].get("status"),
+                    self._adaptive_summary["maximum"].get("status"),
+                }
+                if "inconclusive" in boundary_states:
+                    policy["_inconclusive"] = True
+                    policy["_inconclusive_reason"] = (
+                        "adaptive_length_probe_inconclusive: "
+                        + str(self._adaptive_summary.get("stop_reason") or "unknown")
+                    )
+                    return policy
 
             policy["permissive"]["permitted_characters"] = \
                 self.identify_permissive_characters(policy["length"])
@@ -962,6 +966,14 @@ class FullFormPolicyTester:
             import traceback
             traceback.print_exc()
         finally:
+            policy["_probe_evidence"] = list(
+                getattr(self, "_probe_evidence", []))
+            if getattr(self, "_had_inconclusive", False):
+                policy["_inconclusive"] = True
+                policy.setdefault(
+                    "_inconclusive_reason",
+                    "at_least_one_full_form_probe_lacked_password_specific_evidence",
+                )
             self.my_logger.info(f"Policy of {self.test_site}: {policy}")
 
         return policy
@@ -1017,12 +1029,14 @@ class FullFormPolicyTester:
         """返回密码框的候选 XPath（字段检测结果 + 显式 password_xpath，去重）"""
         xpaths: List[str] = []
         pw = next(
-            (f for f in self._all_fields if f.get("field_type") == FIELD_PASSWORD), None
+            (f for f in getattr(self, "_all_fields", [])
+             if f.get("field_type") == FIELD_PASSWORD), None
         )
         if pw and pw.get("xpath"):
             xpaths.append(pw["xpath"])
-        if self.password_xpath and self.password_xpath not in xpaths:
-            xpaths.append(self.password_xpath)
+        explicit = getattr(self, "password_xpath", "")
+        if explicit and explicit not in xpaths:
+            xpaths.append(explicit)
         return xpaths
 
     def _read_password_maxlength(self) -> Optional[int]:

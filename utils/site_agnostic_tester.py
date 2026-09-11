@@ -272,6 +272,20 @@ class SitePasswordPolicyTester:
 
             password_policy["length"][0], password_policy["length"][1] = \
                 self._tester.identify_min_and_max_length_limitations(rp, [0, 32], [6, 128])
+            adaptive = getattr(self._tester, "_adaptive_summary", None)
+            if adaptive:
+                password_policy["_adaptive"] = adaptive
+                boundary_states = {
+                    adaptive["minimum"].get("status"),
+                    adaptive["maximum"].get("status"),
+                }
+                if "inconclusive" in boundary_states:
+                    password_policy["_inconclusive"] = True
+                    password_policy["_inconclusive_reason"] = (
+                        "adaptive_length_probe_inconclusive: "
+                        + str(adaptive.get("stop_reason") or "unknown")
+                    )
+                    return password_policy
             _safe_print(
                 f"    长度: min={password_policy['length'][0]}, "
                 f"max={password_policy['length'][1]}")

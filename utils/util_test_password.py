@@ -22,6 +22,10 @@ from utils.password_candidates import (
     admissible_candidate_lengths,
     stratified_password_candidates,
 )
+from utils.adaptive_policy import (
+    AdaptiveLengthPlanner,
+    build_length_candidate,
+)
 
 
 def _admissible_cache_path(test_site: str, strength: str = None) -> str:
@@ -681,6 +685,7 @@ class TestPassword(object):
         self._probe_evidence = []
         self._negative_control_confirmed = False
         self._had_inconclusive = False
+        self._adaptive_summary = {}
 
     def _record_probe(self, password: str, outcome: ProbeOutcome,
                       evidence: str) -> None:
@@ -2982,61 +2987,42 @@ class TestPassword(object):
         return lo
 
     def identify_min_and_max_length_limitations(self, restrictive_parameters, min_interval, max_interval):
-        """
-        get the length minimum and maximum of the website password composition rule
-        :param max_interval:
-        :param min_interval:
-        :param restrictive_parameters: the restrictive parameters of the website is known
-        """
-        ret_min = 0
-        ret_max = 0
-        # 优先使用 admissible_password（已知通过所有规则的密码）作为二分搜索种子。
-        # admissible_password 是通过测试确认可被接受的密码，其字符结构已被网站验证通过。
-        # length_limit_initial_password 生成的密码虽然满足参数约束，
-        # 但其块状字符结构（如 3 小写+1 数字+3 大写）在随机扩展后可能产生
-        # 网站实际拒绝的模式（非长度原因），污染二分搜索结果。
-        if self.admissible_password and len(self.admissible_password) >= 6:
-            initial_password = self.admissible_password
-            self.my_logger.debug(
-                f"identify_min_and_max_length_limitations: using admissible_password "
-                f"'{initial_password}' (len={len(initial_password)})"
-            )
+        """Infer min/max length using the shared budgeted adaptive planner."""
+        if self.admissible_password and len(self.admissible_password) >= 4:
+            anchor = self.admissible_password
         else:
-            initial_password = self.length_limit_initial_password(restrictive_parameters)
-            self.my_logger.debug(
-                f"identify_min_and_max_length_limitations: using generated initial_password "
-                f"'{initial_password}' (len={len(initial_password)})"
-            )
-        # TODO: 2 -> padding the password to tested length
-        initial_min_length = len(initial_password)
-        if initial_min_length > 32:
-            ret_min = initial_min_length
-        ret_min = self.binary_search_min(initial_password, min_interval)
-        ret_max = self.binary_search_max(initial_password, max_interval)
+            anchor = self.length_limit_initial_password(restrictive_parameters)
 
-        # 方案 A：长度上限不盲信二分结果。
-        # 若二分顶到写死上界 max_interval[1]，说明在搜索范围内每一步都「看不到拒绝
-        # 信号」——可能是输入框无 maxlength、且网站不实时校验「过长」（校验在提交时）。
-        # 此时读输入框 maxlength 佐证：
-        #   - 有 maxlength=N → 浏览器强制截断，N 即真实上限（可能 > 上界）；
-        #   - 无 maxlength → 真实上限未知，标记 None（未检出），避免误报 128。
-        if ret_max == max_interval[1]:
-            maxlength = self._read_password_maxlength()
-            if maxlength:
-                self.my_logger.warning(
-                    f"二分顶到上界 {max_interval[1]}，但输入框 maxlength={maxlength}，"
-                    f"以 maxlength 作为真实上限")
-                ret_max = maxlength
-            else:
-                self.my_logger.warning(
-                    f"二分顶到上界 {max_interval[1]}，且输入框无 maxlength 佐证，"
-                    f"网站可能不实时校验「过长」，真实上限未检出（max=None）")
-                ret_max = None
+        def observe(candidate, purpose):
+            accepted = self.test_one_password(candidate, purpose)
+            outcome = getattr(self, "_last_probe_outcome", None)
+            if outcome is None:
+                return accepted
+            return outcome
 
-        # TODO: 3 -> test the password
-        self.my_logger.info(
-            f"Length limitation results: min={ret_min}, max={ret_max}"
+        maxlength = self._read_password_maxlength()
+        planner = AdaptiveLengthPlanner(
+            probe=observe,
+            candidate_factory=lambda length: build_length_candidate(
+                length, restrictive_parameters, anchor),
+            accepted_anchor=anchor,
+            minimum_range=(int(min_interval[0]), int(min_interval[1])),
+            maximum_range=(int(max_interval[0]), int(max_interval[1])),
+            probe_budget=24,
+            known_maximum=maxlength,
+            confirmation_factory=lambda length: build_length_candidate(
+                length, restrictive_parameters, anchor, variant=1),
         )
+        summary = planner.infer()
+        self._adaptive_summary = summary
+        ret_min = summary["minimum"].get("value") or 0
+        ret_max = summary["maximum"].get("value")
+        self.my_logger.info(
+            "Adaptive length results: min={} max={} probes={} "
+            "saved_vs_worst_case={}".format(
+                ret_min, ret_max, summary["probes_used"],
+                summary["probes_saved_vs_worst_case"],
+            ))
         return ret_min, ret_max
 
     def identify_permissive_characters(self, password_length):

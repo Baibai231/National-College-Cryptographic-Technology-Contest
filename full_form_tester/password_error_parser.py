@@ -171,7 +171,7 @@ class PasswordErrorParser:
             (accepted, error_text)
             - accepted=True  → 密码被接受
             - accepted=False → 密码被拒绝，error_text 包含错误描述
-            - accepted=False, error_text=None → 无法判定（视为拒绝）
+            - accepted=False, error_text=None → 无法判定（调用方记录为 inconclusive）
         """
         # Layer 0: 多步表单超限无反馈 → 无研究价值
         if result.get("no_value"):
@@ -232,7 +232,7 @@ class PasswordErrorParser:
         if self._RE_SUCCESS.search(all_text):
             return True, None
 
-        # 无法判定 → 视为拒绝（安全侧）
+        # 无法判定：由调用方保留为独立三态，不能作为策略拒绝证据。
         return False, None
 
     def snapshot_source(self, html_source: str) -> None:
