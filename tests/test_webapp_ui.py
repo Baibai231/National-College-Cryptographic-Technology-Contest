@@ -80,6 +80,9 @@ class WebAppUiTests(unittest.TestCase):
         self.assertIn("自适应探测证据", self.html)
         self.assertIn("此决策证据不保存候选口令原文", self.html)
         self.assertIn("probes_saved_vs_worst_case", self.html)
+        self.assertIn("_adaptive_composition", self.html)
+        self.assertIn("已接受的最小组合", self.html)
+        self.assertIn("固定必需类", self.html)
 
     def test_repeat_measurement_control_bypasses_database_cache(self):
         self.assertIn('id="force-retest"', self.html)

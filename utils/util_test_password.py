@@ -23,7 +23,9 @@ from utils.password_candidates import (
     stratified_password_candidates,
 )
 from utils.adaptive_policy import (
+    AdaptiveCompositionPlanner,
     AdaptiveLengthPlanner,
+    apply_composition_to_restrictive,
     build_length_candidate,
 )
 
@@ -686,6 +688,7 @@ class TestPassword(object):
         self._negative_control_confirmed = False
         self._had_inconclusive = False
         self._adaptive_summary = {}
+        self._adaptive_composition_summary = {}
 
     def _record_probe(self, password: str, outcome: ProbeOutcome,
                       evidence: str) -> None:
@@ -2985,6 +2988,34 @@ class TestPassword(object):
                 hi = mi - 1
         self.my_logger.debug(f"binary_search_max: result = {lo}")
         return lo
+
+    def identify_adaptive_composition(self, restrictive_parameters):
+        """Infer character-class constraints at the accepted anchor length."""
+        anchor = self.admissible_password
+
+        def observe(candidate, purpose):
+            accepted = self.test_one_password(candidate, purpose)
+            outcome = getattr(self, "_last_probe_outcome", None)
+            return accepted if outcome is None else outcome
+
+        planner = AdaptiveCompositionPlanner(
+            probe=observe,
+            accepted_anchor=anchor,
+            structural_rules=restrictive_parameters,
+            probe_budget=24,
+        )
+        summary = planner.infer()
+        self._adaptive_composition_summary = summary
+        apply_composition_to_restrictive(restrictive_parameters, summary)
+        self.my_logger.info(
+            "Adaptive composition result: minimum_classes={} required={} "
+            "probes={} status={}".format(
+                summary.get("minimum_character_classes"),
+                summary.get("required_classes"),
+                summary.get("probes_used"),
+                summary.get("status"),
+            ))
+        return summary
 
     def identify_min_and_max_length_limitations(self, restrictive_parameters, min_interval, max_interval):
         """Infer min/max length using the shared budgeted adaptive planner."""

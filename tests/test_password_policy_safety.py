@@ -165,6 +165,29 @@ class PasswordPolicySafetyTests(unittest.TestCase):
             for call in tester.test_one_password.call_args_list
         ))
 
+    def test_full_form_symbol_probe_keeps_length_and_uses_control(self):
+        tester = FullFormPolicyTester.__new__(FullFormPolicyTester)
+        tester.my_logger = mock.MagicMock()
+        tester._record_probe = mock.MagicMock()
+        anchor = "kqmxVZ73"
+
+        def observe(candidate, purpose):
+            if "symbol at fixed length" in purpose:
+                tester._last_probe_outcome = "rejected"
+                return False
+            tester._last_probe_outcome = "accepted"
+            return True
+
+        tester.test_one_password = mock.MagicMock(side_effect=observe)
+        prohibited = tester.check_special_symbols(anchor)
+
+        self.assertTrue(prohibited)
+        self.assertEqual(tester.test_one_password.call_count, 2)
+        self.assertTrue(all(
+            len(call.args[0]) == len(anchor)
+            for call in tester.test_one_password.call_args_list
+        ))
+
     # ── P3 自洽校验：OR 规则检测 ──
     def test_self_consistency_detects_or_rule_when_single_class_rejected(self):
         tester = TestPassword(mock.MagicMock(), "example.com")

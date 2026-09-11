@@ -1052,7 +1052,8 @@ function listTrueZh(dict, zhMap) {
 }
 function adaptivePolicyHtml(policy) {
   const a = (policy || {})._adaptive;
-  if (!a || !a.engine) return '';
+  const c = (policy || {})._adaptive_composition;
+  if ((!a || !a.engine) && (!c || !c.engine)) return '';
   const boundary = (label, item) => {
     item = item || {};
     const value = item.value == null
@@ -1065,7 +1066,7 @@ function adaptivePolicyHtml(policy) {
   };
   const outcomeZh = { accepted: '接受', rejected: '拒绝',
     inconclusive: '证据不足', not_constructible: '无法构造' };
-  const trace = (a.decision_trace || []).map(step => {
+  const trace = ((a || {}).decision_trace || []).map(step => {
     const bounds = (step.bounds_before || []).join('～');
     return `<tr>
       <td>${esc(step.phase || '')}</td><td>${esc(step.target_length)}</td>
@@ -1073,15 +1074,64 @@ function adaptivePolicyHtml(policy) {
       <td>${esc(bounds)}</td><td>${esc(step.decision || '')}</td>
     </tr>`;
   }).join('');
+  const classZh = { lower: '小写字母', upper: '大写字母',
+    digit: '数字', symbol: '特殊符号' };
+  const classList = items => (items || []).map(name => classZh[name] || name).join('＋');
+  const compositionSummary = c && c.engine ? (() => {
+    const minimum = c.minimum_character_classes == null
+      ? '无法判断' : `至少 ${c.minimum_character_classes} 类`;
+    const required = (c.required_classes || []).length
+      ? classList(c.required_classes)
+      : (c.minimum_character_classes ? '无固定必需类（任意满足数量的组合均可）' : '无法判断');
+    const acceptedSets = (c.accepted_minimal_sets || [])
+      .map(items => classList(items)).join('；');
+    const minimums = Object.entries(c.class_minimums || {})
+      .filter(([, item]) => item && Number(item.value) > 0)
+      .map(([name, item]) => item.status === 'measured'
+        ? `${classZh[name] || name} ≥ ${item.value} 个`
+        : `${classZh[name] || name} 可确定下界 ${item.value} 个（精确值证据不足）`)
+      .join('；');
+    const statusZh = { measured: '已测量', partial: '部分测量',
+      inconclusive: '证据不足' };
+    const compositionTrace = (c.decision_trace || []).map(step => {
+      const target = step.target_classes
+        ? classList(step.target_classes)
+        : `${classZh[step.target_class] || step.target_class || ''}${step.target_count == null ? '' : ' = ' + step.target_count}`;
+      const profile = step.candidate || {};
+      const structure = profile.length == null ? ''
+        : `${profile.length} 位 / ${classList(profile.classes || [])}`;
+      return `<tr>
+        <td>${esc(step.phase || '')}</td><td>${esc(target)}</td>
+        <td>${esc(outcomeZh[step.outcome] || step.outcome || '')}</td>
+        <td>${esc(structure)}</td><td>${esc(step.decision || '')}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="mt-2 pt-2 border-top">
+      <div class="small"><b>字符组成：</b>${esc(minimum)}；状态：${esc(statusZh[c.status] || c.status || '')}；
+        实际探测 ${esc(c.probes_used || 0)} 次</div>
+      <div class="small">固定必需类：${esc(required)}</div>
+      ${acceptedSets ? `<div class="small">已接受的最小组合：${esc(acceptedSets)}</div>` : ''}
+      ${minimums ? `<div class="small">各类最低数量：${esc(minimums)}</div>` : ''}
+      <div class="small text-muted">推断前提：固定长度下，增加字符类别不会使原本合规的口令失效；若页面行为不满足此前提，应结合决策路径人工复核。</div>
+      ${compositionTrace ? `<div class="table-responsive mt-2"><table class="table table-sm table-bordered mb-0">
+        <thead><tr><th>阶段</th><th>目标字符类/数量</th><th>结果</th><th>候选结构</th><th>下一步决策</th></tr></thead>
+        <tbody>${compositionTrace}</tbody></table></div>` : ''}
+    </div>`;
+  })() : '';
+  const probeSummary = [
+    a && a.engine ? `长度 ${a.probes_used || 0} 次` : '',
+    c && c.engine ? `字符组成 ${c.probes_used || 0} 次` : '',
+  ].filter(Boolean).join('，');
   return `<details class="mt-2">
-    <summary><b>自适应探测证据</b>：实际 ${esc(a.probes_used || 0)} 次，
-      相比最坏线性扫描减少约 ${esc(a.probes_saved_vs_worst_case || 0)} 次</summary>
+    <summary><b>自适应探测证据</b>：${esc(probeSummary)}${a && a.engine
+      ? `，长度探测相比最坏线性扫描减少约 ${esc(a.probes_saved_vs_worst_case || 0)} 次` : ''}</summary>
     <div class="border rounded p-2 mt-1 bg-white">
-      <div class="small">引擎：${esc(a.engine)}；探测预算：${esc(a.probe_budget)}；此决策证据不保存候选口令原文</div>
-      <div class="small mt-1">${boundary('最小长度', a.minimum)}${boundary('最大长度', a.maximum)}</div>
+      <div class="small">引擎：${esc([a && a.engine, c && c.engine].filter(Boolean).join(' + '))}；此决策证据不保存候选口令原文</div>
+      ${a && a.engine ? `<div class="small mt-1">${boundary('最小长度', a.minimum)}${boundary('最大长度', a.maximum)}</div>` : ''}
       ${trace ? `<div class="table-responsive mt-2"><table class="table table-sm table-bordered mb-0">
         <thead><tr><th>阶段</th><th>长度</th><th>结果</th><th>搜索区间</th><th>下一步决策</th></tr></thead>
         <tbody>${trace}</tbody></table></div>` : ''}
+      ${compositionSummary}
     </div>
   </details>`;
 }
@@ -1118,7 +1168,10 @@ function measuredPolicyHtml(policy, methodUsed) {
   if (r.r_l_start) reqs.push('必须以字母开头');
   if (r.r_2_word) reqs.push('需多词结构');
   if (r.r_no_a_sps) reqs.push('不允许特殊符号');
-  if (r.r_cmb44) reqs.push('需含大小写字母+数字+特殊符号四类');
+  const adaptiveComposition = policy._adaptive_composition || {};
+  if (adaptiveComposition.minimum_character_classes > 0) {
+    reqs.push('至少使用 ' + adaptiveComposition.minimum_character_classes + ' 类字符');
+  } else if (r.r_cmb44) reqs.push('需含大小写字母+数字+特殊符号四类');
   else if (r.r_cmb34) reqs.push('需含大小写字母/数字/特殊符号中三类');
   else if (r.r_cmb24) reqs.push('需含四类字符中两类');
   lines.push('<b>限制：</b>' + (reqs.length ? reqs.join('；') : '无特殊限制'));

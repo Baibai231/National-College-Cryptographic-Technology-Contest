@@ -5,9 +5,14 @@ from full_form_tester.full_form_tester import FullFormPolicyTester
 from utils.adaptive_policy import (
     ACCEPTED,
     INCONCLUSIVE,
+    AdaptiveCompositionPlanner,
     AdaptiveLengthPlanner,
+    apply_composition_to_restrictive,
+    build_class_count_candidate,
+    build_class_subset_candidate,
     build_length_candidate,
     candidate_profile,
+    character_class_counts,
 )
 
 
@@ -178,6 +183,127 @@ class AdaptivePolicyTests(unittest.TestCase):
             tester._probe_evidence[-1]["evidence"],
             "no_password_specific_feedback",
         )
+
+    def test_subset_candidate_preserves_anchor_counts_for_present_classes(self):
+        candidate = build_class_subset_candidate(
+            12, ("lower", "digit"), template="kqmxVZ739!@a")
+        self.assertEqual(len(candidate), 12)
+        self.assertEqual(
+            set(candidate_profile(candidate)["classes"]), {"lower", "digit"})
+        self.assertGreaterEqual(character_class_counts(candidate)["digit"], 3)
+
+    def test_count_candidate_changes_only_target_count_and_keeps_length(self):
+        template = "kqmxVZ739!@a"
+        candidate = build_class_count_candidate(template, "digit", 2)
+        self.assertEqual(len(candidate), len(template))
+        self.assertEqual(character_class_counts(candidate)["digit"], 2)
+        self.assertEqual(
+            set(candidate_profile(candidate)["classes"]),
+            set(candidate_profile(template)["classes"]),
+        )
+        self.assertIsNone(build_class_count_candidate(
+            template, "digit", 1, {"r_2_word": True}))
+
+    def test_composition_planner_recognizes_symmetric_two_of_four(self):
+        tested = []
+
+        def probe(candidate, _purpose):
+            tested.append(candidate)
+            return len(candidate_profile(candidate)["classes"]) >= 2
+
+        result = AdaptiveCompositionPlanner(
+            probe=probe,
+            accepted_anchor="kqmxVZ73!@",
+        ).infer()
+
+        self.assertEqual(result["status"], "measured")
+        self.assertEqual(result["minimum_character_classes"], 2)
+        self.assertEqual(result["required_classes"], [])
+        self.assertEqual(len(result["accepted_minimal_sets"]), 6)
+        self.assertLessEqual(result["probes_used"], 10)
+        for candidate in tested:
+            self.assertNotIn(candidate, str(result["decision_trace"]))
+
+    def test_composition_planner_finds_asymmetric_required_classes(self):
+        def probe(candidate, _purpose):
+            counts = character_class_counts(candidate)
+            return counts["lower"] >= 1 and counts["digit"] >= 1
+
+        result = AdaptiveCompositionPlanner(
+            probe=probe,
+            accepted_anchor="kqmxVZ73!@",
+        ).infer()
+
+        self.assertEqual(result["minimum_character_classes"], 2)
+        self.assertEqual(
+            result["accepted_minimal_sets"], [["lower", "digit"]])
+        self.assertEqual(result["required_classes"], ["lower", "digit"])
+        self.assertEqual(result["class_minimums"]["lower"]["value"], 1)
+        self.assertEqual(result["class_minimums"]["digit"]["value"], 1)
+
+    def test_composition_planner_binary_searches_required_class_count(self):
+        def probe(candidate, _purpose):
+            counts = character_class_counts(candidate)
+            return counts["lower"] >= 1 and counts["digit"] >= 2
+
+        result = AdaptiveCompositionPlanner(
+            probe=probe,
+            accepted_anchor="kqmxVZ739!@",
+        ).infer()
+
+        self.assertEqual(result["required_classes"], ["lower", "digit"])
+        self.assertEqual(result["class_minimums"]["digit"]["value"], 2)
+        self.assertEqual(result["class_minimums"]["digit"]["status"], "measured")
+
+    def test_composition_planner_excludes_prohibited_symbols(self):
+        result = AdaptiveCompositionPlanner(
+            probe=lambda candidate, _purpose: (
+                len(candidate_profile(candidate)["classes"]) >= 2),
+            accepted_anchor="kqmxVZ739",
+            structural_rules={"r_no_a_sps": True},
+        ).infer()
+        self.assertEqual(result["universe"], ["lower", "upper", "digit"])
+        self.assertTrue(all(
+            "symbol" not in classes
+            for classes in result["accepted_minimal_sets"]
+        ))
+
+    def test_composition_inconclusive_does_not_become_a_policy(self):
+        result = AdaptiveCompositionPlanner(
+            probe=lambda _candidate, _purpose: INCONCLUSIVE,
+            accepted_anchor="kqmxVZ73!@",
+        ).infer()
+        self.assertEqual(result["status"], "inconclusive")
+        self.assertIsNone(result["minimum_character_classes"])
+        self.assertIn("inconclusive", result["stop_reason"])
+
+    def test_composition_projection_populates_legacy_fields(self):
+        restrictive = self._rules()
+        summary = AdaptiveCompositionPlanner(
+            probe=lambda candidate, _purpose: (
+                len(candidate_profile(candidate)["classes"]) >= 2),
+            accepted_anchor="kqmxVZ73!@",
+        ).infer()
+        apply_composition_to_restrictive(restrictive, summary)
+        self.assertTrue(restrictive["r_cmb24"])
+        self.assertFalse(restrictive["r_cmb44"])
+        self.assertEqual(restrictive["r_dig_min"], 0)
+
+    def test_full_form_composition_measurement_uses_shared_planner(self):
+        tester = FullFormPolicyTester.__new__(FullFormPolicyTester)
+        tester.my_logger = mock.MagicMock()
+        tester.rate_ctrl = mock.MagicMock()
+        tester.admissible_password = "kqmxVZ73!@"
+        tester.test_one_password = mock.MagicMock(
+            side_effect=lambda candidate, _purpose: (
+                len(candidate_profile(candidate)["classes"]) >= 2))
+        restrictive = self._rules()
+
+        result = tester.identify_adaptive_composition(restrictive)
+
+        self.assertEqual(result["engine"], "adaptive-composition-v1")
+        self.assertEqual(result["minimum_character_classes"], 2)
+        self.assertTrue(restrictive["r_cmb24"])
 
 
 if __name__ == "__main__":

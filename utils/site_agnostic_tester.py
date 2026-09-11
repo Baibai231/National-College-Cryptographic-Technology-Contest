@@ -244,23 +244,23 @@ class SitePasswordPolicyTester:
                     "control_pair_drifted_after_letter_start_step"
                 return password_policy
 
-            rp["r_dig_min"] = self._tester.change_and_test_digit_minimum(rp["r_no_a_sps"])
-            _safe_print(f"    r_dig_min: {rp['r_dig_min']}")
-
-            if not _control_pair("phase control: revalidate after digit-minimum"):
+            composition = self._tester.identify_adaptive_composition(rp)
+            password_policy["_adaptive_composition"] = composition
+            _safe_print(
+                "    字符组成(自适应): 至少{}类, 必需类={}, 探针={}, 状态={}".format(
+                    composition.get("minimum_character_classes"),
+                    composition.get("required_classes"),
+                    composition.get("probes_used"),
+                    composition.get("status"),
+                ))
+            if composition.get("status") == "inconclusive":
                 password_policy["_inconclusive"] = True
-                password_policy["_inconclusive_reason"] = \
-                    "control_pair_drifted_after_digit_minimum_step"
+                password_policy["_inconclusive_reason"] = (
+                    "adaptive_composition_probe_inconclusive: "
+                    + str(composition.get("stop_reason") or "unknown"))
                 return password_policy
-
-            rp["r_upp_min"] = self._tester.change_and_test_lower_upper_minimum(True, rp["r_no_a_sps"])
-            _safe_print(f"    r_upp_min: {rp['r_upp_min']}")
-
-            rp["r_low_min"] = self._tester.change_and_test_lower_upper_minimum(False, rp["r_no_a_sps"])
-            _safe_print(f"    r_low_min: {rp['r_low_min']}")
-
-            rp["r_sps_min"] = self._tester.change_and_test_symbol_minimum(rp["r_no_a_sps"])
-            _safe_print(f"    r_sps_min: {rp['r_sps_min']}")
+            if composition.get("status") == "partial":
+                password_policy["_composition_partial"] = True
 
             # 固定顺序的连续突变可能积累页面状态或触发策略切换。进入长度阶段前
             # 重新跑“负对照 + 已知基准”配对，二者任一漂移就停止推断。
@@ -298,25 +298,14 @@ class SitePasswordPolicyTester:
                 _eff_max = max(password_policy["length"][0], len(admissible))
             _eff_length = [password_policy["length"][0], _eff_max]
 
-            # ── 组合要求测试（长度已确定后执行）──
-            # 修复缺陷3（组合先于长度）：组合测试的密码必须在合法长度区间内构造，
-            # 否则站点先拒绝"长度不合法"，测出的 r_cmb* 全是长度拒绝的假象。
-            # 组合测试前同样重验负对照+基准对。
+            # 长度探测后重新验证控制对，确认页面状态没有因连续探针漂移。
             if not self._tester.establish_inline_control() or not \
                     self._tester.test_one_password(
-                        admissible, "phase control: revalidate admissible before combination"):
+                        admissible, "phase control: revalidate admissible after adaptive probes"):
                 password_policy["_inconclusive"] = True
                 password_policy["_inconclusive_reason"] = \
-                    "control_pair_drifted_before_combination_phase"
+                    "control_pair_drifted_after_adaptive_probe_phases"
                 return password_policy
-
-            [
-                rp["r_cmb13"], rp["r_cmb23"], rp["r_cmb33"],
-                rp["r_cmb14"], rp["r_cmb24"], rp["r_cmb34"], rp["r_cmb44"]
-            ] = self._tester.identify_combination_requirements(rp, _eff_length)
-            _safe_print(
-                f"    组合(细粒度): 14={rp['r_cmb14']} 24={rp['r_cmb24']} "
-                f"34={rp['r_cmb34']} 44={rp['r_cmb44']}")
 
             # ── P3 自洽校验：用已推断约束反推密码验证模型一致性 ──
             # 模型是 AND 语义，无法表达 OR 规则（如 GitHub "≥15位 或

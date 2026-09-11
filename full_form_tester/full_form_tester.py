@@ -36,7 +36,9 @@ from utils.adaptive_policy import (
     ACCEPTED,
     INCONCLUSIVE,
     REJECTED,
+    AdaptiveCompositionPlanner,
     AdaptiveLengthPlanner,
+    apply_composition_to_restrictive,
     build_length_candidate,
     candidate_profile,
     normalize_outcome,
@@ -118,6 +120,7 @@ class FullFormPolicyTester:
         self._probe_evidence: List[Dict] = []
         self._had_inconclusive: bool = False
         self._adaptive_summary: Dict = {}
+        self._adaptive_composition_summary: Dict = {}
 
         # 日志
         self.my_logger = uub.get_logger(self.test_site)
@@ -558,9 +561,73 @@ class FullFormPolicyTester:
     # ================================================================
 
     def check_special_symbols(self, test_password: str) -> bool:
-        """特殊符号是否被禁止（True = 禁止）"""
-        self.my_logger.info(f"Testing special symbols: {test_password}@")
-        return not self.test_one_password(test_password + "@", "test special symbol")
+        """Test symbol prohibition without accidentally changing length."""
+        if any(not char.isalnum() and not char.isspace()
+               for char in test_password):
+            return False
+
+        def kind(char: str) -> str:
+            if char.islower():
+                return "lower"
+            if char.isupper():
+                return "upper"
+            if char.isdigit():
+                return "digit"
+            return "symbol"
+
+        counts: Dict[str, int] = {}
+        for char in test_password:
+            counts[kind(char)] = counts.get(kind(char), 0) + 1
+        replace_at = next(
+            (index for index in range(len(test_password) - 1, -1, -1)
+             if counts.get(kind(test_password[index]), 0) > 1),
+            None,
+        )
+        if replace_at is None:
+            self._record_probe(
+                test_password, INCONCLUSIVE,
+                "special_symbol_probe_has_no_redundant_character",
+                "test special symbol",
+            )
+            return False
+
+        symbol_candidate = (
+            test_password[:replace_at] + "!" + test_password[replace_at + 1:])
+        self.my_logger.info(
+            f"Testing special symbol at fixed length={len(symbol_candidate)}")
+        if self.test_one_password(symbol_candidate, "test special symbol at fixed length"):
+            return False
+        symbol_outcome = normalize_outcome(
+            getattr(self, "_last_probe_outcome", INCONCLUSIVE))
+        if symbol_outcome != REJECTED:
+            return False
+
+        original_kind = kind(test_password[replace_at])
+        recipient_kind = next(
+            (name for name in ("lower", "upper", "digit")
+             if name != original_kind and counts.get(name, 0) > 0),
+            None,
+        )
+        if recipient_kind is None:
+            self._record_probe(
+                test_password, INCONCLUSIVE,
+                "symbol_rejected_but_lost_class_minimum_cannot_be_controlled",
+                "test special symbol",
+            )
+            return False
+        replacement = {"lower": "q", "upper": "Q", "digit": "7"}[recipient_kind]
+        control_candidate = (
+            test_password[:replace_at] + replacement
+            + test_password[replace_at + 1:])
+        if self.test_one_password(
+                control_candidate, "control for fixed-length symbol mutation"):
+            return True
+        self._record_probe(
+            test_password, INCONCLUSIVE,
+            "symbol_and_non_symbol_control_both_rejected",
+            "test special symbol",
+        )
+        return False
 
     def change_and_test_2_word_password(self):
         """2-word 结构是否强制"""
@@ -668,6 +735,37 @@ class FullFormPolicyTester:
                     uusg.gen_random_digit(2) +
                     uusg.gen_random_symbol_character(2))
         return uusg.gen_random_str_no_symbol(length)
+
+    def identify_adaptive_composition(self, rp: dict) -> dict:
+        """Infer class subsets and required-class counts at a fixed length."""
+        def observe(candidate: str, purpose: str):
+            try:
+                accepted = self.test_one_password(candidate, purpose)
+                outcome = getattr(self, "_last_probe_outcome", None)
+                return accepted if outcome is None else outcome
+            finally:
+                # Full-form probes may submit a form; retain the global pacing
+                # policy even when the candidate is explicitly accepted.
+                self.rate_ctrl.delay_between_tests()
+
+        planner = AdaptiveCompositionPlanner(
+            probe=observe,
+            accepted_anchor=self.admissible_password,
+            structural_rules=rp,
+            probe_budget=24,
+        )
+        summary = planner.infer()
+        self._adaptive_composition_summary = summary
+        apply_composition_to_restrictive(rp, summary)
+        self.my_logger.info(
+            "Adaptive composition result: minimum_classes={} required={} "
+            "probes={} status={}".format(
+                summary.get("minimum_character_classes"),
+                summary.get("required_classes"),
+                summary.get("probes_used"),
+                summary.get("status"),
+            ))
+        return summary
 
     def identify_min_and_max_length_limitations(self, rp: dict, r_min: list, r_max: list) -> tuple:
         """Infer length boundaries with a budgeted adaptive search.
@@ -906,23 +1004,27 @@ class FullFormPolicyTester:
             rp["r_l_start"] = self.change_and_test_letter_start_password(rp["r_2_word"])
             self.rate_ctrl.delay_between_tests()
 
-            rp["r_dig_min"] = self.change_and_test_digit_minimum(rp["r_no_a_sps"])
+            # Cached admissible candidates can expire or the form can drift
+            # after structural probes.  Revalidate the exact anchor before it
+            # is used as the accepted invariant by both adaptive planners.
+            if not self.test_one_password(
+                    admissible, "phase control: revalidate accepted anchor"):
+                policy["_inconclusive"] = True
+                policy["_inconclusive_reason"] = \
+                    "accepted_anchor_revalidation_failed_before_adaptive_probes"
+                return policy
             self.rate_ctrl.delay_between_tests()
 
-            rp["r_upp_min"] = self.change_and_test_lower_upper_minimum(True, rp["r_no_a_sps"])
-            self.rate_ctrl.delay_between_tests()
-
-            rp["r_low_min"] = self.change_and_test_lower_upper_minimum(False, rp["r_no_a_sps"])
-            self.rate_ctrl.delay_between_tests()
-
-            rp["r_sps_min"] = self.change_and_test_symbol_minimum(rp["r_no_a_sps"])
-            self.rate_ctrl.delay_between_tests()
-
-            combos = self.identify_combination_requirements(rp)
-            keys = ["r_cmb13", "r_cmb23", "r_cmb33",
-                    "r_cmb14", "r_cmb24", "r_cmb34", "r_cmb44"]
-            for k, v in zip(keys, combos):
-                rp[k] = v
+            composition = self.identify_adaptive_composition(rp)
+            policy["_adaptive_composition"] = composition
+            if composition.get("status") == "inconclusive":
+                policy["_inconclusive"] = True
+                policy["_inconclusive_reason"] = (
+                    "adaptive_composition_probe_inconclusive: "
+                    + str(composition.get("stop_reason") or "unknown"))
+                return policy
+            if composition.get("status") == "partial":
+                policy["_composition_partial"] = True
 
             policy["length"][0], policy["length"][1] = \
                 self.identify_min_and_max_length_limitations(rp, [0, 32], [6, 128])
