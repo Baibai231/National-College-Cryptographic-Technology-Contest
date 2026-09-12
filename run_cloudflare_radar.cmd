@@ -4,6 +4,12 @@ setlocal EnableExtensions
 rem Always run relative to this repository, including when launched by double-click.
 cd /d "%~dp0"
 
+rem A double-click starts the script without arguments and closes the window as
+rem soon as it exits. Keep that help/error window visible for the user. Calls
+rem with arguments remain script-friendly and return normally.
+set "PAUSE_ON_EXIT=0"
+if "%~1"=="" set "PAUSE_ON_EXIT=1"
+
 set "PYTHON=%~dp0.venv\Scripts\python.exe"
 if not exist "%PYTHON%" (
     where python >nul 2>&1
@@ -12,6 +18,7 @@ if not exist "%PYTHON%" (
         echo Create the environment first:
         echo   py -m venv .venv
         echo   .venv\Scripts\python.exe -m pip install -r webapp\requirements-server.txt
+        if "%PAUSE_ON_EXIT%"=="1" pause
         exit /b 1
     )
     set "PYTHON=python"
@@ -19,6 +26,7 @@ if not exist "%PYTHON%" (
 
 if not exist "%~dp0scripts\run_radar_measurement.py" (
     echo [CryptoScope] scripts\run_radar_measurement.py was not found.
+    if "%PAUSE_ON_EXIT%"=="1" pause
     exit /b 1
 )
 
@@ -29,6 +37,10 @@ if "%~1"=="" (
     echo   run_cloudflare_radar.cmd --top 1000 --measure-policy --authorization-manifest scope.json --resume
     echo.
     "%PYTHON%" "%~dp0scripts\run_radar_measurement.py" --help
+    if "%PAUSE_ON_EXIT%"=="1" (
+        echo.
+        pause
+    )
     exit /b 0
 )
 
@@ -36,5 +48,9 @@ if "%~1"=="" (
 set "EXITCODE=%ERRORLEVEL%"
 if "%EXITCODE%"=="2" (
     echo [CryptoScope] The coverage threshold was not reached; results were kept. Use --resume to continue.
+)
+if "%PAUSE_ON_EXIT%"=="1" (
+    echo.
+    pause
 )
 exit /b %EXITCODE%

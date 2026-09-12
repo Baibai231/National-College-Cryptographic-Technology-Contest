@@ -15,7 +15,7 @@ scripts/run_radar_measurement.py
 
 `.cmd` 可直接双击或从 `cmd.exe` 启动，`.ps1` 适合 PowerShell；两者都会优先使用仓库内的
 `.venv\Scripts\python.exe`，并把后续参数原样传给编排脚本。直接双击 `.cmd`（不带参数）只显示
-帮助，不会启动批量测量。
+帮助，不会启动批量测量，并会等待按键后再关闭窗口，便于查看提示；带参数从 `cmd.exe` 调用时不会额外暂停。
 
 它会自动完成以下步骤：
 
