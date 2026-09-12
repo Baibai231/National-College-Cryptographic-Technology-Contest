@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import FrozenSet, Iterable, Mapping, Optional, Tuple
+from urllib.parse import urlparse
 
 from scripts.build_target_corpus import normalize_domain
 
@@ -19,6 +20,21 @@ _BROAD_WILDCARD_SUFFIXES = frozenset({
     "co.uk", "org.uk", "ac.uk", "gov.uk", "com.cn", "net.cn",
     "org.cn", "co.jp", "ne.jp", "com.au", "net.au", "co.in", "co.kr",
 })
+
+
+def _scope_host(value: str) -> Optional[str]:
+    """Normalize a scope host while preserving an explicit ``www`` label."""
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    parsed = urlparse(raw if "://" in raw else "//" + raw)
+    host = (parsed.hostname or "").strip(".").lower()
+    canonical = normalize_domain(host)
+    if not canonical:
+        return None
+    if host.startswith("www.") and canonical != host:
+        return "www." + canonical
+    return canonical
 
 
 @dataclass(frozen=True)
@@ -35,10 +51,11 @@ class AuthorizationScope:
         return self.digest[:16]
 
     def matches(self, host_or_url: str) -> bool:
-        host = normalize_domain(host_or_url)
+        host = _scope_host(host_or_url)
         if not host:
             return False
-        if host in self.allowed_hosts:
+        if host in self.allowed_hosts or (
+                host.startswith("www.") and host[4:] in self.allowed_hosts):
             return True
         return any(host.endswith("." + suffix)
                    for suffix in self.allowed_wildcards)
@@ -95,7 +112,7 @@ def _normalise_entries(entries: Iterable[object]) -> Tuple[FrozenSet[str], Tuple
             continue
         wildcard = raw.startswith("*.")
         candidate = raw[2:] if wildcard else raw
-        host = normalize_domain(candidate)
+        host = _scope_host(candidate)
         if not host:
             raise ValueError("authorization_manifest_invalid_host:{}".format(raw))
         if wildcard:

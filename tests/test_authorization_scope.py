@@ -14,7 +14,8 @@ class AuthorizationScopeTests(unittest.TestCase):
                             encoding="utf-8")
             scope = load_authorization_scope(str(path))
 
-        self.assertTrue(scope.matches("https://example.com/signup"))
+        self.assertTrue(scope.matches("https://www.example.com/signup"))
+        self.assertFalse(scope.matches("https://example.com/signup"))
         self.assertTrue(scope.matches("xn--fsqu00a.xn--fiqs8s"))
         self.assertFalse(scope.matches("other.example.com"))
         self.assertEqual(len(scope.scope_id), 16)
@@ -33,6 +34,15 @@ class AuthorizationScopeTests(unittest.TestCase):
         self.assertFalse(scope.matches("owned.example"))
         self.assertFalse(scope.matches("a.not-owned.example"))
         self.assertIsNotNone(scope.expires_at)
+
+    def test_wildcard_does_not_broaden_explicit_www_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "scope.txt"
+            path.write_text("*.www.owned.example\n", encoding="utf-8")
+            scope = load_authorization_scope(str(path))
+
+        self.assertTrue(scope.matches("a.www.owned.example"))
+        self.assertFalse(scope.matches("a.owned.example"))
 
     def test_manifest_rejects_expired_or_broad_scope(self):
         with tempfile.TemporaryDirectory() as directory:
