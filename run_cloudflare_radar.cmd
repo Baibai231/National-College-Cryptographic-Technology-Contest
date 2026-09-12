@@ -47,7 +47,7 @@ if "%~1"=="" (
 "%PYTHON%" "%~dp0scripts\run_radar_measurement.py" %*
 set "EXITCODE=%ERRORLEVEL%"
 if "%EXITCODE%"=="2" (
-    echo [CryptoScope] The coverage threshold was not reached; results were kept. Use --resume to continue.
+    echo [CryptoScope] Command returned exit code 2. Review the error above; with --require-complete this may mean the coverage threshold was not reached.
 )
 if "%PAUSE_ON_EXIT%"=="1" (
     echo.
