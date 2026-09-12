@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "goal_complete_sites": 1000,
+  "distinct_signup_sites": 303,
+  "complete_sites": 5,
+  "remaining_sites": 995,
+  "complete_rate_percent": 1.65,
+  "stages": {
+    "site_reachable": {
+      "count": 300,
+      "rate_percent": 99.01
+    },
+    "signup_entry_found": {
+      "count": 163,
+      "rate_percent": 53.8
+    },
+    "password_field_reached": {
+      "count": 61,
+      "rate_percent": 20.13
+    },
+    "active_measurement_run": {
+      "count": 16,
+      "rate_percent": 5.28
+    },
+    "accepted_control_observed": {
+      "count": 16,
+      "rate_percent": 5.28
+    },
+    "rejected_control_observed": {
+      "count": 16,
+      "rate_percent": 5.28
+    },
+    "length_complete": {
+      "count": 13,
+      "rate_percent": 4.29
+    },
+    "composition_complete": {
+      "count": 16,
+      "rate_percent": 5.28
+    },
+    "permissive_complete": {
+      "count": 8,
+      "rate_percent": 2.64
+    }
+  },
+  "statuses": {
+    "classified_only": 102,
+    "complete": 5,
+    "partial": 56,
+    "unreached": 140
+  },
+  "failure_reasons": {
+    "permissive_policy_incomplete": 295,
+    "length_boundary_incomplete": 290,
+    "accepted_control_missing": 287,
+    "active_policy_measurement_not_run": 287,
+    "composition_policy_incomplete": 287,
+    "rejected_control_missing": 287,
+    "password_field_not_reached": 242,
+    "signup_entry_not_confirmed": 140,
+    "infrastructure_error": 3,
+    "policy_marked_inconclusive": 1
+  },
+  "complete_hosts": [
+    "www.163.com",
+    "www.baidu.com",
+    "www.gitee.com",
+    "www.ifeng.com",
+    "you.163.com"
+  ]
+}

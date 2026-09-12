@@ -1343,14 +1343,32 @@ def _run_live_policy(url: str, method: str) -> dict:
     url, _host = _validated_classify_url(url, resolve=True)
     from main import test_single_site
     result = test_single_site(url, method=method)
-    policy = result.get("policy") or {}
-    # 实测口令政策带 "restrictive" 键；分类政策/空政策没有 → 是否真的测到了口令政策。
-    measured = isinstance(policy, dict) and "restrictive" in policy
+    policy = result.get("partial_policy") or result.get("policy") or {}
+    # 只有通过严格证据门的主动测量才展示为“完整测量”。历史实现只检查
+    # ``restrictive`` 键，会把缺少接受/拒绝对照或允许项的部分结果算成功，
+    # 从而夸大千站目标进度。
+    from utils.policy_quality import evaluate_policy_record
+    quality_input = dict(result)
+    if result.get("partial_policy"):
+        quality_input["policy"] = result["partial_policy"]
+        quality_input["method_used"] = (
+            result.get("attempted_method") or result.get("method_used"))
+    quality_input.setdefault("site", url)
+    quality_input.setdefault("entry_kind", "signup")
+    quality = evaluate_policy_record(quality_input)
+    measured = bool(quality["complete"])
     if not measured:
         response = _classification_response(url, "signup", result)
         response["method_used"] = result.get("method_used") or "classified_only"
         response["class_letter"] = result.get("class_letter")
         response["policy_measured"] = False
+        response["measurement_quality"] = quality
+        # 保留部分主动测量政策，供 UI 展示“测到了哪些、缺什么”；不能用
+        # 分类政策覆盖掉这些已经获得的证据。
+        if quality["status"] == "partial" and isinstance(policy, dict):
+            response["partial_policy"] = policy
+            response["attempted_method"] = (
+                result.get("attempted_method") or result.get("method_used"))
         return response
     return {
         "url": url,
@@ -1373,6 +1391,7 @@ def _run_live_policy(url: str, method: str) -> dict:
         "suspicious_login_form": result.get("suspicious_login_form", False),
         "policy": policy,
         "policy_measured": True,
+        "measurement_quality": quality,
         "measured_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -1527,7 +1546,20 @@ def _run_task_policy(url: str, method: str, force_retest: bool = False,
     cached = None
     if not force_retest:
         cached = _db_entry_for(host, "signup") or _db_entry_for(host, "login")
-    if cached and (cached.get("pwd_policy") or {}).get("length", [0, 0]) != [0, 0]:
+    cached_quality = None
+    if cached:
+        from utils.policy_quality import evaluate_policy_record
+        cached_quality = evaluate_policy_record({
+            "site": url,
+            "entry_kind": "signup",
+            "final_url": cached.get("final_url") or url,
+            "flow_type": cached.get("flow_type"),
+            "states": cached.get("raw_states") or cached.get("steps") or [],
+            "method_used": cached.get("pwd_method") or "inline",
+            "policy": cached.get("pwd_policy") or {},
+            "error": cached.get("error"),
+        })
+    if cached and cached_quality and cached_quality["complete"]:
         return {
             "url": url,
             "entry_kind": entry_kind,
@@ -1541,6 +1573,7 @@ def _run_task_policy(url: str, method: str, force_retest: bool = False,
             "security_observations": cached.get(
                 "security_observations", {}),
             "policy_measured": True,
+            "measurement_quality": cached_quality,
             "measured_at": cached.get("measured_at"),
         }
     result = _run_live_policy(url, method)

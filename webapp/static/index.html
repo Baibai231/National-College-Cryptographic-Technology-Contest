@@ -1172,6 +1172,28 @@ function adaptivePolicyHtml(policy) {
     </div>
   </details>`;
 }
+function declaredPolicyEvidenceHtml(policy) {
+  const dom = (policy || {})._declared_policy_evidence || {};
+  const constraints = dom.constraints || {};
+  const declared = dom.declared_policy || {};
+  const parts = [];
+  if (constraints.minlength) parts.push('HTML minlength=' + constraints.minlength);
+  if (constraints.maxlength) parts.push('HTML maxlength=' + constraints.maxlength);
+  if (constraints.pattern_present) parts.push('HTML pattern');
+  if (declared.length_min) parts.push('声明最小 ' + declared.length_min + ' 位');
+  if (declared.length_max) parts.push('声明最大 ' + declared.length_max + ' 位');
+  const labels = {upper: '大写字母', lower: '小写字母', digit: '数字',
+    symbol: '特殊符号', letter: '字母'};
+  const required = (declared.required_classes || []).map(x => labels[x] || x);
+  if (required.length) parts.push('声明需要 ' + required.join('、'));
+  const raw = declared.raw_texts || [];
+  if (!parts.length && !raw.length) return '';
+  return `<div class="alert alert-secondary py-2 mt-2 mb-0 small">
+    <div><b>DOM/页面声明证据（非完整主动实测）</b></div>
+    ${parts.length ? `<div class="mt-1">${parts.map(esc).join('；')}</div>` : ''}
+    ${raw.length ? `<div class="text-muted mt-1">${raw.map(esc).join('<br>')}</div>` : ''}
+  </div>`;
+}
 function measuredPolicyHtml(policy, methodUsed) {
   const hint = (policy || {})._hint_policy;
   const hintHtml = hint && hint.raw_texts && hint.raw_texts.length
@@ -1184,10 +1206,12 @@ function measuredPolicyHtml(policy, methodUsed) {
   if (methodUsed === 'classified_only') {
     const pt = policyText(policy);
     return '<div class="small">密码政策：' +
-      (pt && pt !== '未测量' ? pt : '无可测口令框（仅完成分类）') + '</div>' + hintHtml;
+      (pt && pt !== '未测量' ? pt : '无可测口令框（仅完成分类）') + '</div>' +
+      hintHtml + declaredPolicyEvidenceHtml(policy);
   }
   if (!policy || !Object.keys(policy).length) {
-    return '<div class="small text-muted">未测量到密码政策</div>' + hintHtml;
+    return '<div class="small text-muted">未测量到密码政策</div>' + hintHtml +
+      declaredPolicyEvidenceHtml(policy);
   }
   const length = policy.length || [];
   const r = policy.restrictive || {};
@@ -1236,7 +1260,7 @@ function measuredPolicyHtml(policy, methodUsed) {
   if (p.breached_password && p.breached_password.p_br) perm.push('拦截泄密口令');
   lines.push('<b>允许：</b>' + (perm.length ? perm.join('；') : '未检测'));
   return '<div class="small">' + lines.join('<br>') + '</div>' +
-    adaptivePolicyHtml(policy);
+    adaptivePolicyHtml(policy) + declaredPolicyEvidenceHtml(policy);
 }
 function measuredPwdHtml(loginPwd, signupPwd) {
   // 站点详情里仅在存在实测口令规则时显示（避免每站都多一行噪音）
@@ -1247,6 +1271,7 @@ function measuredPwdHtml(loginPwd, signupPwd) {
   return `<div class="alert alert-light py-2 mt-2">${row('登录', loginPwd)}${row('注册', signupPwd)}</div>`;
 }
 function isPolicyMeasured(d) {
+  if (d && d.policy_measured === false) return false;
   return !!(d && (d.policy_measured === true ||
     (d.policy && typeof d.policy === 'object' && 'restrictive' in d.policy)));
 }
@@ -1264,10 +1289,12 @@ function classificationOnlyTableHtml(d) {
 }
 function policyBoxHtml(d) {
   const method = d.method_used;
+  const evidenceMethod = d.attempted_method || method;
   const measured = isPolicyMeasured(d);
+  const displayPolicy = d.partial_policy || d.policy || {};
   if (!measured) {
     // 提示政策（inline 无法建立反馈时解析的页面自述规则）
-    const hint = (d.policy || {})._hint_policy;
+    const hint = displayPolicy._hint_policy;
     const hintHtml = hint && hint.raw_texts && hint.raw_texts.length
       ? `<div class="alert alert-warning py-2 mt-2 mb-0">
           <div><b>页面提示政策（非实测）</b></div>
@@ -1287,6 +1314,12 @@ function policyBoxHtml(d) {
         <div class="mt-2">${extraLines(d, '注册')}</div>
         <div class="small text-muted mt-1">密码政策测试未完成，仅输出注册与分类结果</div>
         ${hintHtml}
+        ${d.partial_policy ? '' : declaredPolicyEvidenceHtml(displayPolicy)}
+        ${d.partial_policy ? `<div class="alert alert-warning py-2 mt-2 mb-0">
+          <b>部分主动测量证据</b><div class="mt-1">${measuredPolicyHtml(displayPolicy, evidenceMethod)}</div>
+          ${(d.measurement_quality || {}).reasons
+            ? `<div class="small text-muted mt-1">尚缺：${d.measurement_quality.reasons.map(esc).join('、')}</div>` : ''}
+        </div>` : ''}
         ${d.error ? `<div class="small text-danger mt-1">${esc(d.error)}</div>` : ''}
       </div>`;
   }
@@ -1481,8 +1514,13 @@ async function showTaskResult(taskId) {
   if (t.kind === 'policy') {
     const p = result.policy || {};
     const len = p.length && p.length[0] !== 0 ? p.length : null;
+    const quality = result.measurement_quality || {};
+    const outcomeLabel = t.status !== 'done' ? '任务未完成'
+      : quality.complete ? '口令政策完整测量完成'
+      : quality.status === 'partial' ? '任务完成，仅获得部分政策证据'
+      : '任务完成，仅完成注册分类';
     body = `<div class="alert alert-info py-2">
-        <div><b>${esc(t.url)}</b> — ${t.status === 'done' ? '口令政策测量完成' : '未完成'}</div>
+        <div><b>${esc(t.url)}</b> — ${outcomeLabel}</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交 · ${fmtTime(t.finished_at)} 完成</div>
         ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
         ${result.from_database ? '<div class="badge bg-secondary mt-1">数据库已有结果，未重复测量</div>' : ''}

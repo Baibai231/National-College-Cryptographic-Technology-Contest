@@ -1,5 +1,8 @@
 import faker
+import os
 import random
+import re
+import secrets
 import string
 
 
@@ -80,34 +83,66 @@ def gen_random_symbol_character(target_length=1):
     return rand_str
 
 
+def _valid_email_domain(value):
+    value = str(value or "").strip().lower().rstrip(".")
+    if (not value or len(value) > 253 or "@" in value
+            or not re.fullmatch(
+                r"(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+"
+                r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?",
+                value,
+            )):
+        return None
+    return value
+
+
+def _valid_fixed_email(value):
+    value = str(value or "").strip()
+    if (not value or len(value) > 254 or value.count("@") != 1
+            or any(char.isspace() for char in value)):
+        return None
+    local, domain = value.rsplit("@", 1)
+    if not local or len(local) > 64 or not _valid_email_domain(domain):
+        return None
+    return value
+
+
+def gen_measurement_email():
+    """Return an explicitly configured, auditable measurement identity.
+
+    The default uses the reserved ``example.invalid`` domain so it cannot
+    accidentally deliver mail to a real person. A large-scale experiment can
+    opt into either a researcher-controlled fixed address or, preferably, a
+    catch-all domain that accepts unique local parts. This function only
+    generates an address; it never reads a mailbox or verifies an account.
+    """
+    fixed = _valid_fixed_email(os.getenv("SITES_MEASURE_EMAIL_ADDRESS"))
+    if fixed:
+        domain = fixed.rsplit("@", 1)[1].lower()
+        return fixed, {
+            "mode": "configured_fixed",
+            "domain": domain,
+            "unique_per_run": False,
+            "mail_delivery_configured": not domain.endswith(".invalid"),
+        }
+
+    domain = _valid_email_domain(os.getenv("SITES_MEASURE_EMAIL_DOMAIN"))
+    mode = "configured_catch_all" if domain else "reserved_non_delivery"
+    domain = domain or "example.invalid"
+    raw_prefix = os.getenv("SITES_MEASURE_EMAIL_PREFIX", "cryptoscope")
+    prefix = re.sub(r"[^a-z0-9._-]+", "-", raw_prefix.strip().lower())
+    prefix = prefix.strip(".-_")[:30] or "cryptoscope"
+    address = "{}-{}@{}".format(prefix, secrets.token_hex(8), domain)
+    return address, {
+        "mode": mode,
+        "domain": domain,
+        "unique_per_run": True,
+        "mail_delivery_configured": mode == "configured_catch_all",
+    }
+
+
 def gen_random_email():
-    """
-    generate a random email
-    :return: return the generated email
-    """
-    list_of_domains = (
-        'com',
-        # 'net',
-        # 'org',
-        # 'gov'
-    )
-    list_of_company = (
-        'gmail',
-        'foxmail',
-        'yahoo',
-        # 'weibo',
-        # 'outlook',
-        # 'aol',
-        # 'icloud',
-        # 'protonmail'
-    )
-    fake = faker.Faker()
-    first_name = fake.first_name()
-    last_name = fake.last_name()
-    company = fake.random_element(elements=list_of_company)
-    dns_org = fake.random_element(elements=list_of_domains)
-    email = f"{first_name}_{last_name}@{company}.{dns_org}".lower()
-    return email
+    """Backward-compatible address accessor for measurement code."""
+    return gen_measurement_email()[0]
 
 
 def gen_random_full_name():

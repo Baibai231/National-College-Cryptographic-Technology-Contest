@@ -18,6 +18,7 @@ import time
 import utils.util_basic as uub
 from utils.login_link_discovery import LoginLinkDiscovery
 from utils.util_test_password import TestPassword, BrowserDeadError
+from utils.password_policy_evidence import has_substantive_dom_evidence
 
 
 def _safe_print(message) -> None:
@@ -168,6 +169,19 @@ class SitePasswordPolicyTester:
                 "breached_password": {},
             }
         }
+        password_policy["_measurement_identity"] = dict(
+            getattr(self._tester, "measurement_identity", {}) or {})
+
+        # Capture declarations before the first active mutation.  This tier is
+        # kept separate from measured fields so a useful partial result does
+        # not silently become a claimed complete measurement.
+        try:
+            dom_evidence = self._tester.extract_dom_policy_evidence()
+            if (isinstance(dom_evidence, dict)
+                    and has_substantive_dom_evidence(dom_evidence)):
+                password_policy["_declared_policy_evidence"] = dom_evidence
+        except Exception:
+            pass
 
         try:
             # 先用明显非法的一字符密码建立负对照。若当前表单连该候选都不给出

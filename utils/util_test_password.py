@@ -29,6 +29,10 @@ from utils.adaptive_policy import (
     apply_composition_to_restrictive,
     build_length_candidate,
 )
+from utils.password_policy_evidence import (
+    normalize_dom_constraints,
+    parse_password_policy_texts,
+)
 
 
 def _admissible_cache_path(test_site: str, strength: str = None) -> str:
@@ -652,7 +656,7 @@ class TestPassword(object):
         }
         self.my_logger = my_logger
         self.test_site = test_site
-        self.username = uusg.gen_random_email()
+        self.username, self.measurement_identity = uusg.gen_measurement_email()
         self.admissible_password = admissible_password
         # 同页面复用标志：页面已加载并填好邮箱时为 True，
         # 后续测试只重填密码字段，避免每个密码都重新加载页面（减少请求量，缓解限速）
@@ -691,18 +695,34 @@ class TestPassword(object):
         self._adaptive_summary = {}
         self._adaptive_composition_summary = {}
         self._adaptive_conditional_summary = {}
+        self._dom_policy_evidence = normalize_dom_constraints({})
 
     def _record_probe(self, password: str, outcome: ProbeOutcome,
-                      evidence: str) -> None:
+                      evidence: str, evidence_detail=None) -> None:
         self._last_probe_outcome = outcome
         self._last_probe_evidence = evidence
         if outcome == ProbeOutcome.INCONCLUSIVE:
             self._had_inconclusive = True
-        self._probe_evidence.append({
+        record = {
             "password_length": len(password),
             "outcome": outcome.value,
             "evidence": evidence[:300],
-        })
+        }
+        # Native constraint state is useful audit evidence, but never retain
+        # the candidate password or the field value.
+        if isinstance(evidence_detail, dict):
+            allowed = {
+                key: evidence_detail[key]
+                for key in (
+                    "valid", "tooShort", "tooLong", "patternMismatch",
+                    "customError", "valueMissing", "minlength",
+                    "maxlength", "pattern_present",
+                )
+                if key in evidence_detail
+            }
+            if allowed:
+                record["native_constraint_state"] = allowed
+        self._probe_evidence.append(record)
 
     def establish_inline_control(self) -> bool:
         """用明显无效的短密码验证当前表单确实会给出密码专属拒绝反馈。"""
@@ -722,6 +742,90 @@ class TestPassword(object):
         """生成覆盖常见字符类别要求、但不依赖错误文案的基准候选。"""
         return stratified_password_candidates(length)
 
+    def _declared_admissible_lengths(self):
+        """Prioritize declared boundaries without treating them as measured."""
+        evidence = self._dom_policy_evidence
+        if not isinstance(evidence, dict):
+            return []
+        constraints = evidence.get("constraints") or {}
+        declared = evidence.get("declared_policy") or {}
+        values = [constraints.get("minlength"), declared.get("length_min")]
+        output = []
+        for value in values:
+            if (isinstance(value, int) and not isinstance(value, bool)
+                    and 4 <= value <= 128 and value not in output):
+                output.append(value)
+        return output
+
+    def _declared_stratified_candidates(self, length):
+        """Order admissible candidates using, but never trusting, declarations."""
+        evidence = self._dom_policy_evidence
+        declared = evidence.get("declared_policy") if isinstance(evidence, dict) else {}
+        declared = declared if isinstance(declared, dict) else {}
+        required = set(declared.get("required_classes") or [])
+        forbidden = set(declared.get("forbidden_classes") or [])
+        minimum_classes = declared.get("minimum_character_classes")
+        if not isinstance(minimum_classes, int):
+            minimum_classes = 0
+
+        normalized_required = set(required)
+        if "letter" in normalized_required:
+            normalized_required.add("lower")
+            normalized_required.discard("letter")
+        common_order = ["lower", "digit", "upper", "symbol"]
+        allowed = [name for name in common_order if name not in forbidden]
+        selected = [
+            name for name in common_order
+            if name in normalized_required and name in allowed
+        ]
+        desired = max(minimum_classes, len(selected))
+        if not selected and forbidden:
+            desired = max(desired, min(2, len(allowed)))
+        for name in allowed:
+            if len(selected) >= desired:
+                break
+            if name not in selected:
+                selected.append(name)
+
+        pools = {
+            "lower": "kqmxvzptnryfbw",
+            "upper": "KQMXVZPTNRYFBW",
+            "digit": "7392846150",
+            "symbol": "!#%&*?",
+        }
+
+        def build(classes):
+            classes = list(classes)
+            if not classes or len(classes) > length:
+                return None
+            prefix = "".join(pools[name][0] for name in classes)
+            filler_pool = pools[classes[0]]
+            repeats = (length // len(filler_pool)) + 2
+            return (prefix + filler_pool * repeats)[:length]
+
+        declared_candidates = []
+        if selected:
+            declared_candidates.append(build(selected))
+        if allowed and (required or forbidden or minimum_classes):
+            declared_candidates.append(build(allowed))
+
+        def violates_forbidden(candidate):
+            if not candidate:
+                return True
+            checks = {
+                "lower": any(char.islower() for char in candidate),
+                "upper": any(char.isupper() for char in candidate),
+                "digit": any(char.isdigit() for char in candidate),
+                "symbol": any(not char.isalnum() for char in candidate),
+            }
+            return any(checks.get(name, False) for name in forbidden)
+
+        candidates = declared_candidates + self._stratified_candidates(length)
+        return list(dict.fromkeys(
+            candidate for candidate in candidates
+            if candidate and not violates_forbidden(candidate)
+        ))
+
     @logger.catch
     def find_admissible_password(self):
         """
@@ -729,8 +833,11 @@ class TestPassword(object):
         :return: return admissible password
         """
         self.my_logger.info(f"Begin finding the admissible password for {self.test_site}.")
-        search_lengths = admissible_candidate_lengths(
-            Config.ADMISSIBLE_MIN_LENGTH, Config.ADMISSIBLE_MAX_LENGTH)
+        declared_lengths = self._declared_admissible_lengths()
+        search_lengths = list(dict.fromkeys(
+            declared_lengths + admissible_candidate_lengths(
+                Config.ADMISSIBLE_MIN_LENGTH, Config.ADMISSIBLE_MAX_LENGTH)
+        ))
         cache_path = _admissible_cache_path(self.test_site)
         if os.path.isfile(cache_path):
             with open(cache_path, "r", encoding="utf-8") as cache_file:
@@ -742,9 +849,26 @@ class TestPassword(object):
                     return cached
                 self.my_logger.warning("缓存密码本轮未通过，忽略缓存并重新搜索。")
         flag = False
+        tried_lengths = set()
+        # Phase 0: use DOM/declared lower bounds only to schedule the first
+        # candidates. Acceptance still requires the same active evidence.
+        for i in declared_lengths:
+            tried_lengths.add(i)
+            ret = False
+            for pwd in self._declared_stratified_candidates(i):
+                ret = self.test_one_password(
+                    pwd, "Find admissible name (declared boundary priority)")
+                if ret:
+                    flag = True
+                    self.admissible_password = pwd
+                    break
+            if ret:
+                break
+
         # Phase A：8/9/10 无符号主池（覆盖大多数常见政策）。GitHub 新政策下
         # 6-7 位密码必被拒，故直接从 8 开始。
-        for i in range(8, 11):
+        for i in (n for n in range(8, 11) if n not in tried_lengths and not flag):
+            tried_lengths.add(i)
             ret = False
             candidates = list(dict.fromkeys(
                 self.admissible_password_list[str(i)] + self._stratified_candidates(i)
@@ -786,7 +910,8 @@ class TestPassword(object):
         # Phase C：扩展到配置上限。常见边界优先，之后补齐全部长度；
         # 不再依赖网站错误文案是否恰好提到“大写/符号”。
         if not flag:
-            for i in (n for n in search_lengths if n not in (8, 9, 10)):
+            for i in (n for n in search_lengths if n not in tried_lengths):
+                tried_lengths.add(i)
                 test_pwd_list = self._stratified_candidates(i)
                 ret = False
                 for pwd in test_pwd_list:
@@ -1100,6 +1225,7 @@ class TestPassword(object):
                 # 门控表单下等待时长可缩短（密码专属错误在 blur 后 1~2s 内渲染）
                 deadline = time.time() + (3 if gated_form else 8)
                 _probe_start = time.time()
+                field_state = None
                 while time.time() < deadline:
                     try:
                         # 第一层：密码字段自身状态（validity / :invalid / aria-invalid / class）
@@ -1109,8 +1235,20 @@ class TestPassword(object):
                         field_state = driver.execute_script("""
                             var el = arguments[0];
                             var gated = arguments[1] === true;
-                            var state = {rejected: false, reason: null, gated: gated, soft: false,
-                                         pending: false};
+                            var validity = el.validity || {};
+                            var state = {
+                                rejected: false, reason: null, gated: gated,
+                                soft: false, pending: false,
+                                valid: validity.valid !== false,
+                                tooShort: !!validity.tooShort,
+                                tooLong: !!validity.tooLong,
+                                patternMismatch: !!validity.patternMismatch,
+                                customError: !!validity.customError,
+                                valueMissing: !!validity.valueMissing,
+                                minlength: el.getAttribute('minlength'),
+                                maxlength: el.getAttribute('maxlength'),
+                                pattern_present: !!el.getAttribute('pattern')
+                            };
                             function isErrorBorder(c) {
                                 var m = (c || '').match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?/);
                                 if (!m) return false;
@@ -1373,7 +1511,8 @@ class TestPassword(object):
                             f" signal{_strength_info})")
                         self._record_probe(
                             test_password, ProbeOutcome.ACCEPTED,
-                            "paired_negative_control_rejected_and_candidate_no_rejection")
+                            "paired_negative_control_rejected_and_candidate_no_rejection",
+                            field_state if isinstance(field_state, dict) else None)
                     else:
                         self.my_logger.warning(
                             f"The tested password {test_password} is inconclusive"
@@ -1381,7 +1520,8 @@ class TestPassword(object):
                             f"{_strength_info})")
                         self._record_probe(
                             test_password, ProbeOutcome.INCONCLUSIVE,
-                            "no_rejection_signal_without_validated_negative_control")
+                            "no_rejection_signal_without_validated_negative_control",
+                            field_state if isinstance(field_state, dict) else None)
                     # 退出密码框
                     try:
                         ActionChains(driver).move_to_element(
@@ -1403,14 +1543,16 @@ class TestPassword(object):
                     self._last_reject_msg = fb_msg
                     self._record_probe(
                         test_password, ProbeOutcome.REJECTED,
-                        f"{fb_type}: {fb_msg}")
+                        f"{fb_type}: {fb_msg}",
+                        field_state if isinstance(field_state, dict) else None)
                     self.my_logger.warning(
                         f"The tested password {test_password} is rejected ({fb_type}: {fb_msg})")
                 else:
                     flag = True
                     self._record_probe(
                         test_password, ProbeOutcome.ACCEPTED,
-                        f"{fb_type}: {fb_msg or 'explicit_non_rejected_state'}")
+                        f"{fb_type}: {fb_msg or 'explicit_non_rejected_state'}",
+                        field_state if isinstance(field_state, dict) else None)
                     # 强度计文本（如有）仅作为备注，不参与决策
                     _strength_info = ""
                     if _strength_note:
@@ -2508,6 +2650,79 @@ class TestPassword(object):
                 break
         return or_rule
 
+    def extract_dom_policy_evidence(self) -> dict:
+        """Capture live password-field constraints without submitting a form.
+
+        The result is deliberately labelled as DOM/declaration evidence.  It
+        can explain why an inline probe is blocked and provide useful partial
+        results, but it is not promoted to an actively measured policy.
+        """
+        empty = normalize_dom_constraints({})
+        try:
+            driver = self._driver or _get_shared_driver()
+            if self.password_frame_path and not self._ensure_frame_context(driver):
+                return empty
+            element = driver.find_element(By.XPATH, self.password_xpath)
+            snapshot = driver.execute_script("""
+                /* cryptoscope_password_constraint_snapshot */
+                var el = arguments[0], texts = [], seen = {};
+                function add(value) {
+                    var text = (value || '').replace(/\\s+/g, ' ').trim();
+                    if (!text || text.length < 4 || text.length > 500) return;
+                    var key = text.toLowerCase();
+                    if (!seen[key]) { seen[key] = true; texts.push(text); }
+                }
+                try {
+                    Array.from(el.labels || []).forEach(function(label) {
+                        add(label.innerText || label.textContent);
+                    });
+                } catch (e) {}
+                var described = (el.getAttribute('aria-describedby') || '')
+                    .split(/\\s+/).filter(Boolean);
+                described.forEach(function(id) {
+                    var node = document.getElementById(id);
+                    if (node) add(node.innerText || node.textContent);
+                });
+                add(el.getAttribute('aria-label'));
+                add(el.getAttribute('title'));
+                add(el.getAttribute('placeholder'));
+                var node = el.parentElement;
+                for (var level = 0; node && level < 4; level++, node = node.parentElement) {
+                    var own = (node.innerText || node.textContent || '').trim();
+                    if (/password|passphrase|passwd|密码|密碼|口令/i.test(own)) add(own);
+                    node.querySelectorAll('small,li,p,label,[role="alert"],.hint,.help,.requirement')
+                        .forEach(function(item) {
+                            var value = item.innerText || item.textContent || '';
+                            if (/password|passphrase|passwd|密码|密碼|口令|character|uppercase|lowercase|digit|number|symbol|字符|字母|数字|符号/i.test(value)) add(value);
+                        });
+                }
+                var validity = el.validity || {};
+                return {
+                    minlength: el.getAttribute('minlength'),
+                    maxlength: el.getAttribute('maxlength'),
+                    pattern: el.getAttribute('pattern'),
+                    required: el.required === true || el.hasAttribute('required'),
+                    autocomplete: el.getAttribute('autocomplete'),
+                    validity: {
+                        valid: validity.valid !== false,
+                        tooShort: !!validity.tooShort,
+                        tooLong: !!validity.tooLong,
+                        patternMismatch: !!validity.patternMismatch,
+                        customError: !!validity.customError,
+                        valueMissing: !!validity.valueMissing
+                    },
+                    texts: texts.slice(0, 30)
+                };
+            """, element)
+            evidence = normalize_dom_constraints(
+                snapshot if isinstance(snapshot, dict) else {})
+            self._dom_policy_evidence = evidence
+            return evidence
+        except Exception as exc:
+            self.my_logger.debug(f"DOM 口令政策证据提取失败: {exc}")
+            self._dom_policy_evidence = empty
+            return empty
+
     def extract_hint_policy(self) -> dict:
         """解析页面上的密码规则提示文本，提取政策线索。
 
@@ -2522,9 +2737,7 @@ class TestPassword(object):
         :return: {"length_min": int|None, "length_max": int|None,
                   "charset_hints": [str], "raw_texts": [str]}
         """
-        import re as _re
-        hint = {"length_min": None, "length_max": None,
-                "charset_hints": [], "raw_texts": []}
+        hint = parse_password_policy_texts([])
         try:
             driver = self._driver or _get_shared_driver()
             # 填短密码触发提示闪现（gamersky 等站提示只在 blur 后出现）
@@ -2621,39 +2834,7 @@ class TestPassword(object):
                         pass
             if not texts:
                 return hint
-            for t in texts:
-                # 过滤纯导航/链接文本（"密码登录/忘记密码/密码重置"无规则信息）
-                if not _re.search(
-                        r'长度|位数|字符|至少|必须|不能|不允许|禁止|至少|不少于|'
-                        r'不得|6-20|\d+\s*[-~至到]\s*\d+|个字符|字母|数字|符号|'
-                        r'大小写|开头|下划线|组合', t):
-                    continue
-                hint["raw_texts"].append(t[:120])
-                # 长度区间：6-20位 / 8~16个字符 / 至少6位 / 最长20位
-                m = _re.search(r'(\d+)\s*[-~至到]\s*(\d+)\s*[位个]', t)
-                if m:
-                    hint["length_min"] = int(m.group(1))
-                    hint["length_max"] = int(m.group(2))
-                    continue
-                m = _re.search(r'至少\s*(\d+)\s*[位个]', t)
-                if m and hint["length_min"] is None:
-                    hint["length_min"] = int(m.group(1))
-                    continue
-                m = _re.search(r'最长\s*(\d+)\s*[位个]|不能超过\s*(\d+)', t)
-                if m and hint["length_max"] is None:
-                    hint["length_max"] = int(m.group(1) or m.group(2))
-                    continue
-                # 字符类要求
-                for kw, name in (
-                    ("数字", "digit"), ("大写", "upper"), ("小写", "lower"),
-                    ("字母", "letter"), ("符号", "symbol"), ("特殊", "symbol"),
-                    ("数字与字母", "digit+letter"), ("字母数字", "digit+letter"),
-                    ("大小写", "upper+lower"), ("中文", "no_chinese"),
-                    ("不能带有中文", "no_chinese"),
-                ):
-                    if kw in t:
-                        if name not in hint["charset_hints"]:
-                            hint["charset_hints"].append(name)
+            hint = parse_password_policy_texts(texts)
             self.my_logger.info(f"提示政策解析: {hint}")
         except Exception as exc:
             self.my_logger.debug(f"提示政策解析失败: {exc}")

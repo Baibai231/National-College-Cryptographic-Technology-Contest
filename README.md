@@ -65,6 +65,9 @@ GitHub 等认证方式的 `confirmed`、`blocked` 或 `observed` 状态，不再
 - 允许的特殊字符、长短口令、常见序列和泄露口令候选。
 - “较短口令需多类字符，较长口令可放宽”等 OR 组合规则。
 - 页面声明的 `maxlength` 和口令提示文案，作为独立证据而非无条件真值。
+- 从真实口令框提取 HTML5 `minlength`、`maxlength`、`pattern`、原生
+  `validity` 原因、ARIA 说明和中英文规则文本；它们单列为 DOM/声明证据，
+  即使主动探针被身份步骤门控，也不会丢掉已经观察到的公开规则。
 - inline 与 full-form 共享 `adaptive-length-v1` 自适应长度规划器：以已确认可接受
   口令为锚点，通过二分决策选择下一次最有信息量的长度，不再线性遍历整个区间。
 - 共享 `adaptive-composition-v1` 字符组成规划器：在相同长度下按字符类子集格逐层
@@ -125,6 +128,9 @@ GitHub 等认证方式的 `confirmed`、`blocked` 或 `observed` 状态，不再
 - 注册、登录两侧独立测量，并支持仅分类或同时测量口令策略。
 - JSON、JSONL、分站日志和阶段性 `.partial.json` 输出。
 - `--resume` 断点续跑、`--only` 选择子集、`--site-timeout` 进程级超时。
+- `--resume-mode complete` 只跳过真正通过完整证据门的结果，部分/失败记录可继续迭代；
+  `--shard-count/--shard-index` 可确定性分片，`--max-sites` 和 `--min-priority`
+  控制每轮规模，运行中定期输出质量漏斗。
 - 只对浏览器崩溃、基础设施、导航、超时等瞬态失败重试。
 - `--retry-unknown` 多轮复测并按有效证据多数结果稳定化。
 - 结果可重建为 SQLite 查询库，并生成逐站 Markdown 报告。
@@ -150,11 +156,17 @@ FastAPI + 静态前端提供：
 
 - 可以：浏览公开页面、点击明确的登录/注册/tab/下一步入口、处理隐私保护型 Cookie
   横幅、只向口令框填写测试候选、读取页面内联反馈。
-- 不可以：填写真实邮箱或手机号、发送验证码、扫码、完成第三方授权、绕过 CAPTCHA、
-  登录真实账号或创建账号。
+- 不可以：使用第三方或随机伪造的真实邮箱、填写手机号、发送验证码、扫码、完成第三方
+  授权、绕过 CAPTCHA、登录真实账号或创建账号。
 - 无可靠内联反馈时停止为 `inline_unsupported` 或 `inconclusive`，不自动升级为提交表单。
 - `full` 模式可能填写身份字段并提交，默认关闭；只有调用者显式选择 `full`，同时设置
   环境开关和精确主机白名单后才能运行。
+
+默认测量身份为不可投递的 `*@example.invalid`。经过授权的正式实验可以设置
+`SITES_MEASURE_EMAIL_DOMAIN` 为研究者自有的 catch-all 域，使每个测量进程获得唯一邮箱；
+也可设置 `SITES_MEASURE_EMAIL_ADDRESS` 使用一个固定地址，但不推荐用于大规模测量。结果只
+记录身份模式和域，不保存完整地址；工具不会读取邮箱或输入验证码。配置示例和边界见
+[千站口令策略完整测量路线](docs/LARGE_SCALE_POLICY_MEASUREMENT.md#测量邮箱配置)。
 
 不要根据认证前结果推断服务端口令哈希算法、登录后 Session 安全、MFA 强制执行或完整
 零信任架构。所有评分必须与 `coverage`、`evidence` 和未知项一起解读。
@@ -236,6 +248,48 @@ python scripts/run_measurement.py \
   --measure-policy \
   --resume
 ```
+
+### 大规模目标语料、预筛与严格验收
+
+Alexa Top Sites 已停止服务。当前流水线使用可复现的 Tranco 快照，并可合并中文站点补充
+清单。先建立大候选池，再用廉价 HTTP 预筛筛出值得启动浏览器的站点：
+
+```bash
+python scripts/build_target_corpus.py \
+  --top 100000 \
+  --output .cache/target-corpora/targets.txt \
+  --metadata .cache/target-corpora/targets.json
+
+python scripts/preflight_targets.py \
+  --metadata .cache/target-corpora/targets.json \
+  --output .cache/target-corpora/preflight.jsonl \
+  --candidates .cache/target-corpora/candidates.jsonl \
+  --workers 32 --max-pages 3 --resume
+
+python scripts/run_measurement.py \
+  --preflight-candidates .cache/target-corpora/candidates.jsonl \
+  --kinds signup --measure-policy \
+  --output reports/policy_1000.jsonl \
+  --workers 2 --site-timeout 900 \
+  --resume --resume-mode complete --checkpoint-every 25
+
+python scripts/report_policy_coverage.py \
+  reports/policy_1000.jsonl \
+  --json reports/policy_1000_coverage.json \
+  --markdown reports/policy_1000_coverage.md \
+  --require-complete 1000
+```
+
+预筛最多读取“主页 + 观察到的登录/账户/注册入口”，不填写也不提交；登录页常是注册入口
+的上一层，因此比只猜 `/signup` 覆盖更广。浏览器阶段会重新验证最多 8 个同站候选，
+不会信任预筛 URL，也不会把跨站链接作为目标。
+
+“完整站点”不是“页面可访问”或“看到了口令框”。它必须同时具备：注册口令框可达、
+主动测量方法、接受与拒绝对照、完整的长度边界结论、完整限制项、完整允许项、无基础设施错误、
+无不确定/失格标记。最大长度可以是精确值，或由结构化探针证明确认到协议上界 128 位
+仍未观察到上限；裸 `null` 仍是不完整。历史 303 站数据按此门槛只有 5 站完整，因此项目当前仍处于扩大覆盖
+阶段，不能把 303 站分类结果宣称为 303 站完整口令政策。详细设计、失败漏斗和复现实验见
+[docs/LARGE_SCALE_POLICY_MEASUREMENT.md](docs/LARGE_SCALE_POLICY_MEASUREMENT.md)。
 
 ### 显式启用 full-form
 
@@ -322,6 +376,12 @@ curl -X POST http://127.0.0.1:8000/api/classify \
   "states": [],
   "evidence": [],
   "policy": {},
+  "measurement_quality": {
+    "status": "partial",
+    "complete": false,
+    "stages": {},
+    "reasons": []
+  },
   "security_observations": {
     "collection_mode": "passive",
     "analyzers": {},
@@ -337,6 +397,9 @@ curl -X POST http://127.0.0.1:8000/api/classify \
 - `confidence` 和 `evidence`：结论依据是否充分。
 - `states`：每一步实际看到了哪些字段、方式和阻断。
 - `policy._inconclusive`：口令策略是否因为反馈不足或状态漂移而无法确认。
+- `measurement_quality`：是否满足严格完整门槛、当前到达哪一层、还缺哪些证据。
+- `policy._declared_policy_evidence`：HTML/DOM/页面自述规则；是有来源的部分证据，
+  但不等于主动接受/拒绝实测。
 - `security_observations.assessment.coverage`：评分覆盖了多少可验证证据。
 - `not_observed`：表示本次安全可达范围内没有证据，不代表能力不存在。
 
@@ -346,7 +409,7 @@ curl -X POST http://127.0.0.1:8000/api/classify \
 
 | 提交 | 修复或新增内容 |
 |---|---|
-| 当前开发版 | 新增自适应长度、字符组成与分段 OR 政策推断；修复 Python 3.12 浏览器驱动兼容；新增 Windows 本地一键展示；历史实测口令策略正确映射到 Dashboard；新增认证语义状态/动作边去重；分类现场口令字段直接交给策略测量器；合法口令搜索覆盖扩展至 64 位且常见边界优先 |
+| 当前开发版 | 新增 10 万站可复现目标语料、主页→登录/账户→注册的多层预筛、多个同站候选交接、DOM/英文与中文声明证据、严格完整性漏斗、质量续跑、确定性分片和可审计 Dashboard 状态；保留自适应长度、字符组成与分段 OR 政策推断 |
 | `a50c8e3` | 修复泄露口令结论反向、长度/组合交叉污染、无证据即接受等问题；加固公开测量接口、队列、CORS、DNS/SSRF 和任务生命周期 |
 | `9b46253` | 修复主文档字段导致 iframe 提前返回、主页面阻断掩盖 frame 语义、SPA/Shadow 状态漏检和确定性失败无意义重试 |
 | `4b798a7` | 新增证据约束的 CPAM 成熟度阶梯，防止跨级和服务端能力过度推断 |
@@ -399,7 +462,7 @@ python -m compileall -q main.py signup_flow_classifier security_observers
 
 当前测试覆盖流程分类、入口识别、跨 iframe/Shadow DOM、SPA 指纹、口令证据状态、
 自适应长度/字符组成推断、安全观察器、评分、API 权限、任务队列、Cookie 横幅和
-前端展示等关键路径；当前完整回归测试共 266 项。
+前端展示等关键路径；测试数量以当前 `unittest discover` 输出为准。
 
 ## 已知限制
 

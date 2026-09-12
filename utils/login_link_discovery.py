@@ -307,6 +307,35 @@ class LoginLinkDiscovery:
         'zarejestruj', 'Создать', 'inscr', 'registr',
     ]
 
+    def open_signup_hint(self, homepage_url: str,
+                         candidate_url: str) -> Optional[str]:
+        """Validate a preflight-discovered signup URL in the real browser.
+
+        A hint is never trusted merely because the HTTP preflight ranked it.
+        It must remain on the same registered site and expose a visible auth
+        input or an explicit signup URL before it can skip homepage discovery.
+        """
+        if not candidate_url or not self._is_same_site(
+                homepage_url, candidate_url):
+            logger.warning("忽略跨站或空的注册页预筛提示")
+            return None
+        try:
+            self.inject()
+            self.driver.get(candidate_url)
+            self._wait_for_page_ready(timeout=12)
+            self._wait_for_spa_render(timeout=5)
+            current = self.driver.current_url
+            if (self._is_same_site(homepage_url, current)
+                    and self._page_has_auth_signal()):
+                self._entry_clicked = True
+                logger.info("预筛注册页提示验证成功: {}".format(current))
+                return current
+            logger.info("预筛注册页提示没有可见认证信号，回退首页发现")
+        except Exception as exc:
+            logger.debug("预筛注册页提示验证失败: {}:{}".format(
+                type(exc).__name__, str(exc)[:120]))
+        return None
+
     def navigate_to_signup(self, homepage_url: str) -> Optional[str]:
         """发现注册页面 URL
 
@@ -830,26 +859,27 @@ class LoginLinkDiscovery:
                 logger.debug("登录入口兜底: 页面无可见登录入口，跳过")
 
         # ================================================================
-        # 第 2 层：尝试常见注册 URL 模式
+        # 第 2 层：真实链接 + 常见路径的统一候选排序
         # ================================================================
-        logger.info("尝试 URL 模式回退...")
-        from urllib.parse import urljoin
-        import urllib3
-        urllib3.disable_warnings()
+        # 旧版只按固定顺序浏览 /signup、/register、/join 三个路径，既漏掉
+        # /users/sign_up、/account/create 等常见框架路径，也没有利用首页已经
+        # 暴露的 accounts/auth/passport 子域链接。现在先进行纯计算排序，
+        # 再用有限浏览器预算验证最高置信候选；仍然只允许同一注册域 GET。
+        logger.info("尝试排序后的注册 URL 候选...")
+        from utils.signup_candidates import rank_signup_candidates
 
-        tried_urls = set()
-        # 模式探测预算：只试前几个最常见模式（/signup、/register、/join）。
-        # 全部 14 个模式都开真实浏览器会浪费几分钟（贴吧/脉脉等不支持
-        # 常见模式的站点实测）；前缀顺序即按使用频率排列。
-        pattern_budget = 3
-        for pattern in self._SIGNUP_URL_PATTERNS:
-            if pattern_budget <= 0:
-                break
-            candidate = urljoin(base + '/', pattern)  # urljoin 自动处理路径
-            if candidate in tried_urls:
-                continue
-            tried_urls.add(candidate)
-            pattern_budget -= 1
+        ranked_candidates = rank_signup_candidates(
+            homepage_url,
+            links or [],
+            common_paths=self._SIGNUP_URL_PATTERNS + [
+                "/account/register", "/account/signup", "/account/create",
+                "/accounts/register", "/users/sign_up", "/user/register",
+                "/member/register", "/auth/register", "/auth/signup",
+            ],
+            limit=8,
+        )
+        for ranked in ranked_candidates:
+            candidate = ranked["url"]
 
             try:
                 self.driver.get(candidate)
@@ -858,18 +888,22 @@ class LoginLinkDiscovery:
                 # 快速检查：页面是否有密码字段
                 pwds = self.find_password_fields()
                 if pwds:
-                    logger.info(f"URL 模式命中: -> {candidate}")
+                    logger.info(
+                        "URL 候选命中密码字段: score={} source={} -> {}".format(
+                            ranked["score"], ranked["source"], candidate))
                     self._wait_for_spa_render()
                     return candidate
 
                 # 检查是否有邮箱输入框
                 emails = self.detect_email_inputs()
                 if emails:
-                    logger.info(f"URL 模式命中 (仅邮箱): -> {candidate}")
+                    logger.info(
+                        "URL 候选命中邮箱字段: score={} source={} -> {}".format(
+                            ranked["score"], ranked["source"], candidate))
                     self._wait_for_spa_render()
                     return candidate
             except Exception as e:
-                logger.debug(f"URL 模式 {candidate} 失败: {e}")
+                logger.debug(f"URL 候选 {candidate} 失败: {e}")
                 continue
 
         # ================================================================
@@ -1443,12 +1477,8 @@ class LoginLinkDiscovery:
     def _registered_domain(url: str) -> str:
         """返回 URL 的注册域（eTLD+1），如 passport.163.com → 163.com。"""
         try:
-            from urllib.parse import urlparse
-            host = urlparse(url).hostname or ""
-            parts = host.split(".")
-            if len(parts) >= 2:
-                return ".".join(parts[-2:])
-            return host
+            from utils.signup_candidates import registered_domain
+            return registered_domain(url)
         except Exception:
             return ""
 

@@ -421,8 +421,17 @@ def _policy_is_usable(policy) -> bool:
 
 def _fallback_to_classification(result: dict, classification: dict, note: str = "") -> dict:
     """测量失败时，用已经完成的注册流程分类结果兜底输出。"""
+    attempted_method = result.get("method_used")
+    partial = result.get("policy")
+    classification_policy = (
+        classification.get("policy", {}) if classification else {})
+    if (attempted_method in {"inline", "full", "partial_browser_dead"}
+            and isinstance(partial, dict) and partial
+            and partial != classification_policy):
+        result["partial_policy"] = partial
+        result["attempted_method"] = attempted_method
     result["method_used"] = "classified_only"
-    result["policy"] = classification.get("policy", {}) if classification else {}
+    result["policy"] = classification_policy
     result["error"] = None
     if note and not result.get("note"):
         result["note"] = note
@@ -460,12 +469,14 @@ def _refresh_result_security_assessment(result: dict) -> None:
 # 单站点测试
 # ================================================================
 
-def test_single_site(site_url: str, method: str = "auto") -> dict:
+def test_single_site(site_url: str, method: str = "auto",
+                     signup_url_hint="") -> dict:
     """测试单个站点（每个线程创建独立 WebDriver）
 
     Args:
         site_url: 目标网站 URL
         method: "auto" | "inline" | "full"
+        signup_url_hint: 一个或多个只读预筛发现的同站注册页候选；浏览器会逐个验证
 
     Returns:
         {"url": str, "policy": dict, "error": str|None, "method_used": str,
@@ -486,7 +497,23 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
         # Phase 1: 发现注册页面
         # ================================================================
         discovery = LoginLinkDiscovery(driver)
-        signup_url = discovery.navigate_to_signup(site_url)
+        signup_url = None
+        if isinstance(signup_url_hint, str):
+            signup_url_hints = [signup_url_hint] if signup_url_hint else []
+        else:
+            signup_url_hints = [
+                str(value) for value in (signup_url_hint or []) if value]
+        attempted_hints = []
+        for hint in signup_url_hints[:8]:
+            attempted_hints.append(hint)
+            signup_url = discovery.open_signup_hint(site_url, hint)
+            if signup_url:
+                break
+        if attempted_hints:
+            result["signup_url_hints_attempted"] = len(attempted_hints)
+            result["signup_url_hint_used"] = bool(signup_url)
+        if not signup_url:
+            signup_url = discovery.navigate_to_signup(site_url)
 
         engine = None
 
@@ -952,6 +979,8 @@ def save_result(site_url: str, result: dict):
         "methods": result.get("methods", []),
         "error": result.get("error"),
         "policy": result.get("policy", {}),
+        "partial_policy": result.get("partial_policy", {}),
+        "attempted_method": result.get("attempted_method", ""),
         "classification_policy": result.get("classification_policy", {}),
         "security_observations": result.get("security_observations", {}),
         "states": result.get("states", []),
@@ -959,6 +988,15 @@ def save_result(site_url: str, result: dict):
         "final_url": result.get("final_url", ""),
         "note": result.get("note", ""),
     }
+    try:
+        from utils.policy_quality import evaluate_policy_record
+        quality_input = dict(payload)
+        quality_input.update({
+            "site": site_url, "entry_kind": "signup",
+        })
+        payload["measurement_quality"] = evaluate_policy_record(quality_input)
+    except Exception:
+        pass
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
     # 删除增量快照：成功收尾后不留陈旧 .partial.json（避免污染后续读取）

@@ -7,6 +7,33 @@ import main
 
 
 class MainFallbackTests(unittest.TestCase):
+    def test_preflight_hints_are_tried_in_order_before_full_discovery(self):
+        driver = mock.MagicMock()
+        driver.current_url = "https://example.com/signup"
+        discovery = mock.MagicMock()
+        discovery.open_signup_hint.side_effect = [
+            None, "https://example.com/signup"]
+        discovery._entry_clicked = True
+        engine = mock.MagicMock()
+        engine.classify.return_value = {
+            "flow_type": "no_web_signup", "confidence": "high",
+            "stop_reason": "fixture_stop", "primary_method": None,
+            "ui_type": "standalone_page", "methods": [], "states": [],
+            "evidence": [], "final_url": "https://example.com/signup",
+            "policy": {}, "should_proceed": False,
+        }
+        with mock.patch.object(main, "_get_new_driver", return_value=driver), \
+                mock.patch.object(main, "LoginLinkDiscovery", return_value=discovery), \
+                mock.patch.object(main, "SignupFlowClassifierEngine", return_value=engine):
+            result = main.test_single_site(
+                "https://example.com", "auto", signup_url_hint=[
+                    "https://example.com/bad", "https://example.com/signup"])
+
+        self.assertEqual(discovery.open_signup_hint.call_count, 2)
+        discovery.navigate_to_signup.assert_not_called()
+        self.assertTrue(result["signup_url_hint_used"])
+        self.assertEqual(result["signup_url_hints_attempted"], 2)
+
     def test_policy_is_usable_rejects_incomplete_measurements(self):
         self.assertFalse(main._policy_is_usable({}))
         self.assertFalse(main._policy_is_usable(None))
@@ -80,6 +107,21 @@ class MainFallbackTests(unittest.TestCase):
         self.assertEqual(result["policy"], classification["policy"])
         self.assertEqual(result["note"], "回退说明")
 
+    def test_fallback_preserves_partial_measurement_evidence(self):
+        partial = {
+            "length": [0, 0], "_inconclusive": True,
+            "_declared_policy_evidence": {
+                "constraints": {"minlength": 12}},
+        }
+        result = {"method_used": "inline", "policy": partial, "error": None}
+        classification = {"policy": {"schema_version": "1.0"}}
+
+        main._fallback_to_classification(result, classification, "fallback")
+
+        self.assertEqual(result["policy"], classification["policy"])
+        self.assertEqual(result["partial_policy"], partial)
+        self.assertEqual(result["attempted_method"], "inline")
+
     def test_save_result_preserves_classification_evidence(self):
         result = {
             "method_used": "classified_only",
@@ -111,6 +153,7 @@ class MainFallbackTests(unittest.TestCase):
                 self.assertEqual(saved["final_url"], result["final_url"])
                 self.assertEqual(saved["ui_type"], "standalone_page")
                 self.assertEqual(saved["note"], "分类结果")
+                self.assertIn("measurement_quality", saved)
             finally:
                 import shutil
                 shutil.rmtree(Path(main._PROJECT_ROOT).parent / "__tmp_fallback_test__", ignore_errors=True)
