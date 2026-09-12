@@ -43,6 +43,15 @@ Roomi、Li 等人的大规模研究采用“百万站点候选池 → 分层发�
 4. **严格验收**：`report_policy_coverage.py --require-complete 1000` 只统计满足全部证据门的
    不同主机，并输出分层漏斗及失败原因；返回非零值表示尚未达标。
 
+### Cloudflare Radar 目标源
+
+`scripts/run_radar_measurement.py` 和根目录 `run_cloudflare_radar.ps1` 将 Cloudflare Radar
+排行榜接入上述四阶段：Top 100 使用有序 `radar/ranking/top`，Top 200 及以上自动使用官方
+`radar/datasets/ranking_top_<bucket>` 全球 POPULAR 数据集，并记录接口、榜单类型、抓取时间
+和响应 SHA-256。由于大 bucket 按官方说明是无序集合，脚本只记录 `bucket_position`，不会
+把它当作流行度排名；地区参数仅适用于 Top 100。榜单快照可通过 `--snapshot` 离线复用，保证
+重跑时目标集合不随榜单日更悄然变化。
+
 ## 测量邮箱配置
 
 默认地址使用不可投递的 `example.invalid` 保留域，避免旧版随机生成的 Gmail/Foxmail

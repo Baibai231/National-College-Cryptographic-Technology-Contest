@@ -287,6 +287,50 @@ python scripts/report_policy_coverage.py \
   --require-complete 1000
 ```
 
+### Cloudflare Radar 一键运行
+
+Cloudflare Radar 的有序排行榜接口最多返回 Top 100；更大的全球榜单使用官方
+`ranking_top_200`、`ranking_top_1000` 等数据集流。下面的启动器会自动选择合适的接口，
+保存榜单快照、目标元数据、预筛结果和覆盖率报告。接口细节以
+[Cloudflare Domains ranking 文档](https://developers.cloudflare.com/radar/investigate/domain-ranking-datasets/)
+为准。
+
+先设置 Cloudflare API Token（只放在环境变量中）：
+
+```powershell
+$env:CLOUDFLARE_API_TOKEN = "<你的 Radar API Token>"
+```
+
+只获取榜单并预筛（默认不会启动浏览器口令探针）：
+
+```powershell
+.\run_cloudflare_radar.ps1 `
+  --top 1000 `
+  --output-dir .cache\target-corpora\cloudflare-radar `
+  --preflight-workers 16 `
+  --resume
+```
+
+在明确授权的目标范围内继续测量口令策略：
+
+```powershell
+.\run_cloudflare_radar.ps1 `
+  --top 1000 `
+  --output-dir .cache\target-corpora\cloudflare-radar `
+  --measure-policy `
+  --authorization-manifest scope.json `
+  --browser-workers 2 `
+  --site-timeout 900 `
+  --require-complete 1000 `
+  --resume
+```
+
+`--top <= 100` 使用有序全球/地区榜单（可加 `--location CN`）；`--top > 100` 使用全球
+`POPULAR` 无序 bucket，因此结果中的 `rank` 保持为 `null`，不会把文件位置冒充流行度排名。
+脚本会在 `output-dir` 下生成 `radar_snapshot.json`、`targets.json`、`preflight.jsonl`、
+`candidates.jsonl`、`policy.jsonl` 和 `coverage.*`，可以用 `--snapshot` 离线复用此前快照；
+若使用 `--skip-preflight`，必须同时指定同一份 `--snapshot`，避免榜单日更后错配旧候选。
+
 授权范围文件示例（由站点所有者或研究负责人提供，不要把邮箱、密码或令牌放入其中）：
 
 ```json

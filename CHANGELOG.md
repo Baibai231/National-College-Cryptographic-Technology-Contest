@@ -42,6 +42,11 @@
       加载造成的站点压力并提高大规模结果可解释性。
 - [x] 覆盖率汇总新增相对千站目标的 `goal_progress_percent`，报告同时显示“目标进度”和
       “当前批次完整率”，避免单站批次 100% 被误读为已完成千站验收。
+- [x] 新增 `scripts/run_radar_measurement.py` 和 `run_cloudflare_radar.ps1`：按 Cloudflare
+      Radar 官方接口自动选择 Top 100 有序榜单或更大无序 bucket，保存带响应指纹的快照，
+      一键衔接预筛、授权策略测量和覆盖率报告。
+- [x] `--skip-preflight` 强制要求配合 `--snapshot`，防止榜单日更后把新目标元数据与旧候选
+      JSONL 混用。
 
 ### 66. 千站严格验收、分层预筛与声明证据（2026-09-12）
 
