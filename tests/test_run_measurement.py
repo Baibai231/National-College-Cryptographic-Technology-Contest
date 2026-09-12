@@ -1,15 +1,19 @@
 import json
 import os
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from scripts.run_measurement import (
     _browser_session_lost,
+    main as run_measurement_main,
     _partial_checkpoint_path,
     _recover_timeout_checkpoint,
     _resume_completed_keys,
+    _stop_worker_process_tree,
     _task_shard,
 )
 
@@ -37,6 +41,27 @@ class RunMeasurementSchedulingTests(unittest.TestCase):
             "error": "Message: no such window: target window already closed"
         }))
         self.assertFalse(_browser_session_lost({"error": "dns failed"}))
+
+    def test_timeout_cleanup_stops_worker_and_browser_children(self):
+        worker = mock.MagicMock()
+        worker.pid = 1234
+        worker.is_alive.return_value = False
+        child = mock.MagicMock()
+        child.is_running.return_value = True
+        process_factory = mock.MagicMock()
+        fake_psutil = types.SimpleNamespace(
+            Process=process_factory,
+            NoSuchProcess=type("NoSuchProcess", (Exception,), {}),
+            AccessDenied=type("AccessDenied", (Exception,), {}),
+        )
+        process_factory.return_value.children.return_value = [child]
+        with mock.patch.dict(sys.modules, {"psutil": fake_psutil}):
+            _stop_worker_process_tree(worker, join_timeout=0.01)
+
+        process_factory.assert_called_once_with(1234)
+        child.terminate.assert_called_once_with()
+        child.kill.assert_called_once_with()
+        worker.terminate.assert_called_once_with()
 
     def test_timeout_recovers_only_fresh_probe_checkpoint(self):
         with tempfile.TemporaryDirectory() as directory, \
@@ -108,6 +133,40 @@ class RunMeasurementSchedulingTests(unittest.TestCase):
 
         self.assertEqual(complete, {("https://a.test", "signup")})
         self.assertEqual(len(any_record), 2)
+
+    def test_authorization_manifest_filters_batch_and_stamps_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            input_path = Path(directory) / "sites.txt"
+            input_path.write_text(
+                "https://example.com/\nhttps://other.example/\n",
+                encoding="utf-8")
+            scope_path = Path(directory) / "scope.txt"
+            scope_path.write_text("example.com\n", encoding="utf-8")
+            output_path = Path(directory) / "records.jsonl"
+            fake = {
+                "site": "https://example.com/",
+                "hostname": "example.com",
+                "entry_kind": "signup",
+                "flow_type": "no_web_signup",
+                "measurement_quality": {"status": "classified"},
+            }
+            argv = [
+                "run_measurement.py", "--input", str(input_path),
+                "--authorization-manifest", str(scope_path),
+                "--kinds", "signup", "--output", str(output_path),
+                "--workers", "1", "--checkpoint-every", "0",
+            ]
+            with mock.patch.object(sys, "argv", argv), mock.patch(
+                    "scripts.run_measurement.classify_one",
+                    return_value=fake):
+                run_measurement_main()
+
+            records = [json.loads(line) for line in output_path.read_text(
+                encoding="utf-8").splitlines() if line.strip()]
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["hostname"], "example.com")
+        self.assertEqual(len(records[0]["authorization_scope_id"]), 16)
 
 
 if __name__ == "__main__":

@@ -133,6 +133,9 @@ GitHub 等认证方式的 `confirmed`、`blocked` 或 `observed` 状态，不再
   控制每轮规模，运行中定期输出质量漏斗。
 - 只对浏览器崩溃、基础设施、导航、超时等瞬态失败重试。
 - `--retry-unknown` 多轮复测并按有效证据多数结果稳定化。
+- `--authorization-manifest` 可加载所有者提供的主机范围（文本每行一个主机名，或带
+  `authorized_hosts`/`expires_at` 的 JSON）；启用后只测范围内站点，并在每条结果写入
+  脱敏范围指纹，方便审计授权边界。
 - 结果可重建为 SQLite 查询库，并生成逐站 Markdown 报告。
 - 支持结构化人工核验、程序与人工结果对照、待审核队列和历史版本。
 
@@ -270,6 +273,7 @@ python scripts/preflight_targets.py \
 python scripts/run_measurement.py \
   --preflight-candidates .cache/target-corpora/candidates.jsonl \
   --kinds signup --measure-policy \
+  --authorization-manifest scope.json \
   --output reports/policy_1000.jsonl \
   --workers 2 --site-timeout 900 --headless \
   --resume --resume-mode complete --checkpoint-every 25
@@ -280,6 +284,18 @@ python scripts/report_policy_coverage.py \
   --markdown reports/policy_1000_coverage.md \
   --require-complete 1000
 ```
+
+授权范围文件示例（由站点所有者或研究负责人提供，不要把邮箱、密码或令牌放入其中）：
+
+```json
+{
+  "authorized_hosts": ["example.com", "*.owned.example"],
+  "expires_at": "2026-12-31T23:59:59Z"
+}
+```
+
+也可以使用 UTF-8 文本，每行一个精确主机名；`*.owned.example` 只匹配其子域名，
+不会匹配裸域。范围过期、为空或包含过宽通配符时，批量命令会在启动前拒绝执行。
 
 预筛最多读取“主页 + 观察到的登录/账户/注册入口”，不填写也不提交；登录页常是注册入口
 的上一层，因此比只猜 `/signup` 覆盖更广。浏览器阶段会重新验证最多 8 个同站候选，

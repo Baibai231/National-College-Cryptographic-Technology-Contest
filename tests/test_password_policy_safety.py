@@ -91,6 +91,10 @@ class PasswordPolicySafetyTests(unittest.TestCase):
         state = {"valid": True, "rejected": False, "soft": False, "pending": False}
         self.assertFalse(clean_state_quiet_enough(state, 8.0, False, 3.0))
 
+    def test_clean_candidate_requires_explicit_valid_state(self):
+        state = {"rejected": False, "soft": False, "pending": False}
+        self.assertFalse(clean_state_quiet_enough(state, 3.1, True, 3.0))
+
     def test_pending_or_soft_candidate_waits_for_resolution(self):
         self.assertFalse(clean_state_quiet_enough(
             {"valid": True, "pending": True}, 4.0, True, 3.0))

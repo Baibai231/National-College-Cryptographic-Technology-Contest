@@ -11,3 +11,9 @@ Faker>=18
 requests>=2.31
 tldextract>=3.2
 urllib3>=1.26
+# Required by the Selenium driver wrapper and the batch watchdog.  Keeping
+# these explicit makes a fresh worker environment behave like the repository
+# development environment instead of failing only when the first browser is
+# launched.
+psutil>=5.9
+pyvirtualdisplay>=3.0

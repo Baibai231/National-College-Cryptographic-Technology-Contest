@@ -648,7 +648,7 @@ def clean_state_quiet_enough(field_state, elapsed_seconds,
     return not any(
         bool(field_state.get(key))
         for key in ("rejected", "soft", "pending")
-    ) and field_state.get("valid") is not False
+    ) and field_state.get("valid") is True
 
 
 class TestPassword(object):

@@ -82,6 +82,9 @@ $env:SITES_MEASURE_EMAIL_PREFIX = "cryptoscope"
 - `--max-sites`：先做 20、100、1000 的阶梯基准，再扩到完整目标所需的候选规模。
 - `--checkpoint-every`：持续显示 complete/partial/classified/unreached 分布，避免只看任务数。
 - `--headless`：批量任务不依赖可见桌面窗口；浏览器会话意外关闭时，单站包装器只重建一次。
+- `--authorization-manifest`：加载站点所有者/研究负责人提供的精确主机范围；批量任务只
+  执行范围内目标，结果写入不含文件内容的 SHA-256 范围指纹。支持每行一个主机名的文本
+  文件，或包含 `authorized_hosts`、可选 `expires_at` 的 JSON；过期和过宽通配符会在启动前拒绝。
 - 单站看门狗超时后，只有包含 accepted/rejected 探针轨迹的新鲜阶段检查点才恢复为
   `partial_timeout`，不会把旧缓存或只有静态声明的文件冒充主动测量结果。
 - `--inline-accept-quiet-seconds`：同页负对照成立后，候选持续无错误的观察窗（默认3秒，

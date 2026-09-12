@@ -33,6 +33,7 @@ from utils.login_link_discovery import LoginLinkDiscovery
 from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
 from signup_flow_classifier.browser_failures import is_retryable_browser_failure
 from utils.policy_quality import evaluate_policy_record
+from utils.authorization_scope import load_authorization_scope
 
 _CURRENT_VERSION = "unknown"
 _version_path = os.path.join(_PROJECT_ROOT, "misc", "measure_version.txt")
@@ -286,13 +287,64 @@ def _classify_worker(site: str, kind: str, result_queue,
             pass
 
 
+def _stop_worker_process_tree(process, join_timeout: float = 5.0) -> None:
+    """Stop a timed-out worker and any browser children it created.
+
+    ``multiprocessing.Process.terminate`` only targets the worker itself on
+    Windows. A Selenium driver can therefore outlive a timed-out worker and
+    accumulate across a large batch. Enumerate descendants before stopping
+    the worker, then use a short terminate/kill escalation for each known PID.
+    The fallback keeps the watchdog usable when psutil is unavailable.
+    """
+    descendants = []
+    try:
+        import psutil
+        parent = psutil.Process(process.pid)
+        descendants = parent.children(recursive=True)
+        for child in descendants:
+            try:
+                child.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+    except Exception:
+        descendants = []
+
+    try:
+        process.terminate()
+    except (OSError, AttributeError):
+        pass
+    try:
+        process.join(timeout=join_timeout)
+    except (OSError, AttributeError):
+        pass
+    if process.is_alive():
+        try:
+            process.kill()
+        except (OSError, AttributeError):
+            pass
+        try:
+            process.join(timeout=join_timeout)
+        except (OSError, AttributeError):
+            pass
+
+    # The descendants were captured before the parent was terminated. Some
+    # may ignore terminate (or briefly outlive their parent), so kill only
+    # those exact PIDs after the graceful window; never scan the whole system.
+    for child in descendants:
+        try:
+            if child.is_running():
+                child.kill()
+        except Exception:
+            pass
+
+
 def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
                             measure_policy: bool = False):
     """并发执行任务并以进程级看门狗防止单站卡死整轮回归。
 
     Selenium 的线程无法强制中断，因此这里特意不用 ThreadPoolExecutor。
-    每个子进程完成后由它自己的 finally 关闭 driver；超时时先发送 SIGTERM，
-    让 worker 捕获并走 finally，然后才由父进程记录 site_timeout。
+    每个子进程完成后由它自己的 finally 关闭 driver；超时时先清理 worker
+    创建的浏览器子进程，再由父进程记录 site_timeout。
     """
     context = multiprocessing.get_context("spawn")
     pending = iter(tasks)
@@ -341,8 +393,7 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
             if ready_record is not None:
                 process.join(timeout=5)
                 if process.is_alive():
-                    process.terminate()
-                    process.join(timeout=5)
+                    _stop_worker_process_tree(process)
                 try:
                     item["queue"].close()
                     item["queue"].join_thread()
@@ -359,10 +410,8 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
 
             timed_out = process.is_alive()
             if timed_out:
-                process.terminate()
-            process.join(timeout=5)
-            if process.is_alive():
-                process.kill()
+                _stop_worker_process_tree(process)
+            else:
                 process.join(timeout=5)
 
             if timed_out:
@@ -416,6 +465,8 @@ def main():
     ap.add_argument("--overwrite", action="store_true",
                     help="开始前清空输出文件；与 --resume 互斥")
     ap.add_argument("--only", default="", help="只跑逗号分隔的主机名子集")
+    ap.add_argument("--authorization-manifest", default="",
+                    help="所有者授权范围文件（每行一个主机名，或 JSON；只测匹配主机）")
     ap.add_argument("--measure-policy", action="store_true",
                     help="对分类出的注册口令框站点额外执行密码政策测量"
                          "（完整流程，每站 5-15 分钟；不带此开关只跑分类）")
@@ -455,6 +506,13 @@ def main():
         os.environ["SITES_HEADLESS"] = "1"
     os.environ["SITES_INLINE_ACCEPT_QUIET_SECONDS"] = str(
         args.inline_accept_quiet_seconds)
+    authorization_scope = None
+    if args.authorization_manifest:
+        try:
+            authorization_scope = load_authorization_scope(
+                args.authorization_manifest)
+        except (OSError, UnicodeError, ValueError) as exc:
+            ap.error("授权范围文件无效: {}".format(exc))
     candidate_hints = {}
     candidate_priorities = {}
     candidate_sites = []
@@ -494,6 +552,14 @@ def main():
             if host not in seen_hosts:
                 seen_hosts.add(host)
                 sites.append(site)
+    if authorization_scope is not None:
+        before_scope = len(sites)
+        sites = [
+            site for site in sites
+            if authorization_scope.matches(urlparse(site).hostname or site)
+        ]
+        print("[authorization:{}] 范围匹配 {}/{} 个站点".format(
+            authorization_scope.scope_id, len(sites), before_scope))
     if args.only:
         only = {h.strip() for h in args.only.split(",") if h.strip()}
         sites = [s for s in sites
@@ -549,6 +615,11 @@ def main():
         completed_records = _thread_records()
 
     for i, rec in enumerate(completed_records, 1):
+        if authorization_scope is not None:
+            rec["authorization_scope_id"] = authorization_scope.scope_id
+            if authorization_scope.expires_at:
+                rec["authorization_scope_expires_at"] = (
+                    authorization_scope.expires_at)
         site = rec.get("site") or ""
         kind = rec.get("entry_kind") or "?"
         with open(args.output, "a", encoding="utf-8") as f:
@@ -577,6 +648,10 @@ def main():
     # ---- 自动稳定（2026-08-16）：unknown/error 记录多轮重跑取多数 ----
     if args.retry_unknown > 0:
         args.candidate_hints = candidate_hints
+        args.authorization_scope_id = (
+            authorization_scope.scope_id if authorization_scope else "")
+        args.authorization_scope_expires_at = (
+            authorization_scope.expires_at if authorization_scope else "")
         _stabilize_unknown(args, sites, kinds)
 
 
@@ -655,6 +730,13 @@ def _stabilize_unknown(args, sites, kinds):
                             "hostname": h, "entry_kind": k,
                             "error": str(exc)[:120],
                         }
+        scope_id = getattr(args, "authorization_scope_id", "")
+        scope_expires = getattr(args, "authorization_scope_expires_at", "")
+        if scope_id:
+            for record in new_recs.values():
+                record["authorization_scope_id"] = scope_id
+                if scope_expires:
+                    record["authorization_scope_expires_at"] = scope_expires
         for key, rec in new_recs.items():
             votes.setdefault(key, []).append(rec)
         # 每轮后对仍不稳定的键做多数判定
