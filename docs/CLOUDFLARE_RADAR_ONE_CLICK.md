@@ -78,6 +78,15 @@ run_cloudflare_radar.cmd ^
   --resume
 ```
 
+如果你当前窗口左侧提示符是 `PS C:\...>`，说明正在使用 PowerShell。PowerShell 不会默认执行当前目录下的
+脚本，调用 `.cmd` 时必须使用 `.\` 前缀；也可以直接使用上面的 `.ps1` 入口：
+
+```powershell
+.\run_cloudflare_radar.cmd --top 1000 --output-dir .cache\target-corpora\cloudflare-radar --resume
+# 或者
+.\run_cloudflare_radar.ps1 --top 1000 --output-dir .cache\target-corpora\cloudflare-radar --resume
+```
+
 如果只需要地区 Top 100，例如中国地区：
 
 ```powershell

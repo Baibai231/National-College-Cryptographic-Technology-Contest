@@ -294,6 +294,10 @@ python scripts/report_policy_coverage.py \
 `run_cloudflare_radar.ps1`；两个启动器会把参数透传给同一个编排脚本。`.cmd` 直接双击时会在显示帮助或错误后
 等待按键，避免窗口一闪而过；带参数从命令行调用时仍按正常退出码结束。
 
+如果在 PowerShell 中调用 `.cmd`，当前目录脚本需要使用 `.` 前缀，例如
+`.\run_cloudflare_radar.cmd --top 1000 --resume`（也可以直接运行
+`.\run_cloudflare_radar.ps1 --top 1000 --resume`）。
+
 Cloudflare Radar 的有序排行榜接口最多返回 Top 100；更大的全球榜单使用官方
 `ranking_top_200`、`ranking_top_1000` 等数据集流。下面的启动器会自动选择合适的接口，
 保存榜单快照、目标元数据、预筛结果和覆盖率报告。接口细节以
