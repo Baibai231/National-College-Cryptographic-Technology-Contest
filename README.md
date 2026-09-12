@@ -289,6 +289,8 @@ python scripts/report_policy_coverage.py \
 
 ### Cloudflare Radar 一键运行
 
+完整操作手册见 [Cloudflare Radar 一键批量测量指南](docs/CLOUDFLARE_RADAR_ONE_CLICK.md)。
+
 Cloudflare Radar 的有序排行榜接口最多返回 Top 100；更大的全球榜单使用官方
 `ranking_top_200`、`ranking_top_1000` 等数据集流。下面的启动器会自动选择合适的接口，
 保存榜单快照、目标元数据、预筛结果和覆盖率报告。接口细节以

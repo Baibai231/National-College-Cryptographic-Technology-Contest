@@ -47,6 +47,8 @@
       一键衔接预筛、授权策略测量和覆盖率报告。
 - [x] `--skip-preflight` 强制要求配合 `--snapshot`，防止榜单日更后把新目标元数据与旧候选
       JSONL 混用。
+- [x] 新增 `docs/CLOUDFLARE_RADAR_ONE_CLICK.md`，整理 Windows 一键运行、Token 配置、
+      Top 100/Top 1000 选择规则、授权清单、断点续跑和输出文件说明。
 
 ### 66. 千站严格验收、分层预筛与声明证据（2026-09-12）
 
