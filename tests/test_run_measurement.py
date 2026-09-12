@@ -2,6 +2,8 @@ import json
 import os
 import sys
 import tempfile
+import threading
+import time
 import types
 import unittest
 from pathlib import Path
@@ -14,6 +16,7 @@ from scripts.run_measurement import (
     _recover_timeout_checkpoint,
     _resume_completed_keys,
     _stop_worker_process_tree,
+    _task_host,
     _task_shard,
 )
 
@@ -114,6 +117,44 @@ class RunMeasurementSchedulingTests(unittest.TestCase):
         self.assertEqual(first, _task_shard("https://example.com/path", 7))
         self.assertGreaterEqual(first, 0)
         self.assertLess(first, 7)
+
+    def test_task_host_normalizes_case_and_trailing_dot(self):
+        self.assertEqual(_task_host("https://WWW.Example.COM./login"),
+                         "www.example.com")
+
+    def test_same_host_signup_and_login_are_serialized(self):
+        with tempfile.TemporaryDirectory() as directory:
+            input_path = Path(directory) / "sites.txt"
+            input_path.write_text("https://same.example/\n", encoding="utf-8")
+            output_path = Path(directory) / "records.jsonl"
+            counters = {"active": 0, "max_active": 0}
+            counter_lock = threading.Lock()
+
+            def fake_classify(site, kind, **_kwargs):
+                with counter_lock:
+                    counters["active"] += 1
+                    counters["max_active"] = max(
+                        counters["max_active"], counters["active"])
+                time.sleep(0.05)
+                with counter_lock:
+                    counters["active"] -= 1
+                return {
+                    "site": site, "hostname": "same.example",
+                    "entry_kind": kind, "flow_type": "no_web_signup",
+                    "measurement_quality": {"status": "classified"},
+                }
+
+            argv = [
+                "run_measurement.py", "--input", str(input_path),
+                "--kinds", "signup,login", "--output", str(output_path),
+                "--workers", "2", "--checkpoint-every", "0",
+            ]
+            with mock.patch.object(sys, "argv", argv), mock.patch(
+                    "scripts.run_measurement.classify_one",
+                    side_effect=fake_classify):
+                run_measurement_main()
+
+        self.assertEqual(counters["max_active"], 1)
 
     def test_complete_resume_retries_partial_latest_record(self):
         with tempfile.TemporaryDirectory() as directory:

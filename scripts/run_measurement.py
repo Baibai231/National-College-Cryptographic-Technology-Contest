@@ -19,7 +19,9 @@ import queue
 import re
 import signal
 import sys
+import threading
 import time
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from urllib.parse import urlparse
@@ -113,6 +115,11 @@ def _browser_session_lost(result: dict) -> bool:
 def _task_shard(site: str, shard_count: int) -> int:
     host = (urlparse(site).hostname or site).lower().encode("utf-8")
     return int(hashlib.sha256(host).hexdigest()[:16], 16) % shard_count
+
+
+def _task_host(site: str) -> str:
+    """Return the stable host key used to serialize same-site tasks."""
+    return (urlparse(site).hostname or site).lower().rstrip(".")
 
 
 def _resume_completed_keys(path: str, mode: str) -> set:
@@ -343,25 +350,36 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
     """并发执行任务并以进程级看门狗防止单站卡死整轮回归。
 
     Selenium 的线程无法强制中断，因此这里特意不用 ThreadPoolExecutor。
-    每个子进程完成后由它自己的 finally 关闭 driver；超时时先清理 worker
-    创建的浏览器子进程，再由父进程记录 site_timeout。
+    不同主机可以并行，但同一主机的 signup/login 任务始终串行；每个子进程
+    完成后由它自己的 finally 关闭 driver，超时时先清理浏览器子进程，再记录
+    site_timeout。
     """
     context = multiprocessing.get_context("spawn")
-    pending = iter(tasks)
+    pending = deque(tasks)
     active = {}
+    active_hosts = set()
     exhausted = False
 
     def start_next():
         nonlocal exhausted
         if exhausted:
-            return
-        try:
-            task = next(pending)
-            site, kind = task[:2]
-            signup_url_hint = task[2] if len(task) > 2 else ""
-        except StopIteration:
-            exhausted = True
-            return
+            return False
+        task = None
+        # Rotate tasks whose host is already active.  This keeps different
+        # sites parallel while serializing signup/login work for one host.
+        for _ in range(len(pending)):
+            candidate = pending.popleft()
+            candidate_host = _task_host(candidate[0])
+            if candidate_host in active_hosts:
+                pending.append(candidate)
+                continue
+            task = candidate
+            break
+        if task is None:
+            return False
+        site, kind = task[:2]
+        signup_url_hint = task[2] if len(task) > 2 else ""
+        task_host = _task_host(site)
         result_queue = context.Queue(maxsize=1)
         process = context.Process(
             target=_classify_worker,
@@ -371,11 +389,15 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
         active[process.pid] = {
             "process": process, "queue": result_queue, "site": site,
             "kind": kind, "started": time.monotonic(),
-            "started_wall": time.time(),
+            "started_wall": time.time(), "host": task_host,
         }
+        active_hosts.add(task_host)
+        exhausted = not pending
+        return True
 
     while len(active) < workers and not exhausted:
-        start_next()
+        if not start_next():
+            break
 
     while active:
         completed = []
@@ -440,10 +462,13 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
             completed.append((pid, record))
 
         for pid, record in completed:
-            active.pop(pid, None)
+            item = active.pop(pid, None)
+            if item is not None:
+                active_hosts.discard(item["host"])
             yield record
             while len(active) < workers and not exhausted:
-                start_next()
+                if not start_next():
+                    break
 
         if not completed:
             time.sleep(0.2)
@@ -599,11 +624,22 @@ def main():
             measure_policy=args.measure_policy)
     else:
         def _thread_records():
+            host_locks = {
+                _task_host(site): threading.Lock()
+                for site, _, _ in pending
+            }
+
+            def run_serialized(site, kind, hint):
+                host = _task_host(site)
+                lock = host_locks[host]
+                with lock:
+                    return classify_one(
+                        site, kind, measure_policy=args.measure_policy,
+                        signup_url_hint=hint)
+
             with ThreadPoolExecutor(max_workers=args.workers) as pool:
                 futures = {pool.submit(
-                    classify_one, s, k,
-                    measure_policy=args.measure_policy,
-                    signup_url_hint=hint): (s, k)
+                    run_serialized, s, k, hint): (s, k)
                     for s, k, hint in pending}
                 for future in as_completed(futures):
                     site, kind = futures[future]

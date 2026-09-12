@@ -131,6 +131,8 @@ GitHub 等认证方式的 `confirmed`、`blocked` 或 `observed` 状态，不再
 - `--resume-mode complete` 只跳过真正通过完整证据门的结果，部分/失败记录可继续迭代；
   `--shard-count/--shard-index` 可确定性分片，`--max-sites` 和 `--min-priority`
   控制每轮规模，运行中定期输出质量漏斗。
+- 同一主机的注册/登录任务自动串行，不同主机仍可受控并行，避免多入口重复打开浏览器
+  放大目标站点压力。
 - 只对浏览器崩溃、基础设施、导航、超时等瞬态失败重试。
 - `--retry-unknown` 多轮复测并按有效证据多数结果稳定化。
 - `--authorization-manifest` 可加载所有者提供的主机范围（文本每行一个主机名，或带
