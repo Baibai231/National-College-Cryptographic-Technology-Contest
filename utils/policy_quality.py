@@ -267,14 +267,17 @@ def aggregate_policy_records(records: Iterable[Mapping[str, Any]]) -> Dict[str, 
             reasons[reason] = reasons.get(reason, 0) + 1
 
     total = len(latest)
+    goal = 1000
     return {
         "schema_version": "1.0",
-        "goal_complete_sites": 1000,
+        "goal_complete_sites": goal,
         "distinct_signup_sites": total,
         "complete_sites": len(complete_hosts),
-        "remaining_sites": max(0, 1000 - len(complete_hosts)),
+        "remaining_sites": max(0, goal - len(complete_hosts)),
         "complete_rate_percent": round(
             (len(complete_hosts) / total * 100.0) if total else 0.0, 2),
+        "goal_progress_percent": round(
+            (len(complete_hosts) / goal * 100.0) if goal else 0.0, 2),
         "stages": {
             name: {
                 "count": stage_counts[name],

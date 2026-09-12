@@ -145,6 +145,7 @@ class PolicyQualityTest(unittest.TestCase):
         self.assertEqual(summary["distinct_signup_sites"], 1)
         self.assertEqual(summary["complete_sites"], 1)
         self.assertEqual(summary["remaining_sites"], 999)
+        self.assertEqual(summary["goal_progress_percent"], 0.1)
 
 
 if __name__ == "__main__":

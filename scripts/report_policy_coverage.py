@@ -60,6 +60,7 @@ def render_markdown(summary: Dict, inputs: Iterable[Path]) -> str:
         "- 输入文件：{}".format("、".join(str(path) for path in inputs)),
         "- 不同注册站点：{}".format(summary["distinct_signup_sites"]),
         "- 完整测量站点：{} / 1000".format(summary["complete_sites"]),
+        "- 目标进度：{}%".format(summary["goal_progress_percent"]),
         "- 当前批次完整率：{}%".format(summary["complete_rate_percent"]),
         "- 距离目标：{} 个".format(summary["remaining_sites"]),
         "",
