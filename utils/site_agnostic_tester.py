@@ -111,6 +111,13 @@ class SitePasswordPolicyTester:
         try:
             import json
             import os
+            # Intermediate checkpoints must carry the probe trace collected
+            # so far. Previously it was attached only in the final ``finally``
+            # block, so a hard watchdog timeout preserved inferred fields but
+            # lost the accepted/rejected evidence needed to audit them.
+            if getattr(self, "_tester", None) is not None:
+                policy["_probe_evidence"] = list(
+                    getattr(self._tester, "_probe_evidence", []) or [])
             host = self.test_site or "unknown"
             project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             site_dir = os.path.join(project_root, "logs", host)

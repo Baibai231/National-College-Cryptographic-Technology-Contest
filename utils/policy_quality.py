@@ -10,13 +10,19 @@ observation alone must never count towards the 1,000-site measurement goal.
 from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple
 
 
-ACTIVE_METHODS = {"inline", "full", "partial_browser_dead"}
+ACTIVE_METHODS = {
+    "inline", "full", "partial_browser_dead", "partial_timeout",
+}
 
 RESTRICTIVE_KEYS = {
     "r_no_a_sps", "r_2_word", "r_l_start",
     "r_dig_min", "r_upp_min", "r_low_min", "r_sps_min",
     "r_cmb13", "r_cmb23", "r_cmb33",
     "r_cmb14", "r_cmb24", "r_cmb34", "r_cmb44",
+}
+
+RESTRICTIVE_MINIMUM_KEYS = {
+    "r_dig_min", "r_upp_min", "r_low_min", "r_sps_min",
 }
 
 PERMISSIVE_KEYS = {
@@ -93,7 +99,17 @@ def _length_scope(policy: Mapping[str, Any]) -> str:
 
 def _complete_restrictive(policy: Mapping[str, Any]) -> bool:
     restrictive = _as_mapping(policy.get("restrictive"))
-    return RESTRICTIVE_KEYS.issubset(restrictive.keys())
+    if not RESTRICTIVE_KEYS.issubset(restrictive.keys()):
+        return False
+    for key in RESTRICTIVE_MINIMUM_KEYS:
+        value = restrictive.get(key)
+        if (not isinstance(value, int) or isinstance(value, bool)
+                or value < 0):
+            return False
+    return all(
+        isinstance(restrictive.get(key), bool)
+        for key in RESTRICTIVE_KEYS - RESTRICTIVE_MINIMUM_KEYS
+    )
 
 
 def _complete_permissive(policy: Mapping[str, Any]) -> bool:
@@ -101,6 +117,8 @@ def _complete_permissive(policy: Mapping[str, Any]) -> bool:
     for section, required in PERMISSIVE_KEYS.items():
         values = _as_mapping(permissive.get(section))
         if not required.issubset(values.keys()):
+            return False
+        if not all(isinstance(values.get(key), bool) for key in required):
             return False
     return True
 

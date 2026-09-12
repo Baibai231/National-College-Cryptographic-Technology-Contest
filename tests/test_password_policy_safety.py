@@ -7,7 +7,11 @@ from utils.password_candidates import (
     admissible_candidate_lengths,
     stratified_password_candidates,
 )
-from utils.util_test_password import ProbeOutcome, TestPassword
+from utils.util_test_password import (
+    ProbeOutcome,
+    TestPassword,
+    clean_state_quiet_enough,
+)
 
 
 class PasswordPolicySafetyTests(unittest.TestCase):
@@ -74,6 +78,27 @@ class PasswordPolicySafetyTests(unittest.TestCase):
         self.assertTrue(tester._had_inconclusive)
         self.assertEqual(tester._probe_evidence[-1]["outcome"], "inconclusive")
 
+    def test_clean_candidate_can_finish_after_quiet_window(self):
+        state = {
+            "valid": True,
+            "rejected": False,
+            "soft": False,
+            "pending": False,
+        }
+        self.assertTrue(clean_state_quiet_enough(state, 3.1, True, 3.0))
+
+    def test_clean_candidate_never_shortens_negative_control(self):
+        state = {"valid": True, "rejected": False, "soft": False, "pending": False}
+        self.assertFalse(clean_state_quiet_enough(state, 8.0, False, 3.0))
+
+    def test_pending_or_soft_candidate_waits_for_resolution(self):
+        self.assertFalse(clean_state_quiet_enough(
+            {"valid": True, "pending": True}, 4.0, True, 3.0))
+        self.assertFalse(clean_state_quiet_enough(
+            {"valid": True, "soft": True}, 4.0, True, 3.0))
+        self.assertFalse(clean_state_quiet_enough(
+            {"valid": False}, 4.0, True, 3.0))
+
     def test_inline_policy_stops_when_negative_control_is_not_rejected(self):
         driver = mock.MagicMock()
         policy_tester = SitePasswordPolicyTester(driver, "https://example.com")
@@ -118,7 +143,8 @@ class PasswordPolicySafetyTests(unittest.TestCase):
                 self._empty_restrictive_policy(), [8, 16])
 
         self.assertTrue(result["p_br"])
-        self.assertEqual(tester.test_one_password.call_count, 20)
+        self.assertEqual(result["p_br_sample_size"], 5)
+        self.assertEqual(tester.test_one_password.call_count, 5)
 
     def test_inline_breached_password_flag_is_false_when_one_is_accepted(self):
         tester = TestPassword.__new__(TestPassword)
@@ -130,6 +156,34 @@ class PasswordPolicySafetyTests(unittest.TestCase):
                 self._empty_restrictive_policy(), [8, 16])
 
         self.assertFalse(result["p_br"])
+        self.assertEqual(result["p_br_sample_size"], 1)
+
+    def test_inline_breached_password_is_unknown_without_eligible_sample(self):
+        tester = TestPassword.__new__(TestPassword)
+        tester.my_logger = mock.MagicMock()
+        tester.test_one_password = mock.MagicMock(return_value=False)
+
+        with mock.patch("builtins.open", mock.mock_open(read_data="a\n")):
+            result = tester.identify_breached_passwords(
+                self._empty_restrictive_policy(), [8, 16])
+
+        self.assertIsNone(result["p_br"])
+        self.assertEqual(result["p_br_sample_size"], 0)
+        tester.test_one_password.assert_not_called()
+
+    def test_permissive_unicode_stops_after_first_accept_and_tests_emoji(self):
+        tester = TestPassword.__new__(TestPassword)
+        tester.my_logger = mock.MagicMock()
+        tester.admissible_password = "Abcd12"
+        tester.test_one_password = mock.MagicMock(return_value=True)
+
+        result = tester.identify_permissive_characters([6, 64])
+
+        self.assertTrue(result["p_unicd"])
+        self.assertTrue(result["p_emoji"])
+        self.assertEqual(tester.test_one_password.call_count, 7)
+        tested = [call.args[0] for call in tester.test_one_password.call_args_list]
+        self.assertTrue(any("\U0001f600" in candidate for candidate in tested))
 
     def test_full_form_length_probes_preserve_known_composition(self):
         tester = FullFormPolicyTester.__new__(FullFormPolicyTester)

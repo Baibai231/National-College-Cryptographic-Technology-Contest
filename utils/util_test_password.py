@@ -625,6 +625,32 @@ class ProbeOutcome(str, Enum):
     INCONCLUSIVE = "inconclusive"
 
 
+def clean_state_quiet_enough(field_state, elapsed_seconds,
+                             negative_control_confirmed,
+                             quiet_seconds=3.0):
+    """Whether a clean candidate has been observed long enough to stop polling.
+
+    This is only an optimization for the *candidate* half of a paired probe.  It
+    must never shorten the negative-control observation, and pending/soft/native
+    invalid states remain ineligible.  The caller still classifies acceptance
+    from the paired negative control; this helper is not acceptance evidence by
+    itself.
+    """
+    if not negative_control_confirmed or not isinstance(field_state, dict):
+        return False
+    try:
+        elapsed = float(elapsed_seconds)
+        threshold = float(quiet_seconds)
+    except (TypeError, ValueError):
+        return False
+    if elapsed < max(0.0, threshold):
+        return False
+    return not any(
+        bool(field_state.get(key))
+        for key in ("rejected", "soft", "pending")
+    ) and field_state.get("valid") is not False
+
+
 class TestPassword(object):
     def __init__(self, my_logger, test_site, admissible_password="",
                  signup_url="", email_xpath="", password_xpath="",
@@ -1090,20 +1116,6 @@ class TestPassword(object):
                     elm.dispatchEvent(new Event('input', {bubbles: true}));
                     elm.dispatchEvent(new Event('change', {bubbles: true}));
                 """
-                # ── 先退出上一轮密码框状态（两次测量之间必须失焦）──
-                # 用 Selenium ActionChains 真实移动鼠标到密码框右侧空白处点击，
-                # 而非 JS 事件模拟。真实鼠标事件才能触发浏览器原生焦点转移。
-                if self._signup_page_ready:
-                    try:
-                        ActionChains(driver).move_to_element(
-                            password_elem
-                        ).move_by_offset(
-                            password_elem.size['width'] // 2 + 30, 5
-                        ).click().perform()
-                        time.sleep(0.2)
-                    except Exception:
-                        pass
-
                 # ── 先清空并失焦，让上一轮的校验错误先清除 ──
                 # 关键顺序：observer 必须在 reset+失焦之后、fill 之前启动。
                 # Element UI 的错误提示只在 blur 时才清除；若 observer 在 reset
@@ -1347,20 +1359,6 @@ class TestPassword(object):
                             fb_result = {"rejected": True, "type": "field-state",
                                          "message": field_state.get("reason", "")}
                             break
-                        # aria-invalid=false 只是"无错误标记"，不等于校验通过
-                        # （Discord 实测：blur 不校验时"a"也保持 false，误判为
-                        # 接受 → 负对照不可信 → 整站无法测）。不在此 break，
-                        # 继续轮询等 observer/错误文本证据；若始终无信号，
-                        # 由"负对照差分"逻辑在轮询结束后判定。
-                        # 已过 3 秒仍无任何信号 → 提前结束轮询走差分判定
-                        # （避免 aria-invalid=false 的站每测等满 8 秒）。
-                        # 负对照阶段（负对照未建立时）不提前 break：GitHub
-                        # 的 "a" 拒绝靠 observer 捕获（"Password is too
-                        # short"），提前退出会漏捕获导致负对照不成立。
-                        if (field_state and field_state.get("reason") == "aria-invalid=false"
-                                and self._negative_control_confirmed
-                                and time.time() - _probe_start > 3.0):
-                            break
                         # pending 状态（async-verifying）不 break，继续轮询等真实结果
                         # GitHub "Validation failed" 稳定判定：首次出现是
                         # pending（可能瞬态），但持续 2 秒以上未变 valid →
@@ -1409,6 +1407,23 @@ class TestPassword(object):
                                     break
                             if fb_result:
                                 break
+
+                        # 候选阶段已经有同表单负对照，并连续观察到字段完全干净时，
+                        # 无需固定等待满 8 秒。先完成本轮 observer 扫描，再结束轮询，
+                        # 避免漏掉与字段状态同一时刻到达的异步错误文本。负对照阶段
+                        # 不会走这里；pending / 门控软错误 / native invalid 也不会提早。
+                        try:
+                            quiet_seconds = float(os.getenv(
+                                "SITES_INLINE_ACCEPT_QUIET_SECONDS", "3.0"))
+                        except (TypeError, ValueError):
+                            quiet_seconds = 3.0
+                        quiet_seconds = min(8.0, max(2.0, quiet_seconds))
+                        if clean_state_quiet_enough(
+                                field_state,
+                                time.time() - _probe_start,
+                                self._negative_control_confirmed,
+                                quiet_seconds):
+                            break
                     except Exception:
                         pass
                     time.sleep(0.5)
@@ -1522,16 +1537,8 @@ class TestPassword(object):
                             test_password, ProbeOutcome.INCONCLUSIVE,
                             "no_rejection_signal_without_validated_negative_control",
                             field_state if isinstance(field_state, dict) else None)
-                    # 退出密码框
-                    try:
-                        ActionChains(driver).move_to_element(
-                            password_elem
-                        ).move_by_offset(
-                            password_elem.size['width'] // 2 + 30, 5
-                        ).click().perform()
-                        time.sleep(0.2)
-                    except Exception:
-                        pass
+                    # 当前轮填充后已经执行真实点击 + blur；下一轮 reset 后还会
+                    # 再失焦清理状态，无需在返回前重复移动/点击一次。
                     uub.random_sleep([0.5, 1])
                     return self._last_probe_outcome == ProbeOutcome.ACCEPTED
 
@@ -1562,17 +1569,7 @@ class TestPassword(object):
                         self._last_strength_level = None
                     self.my_logger.success(
                         f"The tested password {test_password} is accepted ({fb_type}{_strength_info})")
-                # ── 退出密码框（为下一次测量做准备）──
-                # 两次测量之间必须失焦，否则下一轮 focus→blur 不会触发新反馈
-                try:
-                    ActionChains(driver).move_to_element(
-                        password_elem
-                    ).move_by_offset(
-                        password_elem.size['width'] // 2 + 30, 5
-                    ).click().perform()
-                    time.sleep(0.2)
-                except Exception:
-                    pass
+                # 当前轮已经失焦；下一轮 reset 后仍会执行一次真实失焦清理。
                 uub.random_sleep([0.5, 1])
                 return flag
             except Exception as e:
@@ -3326,13 +3323,20 @@ class TestPassword(object):
             if allowed:
                 uni_flag = True
                 self.my_logger.success(f"[Unicode] Testing permitted character: {mp_uni} is allowed.")
+                # 此字段定义为“是否接受至少一种非 ASCII Unicode 字符”；
+                # 一条接受证据已经足以回答，继续遍历不会改变结论。
+                break
             else:
                 self.my_logger.warning(f"[Unicode] Testing permitted character: {mp_uni} is not allowed.")
         if uni_flag:
             ret_dict["p_unicd"] = True
 
-        # emoji 不再测试：键盘模拟无法可靠输入 emoji（非键盘字符），且无测量意义。
-        # p_emoji 保持默认 False。
+        # Selenium 对非 BMP 字符的 send_keys 支持不一致；test_one_password 在
+        # 键盘输入失败时会使用原生 value setter + input/change 事件兜底，因此
+        # 可以实际测量，而不是把“未测试”写成 False。
+        mp_emoji = initial_password[:-1] + "\U0001f600"
+        ret_dict["p_emoji"] = bool(self.test_one_password(
+            mp_emoji, "[Emoji] Testing the emoji password"))
 
         # TODO 2.3 Replace the last character with special characters
         # . ! _ #
@@ -3450,7 +3454,9 @@ class TestPassword(object):
 
     def identify_breached_passwords(self, restrictive_pr, password_length):
         ret_dict = {
-            "p_br": False
+            "p_br": None,
+            "p_br_sample_size": 0,
+            "p_br_decision": "not_evaluated",
         }
         leaked_data_path = uub.get_absolute_dir_path() + "/../data/leakage/leakage_password.txt"
         with open(leaked_data_path, 'r', encoding='utf-8') as file:
@@ -3459,20 +3465,31 @@ class TestPassword(object):
         # 泄露密码文件有 10000 条；若网站拒绝泄露密码，遍历全文件会跑数小时。
         # 连续 N 条符合政策的泄露密码均被拒，即判定"拒绝泄露密码"并停止。
         consecutive_rejected = 0
-        MAX_REJECTED_SAMPLE = 20
+        try:
+            max_rejected_sample = int(os.getenv(
+                "SITES_BREACHED_REJECT_SAMPLE", "5"))
+        except (TypeError, ValueError):
+            max_rejected_sample = 5
+        max_rejected_sample = min(20, max(3, max_rejected_sample))
         for tmp_pw in lines:
             if not (check_policy(tmp_pw, restrictive_pr, password_length)):
                 continue
+            ret_dict["p_br_sample_size"] += 1
             if self.test_one_password(tmp_pw, f"Testing breached passwords: {tmp_pw}"):
                 # p_br means "the site blocks breached passwords".  One
                 # accepted breached password is sufficient to disprove that
                 # property, so keep False and stop probing.
                 ret_dict["p_br"] = False
+                ret_dict["p_br_decision"] = \
+                    "policy_conforming_breached_password_accepted"
                 break
             consecutive_rejected += 1
-            if consecutive_rejected >= MAX_REJECTED_SAMPLE:
+            if consecutive_rejected >= max_rejected_sample:
                 ret_dict["p_br"] = True
+                ret_dict["p_br_decision"] = \
+                    "consecutive_policy_conforming_breached_passwords_rejected"
                 self.my_logger.info(
-                    f"{MAX_REJECTED_SAMPLE} 条泄露密码均被拒绝，判定该网站拒绝泄露密码（停止遍历）")
+                    f"{max_rejected_sample} 条符合其余政策的泄露密码均被拒绝，"
+                    "判定该网站拒绝泄露密码（停止遍历）")
                 break
         return ret_dict

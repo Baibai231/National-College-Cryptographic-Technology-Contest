@@ -16,6 +16,7 @@ import json
 import multiprocessing
 import os
 import queue
+import re
 import signal
 import sys
 import time
@@ -38,6 +39,74 @@ _version_path = os.path.join(_PROJECT_ROOT, "misc", "measure_version.txt")
 if os.path.isfile(_version_path):
     with open(_version_path, encoding="utf-8") as _fh:
         _CURRENT_VERSION = _fh.read().strip() or "unknown"
+
+
+def _partial_checkpoint_path(site: str) -> str:
+    parse_target = site if "://" in site else "//" + site
+    raw_host = urlparse(parse_target).hostname or ""
+    host = re.sub(r"[^a-zA-Z0-9._-]+", "_", raw_host).strip("._-")
+    host = (host or "unknown")[:253]
+    return os.path.join(
+        _PROJECT_ROOT, "logs", host, "policy_{}.partial.json".format(host))
+
+
+def _clear_partial_checkpoint(site: str) -> None:
+    path = _partial_checkpoint_path(site)
+    try:
+        if os.path.isfile(path):
+            os.remove(path)
+    except OSError:
+        pass
+
+
+def _recover_timeout_checkpoint(site: str, kind: str,
+                                started_wall: float,
+                                timeout_seconds: int) -> dict:
+    """Recover only a checkpoint written by the timed-out worker itself."""
+    record = {
+        "site": site,
+        "hostname": urlparse(site).hostname or site,
+        "entry_kind": kind,
+        "measured_at": datetime.now(timezone.utc).isoformat(),
+        "version": _CURRENT_VERSION,
+        "error": "site_timeout:{}s".format(timeout_seconds),
+    }
+    path = _partial_checkpoint_path(site)
+    try:
+        if os.path.getmtime(path) + 1 < started_wall:
+            return record
+        with open(path, encoding="utf-8") as handle:
+            checkpoint = json.load(handle)
+        policy = checkpoint.get("policy")
+        if not isinstance(policy, dict) or not policy:
+            return record
+        evidence = policy.get("_probe_evidence") or []
+        if not any(isinstance(item, dict) for item in evidence):
+            return record
+        record.update({
+            "flow_type": "direct_password",
+            "confidence": "high",
+            "stop_reason": "policy_measurement_timeout",
+            "primary_method": "password",
+            "final_url": checkpoint.get("url") or site,
+            "states": [{"step": 1, "fields": ["password"]}],
+            "partial_policy": policy,
+            "attempted_method": "partial_timeout",
+            "method_used": "classified_only",
+            "checkpoint_stage": checkpoint.get("stage") or "unknown",
+        })
+        record["measurement_quality"] = evaluate_policy_record(record)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        pass
+    return record
+
+
+def _browser_session_lost(result: dict) -> bool:
+    message = str(result.get("error") or "").lower()
+    return any(marker in message for marker in (
+        "no such window", "target window already closed",
+        "invalid session id", "session deleted because of page crash",
+    ))
 
 
 def _task_shard(site: str, shard_count: int) -> int:
@@ -117,8 +186,15 @@ def classify_one(site: str, kind: str, measure_policy: bool = False,
             # 的 policy 恒为空、method_used 恒为 None（154 站全量验证发现
             # 0 条含有效长度政策）。
             from main import test_single_site
-            result = test_single_site(
-                site, method="auto", signup_url_hint=signup_url_hint)
+            result = {}
+            browser_restarts = 0
+            for attempt in range(2):
+                result = test_single_site(
+                    site, method="auto", signup_url_hint=signup_url_hint)
+                if attempt == 0 and _browser_session_lost(result):
+                    browser_restarts += 1
+                    continue
+                break
             for key in (
                 "flow_type", "confidence", "stop_reason", "primary_method",
                 "ui_type", "final_url", "states", "methods", "policy",
@@ -130,6 +206,8 @@ def classify_one(site: str, kind: str, measure_policy: bool = False,
             if not record.get("start_url") and result.get("final_url"):
                 record["start_url"] = result["final_url"]
             record["measurement_quality"] = evaluate_policy_record(record)
+            if browser_restarts:
+                record["browser_session_restarts"] = browser_restarts
             return record
         driver = _get_new_driver()
         discovery = LoginLinkDiscovery(driver)
@@ -186,6 +264,7 @@ def _classify_worker(site: str, kind: str, result_queue,
     except (AttributeError, ValueError):
         pass
     try:
+        _clear_partial_checkpoint(site)
         result_queue.put(classify_one(
             site, kind, measure_policy=measure_policy,
             signup_url_hint=signup_url_hint))
@@ -240,6 +319,7 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
         active[process.pid] = {
             "process": process, "queue": result_queue, "site": site,
             "kind": kind, "started": time.monotonic(),
+            "started_wall": time.time(),
         }
 
     while len(active) < workers and not exhausted:
@@ -286,12 +366,9 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
                 process.join(timeout=5)
 
             if timed_out:
-                record = {
-                    "site": item["site"],
-                    "hostname": urlparse(item["site"]).hostname or item["site"],
-                    "entry_kind": item["kind"],
-                    "error": "site_timeout:{}s".format(timeout_seconds),
-                }
+                record = _recover_timeout_checkpoint(
+                    item["site"], item["kind"], item["started_wall"],
+                    timeout_seconds)
             else:
                 try:
                     record = item["queue"].get(timeout=2.0)
@@ -358,6 +435,10 @@ def main():
                     help="运行第几片，范围0到shard-count-1")
     ap.add_argument("--checkpoint-every", type=int, default=25,
                     help="每完成N条输出一次质量漏斗；0为关闭")
+    ap.add_argument("--headless", action="store_true",
+                    help="浏览器使用无头模式；批量/服务器运行推荐启用")
+    ap.add_argument("--inline-accept-quiet-seconds", type=float, default=3.0,
+                    help="已建立负对照后，候选字段持续无错误多久可结束观察；范围2-8秒")
     args = ap.parse_args()
 
     if args.resume and args.overwrite:
@@ -368,6 +449,12 @@ def main():
     if (args.workers <= 0 or args.max_sites < 0
             or args.checkpoint_every < 0):
         ap.error("--workers 必须大于0；--max-sites 和 --checkpoint-every 不能为负数")
+    if not 2.0 <= args.inline_accept_quiet_seconds <= 8.0:
+        ap.error("--inline-accept-quiet-seconds 必须位于2到8秒")
+    if args.headless:
+        os.environ["SITES_HEADLESS"] = "1"
+    os.environ["SITES_INLINE_ACCEPT_QUIET_SECONDS"] = str(
+        args.inline_accept_quiet_seconds)
     candidate_hints = {}
     candidate_priorities = {}
     candidate_sites = []

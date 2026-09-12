@@ -58,6 +58,20 @@ class PolicyQualityTest(unittest.TestCase):
         self.assertEqual(quality["status"], "complete")
         self.assertEqual(quality["reasons"], [])
 
+    def test_unknown_permissive_value_is_not_complete(self):
+        record = complete_record()
+        record["policy"]["permissive"]["breached_password"]["p_br"] = None
+        quality = evaluate_policy_record(record)
+        self.assertFalse(quality["complete"])
+        self.assertIn("permissive_policy_incomplete", quality["reasons"])
+
+    def test_wrong_restrictive_value_type_is_not_complete(self):
+        record = complete_record()
+        record["policy"]["restrictive"]["r_dig_min"] = False
+        quality = evaluate_policy_record(record)
+        self.assertFalse(quality["complete"])
+        self.assertIn("composition_policy_incomplete", quality["reasons"])
+
     def test_classification_policy_never_counts_as_complete(self):
         record = complete_record()
         record["method_used"] = "classified_only"

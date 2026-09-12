@@ -245,6 +245,7 @@ python scripts/run_measurement.py \
   --output reports/policy_run.jsonl \
   --workers 1 \
   --site-timeout 900 \
+  --headless \
   --measure-policy \
   --resume
 ```
@@ -270,7 +271,7 @@ python scripts/run_measurement.py \
   --preflight-candidates .cache/target-corpora/candidates.jsonl \
   --kinds signup --measure-policy \
   --output reports/policy_1000.jsonl \
-  --workers 2 --site-timeout 900 \
+  --workers 2 --site-timeout 900 --headless \
   --resume --resume-mode complete --checkpoint-every 25
 
 python scripts/report_policy_coverage.py \
@@ -282,7 +283,9 @@ python scripts/report_policy_coverage.py \
 
 预筛最多读取“主页 + 观察到的登录/账户/注册入口”，不填写也不提交；登录页常是注册入口
 的上一层，因此比只猜 `/signup` 覆盖更广。浏览器阶段会重新验证最多 8 个同站候选，
-不会信任预筛 URL，也不会把跨站链接作为目标。
+不会信任预筛 URL，也不会把跨站链接作为目标。`--headless` 可避免批量任务依赖桌面窗口；
+已由同页一字符负对照确认校验有效后，候选默认持续 3 秒无拒绝即可结束观察，可用
+`--inline-accept-quiet-seconds 2..8` 调整，负对照与 pending 状态不会被缩短。
 
 “完整站点”不是“页面可访问”或“看到了口令框”。它必须同时具备：注册口令框可达、
 主动测量方法、接受与拒绝对照、完整的长度边界结论、完整限制项、完整允许项、无基础设施错误、

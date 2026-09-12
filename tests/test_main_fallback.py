@@ -1,12 +1,34 @@
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 import main
+import utils.site_agnostic_tester as site_tester_module
+from utils.site_agnostic_tester import SitePasswordPolicyTester
 
 
 class MainFallbackTests(unittest.TestCase):
+    def test_intermediate_checkpoint_contains_current_probe_trace(self):
+        tester = SitePasswordPolicyTester.__new__(SitePasswordPolicyTester)
+        tester.test_site = "example.com"
+        tester.site_url = "https://example.com/"
+        tester._tester = mock.MagicMock()
+        tester._tester._probe_evidence = [
+            {"password_length": 1, "outcome": "rejected"}
+        ]
+        policy = {"length": [8, 64]}
+
+        with tempfile.TemporaryDirectory() as directory:
+            fake_module = Path(directory) / "utils" / "module.py"
+            with mock.patch.object(
+                    site_tester_module, "__file__", str(fake_module)):
+                tester._checkpoint_policy(policy, "length_done")
+
+        self.assertEqual(
+            policy["_probe_evidence"][0]["outcome"], "rejected")
+
     def test_preflight_hints_are_tried_in_order_before_full_discovery(self):
         driver = mock.MagicMock()
         driver.current_url = "https://example.com/signup"
