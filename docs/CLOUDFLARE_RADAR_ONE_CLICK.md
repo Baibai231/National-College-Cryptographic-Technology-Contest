@@ -1,6 +1,6 @@
 # Cloudflare Radar 一键批量测量指南
 
-本文档说明如何使用 `run_cloudflare_radar.ps1` 从 Cloudflare Radar Domain Rankings
+本文档说明如何使用 `run_cloudflare_radar.cmd` 或 `run_cloudflare_radar.ps1` 从 Cloudflare Radar Domain Rankings
 生成网站目标，并接入 CryptoScope 的预筛与口令策略测量流程。
 
 ## 1. 功能概览
@@ -8,9 +8,14 @@
 脚本位于：
 
 ```text
+run_cloudflare_radar.cmd
 run_cloudflare_radar.ps1
 scripts/run_radar_measurement.py
 ```
+
+`.cmd` 可直接双击或从 `cmd.exe` 启动，`.ps1` 适合 PowerShell；两者都会优先使用仓库内的
+`.venv\Scripts\python.exe`，并把后续参数原样传给编排脚本。直接双击 `.cmd`（不带参数）只显示
+帮助，不会启动批量测量。
 
 它会自动完成以下步骤：
 
@@ -63,6 +68,16 @@ $env:CLOUDFLARE_API_TOKEN = "<你的 Cloudflare API Token>"
   --resume
 ```
 
+在 `cmd.exe` 中可使用同一流程：
+
+```bat
+run_cloudflare_radar.cmd ^
+  --top 1000 ^
+  --output-dir .cache\target-corpora\cloudflare-radar ^
+  --preflight-workers 16 ^
+  --resume
+```
+
 如果只需要地区 Top 100，例如中国地区：
 
 ```powershell
@@ -111,6 +126,20 @@ login.owned.example
   --browser-workers 2 `
   --site-timeout 900 `
   --require-complete 1000 `
+  --resume
+```
+
+对应的 `cmd.exe` 写法：
+
+```bat
+run_cloudflare_radar.cmd ^
+  --top 1000 ^
+  --output-dir .cache\target-corpora\cloudflare-radar ^
+  --measure-policy ^
+  --authorization-manifest scope.json ^
+  --browser-workers 2 ^
+  --site-timeout 900 ^
+  --require-complete 1000 ^
   --resume
 ```
 

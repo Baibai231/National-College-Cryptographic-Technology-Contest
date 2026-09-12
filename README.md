@@ -289,7 +289,9 @@ python scripts/report_policy_coverage.py \
 
 ### Cloudflare Radar 一键运行
 
-完整操作手册见 [Cloudflare Radar 一键批量测量指南](docs/CLOUDFLARE_RADAR_ONE_CLICK.md)。
+完整操作手册见 [Cloudflare Radar 一键批量测量指南](docs/CLOUDFLARE_RADAR_ONE_CLICK.md)。仓库根目录的
+`run_cloudflare_radar.cmd` 可直接双击或从 `cmd.exe` 运行，PowerShell 用户也可以继续使用
+`run_cloudflare_radar.ps1`；两个启动器会把参数透传给同一个编排脚本。
 
 Cloudflare Radar 的有序排行榜接口最多返回 Top 100；更大的全球榜单使用官方
 `ranking_top_200`、`ranking_top_1000` 等数据集流。下面的启动器会自动选择合适的接口，

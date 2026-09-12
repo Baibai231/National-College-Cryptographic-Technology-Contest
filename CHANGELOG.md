@@ -45,6 +45,8 @@
 - [x] 新增 `scripts/run_radar_measurement.py` 和 `run_cloudflare_radar.ps1`：按 Cloudflare
       Radar 官方接口自动选择 Top 100 有序榜单或更大无序 bucket，保存带响应指纹的快照，
       一键衔接预筛、授权策略测量和覆盖率报告。
+- [x] 新增根目录 `run_cloudflare_radar.cmd`，支持双击、`cmd.exe` 和参数透传；无参数时只显示
+      帮助，不会意外启动批量测量。
 - [x] `--skip-preflight` 强制要求配合 `--snapshot`，防止榜单日更后把新目标元数据与旧候选
       JSONL 混用。
 - [x] 新增 `docs/CLOUDFLARE_RADAR_ONE_CLICK.md`，整理 Windows 一键运行、Token 配置、
