@@ -143,6 +143,7 @@ class SitePasswordPolicyTester:
             )
 
         _safe_print("[*] Phase 3: 执行密码政策测试...")
+        measurement_started = time.monotonic()
         my_logger = uub.get_logger(self.test_site)
 
         self._tester = TestPassword(
@@ -405,6 +406,13 @@ class SitePasswordPolicyTester:
         finally:
             password_policy["_probe_evidence"] = list(
                 getattr(self._tester, "_probe_evidence", []))
+            # Throughput telemetry is part of the audit record, not a policy
+            # conclusion.  It lets a multi-shard run estimate remaining wall
+            # time without retaining candidate values or page content.
+            password_policy["_measurement_seconds"] = round(
+                max(0.0, time.monotonic() - measurement_started), 3)
+            password_policy["_probe_count"] = len(
+                password_policy["_probe_evidence"])
             self._tester.my_logger.info(f"Policy of {self.test_site}: {password_policy}")
             self._checkpoint_policy(password_policy, "final")
 

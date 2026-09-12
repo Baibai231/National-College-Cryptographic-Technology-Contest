@@ -401,6 +401,8 @@ curl -X POST http://127.0.0.1:8000/api/classify \
 - `states`：每一步实际看到了哪些字段、方式和阻断。
 - `policy._inconclusive`：口令策略是否因为反馈不足或状态漂移而无法确认。
 - `measurement_quality`：是否满足严格完整门槛、当前到达哪一层、还缺哪些证据。
+- `policy._measurement_seconds` 与 `policy._probe_count`：本次主动测量耗时和脱敏探针数，
+  用于估算分片吞吐；它们是运行遥测，不代表政策结论。
 - `policy._declared_policy_evidence`：HTML/DOM/页面自述规则；是有来源的部分证据，
   但不等于主动接受/拒绝实测。
 - `security_observations.assessment.coverage`：评分覆盖了多少可验证证据。

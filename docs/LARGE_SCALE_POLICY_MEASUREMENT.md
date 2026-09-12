@@ -86,6 +86,8 @@ $env:SITES_MEASURE_EMAIL_PREFIX = "cryptoscope"
   `partial_timeout`，不会把旧缓存或只有静态声明的文件冒充主动测量结果。
 - `--inline-accept-quiet-seconds`：同页负对照成立后，候选持续无错误的观察窗（默认3秒，
   范围2--8秒）；负对照、异步 pending 和门控软错误仍等待完整判定。
+- 每份主动政策都写入 `_measurement_seconds` 和 `_probe_count`，仅用于分片吞吐与剩余时间
+  估算；不保存候选口令值，也不改变严格完整性判断。
 
 ## 数据解释
 
