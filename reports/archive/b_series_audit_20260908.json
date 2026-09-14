@@ -1,0 +1,223 @@
+{
+  "schema_version": "b-series-audit-1.0",
+  "scope": "Mac-local visitor and safe-interaction stage; authorized-account claims remain explicit UNKNOWN",
+  "cohort_integrity": {
+    "A_manual_sites": {
+      "expected": 125,
+      "actual": 125,
+      "match": true
+    },
+    "B_manual_inline_sites": {
+      "expected": 25,
+      "actual": 25,
+      "match": true
+    },
+    "C_full_sites": {
+      "expected": 303,
+      "actual": 303,
+      "match": true
+    },
+    "D_passkey_paper_positive_sites": {
+      "expected": 8,
+      "actual": 8,
+      "match": true
+    },
+    "E_synthetic_scenarios": {
+      "expected": 5,
+      "actual": 5,
+      "match": true
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "B-00",
+      "name": "统一证据模型与安全模式",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "complete",
+      "note": "Evidence/Claim/ModuleResult及三种扫描模式已执行"
+    },
+    {
+      "task_id": "B-01",
+      "name": "认证入口图谱",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "partial",
+      "note": "代码与登录/注册分支守卫完成；人工节点准确率和路径召回率尚未形成完整实验表"
+    },
+    {
+      "task_id": "B-02",
+      "name": "口令政策测量",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "partial",
+      "note": "核心探针和漏斗完成；25个人工inline站完整政策仍为7，未达到12/25探索目标"
+    },
+    {
+      "task_id": "B-03",
+      "name": "口令强度计准确性",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "partial",
+      "note": "论文四维方法（WSpearman/KL/Precision/PrecisionSecurity）和站内一致性完成；真实频率/破解真值基准尚未运行"
+    },
+    {
+      "task_id": "B-04",
+      "name": "MFA/OTP/RBA分类",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "public_complete",
+      "note": "访客可见因子与MFA/RBA边界完成；强制关系仍需授权账号"
+    },
+    {
+      "task_id": "B-05",
+      "name": "OAuth/OIDC流程测量",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "public_complete",
+      "note": "公开参数与Discovery/JWKS链完成；完整授权跳转链仍需账号"
+    },
+    {
+      "task_id": "B-06",
+      "name": "JWT/JWS被动分析",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "public_complete",
+      "note": "被动结构、RSA验签和上下文谓词完成；真实令牌闭环需授权输入"
+    },
+    {
+      "task_id": "B-07",
+      "name": "WebAuthn/Passkey测量",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "public_complete",
+      "note": "公开样本、空虚拟认证器与GitHub两轮完成；账号生命周期仍需授权"
+    },
+    {
+      "task_id": "B-08",
+      "name": "账号恢复机制",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "public_complete",
+      "note": "恢复入口与因子完成；Token与撤销联合谓词保持UNKNOWN"
+    },
+    {
+      "task_id": "B-09",
+      "name": "二维码登录安全",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "public_complete",
+      "note": "二维码存在/刷新与零解码守卫完成；扫码确认和重放不在公开模式执行"
+    },
+    {
+      "task_id": "B-10",
+      "name": "表单秘密泄漏",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "prototype_complete",
+      "note": "论文方法、安全阻断和合成页完成；真实站点正样本实验尚未运行"
+    },
+    {
+      "task_id": "B-11",
+      "name": "数据集、回归与论文实验",
+      "implementation_files_complete": true,
+      "missing_files": [],
+      "empirical_status": "partial",
+      "note": "统一统计与分层语料完成；当前代码的两轮303站全量尚未运行"
+    }
+  ],
+  "all_required_files_present": true,
+  "empirical_baselines": {
+    "authentication_classification": {
+      "login": {
+        "match": 76,
+        "mismatch": 15,
+        "inconclusive_program": 28,
+        "inconclusive_manual": 5,
+        "manual_result_overlap": 124,
+        "evaluated": 91,
+        "accuracy": 0.8352,
+        "coverage": 0.7339,
+        "accuracy_wilson_95": [
+          0.7457,
+          0.8975
+        ]
+      },
+      "signup": {
+        "match": 72,
+        "mismatch": 17,
+        "inconclusive_program": 31,
+        "inconclusive_manual": 4,
+        "manual_result_overlap": 124,
+        "evaluated": 89,
+        "accuracy": 0.809,
+        "coverage": 0.7177,
+        "accuracy_wilson_95": [
+          0.7152,
+          0.8772
+        ]
+      },
+      "manual_result_overlap": 124,
+      "manual_without_authoritative_result": 1,
+      "boundary": "该表衡量现有登录/注册结论与人工记录的可判定一致率；人工数据尚未标注完整图节点和逐边真值，因此不能冒充认证图节点准确率或路径召回率。"
+    },
+    "password_inline_funnel": {
+      "manual_inline_total": 25,
+      "complete_policy_total": 7,
+      "complete_policy_rate_percent": 28.0,
+      "complete_policy_wilson_95": [
+        0.1428,
+        0.4758
+      ],
+      "category_counts": {
+        "complete_policy": 7,
+        "hint_only_no_behavioral_evidence": 1,
+        "human_or_access_gate": 4,
+        "inline_feedback_inconclusive": 2,
+        "password_not_reached": 6,
+        "password_on_unconfirmed_signup_context": 3,
+        "password_reached_inline_unsupported": 1,
+        "verification_before_password": 1
+      }
+    },
+    "password_full_303_snapshot": {
+      "records": 606,
+      "unique_sites": 303,
+      "inline_output_unique_sites": 15,
+      "complete_policy_unique_sites": 14,
+      "complete_policy_site_rate": 0.0462,
+      "runtime_error_records": 6,
+      "boundary": "这是2026-09-04固定档案，不是当前新增B层代码的两轮验收。"
+    },
+    "webauthn_public_two_round": {
+      "binary_presence_agreement": 0.9688,
+      "jaccard_formula": "J_2r=sum_i|F_i1 intersect F_i2|/sum_i|F_i1 union F_i2|",
+      "presence_formula": "A_2r=sum_i,j I[x_ij1=x_ij2]/(N_paired*|X|)",
+      "weighted_feature_jaccard": 0.7143
+    },
+    "webauthn_github_safe_two_round": {
+      "configuration_agreement": 1.0,
+      "matched_features": 14,
+      "comparable_features": 14
+    },
+    "historical_303_round_drift_not_current_acceptance": {
+      "paired_or_union_records": 606,
+      "exact_signature_same": 458,
+      "exact_signature_agreement": 0.7557755775577558,
+      "warning": "两档案代码日期不同，只作为历史漂移基线，不冒充当前代码的两轮验收"
+    }
+  },
+  "stage_gate": {
+    "implementation_gate": "pass",
+    "visitor_safe_interaction_gate": "partial",
+    "competition_full_empirical_gate": "not_met",
+    "blocking_reasons": [
+      "B-01已有登录/注册人工一致率表，但人工语料缺完整图节点和逐边标签，仍不能计算节点准确率与路径召回率",
+      "B-02仅7/25人工inline站形成完整政策，探索目标12/25未达到",
+      "B-03缺真实频率/破解真值数据集实验",
+      "B-10缺真实网站伦理正样本实验",
+      "B-11缺当前固定代码的两轮303站全量",
+      "B-04至B-09的账号后安全性质需要授权测试账号，访客模式不能补造"
+    ]
+  }
+}

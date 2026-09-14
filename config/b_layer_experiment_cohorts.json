@@ -1,0 +1,42 @@
+{
+  "schema_version": "b-layer-cohorts-1.0",
+  "generated_from_existing_evidence": "2026-09-08",
+  "cohorts": [
+    {
+      "id": "A",
+      "name": "人工核验认证站",
+      "expected_unique_sites": 125,
+      "source": "misc/manual_review.json",
+      "purpose": "分类节点、方法与路径人工对照"
+    },
+    {
+      "id": "B",
+      "name": "人工确认inline站",
+      "expected_unique_sites": 25,
+      "source": "misc/manual_review.json#pwd_testability",
+      "purpose": "口令政策恢复率与失败漏斗"
+    },
+    {
+      "id": "C",
+      "name": "全量网站语料",
+      "expected_unique_sites": 303,
+      "source": "reports/archive/headless_postfix_round1_20260904.jsonl",
+      "purpose": "分类与口令政策覆盖、错误和漂移"
+    },
+    {
+      "id": "D",
+      "name": "论文正样本",
+      "expected_unique_sites": 8,
+      "source": "config/webauthn_public_cohort.json",
+      "purpose": "论文工具衍生的Passkey阳性语料"
+    },
+    {
+      "id": "E",
+      "name": "本地可控合成靶场",
+      "expected_scenarios": 5,
+      "source": "scripts/smoke_*",
+      "purpose": "WebAuthn、恢复、二维码、表单泄漏和观察器正负向验证"
+    }
+  ],
+  "integrity_rule": "只引用现有权威路径，不复制、覆盖或回写正式测量记录"
+}

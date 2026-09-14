@@ -73,6 +73,12 @@ class WebAppUiTests(unittest.TestCase):
         # 测到口令政策时，方法清单直接写"进行密码政策测试"
         self.assertIn("进行密码政策测试", self.html)
 
+    def test_repeat_measurement_control_bypasses_database_cache(self):
+        self.assertIn('id="force-retest"', self.html)
+        self.assertIn("重复测试（忽略数据库，重新打开网站测量）", self.html)
+        self.assertIn("force_retest: forceRetest", self.html)
+        self.assertIn("点击“加入数据库”后才会覆盖正式数据", self.html)
+
     def test_db_policy_table_uses_two_columns_when_measured(self):
         # 实测口令政策入库后，详情表只保留"密码政策测试"两列，不加登录/注册
         self.assertIn('colspan="2" class="text-center">密码政策测试', self.html)
@@ -81,6 +87,45 @@ class WebAppUiTests(unittest.TestCase):
         # 未实测时按注册+分类展示三列：条目 + 登录 + 注册
         self.assertIn('colspan="3" class="text-center">注册与分类', self.html)
         self.assertIn("<th>登录（程序）</th><th>注册（程序）</th>", self.html)
+
+    def test_security_assessment_explains_public_evidence_boundary(self):
+        self.assertIn("securityAssessmentHtml", self.html)
+        self.assertIn("访客可见认证安全（论文证据层）", self.html)
+        self.assertIn("入口存在不代表实现安全", self.html)
+        self.assertIn("多种登录方式不等于多因素组合", self.html)
+        self.assertIn("OAuth/OIDC公开请求证据", self.html)
+        self.assertIn("口令强度计样本内一致性", self.html)
+        self.assertIn("JWT/JWS/JWKS密码学验证", self.html)
+        self.assertIn("V<sub>P</sub>", self.html)
+        self.assertIn("C<sub>site</sub>", self.html)
+        self.assertIn("不冒充强度计准确率", self.html)
+        self.assertIn("WebAuthn/Passkey实际调用", self.html)
+        self.assertIn("C<sub>WA</sub>", self.html)
+        self.assertIn("V<sub>alg</sub>", self.html)
+        self.assertIn("B<sub>RP</sub>", self.html)
+        self.assertIn("R<sub>ch</sub>", self.html)
+        self.assertIn("Passkey生命周期同步", self.html)
+        self.assertIn("IANA", self.html)
+        self.assertIn("尚未证明是无口令还是第二因子", self.html)
+        self.assertIn("观察器调用凭据API次数为0", self.html)
+        self.assertIn("不是安全分数", self.html)
+        self.assertIn("OIDC Discovery/JWKS公开信任链", self.html)
+        self.assertIn("V<sub>chain</sub>", self.html)
+        self.assertIn("未主动扫描全站", self.html)
+        self.assertIn("外部提供商结论不等于被测网站自身实现", self.html)
+        self.assertIn("账号恢复", self.html)
+        self.assertIn("C<sub>rec</sub>", self.html)
+        self.assertIn("V<sub>rec</sub>", self.html)
+        self.assertIn("Token熵、一次性、时效", self.html)
+        self.assertIn("二维码登录生命周期", self.html)
+        self.assertIn("R<sub>QR</sub>", self.html)
+        self.assertIn("V<sub>QR</sub>", self.html)
+        self.assertIn("不扫码、不重放、不登录", self.html)
+        self.assertIn("提交前表单秘密", self.html)
+        self.assertIn("E<sub>pre</sub>", self.html)
+        self.assertIn("匹配请求先记录后阻断", self.html)
+        self.assertIn("securityAssessmentHtml(signup.application_security)", self.html)
+        self.assertIn("securityAssessmentHtml(login.application_security)", self.html)
 
 
 class PolicyApiTests(unittest.TestCase):

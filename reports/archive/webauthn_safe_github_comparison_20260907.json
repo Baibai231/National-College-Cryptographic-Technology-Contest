@@ -1,0 +1,118 @@
+{
+  "schema_version": "webauthn-safe-round-comparison-v1",
+  "formula": "A_cfg = sum_i I[x_i^(1)=x_i^(2)] / N_comparable",
+  "matched_features": 14,
+  "comparable_features": 14,
+  "configuration_agreement": 1.0,
+  "guard_statuses": {
+    "safe_interaction_guard": [
+      "pass",
+      "pass"
+    ],
+    "pre_click_authentication": [
+      "pass",
+      "pass"
+    ]
+  },
+  "features": [
+    {
+      "feature": "navigation.loaded",
+      "round1": true,
+      "round2": true,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "control.click_count",
+      "round1": 0,
+      "round2": 0,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "control.error",
+      "round1": "page_initiated_before_click",
+      "round2": "page_initiated_before_click",
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "virtual_authenticator.credentials_before",
+      "round1": 0,
+      "round2": 0,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "virtual_authenticator.credentials_after",
+      "round1": 0,
+      "round2": 0,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.authentication_invocations",
+      "round1": 1,
+      "round2": 1,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.registration_invocations",
+      "round1": 0,
+      "round2": 0,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.challenge_bytes",
+      "round1": 32,
+      "round2": 32,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.rp_id_relation",
+      "round1": "current_host",
+      "round2": "current_host",
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.user_verification",
+      "round1": "required",
+      "round2": "required",
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.allow_credentials_count",
+      "round1": 0,
+      "round2": 0,
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.mediation",
+      "round1": "conditional",
+      "round2": "conditional",
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.pre_click_verdict",
+      "round1": "pass",
+      "round2": "pass",
+      "comparable": true,
+      "equal": true
+    },
+    {
+      "feature": "normalized.guard_verdict",
+      "round1": "pass",
+      "round2": "pass",
+      "comparable": true,
+      "equal": true
+    }
+  ],
+  "privacy_note": "Only redacted derived features are compared; no challenge bytes or credential material are retained."
+}

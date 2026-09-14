@@ -95,6 +95,11 @@
       </select>
       <button id="classify-btn" class="btn btn-success">开始分类</button>
     </div>
+    <div class="form-check mt-2">
+      <input id="force-retest" class="form-check-input" type="checkbox">
+      <label class="form-check-label" for="force-retest">重复测试（忽略数据库，重新打开网站测量）</label>
+      <div class="form-text">适合演示已收录的网站；新结果只保存在任务中，点击“加入数据库”后才会覆盖正式数据。</div>
+    </div>
     <div id="classify-result" class="mt-3"></div>
   </div>
 
@@ -699,6 +704,7 @@ async function showDetail(host) {
   document.getElementById('modal-body').innerHTML = `
     ${policyTestTableHtml(loginWithPwd, signupWithPwd, s.version)}
     ${measuredPwdHtml(s.login.pwd_policy, s.signup.pwd_policy)}
+    ${securityAssessmentHtml(s.application_security)}
     <div class="alert ${s.manual.verified ? 'alert-success' : 'alert-warning'} py-2">
       <b>人工复核：</b>${s.manual.verified ? '' : '（待人工）'}
       <span id="review-count-badge" class="small"></span>
@@ -905,6 +911,226 @@ function measuredPwdHtml(loginPwd, signupPwd) {
     ? `<div class="mt-1"><b>${label}实测口令规则：</b>${measuredPolicyHtml(p)}</div>` : '';
   return `<div class="alert alert-light py-2 mt-2">${row('登录', loginPwd)}${row('注册', signupPwd)}</div>`;
 }
+const FACTOR_ZH = {
+  knowledge_password: '口令（知识因子）', possession_otp: '验证码（持有因子）',
+  public_key_passkey: 'Passkey/WebAuthn（公钥凭据）',
+  out_of_band_qr: '二维码带外认证', federated_identity: '联合身份认证'
+};
+function securityAssessmentHtml(applicationSecurity) {
+  const sec = applicationSecurity || {};
+  const surface = (sec.result || {}).claims || [];
+  const claim = id => surface.find(c => c.metric_id === id) || {};
+  const inventory = claim('auth.methods.publicly_observed').value || {};
+  const factors = (inventory.factor_families || []).map(x => FACTOR_ZH[x] || x);
+  const capability = (id, label) => {
+    const c = claim(id), observed = !!((c.value || {}).observed);
+    return `<div><b>${label}：</b>${observed
+      ? '<span class="text-success">已观察到公开入口</span>'
+      : '<span class="text-secondary">当前页面未观察到（不等于不支持）</span>'}</div>`;
+  };
+  const protocolClaims = (((sec.passive_protocol_probe || {}).result || {}).claims || []);
+  const protocolClaim = id => protocolClaims.find(c => c.metric_id === id) || {};
+  const oauth = protocolClaim('auth.oauth.public_request_metadata').value || {};
+  const endpoints = oauth.endpoints || [];
+  const oauthHtml = endpoints.length ? endpoints.map(e => {
+    const protections = [];
+    if (e.state_observed) protections.push('state');
+    if (e.nonce_observed) protections.push('nonce');
+    if (e.pkce_challenge_observed) protections.push('PKCE challenge');
+    if (e.pkce_method_observed) protections.push('PKCE method');
+    return `<div class="small"><code>${esc((e.origin || '') + (e.path || ''))}</code>；公开参数：${
+      (e.query_parameter_names || []).map(esc).join('、') || '未观察到'}；保护信号：${
+      protections.join('、') || '当前DOM未观察到'}</div>`;
+  }).join('') : '<div class="small text-secondary">当前DOM没有可直接读取的OAuth/OIDC请求；参数可能在点击或重定向后生成。</div>';
+  const meterClaims = (((sec.password_meter_evaluation || {}).result || {}).claims || []);
+  const meterClaim = id => meterClaims.find(c => c.metric_id === id) || {};
+  const meterValue = meterClaim('auth.password_meter.site_consistency').value || {};
+  const meterHtml = meterValue.meter_labeled_total ? `<div class="mt-1">
+    <b>口令强度计样本内一致性：</b>${meterValue.consistency == null ? '证据不足'
+      : (meterValue.consistency * 100).toFixed(1) + '%'}
+    <span class="small text-muted">（C<sub>site</sub>=1-(接受且弱+拒绝且强)/有效配对；标签${meterValue.meter_labeled_total}条、有效配对${meterValue.paired_total}条）</span>
+    ${meterValue.accepted_weak || meterValue.rejected_strong
+      ? `<div class="small text-warning">观察到：弱但接受 ${meterValue.accepted_weak || 0} 条，强但拒绝 ${meterValue.rejected_strong || 0} 条。</div>` : ''}
+    <div class="small text-secondary">这只是有限样本中的站内一致性；即使为100%也不判定通过。没有口令频率和破解真值，不冒充强度计准确率。</div>
+  </div>` : '';
+  const joseClaims = (((sec.jose_validation || {}).result || {}).claims || []);
+  const joseClaim = joseClaims.find(c => c.metric_id === 'auth.jose.validation_predicate') || {};
+  const joseValue = joseClaim.value || {};
+  const joseHtml = joseClaims.length ? `<div class="mt-1">
+    <b>JWT/JWS/JWKS密码学验证：</b>${joseValue.observed_total
+      ? `公开观察到 ${joseValue.observed_total} 个JOSE对象；算法 ${
+          (joseValue.algorithms || []).map(esc).join('、') || '未声明'}`
+      : '<span class="text-secondary">当前公开页面未观察到JOSE对象（不等于网站未使用）</span>'}
+    ${joseValue.unsecured_total
+      ? `<div class="small text-danger">发现 ${joseValue.unsecured_total} 个未签名或alg=none对象。</div>` : ''}
+    ${joseValue.failed_verification_total
+      ? `<div class="small text-danger">有 ${joseValue.failed_verification_total} 个对象未通过密码学/上下文验证。</div>` : ''}
+    <div class="small text-muted">V<sub>P</sub>=∧<sub>j∈R(P)</sub>V<sub>j</sub>；按ID Token/JARM/JAR等用途选取签名、算法、发行者、受众、时效、nonce和typ检查，必查项缺少上下文时不判通过。</div>
+    <div class="small text-secondary">不会展示或保存令牌、签名、claim值及JWK材料。</div>
+  </div>` : '';
+  const webauthnClaims = (((sec.webauthn_observer || {}).result || {}).claims || []);
+  const webauthnClaim = id => webauthnClaims.find(c => c.metric_id === id) || {};
+  const webauthnInvocation = webauthnClaim('auth.webauthn.api_invocation').value || {};
+  const webauthnChallenge = webauthnClaim('auth.webauthn.challenge_length').value || {};
+  const webauthnConfig = webauthnClaim('auth.webauthn.request_configuration').value || {};
+  const webauthnAlgorithms = webauthnClaim('auth.webauthn.cose_algorithm_policy').value || {};
+  const webauthnRpScope = webauthnClaim('auth.webauthn.rp_scope').value || {};
+  const webauthnProfile = webauthnClaim('auth.webauthn.passkey_profile').value || {};
+  const webauthnLifecycle = webauthnClaim('auth.webauthn.lifecycle_sync').value || {};
+  const ceremonyZh = {registration: '注册 create()', authentication: '认证 get()'};
+  const rpZh = {
+    default_current_origin: '默认当前源', current_host: '当前主机',
+    parent_domain_candidate: '父域候选',
+    different_or_related_origin: '不同域或关联源（需进一步验证）', unknown: '未知'
+  };
+  const webauthnRows = (webauthnConfig.invocations || []).map((w, i) => {
+    const details = [`challenge ${w.challenge_bytes == null ? '长度未知' : w.challenge_bytes + ' 字节'}`,
+      `RP关系 ${rpZh[w.rp_id_relation] || w.rp_id_relation || '未知'}`,
+      `用户验证 ${w.user_verification || 'default'}`];
+    if (w.ceremony === 'registration') {
+      details.push(`驻留密钥 ${w.resident_key || 'default'}`);
+      details.push(`COSE算法 ${(w.pub_key_algorithms || []).join('、') || '未读取'}`);
+    } else {
+      details.push(`允许凭据数 ${w.allow_credentials_count == null ? '未知' : w.allow_credentials_count}`);
+      details.push(`mediation ${w.mediation || 'default'}`);
+    }
+    return `<div class="small">${i + 1}. ${esc(ceremonyZh[w.ceremony] || w.ceremony)}：${details.map(esc).join('；')}</div>`;
+  }).join('');
+  const webauthnHtml = webauthnClaims.length ? `<div class="mt-1">
+    <b>WebAuthn/Passkey实际调用：</b>${webauthnInvocation.observed
+      ? `观察到 ${webauthnInvocation.invocation_count || 0} 次页面发起调用`
+      : '<span class="text-secondary">当前流程未观察到API调用（不等于网站不支持）</span>'}
+    ${webauthnRows}
+    ${webauthnChallenge.below_16_bytes_count
+      ? `<div class="small text-danger">发现 ${webauthnChallenge.below_16_bytes_count} 次challenge短于W3C建议的16字节。</div>` : ''}
+    ${webauthnChallenge.reused_in_document_count
+      ? `<div class="small text-danger">发现 ${webauthnChallenge.reused_in_document_count} 次同一文档内challenge重复；R<sub>ch</sub>=${
+          ((webauthnChallenge.reuse_rate || 0) * 100).toFixed(1)}%。</div>` : ''}
+    ${webauthnAlgorithms.offered_total ? `<div class="small">
+      COSE算法（IANA ${esc(webauthnAlgorithms.registry_snapshot || '快照未知')}）：推荐 ${
+        (webauthnAlgorithms.recommended || []).map(x => `${esc(x.name)}(${x.id})`).join('、') || '无'}；
+      不推荐/弃用/不兼容 ${[
+        ...(webauthnAlgorithms.not_recommended || []),
+        ...(webauthnAlgorithms.deprecated || []),
+        ...(webauthnAlgorithms.symmetric_or_mac_incompatible || []),
+        ...(webauthnAlgorithms.unknown_or_non_signature || [])
+      ].map(x => `${esc(x.name)}(${x.id})`).join('、') || '无'}。
+      <span class="text-muted">V<sub>alg</sub>=(A≠∅)∧(A⊆R<sub>sig,recommended</sub>)</span>
+    </div>` : ''}
+    ${webauthnRpScope.observed_total ? `<div class="small">
+      RP范围：当前主机 ${webauthnRpScope.narrow_current_host_count || 0} 次；父域放宽 ${
+        webauthnRpScope.parent_scope_count || 0} 次；不同域/关联源待验证 ${
+        webauthnRpScope.different_or_related_origin_count || 0} 次。
+      <span class="text-muted">B<sub>RP</sub>=max(host标签数−RP标签数)=${
+        webauthnRpScope.max_host_labels_removed || 0}</span>
+    </div>` : ''}
+    ${(webauthnProfile.authentication_profiles || []).length ? `<div class="small">
+      认证模式：conditional ${webauthnProfile.conditional_count || 0} 次；discoverable ${
+        webauthnProfile.discoverable_count || 0} 次；non-discoverable ${
+        webauthnProfile.non_discoverable_count || 0} 次；userVerification=discouraged ${
+        webauthnProfile.user_verification_discouraged_count || 0} 次。
+      <span class="text-secondary">尚未证明是无口令还是第二因子，也未验证响应UV标志。</span>
+    </div>` : ''}
+    <div class="small">Passkey生命周期同步：${webauthnLifecycle.observed
+      ? `观察到 ${webauthnLifecycle.invocation_count || 0} 次（${
+          (webauthnLifecycle.signal_types || []).map(esc).join('、')}）`
+      : '<span class="text-secondary">当前流程未观察到signal API调用；登录后设置页仍可能使用</span>'}</div>
+    <div class="small text-muted">C<sub>WA</sub>=(1/n)Σ<sub>i</sub>(Σ<sub>j</sub>𝟙[o<sub>ij</sub>已观察]/|R<sub>i</sub>|)；本次配置证据覆盖率 ${
+      (((webauthnConfig.configuration_coverage || 0) * 100).toFixed(1))}% ，不是安全分数。</div>
+    <div class="small text-secondary">观察器调用凭据API次数为0，调用生命周期API次数也为0；challenge只在页面内用随机HMAC比较相等性，不保存原值或标签；用户/凭据ID和认证器响应也不保存。零重复、推荐算法或窄RP范围都不代表服务端验签安全。</div>
+  </div>` : '';
+  const oidcClaims = (((sec.oidc_discovery || {}).result || {}).claims || []);
+  const oidcClaim = id => oidcClaims.find(c => c.metric_id === id) || {};
+  const oidcDiscovery = oidcClaim('auth.oidc.discovery_metadata').value || {};
+  const oidcChainClaim = oidcClaim('auth.oidc.issuer_jwks_chain');
+  const oidcChain = oidcChainClaim.value || {};
+  const oidcHygiene = oidcClaim('auth.oidc.jwks_hygiene').value || {};
+  const oidcProviders = (oidcChain.providers || []).map(p => {
+    const keys = p.jwks_summary || {};
+    const keyInfo = p.jwks_fetched
+      ? `JWKS ${keys.key_count || 0}把；类型 ${(keys.key_types || []).map(esc).join('、') || '未知'}；算法 ${(keys.algorithms || []).map(esc).join('、') || '未声明'}；RSA位数 ${(keys.rsa_modulus_bits || []).join('、') || '无'}`
+      : 'JWKS未取得';
+    const role = p.role === 'site_origin' ? '站点同源候选' : '外部身份提供商';
+    return `<div class="small"><code>${esc(p.issuer || '')}</code>（${role}）：元数据${p.metadata_observed ? '已读取' : '未读取'}；issuer精确绑定${p.issuer_exact_match === true ? '通过' : (p.issuer_exact_match === false ? '失败' : '未知')}；${keyInfo}${
+      (p.errors || []).length ? `；边界/错误 ${p.errors.map(esc).join('、')}` : ''}</div>`;
+  }).join('');
+  const hygieneIssues = oidcHygiene.issues || {};
+  const oidcVerdictZh = {pass: '通过', fail: '失败', weak: '弱项', unknown: '未知'};
+  const oidcHtml = oidcClaims.length ? `<div class="mt-1">
+    <b>OIDC Discovery/JWKS公开信任链：</b>${oidcDiscovery.observed
+      ? `读取到 ${oidcDiscovery.metadata_observed_count || 0}/${oidcDiscovery.candidate_count || 0} 个标准元数据；链验证 ${oidcVerdictZh[oidcChainClaim.verdict] || '未知'}`
+      : '<span class="text-secondary">当前DOM没有可归因的发行者候选，未主动扫描全站</span>'}
+    ${oidcProviders}
+    ${(hygieneIssues.private_or_symmetric_keys || 0)
+      ? `<div class="small text-danger">公开JWKS发现 ${hygieneIssues.private_or_symmetric_keys} 把对称密钥或含私钥参数的密钥。</div>` : ''}
+    ${(hygieneIssues.rsa_below_2048 || 0)
+      ? `<div class="small text-warning">发现 ${hygieneIssues.rsa_below_2048} 把RSA密钥低于2048位。</div>` : ''}
+    <div class="small text-muted">V<sub>chain</sub>=V<sub>TLS</sub>∧V<sub>issuer</sub>∧V<sub>jwks-https</sub>∧V<sub>jwks-fetch</sub>；每项未知都不能算通过。</div>
+    <div class="small text-secondary">只保留公开端点和密钥数量/类型/位数摘要；不保存元数据全文或JWK材料。外部提供商结论不等于被测网站自身实现。</div>
+  </div>` : '';
+  const recoveryClaims = (((sec.account_recovery || {}).result || {}).claims || []);
+  const recoveryClaim = id => recoveryClaims.find(c => c.metric_id === id) || {};
+  const recoveryEntry = recoveryClaim('auth.recovery.public_entry').value || {};
+  const recoveryFactors = recoveryClaim('auth.recovery.factor_surface').value || {};
+  const recoveryFactorZh = {
+    email: '邮箱', sms: '短信', security_question: '安全问题', backup_code: '备用码',
+    trusted_device: '可信设备', passkey: 'Passkey/安全密钥', customer_support: '人工客服'
+  };
+  const recoveryHtml = recoveryClaims.length ? `<div class="mt-1">
+    <b>账号恢复：</b>${recoveryEntry.observed
+      ? `<span class="text-success">观察到公开恢复入口</span>（控件 ${recoveryEntry.control_count || 0} 个）`
+      : '<span class="text-secondary">当前页面未观察到恢复入口（不等于没有）</span>'}
+    <div class="small">恢复因子提示：${(recoveryFactors.factor_hints || []).length
+      ? recoveryFactors.factor_hints.map(x => esc(recoveryFactorZh[x] || x)).join('、') : '未观察到'}；
+      公开证据覆盖率 ${((recoveryFactors.evidence_coverage || 0) * 100).toFixed(1)}%。</div>
+    <div class="small text-muted">C<sub>rec</sub>=(I<sub>entry</sub>+I<sub>factor</sub>+I<sub>form</sub>)/3；
+      V<sub>rec</sub>=V<sub>entropy</sub>∧V<sub>one-time</sub>∧V<sub>expiry</sub>∧V<sub>session-revoke</sub>∧V<sub>auth-revoke</sub>。</div>
+    <div class="small text-secondary">本轮没有发送恢复请求；Token熵、一次性、时效、旧会话/凭据撤销和OPRF隐私均为未知，不能由入口存在推断。</div>
+  </div>` : '';
+  const qrLifecycleClaims = (((sec.qr_lifecycle || {}).result || {}).claims || []);
+  const qrLifecycleClaim = id => qrLifecycleClaims.find(c => c.metric_id === id) || {};
+  const qrRendered = qrLifecycleClaim('auth.qr.rendered_login_code').value || {};
+  const qrRefresh = qrLifecycleClaim('auth.qr.page_refresh').value || {};
+  const qrProtocol = qrLifecycleClaim('auth.qr.protocol_security_variables').value || {};
+  const qrGuard = qrLifecycleClaim('auth.qr.passive_safety_guard').value || {};
+  const qrLifecycleHtml = qrLifecycleClaims.length ? `<div class="mt-1">
+    <b>二维码登录生命周期：</b>${qrRendered.observed
+      ? '<span class="text-success">认证语境中观察到二维码展示</span>'
+      : '<span class="text-secondary">当前页面未观察到二维码（不等于没有）</span>'}
+    <div class="small">页内采样 ${qrRendered.sample_count || 0} 次；可比较 ${qrRefresh.comparison_count || 0} 次；
+      变化 ${qrRefresh.change_count || 0} 次；R<sub>QR</sub>=${qrRefresh.refresh_rate == null ? '未知' : (qrRefresh.refresh_rate * 100).toFixed(1) + '%'}。</div>
+    <div class="small text-muted">V<sub>QR</sub>=V<sub>bind</sub>∧V<sub>random</sub>∧V<sub>server-gen</sub>∧V<sub>one-time</sub>∧V<sub>token-bind</sub>∧V<sub>confirm</sub>。</div>
+    <div class="small text-secondary">本轮不返回或解码二维码/QrId，不扫码、不重放、不登录；Session绑定、随机性、一次性、Token完整性与手机确认均为未知。安全守卫：${qrGuard.guard_passed ? '通过' : '未知'}。</div>
+  </div>` : '';
+  const leakyClaims = (((sec.pre_submit_secret_exposure || {}).result || {}).claims || []);
+  const leakyClaim = id => leakyClaims.find(c => c.metric_id === id) || {};
+  const leakyNetwork = leakyClaim('auth.form_secret.network_exfiltration_attempt').value || {};
+  const leakyGuard = leakyClaim('auth.form_secret.safe_interaction_guard').value || {};
+  const leakyHtml = leakyClaims.length ? `<div class="mt-1">
+    <b>提交前表单秘密：</b>检测到合成标记外发尝试 ${leakyNetwork.attempt_count || 0} 次（第一方 ${leakyNetwork.first_party_attempt_count || 0}、第三方 ${leakyNetwork.third_party_attempt_count || 0}；邮箱 ${leakyNetwork.email_attempt_count || 0}、口令 ${leakyNetwork.password_attempt_count || 0}）。
+    <div class="small text-muted">E<sub>pre</sub>=N<sub>detected-pre-submit</sub>/N<sub>filled-fields</sub>；本轮 ${leakyNetwork.attempt_rate == null ? '证据不足' : (leakyNetwork.attempt_rate * 100).toFixed(1) + '%'}。</div>
+    <div class="small text-secondary">仅使用一次性合成标记；匹配请求先记录后阻断，不展示标记、请求体或完整URL，不提交表单。安全守卫：${leakyGuard.guard_passed ? '通过' : '未知'}。零命中不等于网站从不采集。</div>
+  </div>` : '';
+  if (!surface.length && !protocolClaims.length && !meterClaims.length && !joseClaims.length && !webauthnClaims.length && !oidcClaims.length && !recoveryClaims.length && !qrLifecycleClaims.length && !leakyClaims.length) return '';
+  return `<div class="alert alert-light py-2 mt-2">
+    <div><b>访客可见认证安全（论文证据层）</b></div>
+    <div class="small text-muted mb-1">只报告公开观察结果；入口存在不代表实现安全，未观察到也不判定为不支持。</div>
+    <div class="small"><b>认证因子：</b>${factors.length ? factors.map(esc).join('、') : '当前未确认'}</div>
+    ${capability('auth.passkey.public_offer', 'Passkey/WebAuthn')}
+    ${capability('auth.federation.public_offer', 'OAuth/OIDC/第三方登录')}
+    ${capability('auth.qr.public_offer', '二维码登录')}
+    <div><b>MFA强制：</b><span class="text-secondary">未知（多种登录方式不等于多因素组合）</span></div>
+    <div><b>风险认证RBA：</b><span class="text-secondary">未知（需授权账号对照实验）</span></div>
+    <div class="mt-1"><b>OAuth/OIDC公开请求证据：</b>${oauthHtml}</div>
+    ${meterHtml}
+    ${joseHtml}
+    ${webauthnHtml}
+    ${oidcHtml}
+    ${recoveryHtml}
+    ${qrLifecycleHtml}
+    ${leakyHtml}
+  </div>`;
+}
 function isPolicyMeasured(d) {
   return !!(d && (d.policy_measured === true ||
     (d.policy && typeof d.policy === 'object' && 'restrictive' in d.policy)));
@@ -1011,7 +1237,7 @@ async function loadTasks() {
       return `<tr>
         <td class="small"><code>${esc(t.task_id)}</code></td>
         <td>${esc(t.url)}</td>
-        <td class="small">${taskKindLabel(t.kind)}</td>
+        <td class="small">${taskKindLabel(t.kind)}${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">重复测试</div>' : ''}</td>
         <td><span class="badge bg-${badge}">${running ? '<span class="spinner-border spinner-border-sm me-1"></span>' : ''}${TASK_STATUS_ZH[t.status] || t.status}</span></td>
         <td class="small text-muted">${fmtTime(t.created_at)}</td>
         <td class="text-end">
@@ -1112,9 +1338,11 @@ async function showTaskResult(taskId) {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — ${t.status === 'done' ? '口令政策测量完成' : '未完成'}</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交 · ${fmtTime(t.finished_at)} 完成</div>
+        ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
         ${result.from_database ? '<div class="badge bg-secondary mt-1">数据库已有结果，未重复测量</div>' : ''}
       </div>
       ${t.status === 'done' ? policyBoxHtml(result) : ''}
+      ${securityAssessmentHtml(result.application_security)}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   } else if (result.entry_kind === 'both') {
     // 注册+登录合并结果：已测侧标注"数据库已有"，未测侧为现场结果
@@ -1125,27 +1353,33 @@ async function showTaskResult(taskId) {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — 注册+登录分类</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交${t.finished_at ? ' · ' + fmtTime(t.finished_at) + ' 完成' : ''}</div>
+        ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
       </div>
       ${signup.flow_type ? `
         <div class="alert alert-info py-2 mb-2"><div><b>注册${signupTag}</b></div>
           <div class="mt-2">${reportTableHtml(null, signup, 'v4')}</div>
           <div class="mt-2">${extraLines(signup, '注册')}</div>
+          ${securityAssessmentHtml(signup.application_security)}
         </div>` : (signup.error ? `<div class="alert alert-danger py-2">注册失败: ${esc(signup.error)}</div>` : '')}
       ${login.flow_type ? `
         <div class="alert alert-info py-2 mb-2"><div><b>登录${loginTag}</b></div>
           <div class="mt-2">${reportTableHtml(login, null, 'v4')}</div>
           <div class="mt-2">${extraLines(login, '登录')}</div>
+          ${securityAssessmentHtml(login.application_security)}
         </div>` : (login.error ? `<div class="alert alert-danger py-2">登录失败: ${esc(login.error)}</div>` : '')}
+      ${securityAssessmentHtml(result.application_security)}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   } else {
     body = `<div class="alert alert-info py-2">
         <div><b>${esc(t.url)}</b> — ${TASK_STATUS_ZH[t.status] || t.status}</div>
         <div class="small text-muted">${fmtTime(t.created_at)} 提交${t.finished_at ? ' · ' + fmtTime(t.finished_at) + ' 完成' : ''}</div>
+        ${t.force_retest ? '<div class="badge bg-warning text-dark mt-1">已忽略数据库并重新测量</div>' : ''}
       </div>
       ${t.status === 'done' ? reportTableHtml(
         result.entry_kind === 'login' ? result : null,
         result.entry_kind === 'signup' ? result : null, 'v4') : ''}
       ${result.flow_type ? extraLines(result, '分类') : ''}
+      ${securityAssessmentHtml(result.application_security)}
       ${t.error ? `<div class="alert alert-danger py-2">${esc(t.error)}</div>` : ''}`;
   }
   document.getElementById('modal-title').textContent = '任务结果';
@@ -1156,6 +1390,7 @@ loadTasks();
 document.getElementById('classify-btn').addEventListener('click', async () => {
   const url = document.getElementById('classify-url').value.trim();
   const kind = document.getElementById('classify-kind').value;
+  const forceRetest = document.getElementById('force-retest').checked;
   if (!url) { alert('请输入网站 URL'); return; }
   const btn = document.getElementById('classify-btn');
   const box = document.getElementById('classify-result');
@@ -1166,21 +1401,21 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       const r = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, kind: 'policy', entry_kind: 'signup', method: 'auto' })
+        body: JSON.stringify({ url, kind: 'policy', entry_kind: 'signup', method: 'auto', force_retest: forceRetest })
       });
       const d = await r.json();
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
       box.innerHTML = `<div class="alert alert-success py-2">
         <div><b>口令政策测量任务已提交</b></div>
         <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
-        <div class="small text-muted">后台测量中（约 1-15 分钟）。刷新页面不影响测量，完成后可在下方"我的测量任务"查看结果。</div>
+        <div class="small text-muted">${forceRetest ? '已忽略数据库并重新打开网站测量。' : '若数据库已有口令政策，将直接使用已有结果。'}后台任务约需 1-15 分钟，刷新页面不影响测量。</div>
       </div>`;
     } else {
       const entryKind = kind;  // 'both' 原样提交，后端分别查库/现场测
       const r = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, kind: 'classify', entry_kind: entryKind })
+        body: JSON.stringify({ url, kind: 'classify', entry_kind: entryKind, force_retest: forceRetest })
       });
       const d = await r.json();
       if (d.detail) { box.innerHTML = `<div class="alert alert-danger py-2">${esc(d.detail)}</div>`; return; }
@@ -1188,7 +1423,7 @@ document.getElementById('classify-btn').addEventListener('click', async () => {
       box.innerHTML = `<div class="alert alert-success py-2">
         <div><b>${label}任务已提交</b></div>
         <div class="small mt-1">任务 ID: <code>${esc(d.task_id)}</code></div>
-        <div class="small text-muted">已测过的部分直接使用数据库结果，未测的部分后台测量。完成后在下方"我的测量任务"查看。</div>
+        <div class="small text-muted">${forceRetest ? '已忽略数据库，将重新打开网站测量。' : '已测过的部分直接使用数据库结果，未测的部分后台测量。'}完成后在下方"我的测量任务"查看。</div>
       </div>`;
     }
     loadTasks();

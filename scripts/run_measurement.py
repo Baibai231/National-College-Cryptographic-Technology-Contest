@@ -49,7 +49,7 @@ def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
         "states": [], "policy": {}, "evidence": [], "error": None,
     }
     try:
-        if measure_policy:
+        if measure_policy and kind == "signup":
             # 完整流程（分类 + 密码政策测量）：复用 main.test_single_site，
             # 它内部完成注册页发现→分类→inline 密码测量→(失败时)回退仅分类。
             # 此前 classify_one 只跑分类器，从不进入密码测量，导致批量结果
@@ -67,15 +67,21 @@ def classify_one(site: str, kind: str, measure_policy: bool = False) -> dict:
             if not record.get("start_url") and result.get("final_url"):
                 record["start_url"] = result["final_url"]
             return record
+        # 口令政策目前只在注册路径上安全测量。批量任务同时请求 login 时，
+        # login 仍执行独立登录分类；绝不能把第二次 signup 政策结果贴上 login
+        # 标签（历史批次曾因此造成两侧结果高度相同）。
         driver = _get_new_driver()
         discovery = LoginLinkDiscovery(driver)
-        signup_url = discovery.navigate_to_signup(site)
+        if kind == "login":
+            entry_url = discovery.navigate_to_login(site)
+        else:
+            entry_url = discovery.navigate_to_signup(site)
         engine = SignupFlowClassifierEngine(driver)
-        if not signup_url:
-            signup_url = driver.current_url
+        if not entry_url:
+            entry_url = driver.current_url
         entry_clicked = getattr(discovery, "_entry_clicked", False)
         result = engine.classify(
-            signup_url, entry_kind=kind,
+            entry_url, entry_kind=kind,
             entry_already_clicked=bool(entry_clicked and kind == "signup"),
         )
         record["flow_type"] = result.get("flow_type")
@@ -160,61 +166,118 @@ def _iter_with_site_timeout(tasks, workers: int, timeout_seconds: int,
             "kind": kind, "started": time.monotonic(),
         }
 
-    while len(active) < workers and not exhausted:
-        start_next()
-
-    while active:
-        completed = []
-        for pid, item in list(active.items()):
-            process = item["process"]
-            elapsed = time.monotonic() - item["started"]
-            if process.is_alive() and elapsed < timeout_seconds:
-                continue
-
-            timed_out = process.is_alive()
-            if timed_out:
+    def stop_and_close(item):
+        """Best-effort cleanup used on timeout, Ctrl-C and circuit breaking."""
+        process = item["process"]
+        try:
+            if process.is_alive():
                 process.terminate()
             process.join(timeout=5)
             if process.is_alive():
                 process.kill()
                 process.join(timeout=5)
+        except Exception:
+            pass
+        try:
+            item["queue"].close()
+            item["queue"].join_thread()
+        except Exception:
+            pass
+        try:
+            process.close()
+        except Exception:
+            pass
 
-            if timed_out:
-                record = {
-                    "site": item["site"],
-                    "hostname": urlparse(item["site"]).hostname or item["site"],
-                    "entry_kind": item["kind"],
-                    "error": "site_timeout:{}s".format(timeout_seconds),
-                }
-            else:
-                try:
-                    record = item["queue"].get(timeout=0.5)
-                except queue.Empty:
+    try:
+        while len(active) < workers and not exhausted:
+            start_next()
+
+        while active:
+            completed = []
+            for pid, item in list(active.items()):
+                process = item["process"]
+                elapsed = time.monotonic() - item["started"]
+                if process.is_alive() and elapsed < timeout_seconds:
+                    continue
+
+                timed_out = process.is_alive()
+                if timed_out:
+                    process.terminate()
+                process.join(timeout=5)
+                if process.is_alive():
+                    process.kill()
+                    process.join(timeout=5)
+
+                if timed_out:
                     record = {
                         "site": item["site"],
                         "hostname": urlparse(item["site"]).hostname or item["site"],
                         "entry_kind": item["kind"],
-                        "error": "worker_exited_without_result",
+                        "error": "site_timeout:{}s".format(timeout_seconds),
                     }
-            try:
-                item["queue"].close()
-                item["queue"].join_thread()
-            except Exception:
-                pass
-            try:
-                process.close()
-            except Exception:
-                pass
-            completed.append((pid, record))
+                else:
+                    try:
+                        record = item["queue"].get(timeout=0.5)
+                    except queue.Empty:
+                        record = {
+                            "site": item["site"],
+                            "hostname": urlparse(item["site"]).hostname or item["site"],
+                            "entry_kind": item["kind"],
+                            "error": "worker_exited_without_result",
+                        }
+                stop_and_close(item)
+                completed.append((pid, record))
 
-        for pid, record in completed:
-            active.pop(pid, None)
-            yield record
-            while len(active) < workers and not exhausted:
-                start_next()
+            for pid, record in completed:
+                active.pop(pid, None)
+                yield record
+                while len(active) < workers and not exhausted:
+                    start_next()
 
-        if not completed:
-            time.sleep(0.2)
+            if not completed:
+                time.sleep(0.2)
+    finally:
+        # Breaking the consumer loop used to leave already-started Chrome
+        # workers alive.  Always reap them so a failed batch cannot keep
+        # relaunching Chrome or leave stale chromedriver processes behind.
+        for item in list(active.values()):
+            stop_and_close(item)
+        active.clear()
+
+
+def _is_chrome_startup_failure(record: dict) -> bool:
+    """Return True for infrastructure failures before a browser session exists."""
+    error = str(record.get("error") or "").lower()
+    markers = (
+        "session not created",
+        "cannot connect to chrome",
+        "chrome not reachable",
+        "failed to start chrome",
+        "devtoolsactiveport file doesn't exist",
+        "no such window: target window already closed",
+    )
+    return any(marker in error for marker in markers)
+
+
+def _configure_browser_mode(args):
+    """Choose a safe display mode for batch work and return a user note."""
+    if args.headless:
+        os.environ["SITES_HEADLESS"] = "1"
+        return "已显式启用无头 Chrome"
+    if args.headful:
+        os.environ.pop("SITES_HEADLESS", None)
+        if sys.platform == "darwin" and args.workers > 1:
+            args.workers = 1
+            return "macOS 有头 Chrome 已限制为单并发，避免 AppKit 启动崩溃"
+        return "已显式启用有头 Chrome"
+    if (sys.platform == "darwin" and args.workers > 1
+            and not os.environ.get("SITES_HEADLESS")):
+        # macOS 26 + Chrome 152 can SIGABRT in _RegisterApplication when
+        # several GUI Chrome instances are launched together.  Bulk runs are
+        # unattended and should mirror the server, so default them to headless.
+        os.environ["SITES_HEADLESS"] = "1"
+        return "macOS 并发批量任务自动使用无头 Chrome；人工观察请传 --headful"
+    return None
 
 
 def main():
@@ -237,10 +300,20 @@ def main():
                     help="主跑后对 unknown/error 记录自动重跑 N 轮并多数投票取稳定结果")
     ap.add_argument("--site-timeout", type=int, default=0,
                     help="单站进程级超时秒数；0 表示沿用线程模式。全量回归建议 90")
+    display = ap.add_mutually_exclusive_group()
+    display.add_argument("--headless", action="store_true",
+                         help="显式使用无头 Chrome（服务器/批量回归推荐）")
+    display.add_argument("--headful", action="store_true",
+                         help="显式显示 Chrome；macOS 自动限制为单并发")
+    ap.add_argument("--startup-failure-limit", type=int, default=3,
+                    help="连续浏览器启动失败达到此数时中止整批，默认 3；0 表示不熔断")
     args = ap.parse_args()
 
     if args.resume and args.overwrite:
         ap.error("--resume 与 --overwrite 不能同时使用")
+    browser_note = _configure_browser_mode(args)
+    if browser_note:
+        print("[浏览器保护] {}".format(browser_note))
     inputs = args.input or ["misc/sites_base_60.txt"]
     sites = []
     seen_hosts = set()
@@ -273,7 +346,10 @@ def main():
                     continue
                 try:
                     r = json.loads(line)
-                    done.add((r.get("site"), r.get("entry_kind")))
+                    # 失败记录不是完成记录；断点续跑应自动重试，而不是把
+                    # session-not-created / timeout 永久当作已经测完。
+                    if not r.get("error"):
+                        done.add((r.get("site"), r.get("entry_kind")))
                 except json.JSONDecodeError:
                     continue
         print(f"[resume] 已存在 {len(done)} 条记录，跳过")
@@ -304,6 +380,8 @@ def main():
                                "error": "{}:{}".format(type(exc).__name__, str(exc)[:200])}
         completed_records = _thread_records()
 
+    startup_failure_streak = 0
+    aborted_for_startup = False
     for i, rec in enumerate(completed_records, 1):
         site = rec.get("site") or ""
         kind = rec.get("entry_kind") or "?"
@@ -315,12 +393,28 @@ def main():
               f"-> {rec.get('flow_type')} ({rec.get('stop_reason')})")
         if rec.get("error"):
             fail += 1
+        if _is_chrome_startup_failure(rec):
+            startup_failure_streak += 1
+        else:
+            startup_failure_streak = 0
+        if (args.startup_failure_limit > 0
+                and startup_failure_streak >= args.startup_failure_limit):
+            aborted_for_startup = True
+            print(
+                "[浏览器保护] 连续 {} 次 Chrome 启动失败，已中止本批；"
+                "请先修复浏览器环境，再用 --resume 重试失败项。".format(
+                    startup_failure_streak))
+            close = getattr(completed_records, "close", None)
+            if close:
+                close()
+            break
     elapsed = time.time() - t0
-    print(f"\n完成。失败 {fail}/{len(pending)}，耗时 {elapsed:.0f} 秒。"
+    outcome = "已因浏览器启动故障提前中止" if aborted_for_startup else "完成"
+    print(f"\n{outcome}。失败 {fail}/{len(pending)}，耗时 {elapsed:.0f} 秒。"
           f"\n结果已写入 {args.output}")
 
     # ---- 自动稳定（2026-08-16）：unknown/error 记录多轮重跑取多数 ----
-    if args.retry_unknown > 0:
+    if args.retry_unknown > 0 and not aborted_for_startup:
         _stabilize_unknown(args, sites, kinds)
 
 

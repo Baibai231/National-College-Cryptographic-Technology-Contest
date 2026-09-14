@@ -439,6 +439,8 @@ class SiteDataStoreTests(unittest.TestCase):
     def test_pending_review_details_require_admin_token(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = str(Path(tmp) / "sites.db")
+            manual_path = Path(tmp) / "manual_review.json"
+            manual_path.write_text('{"sites": {}}', encoding="utf-8")
             create_db([], db_path)
             conn = sqlite3.connect(db_path)
             conn.execute(
@@ -453,9 +455,10 @@ class SiteDataStoreTests(unittest.TestCase):
                  "direct_password", "direct_password", "{}"))
             conn.commit()
             conn.close()
-            old_db = web_app.DB_PATH
+            old_values = (web_app.DB_PATH, web_app.MANUAL_PATH)
             old_token = os.environ.get("SITES_ADMIN_TOKEN")
             web_app.DB_PATH = db_path
+            web_app.MANUAL_PATH = manual_path
             os.environ["SITES_ADMIN_TOKEN"] = "test-token"
             try:
                 # 2026-08-16 规则：待审核列表所有人可见（含完整内容）
@@ -473,7 +476,7 @@ class SiteDataStoreTests(unittest.TestCase):
                                             admin_token="test-token")
                 self.assertTrue(ok["ok"])
             finally:
-                web_app.DB_PATH = old_db
+                web_app.DB_PATH, web_app.MANUAL_PATH = old_values
                 if old_token is None:
                     os.environ.pop("SITES_ADMIN_TOKEN", None)
                 else:

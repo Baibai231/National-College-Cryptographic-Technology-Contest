@@ -189,8 +189,12 @@ class SitePasswordPolicyTester:
                 # 下游会把它当成"站点无任何限制"（错误传导）。必须显式标记
                 # inconclusive，让调用方知道这是"无法推断"而非"无限制"。
                 password_policy["_inconclusive"] = True
+                abort_reason = getattr(
+                    self._tester, "_admissible_abort_reason", "") or ""
                 password_policy["_inconclusive_reason"] = (
-                    "admissible_password_not_found: 无法找到可接受的密码")
+                    "admissible_password_not_found: 无法找到可接受的密码"
+                    + (f"；{abort_reason}" if abort_reason else "")
+                )
                 print("    ✗ 无法找到可接受的密码")
                 # 提示政策解析：admissible 找不到（可能误判连坐拒绝），
                 # 页面提示仍可作线索。

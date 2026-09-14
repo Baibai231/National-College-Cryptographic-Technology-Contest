@@ -24,6 +24,57 @@ class PasswordPolicySafetyTests(unittest.TestCase):
         self.assertTrue(tester._had_inconclusive)
         self.assertEqual(tester._probe_evidence[-1]["outcome"], "inconclusive")
 
+    def test_probe_evidence_records_meter_bin_without_password_plaintext(self):
+        tester = TestPassword(mock.MagicMock(), "example.com")
+        tester._current_probe_purpose = "meter comparison"
+        tester._last_strength_level = "strong"
+        tester._record_probe("Aa3!secret", ProbeOutcome.ACCEPTED, "paired control")
+
+        evidence = tester._probe_evidence[-1]
+        self.assertEqual(evidence["strength_meter_level"], "strong")
+        self.assertEqual(evidence["character_profile"], "lower+upper+digit+symbol")
+        self.assertEqual(evidence["probe_purpose"], "meter comparison")
+        self.assertNotIn("Aa3!secret", str(evidence))
+
+    def test_chinese_medium_meter_text_is_not_misread_as_strong(self):
+        tester = TestPassword(mock.MagicMock(), "example.com")
+        tester._parse_strength_level("密码强度中等，强度要求：")
+        self.assertEqual(tester._last_strength_level, "medium")
+
+    def test_chinese_strong_and_weak_meter_texts_are_normalized(self):
+        tester = TestPassword(mock.MagicMock(), "example.com")
+        tester._parse_strength_level("密码强度强，强度要求：")
+        self.assertEqual(tester._last_strength_level, "strong")
+        tester._parse_strength_level("口令强度：较弱")
+        self.assertEqual(tester._last_strength_level, "weak")
+
+    def test_repeated_rejection_inside_stated_range_is_non_discriminating(self):
+        tester = TestPassword(mock.MagicMock(), "example.com")
+        message = "请输入4-20个字符，支持数字、字母和符号的组合"
+        for password in ("k4m2x9a7", "Aa3kqmxv", "a3!kqmxv", "Aa3!kqmx"):
+            tester._rejected_probe_observations.append({
+                "password_length": len(password),
+                "character_profile": tester._candidate_profile(password),
+                "message": message,
+            })
+
+        reason = tester._non_discriminating_rejection_reason()
+
+        self.assertIn("non_discriminating_rejection_feedback", reason)
+        self.assertNotIn("k4m2x9a7", reason)
+
+    def test_repeated_minimum_length_rejection_does_not_abort_early(self):
+        tester = TestPassword(mock.MagicMock(), "example.com")
+        message = "Password must contain 12-32 characters"
+        for password in ("k4m2x9a7", "Aa3kqmxv", "a3!kqmxv", "Aa3!kqmx"):
+            tester._rejected_probe_observations.append({
+                "password_length": len(password),
+                "character_profile": tester._candidate_profile(password),
+                "message": message,
+            })
+
+        self.assertEqual(tester._non_discriminating_rejection_reason(), "")
+
     def test_inline_policy_stops_when_negative_control_is_not_rejected(self):
         driver = mock.MagicMock()
         policy_tester = SitePasswordPolicyTester(driver, "https://example.com")
@@ -153,6 +204,23 @@ class PasswordPolicySafetyTests(unittest.TestCase):
             "_inconclusive_reason": "negative_control_not_rejected",
         }
         self.assertFalse(_policy_is_usable(policy))
+
+    def test_policy_diagnostic_preserves_reason_without_promoting_hint(self):
+        from main import _policy_diagnostic
+        policy = {
+            "length": [0, 0],
+            "_inconclusive": True,
+            "_inconclusive_reason": "non_discriminating_rejection_feedback",
+            "_hint_policy": {"length_min": 8, "length_max": 16},
+            "_probe_evidence": [{"password_length": 8, "outcome": "rejected"}],
+        }
+
+        diagnostic = _policy_diagnostic(policy)
+
+        self.assertEqual(diagnostic["status"], "inconclusive")
+        self.assertIn("non_discriminating", diagnostic["reason"])
+        self.assertEqual(diagnostic["hint_policy"]["length_min"], 8)
+        self.assertNotIn("length", diagnostic)
 
 
 if __name__ == "__main__":

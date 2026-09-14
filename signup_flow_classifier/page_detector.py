@@ -125,6 +125,12 @@ _AUTO_SIGNUP_HINTS = [
     "登录/注册", "登录或注册", "注册/登录", "注册或登录", "登录即注册",
     "未注册手机验证后自动注册", "未注册手机号验证后自动注册",
 ]
+_PASSKEY_HINTS = [
+    "passkey", "passkeys", "webauthn", "fido2", "security key",
+    "hardware key", "use a passkey", "sign in with a passkey",
+    "通行密钥", "通行金钥", "通行金鑰", "安全密钥", "安全金钥", "安全金鑰",
+    "硬件密钥", "硬體金鑰",
+]
 _SUBMIT_HINTS = [
     "注册", "提交", "完成", "创建账号", "创建账户", "sign up", "register",
     "create account", "submit", "finish", "s'inscrire", "créer un compte",
@@ -886,6 +892,8 @@ _TAB_KINDS = {
     "email_tab": ["邮箱登录", "邮箱注册", "网易邮箱账号登录", "邮箱账号登录",
                   "email login"],
     "qr_tab": ["扫码登录", "二维码登录", "扫码登"],
+    "passkey_tab": ["通行密钥登录", "安全密钥登录", "使用通行密钥",
+                    "passkey login", "sign in with a passkey", "use a passkey"],
     # 精确匹配 hint：以 ! 结尾（如 "sms!"），要求元素文本整词/全文相等
     "sms_tab!": ["sms", "短信"],
     "email_tab!": ["email"],
@@ -981,6 +989,7 @@ def _detect_page_semantics(driver: WebDriver, fields: List[str]) -> dict:
         "blockers": _BLOCKER_HINTS,
         "send": _SEND_CODE_HINTS,
         "auto_signup": _AUTO_SIGNUP_HINTS,
+        "passkey": _PASSKEY_HINTS,
         "submit": _SUBMIT_HINTS,
         "next": list(_NEXT_TEXTS),
         "sso_actions": _SSO_ACTION_HINTS,
@@ -1055,6 +1064,8 @@ for(const root of roots){
      ?'sms_code':presetFields.includes('email')?'email_code':'verification_code');
   }
    if(has(label,cfg.auto_signup))add(methods,'auto_signup');
+   // 仅在认证上下文中的可交互控件上识别 Passkey/WebAuthn。这里只记录公开
+   // 提供该方式，不点击控件、不触发系统认证器弹窗，也不声称服务端配置正确。
    if(has(label,cfg.submit))add(actions,'submit');
    if(cfg.next.map(clean).includes(label))add(actions,'next');
    for(const [kind,hints] of Object.entries(cfg.tabs))
@@ -1073,6 +1084,9 @@ for(const root of roots){
    // 独立认证 URL 才允许扫描整页。
    const inAuthContext=authUrlPath||insideAuthBox
      || (presetFields.length>0&&sharesAuthFieldScope(el));
+   if(isRealClickable&&inAuthContext&&has(semantic,cfg.passkey)){
+    add(methods,'passkey');add(actions,'public_key_auth');
+   }
    if(isRealClickable&&inAuthContext){
     let external=!href;
     try{if(href){const target=new URL(href,location.href);external=!target.hostname||target.hostname!==location.hostname;}}

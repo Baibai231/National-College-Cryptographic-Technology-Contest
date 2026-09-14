@@ -25,6 +25,20 @@ class UrlEntrySemanticsTests(unittest.TestCase):
             )
         )
 
+    def test_reg_path_segment_is_signup(self):
+        self.assertTrue(
+            SignupFlowClassifierEngine._url_is_requested_entry(
+                "https://passport.58.com/reg/", "signup"
+            )
+        )
+
+    def test_reg_substring_is_not_signup(self):
+        self.assertFalse(
+            SignupFlowClassifierEngine._url_is_requested_entry(
+                "https://example.com/region/news", "signup"
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

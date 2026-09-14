@@ -121,6 +121,101 @@ def _states_to_objects(states):
     return out
 
 
+def _auth_graph_for(target: str, entries: dict) -> dict:
+    """Build the additive authentication-graph API view without changing JSONL."""
+    from application_security.auth_graph import build_auth_graph
+    return build_auth_graph(target, entries).to_dict()
+
+
+def _authentication_surface_for(target: str, entries: dict) -> dict:
+    """Build the paper-backed passive security view without changing storage."""
+    from application_security.authentication_surface import (
+        AUTHENTICATION_SURFACE_MANIFEST,
+        analyze_authentication_surface,
+    )
+    return {
+        "manifest": AUTHENTICATION_SURFACE_MANIFEST.to_dict(),
+        "result": analyze_authentication_surface(target, entries).to_dict(),
+    }
+
+
+def _password_meter_evaluation_for(target: str, policy: dict) -> dict:
+    """Derive the paper-backed meter view from already captured probe evidence."""
+    from application_security.password_meter_evaluation import (
+        PASSWORD_METER_MANIFEST,
+        analyze_site_meter_consistency,
+    )
+    probes = (policy or {}).get("_probe_evidence") or []
+    return {
+        "manifest": PASSWORD_METER_MANIFEST.to_dict(),
+        "result": analyze_site_meter_consistency(target, probes).to_dict(),
+    }
+
+
+def _attach_live_protocol_probe(
+        response: dict, driver, target: str,
+        webauthn_install_errors=()) -> dict:
+    """Attach current-DOM protocol evidence to a live result only."""
+    from application_security.jose_validation import (
+        JOSE_MANIFEST,
+        analyze_jose_metadata,
+    )
+    from application_security.passive_protocol_probe import (
+        PASSIVE_PROTOCOL_MANIFEST,
+        collect_passive_protocol_metadata,
+    )
+    from application_security.webauthn_observer import (
+        WEBAUTHN_OBSERVER_MANIFEST,
+        collect_webauthn_observations,
+    )
+    from application_security.oidc_discovery import (
+        OIDC_DISCOVERY_MANIFEST,
+        probe_oidc_discovery,
+    )
+    from application_security.recovery_analysis import (
+        RECOVERY_MANIFEST,
+        collect_recovery_surface,
+    )
+    from application_security.qr_lifecycle import (
+        QR_LIFECYCLE_MANIFEST,
+        collect_qr_lifecycle_sample,
+    )
+    security = response.setdefault("application_security", {})
+    protocol_result = collect_passive_protocol_metadata(driver, target)
+    security["passive_protocol_probe"] = {
+        "manifest": PASSIVE_PROTOCOL_MANIFEST.to_dict(),
+        "result": protocol_result.to_dict(),
+    }
+    jose_observations = []
+    oidc_candidates = []
+    if protocol_result.evidence:
+        protocol_observation = protocol_result.evidence[0].observation
+        jose_observations = protocol_observation.get("jose_objects") or []
+        oidc_candidates = protocol_observation.get("oauth_endpoints") or []
+    security["jose_validation"] = {
+        "manifest": JOSE_MANIFEST.to_dict(),
+        "result": analyze_jose_metadata(target, jose_observations).to_dict(),
+    }
+    security["webauthn_observer"] = {
+        "manifest": WEBAUTHN_OBSERVER_MANIFEST.to_dict(),
+        "result": collect_webauthn_observations(
+            driver, target, webauthn_install_errors).to_dict(),
+    }
+    security["oidc_discovery"] = {
+        "manifest": OIDC_DISCOVERY_MANIFEST.to_dict(),
+        "result": probe_oidc_discovery(target, oidc_candidates).to_dict(),
+    }
+    security["account_recovery"] = {
+        "manifest": RECOVERY_MANIFEST.to_dict(),
+        "result": collect_recovery_surface(driver, target).to_dict(),
+    }
+    security["qr_lifecycle"] = {
+        "manifest": QR_LIFECYCLE_MANIFEST.to_dict(),
+        "result": collect_qr_lifecycle_sample(driver, target).to_dict(),
+    }
+    return response
+
+
 def _row_to_site(row):
     (hostname, url, keywords, version, lf, lfzh, lr, lfields, lblockers,
      lfinal, lma, sf, sfzh, sr, sfields, sblockers, sfinal, sma,
@@ -197,6 +292,20 @@ def _row_to_site(row):
         "match_status": match,
         # 注册侧程序vs人工匹配：match/mismatch/pending（供筛选）
     }
+    site["auth_graph"] = _auth_graph_for(hostname, {
+        "login": site["login"],
+        "signup": site["signup"],
+    })
+    site["application_security"] = _authentication_surface_for(hostname, {
+        "login": site["login"],
+        "signup": site["signup"],
+    })
+    site["application_security"]["password_meter_evaluation"] = (
+        _password_meter_evaluation_for(
+            hostname,
+            site["signup"].get("pwd_policy") or site["login"].get("pwd_policy") or {},
+        )
+    )
     login_comparison = _manual_comparison(
         lf, mlogin or "", lr or "", lfields or "", lblockers or "",
         verified=bool(mverified), methods=login_methods,
@@ -1122,7 +1231,7 @@ def _classification_response(url: str, entry_kind: str, result: dict) -> dict:
     """
     flow_type = result.get("flow_type")
     states = result.get("states") or []
-    return {
+    response = {
         "url": url,
         "entry_kind": entry_kind,
         "flow_type": flow_type,
@@ -1138,6 +1247,12 @@ def _classification_response(url: str, entry_kind: str, result: dict) -> dict:
         "error": result.get("error"),
         "measured_at": datetime.now(timezone.utc).isoformat(),
     }
+    target = urlparse(url).hostname or url
+    response["auth_graph"] = _auth_graph_for(
+        target, {entry_kind: response})
+    response["application_security"] = _authentication_surface_for(
+        target, {entry_kind: response})
+    return response
 
 
 def _db_entry_for(host: str, kind: str) -> Optional[dict]:
@@ -1185,25 +1300,38 @@ def _run_live_classification(url: str, kind: str) -> dict:
     from utils.util_test_password import _get_new_driver
     from utils.login_link_discovery import LoginLinkDiscovery
     from signup_flow_classifier.classifier_engine import SignupFlowClassifierEngine
+    from application_security.webauthn_observer import install_webauthn_observer
 
     driver = _get_new_driver()
     try:
+        # Register before the first navigation.  This observer never invokes a
+        # credential API; it only redacts calls initiated by the page itself.
+        observer_errors = list(install_webauthn_observer(driver))
         discovery = LoginLinkDiscovery(driver)
-        signup_url = discovery.navigate_to_signup(url)
+        if kind == "login":
+            entry_url = discovery.navigate_to_login(url)
+        else:
+            entry_url = discovery.navigate_to_signup(url)
+        # target=_blank creates a new CDP target.  Register on that target as
+        # well before the classifier's following navigation/interactions.
+        observer_errors.extend(install_webauthn_observer(driver))
         engine = SignupFlowClassifierEngine(driver)
-        if not signup_url:
-            signup_url = driver.current_url
+        if not entry_url:
+            entry_url = driver.current_url
         # Re-check the post-navigation target before the classifier performs
         # any further safe clicks. This also blocks a public URL redirecting
         # the browser onto a private host from being explored further.
-        signup_url, _redirect_host = _validated_classify_url(
-            signup_url, resolve=True)
+        entry_url, _redirect_host = _validated_classify_url(
+            entry_url, resolve=True)
         entry_clicked = getattr(discovery, "_entry_clicked", False)
         result = engine.classify(
-            signup_url, entry_kind=kind,
+            entry_url, entry_kind=kind,
             entry_already_clicked=bool(entry_clicked and kind == "signup"),
         )
-        return _classification_response(url, kind, result)
+        response = _classification_response(url, kind, result)
+        target = urlparse(url).hostname or url
+        return _attach_live_protocol_probe(
+            response, driver, target, tuple(dict.fromkeys(observer_errors)))
     finally:
         try:
             driver.quit()
@@ -1232,7 +1360,7 @@ def classify_site(req: ClassifyRequest):
         if row:
             site = _row_to_site(row)
             entry = site[kind]
-            return {
+            response = {
                 "url": url,
                 "entry_kind": kind,
                 "from_database": True,
@@ -1254,6 +1382,13 @@ def classify_site(req: ClassifyRequest):
                 "route": entry.get("route"),
                 "manual": site.get("manual"),
             }
+            response["auth_graph"] = site.get("auth_graph") or _auth_graph_for(
+                host, {kind: response})
+            response["application_security"] = (
+                site.get("application_security")
+                or _authentication_surface_for(host, {kind: response})
+            )
+            return response
 
     # Only live navigation needs DNS resolution. Cached public results remain
     # available during a transient resolver outage. Reserve the bounded slot
@@ -1292,8 +1427,17 @@ def _run_live_policy(url: str, method: str) -> dict:
         response["method_used"] = result.get("method_used") or "classified_only"
         response["class_letter"] = result.get("class_letter")
         response["policy_measured"] = False
+        diagnostic = result.get("measurement_diagnostic") or {}
+        if diagnostic:
+            response["measurement_diagnostic"] = diagnostic
+        response["application_security"]["password_meter_evaluation"] = (
+            _password_meter_evaluation_for(
+                urlparse(url).hostname or url,
+                {"_probe_evidence": diagnostic.get("probe_evidence") or []},
+            )
+        )
         return response
-    return {
+    response = {
         "url": url,
         "method_used": result.get("method_used"),
         "flow_type": result.get("flow_type"),
@@ -1315,6 +1459,14 @@ def _run_live_policy(url: str, method: str) -> dict:
         "policy_measured": True,
         "measured_at": datetime.now(timezone.utc).isoformat(),
     }
+    target = urlparse(url).hostname or url
+    response["auth_graph"] = _auth_graph_for(target, {"signup": response})
+    response["application_security"] = _authentication_surface_for(
+        target, {"signup": response})
+    response["application_security"]["password_meter_evaluation"] = (
+        _password_meter_evaluation_for(target, policy)
+    )
+    return response
 
 
 @app.post("/api/policy")
@@ -1392,6 +1544,7 @@ def _task_snapshot(task: dict) -> dict:
         "url": task.get("url"),
         "entry_kind": task.get("entry_kind"),
         "kind": task.get("kind"),
+        "force_retest": bool(task.get("force_retest", False)),
         "status": task.get("status"),
         "created_at": task.get("created_at"),
         "started_at": task.get("started_at"),
@@ -1406,6 +1559,7 @@ class TaskSubmitRequest(BaseModel):
     kind: Literal["classify", "policy"] = "classify"
     entry_kind: Literal["signup", "login", "both"] = "signup"
     method: Literal["auto", "inline", "full"] = "auto"
+    force_retest: bool = False
 
 
 def _run_task_classify(url: str, kind: str) -> dict:
@@ -1413,8 +1567,8 @@ def _run_task_classify(url: str, kind: str) -> dict:
     return _run_live_classification(url, kind)
 
 
-def _run_task_both(url: str) -> dict:
-    """注册+登录：已测侧用数据库结果，未测侧现场测，合并返回。
+def _run_task_both(url: str, force_retest: bool = False) -> dict:
+    """注册+登录：默认复用已测侧；强制重测时两侧都现场测量。
 
     结果结构：
     {
@@ -1427,7 +1581,7 @@ def _run_task_both(url: str) -> dict:
     host = urlparse(url).hostname or url
     parts = {}
     for kind in ("signup", "login"):
-        cached = _db_entry_for(host, kind)
+        cached = None if force_retest else _db_entry_for(host, kind)
         if cached:
             parts[kind] = cached
             parts[kind + "_from_database"] = True
@@ -1447,6 +1601,47 @@ def _run_task_both(url: str) -> dict:
         "signup_from_database": bool(parts.get("signup_from_database")),
         "login_from_database": bool(parts.get("login_from_database")),
     }
+    result["auth_graph"] = _auth_graph_for(host, {
+        "login": parts.get("login"),
+        "signup": parts.get("signup"),
+    })
+    result["application_security"] = _authentication_surface_for(host, {
+        "login": parts.get("login"),
+        "signup": parts.get("signup"),
+    })
+    return result
+
+
+def _run_task_policy(url: str, method: str, force_retest: bool = False,
+                     entry_kind: str = "signup") -> dict:
+    """执行口令政策任务；强制重测时忽略数据库中的既有政策。"""
+    from urllib.parse import urlparse
+    host = urlparse(url).hostname or url
+    cached = None
+    if not force_retest:
+        cached = _db_entry_for(host, "signup") or _db_entry_for(host, "login")
+    if cached and (cached.get("pwd_policy") or {}).get("length", [0, 0]) != [0, 0]:
+        result = {
+            "url": url,
+            "entry_kind": entry_kind,
+            "hostname": host,
+            "from_database": True,
+            "method_used": cached.get("pwd_method") or "inline",
+            "flow_type": cached.get("flow_type"),
+            "flow_zh": cached.get("flow_zh"),
+            "policy": cached.get("pwd_policy", {}),
+            "classification_policy": cached.get("policy", {}),
+            "policy_measured": True,
+            "measured_at": cached.get("measured_at"),
+        }
+        result["application_security"] = _authentication_surface_for(
+            host, {entry_kind: result})
+        result["application_security"]["password_meter_evaluation"] = (
+            _password_meter_evaluation_for(host, result["policy"])
+        )
+        return result
+    result = _run_live_policy(url, method)
+    result["hostname"] = host
     return result
 
 
@@ -1468,30 +1663,15 @@ def _task_worker_loop() -> None:
                 _save_tasks(tasks)
             try:
                 if task["kind"] == "policy":
-                    # 口令政策：库中已有实测结果则直接返回，不重复测量
-                    from urllib.parse import urlparse as _urlparse
-                    _host = _urlparse(task["url"]).hostname or task["url"]
-                    cached = _db_entry_for(_host, "signup") or _db_entry_for(_host, "login")
-                    if cached and (cached.get("pwd_policy") or {}).get("length", [0, 0]) != [0, 0]:
-                        result = {
-                            "url": task["url"],
-                            "entry_kind": task.get("entry_kind", "signup"),
-                            "hostname": _host,
-                            "from_database": True,
-                            "method_used": cached.get("pwd_method") or "inline",
-                            "flow_type": cached.get("flow_type"),
-                            "flow_zh": cached.get("flow_zh"),
-                            "policy": cached.get("pwd_policy", {}),
-                            "classification_policy": cached.get("policy", {}),
-                            "policy_measured": True,
-                            "measured_at": cached.get("measured_at"),
-                        }
-                    else:
-                        result = _run_live_policy(task["url"], task.get("method", "auto"))
-                        result["hostname"] = _host
+                    result = _run_task_policy(
+                        task["url"], task.get("method", "auto"),
+                        force_retest=bool(task.get("force_retest", False)),
+                        entry_kind=task.get("entry_kind", "signup"))
                 else:
                     if task.get("entry_kind") == "both":
-                        result = _run_task_both(task["url"])
+                        result = _run_task_both(
+                            task["url"],
+                            force_retest=bool(task.get("force_retest", False)))
                     else:
                         result = _run_task_classify(task["url"], task.get("entry_kind", "signup"))
                 task["status"] = "done"
@@ -1606,6 +1786,7 @@ def submit_task(req: TaskSubmitRequest):
         "entry_kind": req.entry_kind,
         "kind": req.kind,
         "method": req.method,
+        "force_retest": req.force_retest,
         "status": "queued",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "started_at": None,

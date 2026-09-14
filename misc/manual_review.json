@@ -1036,11 +1036,6 @@
       },
       "reviewed_from": "web@cjx@2026-08-16T02:26:35.821860+00:00"
     },
-    "private.example": {
-      "manual_login": "敏感人工观察",
-      "verified": true,
-      "reviewed_from": "web@reviewer@2026-08-15T00:00:00+00:00"
-    },
     "www.dongqiudi.com": {
       "manual_login": "需下载 App",
       "manual_signup": "需下载 App",

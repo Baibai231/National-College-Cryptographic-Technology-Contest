@@ -1,0 +1,19 @@
+{
+  "schema_version": "webauthn-safe-interaction-targets-1.0",
+  "purpose": "B-07 phase-4 exact-control allowlist",
+  "selection_evidence": "B07 phase-3 round 2 plus GitHub official passkey sign-in documentation",
+  "selection_result": "reports/archive/webauthn_public_r2_20260907.jsonl",
+  "manual_confirmation_url": "https://docs.github.com/en/authentication/authenticating-with-a-passkey/signing-in-with-a-passkey",
+  "sites": [
+    {
+      "site_id": "github.com",
+      "public_entry_url": "https://github.com/login?passkey=true",
+      "allowed_host": "github.com",
+      "expected_labels": [
+        "Sign in with a passkey"
+      ],
+      "maximum_clicks": 1,
+      "allowed_ceremony": "authentication"
+    }
+  ]
+}

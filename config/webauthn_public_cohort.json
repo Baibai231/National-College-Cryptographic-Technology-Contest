@@ -1,0 +1,59 @@
+{
+  "schema_version": "webauthn-public-cohort-1.0",
+  "purpose": "B-07 phase-3 reproducible public-page positive cohort",
+  "paper": "The State of Passkeys, USENIX Security 2026",
+  "artifact_repository": "https://github.com/RUB-NDS/state-of-passkeys-artifacts",
+  "artifact_commit": "0905470c983c46baaecbfa17044d2219e6cdd100",
+  "artifact_snapshot": "data/merged/2026-04-21-13-50-39.json",
+  "selection_rule": "First eight manually reachable public authentication entries among domains present in the cited merged positive-directory snapshot; entries are fixed before measurement.",
+  "sites": [
+    {
+      "site_id": "github.com",
+      "directory_domain": "github.com",
+      "public_entry_url": "https://github.com/login",
+      "well_known_origin": "https://github.com"
+    },
+    {
+      "site_id": "google.com",
+      "directory_domain": "google.com",
+      "public_entry_url": "https://accounts.google.com/",
+      "well_known_origin": "https://www.google.com"
+    },
+    {
+      "site_id": "paypal.com",
+      "directory_domain": "paypal.com",
+      "public_entry_url": "https://www.paypal.com/signin",
+      "well_known_origin": "https://www.paypal.com"
+    },
+    {
+      "site_id": "ebay.com",
+      "directory_domain": "ebay.com",
+      "public_entry_url": "https://signin.ebay.com/ws/eBayISAPI.dll",
+      "well_known_origin": "https://www.ebay.com"
+    },
+    {
+      "site_id": "coinbase.com",
+      "directory_domain": "coinbase.com",
+      "public_entry_url": "https://login.coinbase.com/signin",
+      "well_known_origin": "https://www.coinbase.com"
+    },
+    {
+      "site_id": "yahoo.com",
+      "directory_domain": "yahoo.com",
+      "public_entry_url": "https://login.yahoo.com/",
+      "well_known_origin": "https://www.yahoo.com"
+    },
+    {
+      "site_id": "adobe.com",
+      "directory_domain": "adobe.com",
+      "public_entry_url": "https://account.adobe.com/",
+      "well_known_origin": "https://www.adobe.com"
+    },
+    {
+      "site_id": "cloudflare.com",
+      "directory_domain": "cloudflare.com",
+      "public_entry_url": "https://dash.cloudflare.com/login",
+      "well_known_origin": "https://www.cloudflare.com"
+    }
+  ]
+}

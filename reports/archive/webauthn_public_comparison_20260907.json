@@ -1,0 +1,168 @@
+{
+  "missing_sites": {
+    "only_round_1": [],
+    "only_round_2": []
+  },
+  "paired_site_count": 8,
+  "round_1": {
+    "api_given_visible_control": null,
+    "conditional_formula": "P_API|DOM=N(API and DOM)/N(DOM)",
+    "coverage": {
+      "api_invocation": 0.0,
+      "cose_algorithm_observed": 0.0,
+      "dom_passkey_visible": 0.0,
+      "lifecycle_signal": 0.0,
+      "navigation_loaded": 0.5,
+      "request_configuration": 0.0,
+      "well_known_endpoints": 0.125,
+      "well_known_related_origins": 0.0
+    },
+    "coverage_formula": "C_x=N_x/N_cohort",
+    "observed_counts": {
+      "api_invocation": 0,
+      "cose_algorithm_observed": 0,
+      "dom_passkey_visible": 0,
+      "lifecycle_signal": 0,
+      "navigation_loaded": 4,
+      "request_configuration": 0,
+      "well_known_endpoints": 1,
+      "well_known_related_origins": 0
+    },
+    "positive_directory_claim_count": 8,
+    "site_count": 8,
+    "unknown_boundary": "No evidence on an unauthenticated public page is not evidence of no Passkey support."
+  },
+  "round_2": {
+    "api_given_visible_control": 0.0,
+    "conditional_formula": "P_API|DOM=N(API and DOM)/N(DOM)",
+    "coverage": {
+      "api_invocation": 0.0,
+      "cose_algorithm_observed": 0.0,
+      "dom_passkey_visible": 0.125,
+      "lifecycle_signal": 0.0,
+      "navigation_loaded": 0.625,
+      "request_configuration": 0.0,
+      "well_known_endpoints": 0.125,
+      "well_known_related_origins": 0.0
+    },
+    "coverage_formula": "C_x=N_x/N_cohort",
+    "observed_counts": {
+      "api_invocation": 0,
+      "cose_algorithm_observed": 0,
+      "dom_passkey_visible": 1,
+      "lifecycle_signal": 0,
+      "navigation_loaded": 5,
+      "request_configuration": 0,
+      "well_known_endpoints": 1,
+      "well_known_related_origins": 0
+    },
+    "positive_directory_claim_count": 8,
+    "site_count": 8,
+    "unknown_boundary": "No evidence on an unauthenticated public page is not evidence of no Passkey support."
+  },
+  "schema_version": "webauthn-public-round-comparison-1.0",
+  "sites": [
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [
+        "navigation_loaded"
+      ],
+      "round_2_features": [
+        "navigation_loaded"
+      ],
+      "site_id": "adobe.com"
+    },
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [
+        "navigation_loaded"
+      ],
+      "round_2_features": [
+        "navigation_loaded"
+      ],
+      "site_id": "cloudflare.com"
+    },
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [],
+      "round_2_features": [],
+      "site_id": "coinbase.com"
+    },
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [
+        "navigation_loaded",
+        "well_known_endpoints"
+      ],
+      "round_2_features": [
+        "navigation_loaded",
+        "well_known_endpoints"
+      ],
+      "site_id": "ebay.com"
+    },
+    {
+      "added_in_round_2": [
+        "dom_passkey_visible",
+        "navigation_loaded"
+      ],
+      "feature_jaccard": 0.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 0.75,
+      "round_1_features": [],
+      "round_2_features": [
+        "dom_passkey_visible",
+        "navigation_loaded"
+      ],
+      "site_id": "github.com"
+    },
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [],
+      "round_2_features": [],
+      "site_id": "google.com"
+    },
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [],
+      "round_2_features": [],
+      "site_id": "paypal.com"
+    },
+    {
+      "added_in_round_2": [],
+      "feature_jaccard": 1.0,
+      "missing_in_round_2": [],
+      "presence_agreement": 1.0,
+      "round_1_features": [
+        "navigation_loaded"
+      ],
+      "round_2_features": [
+        "navigation_loaded"
+      ],
+      "site_id": "yahoo.com"
+    }
+  ],
+  "two_round_consistency": {
+    "binary_presence_agreement": 0.9688,
+    "jaccard_formula": "J_2r=sum_i|F_i1 intersect F_i2|/sum_i|F_i1 union F_i2|",
+    "presence_formula": "A_2r=sum_i,j I[x_ij1=x_ij2]/(N_paired*|X|)",
+    "weighted_feature_jaccard": 0.7143
+  }
+}

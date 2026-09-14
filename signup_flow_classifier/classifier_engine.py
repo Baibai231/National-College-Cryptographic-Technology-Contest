@@ -65,6 +65,15 @@ _TAB_EXPLORE_PRIORITY = (
 )
 
 
+def _tab_belongs_to_entry(tab: str, entry_kind: str) -> bool:
+    """Keep full-view exploration inside the requested authentication branch."""
+    if entry_kind == "login" and tab in {
+        "register_tab", "password_signup_tab"
+    }:
+        return False
+    return True
+
+
 class SignupFlowClassifierEngine:
     """注册流程分类器引擎。
 
@@ -278,6 +287,23 @@ class SignupFlowClassifierEngine:
                     return self._done(
                         result, "human_blocked", "high", StopReason.HUMAN_BLOCKED.value)
                 return self._done(result, "unknown", "high", StopReason.ACCESS_BLOCKED.value)
+
+            # 登录测量不得吸收注册页面证据。全视图探索或站点脚本偶尔会把
+            # 浏览器带到 /register；在记录该状态前停止，并使用此前的登录
+            # 状态得出结论。这样 final_url、fields 和 methods 都留在登录分支。
+            if (entry_kind == "login"
+                    and self._url_is_requested_entry(state.url, "signup")):
+                record_evidence(
+                    result,
+                    "login_cross_entry_guard:blocked_signup_url={}".format(
+                        state.url),
+                )
+                if result.states:
+                    ft, conf, reason = classify(result.states)
+                    result.primary_method = primary_method(result.states)
+                    return self._done(result, ft, conf, reason)
+                return self._done(
+                    result, "unknown", "low", StopReason.NO_SAFE_ACTION.value)
 
             # 记录本步状态
             record_step(result, state)
@@ -545,7 +571,8 @@ class SignupFlowClassifierEngine:
                 if tab_clicks_left > 0:
                     next_tab = None
                     for cand in _TAB_EXPLORE_PRIORITY:
-                        if (cand in state.tabs and cand not in visited_tabs
+                        if (_tab_belongs_to_entry(cand, entry_kind)
+                                and cand in state.tabs and cand not in visited_tabs
                                 and cand not in ("password_tab",
                                                 "password_signup_tab")):
                             next_tab = cand
@@ -553,7 +580,9 @@ class SignupFlowClassifierEngine:
                     if next_tab is None:
                         # 只剩主口令 tab 未访问（罕见）：也切一次收集证据
                         for cand in ("password_tab", "password_signup_tab"):
-                            if cand in state.tabs and cand not in visited_tabs:
+                            if (_tab_belongs_to_entry(cand, entry_kind)
+                                    and cand in state.tabs
+                                    and cand not in visited_tabs):
                                 next_tab = cand
                                 break
                     if next_tab is not None:
@@ -1259,6 +1288,9 @@ class SignupFlowClassifierEngine:
         """
         parsed = urlparse(url)
         path = parsed.path.lower()
+        path_segments = {
+            segment for segment in path.split("/") if segment
+        }
         query_keys = {
             key.lower()
             for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
@@ -1282,7 +1314,8 @@ class SignupFlowClassifierEngine:
         ):
             return False
         if entry_kind == "signup":
-            return bool(signup_query_keys & query_keys) or any(
+            return ("reg" in path_segments
+                    or bool(signup_query_keys & query_keys)) or any(
                 hint in path for hint in signup_hints
             )
         return bool(login_query_keys & query_keys) or any(

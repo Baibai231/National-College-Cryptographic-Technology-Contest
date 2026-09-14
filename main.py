@@ -417,6 +417,21 @@ def _policy_is_usable(policy) -> bool:
     return True
 
 
+def _policy_diagnostic(policy) -> dict:
+    """保留不可信测量的诊断证据，同时不把它冒充为有效口令政策。"""
+    if not isinstance(policy, dict):
+        return {}
+    diagnostic = {
+        "status": "inconclusive",
+        "reason": policy.get("_inconclusive_reason") or "policy_not_usable",
+    }
+    if policy.get("_hint_policy"):
+        diagnostic["hint_policy"] = policy["_hint_policy"]
+    if policy.get("_probe_evidence"):
+        diagnostic["probe_evidence"] = policy["_probe_evidence"]
+    return diagnostic
+
+
 def _fallback_to_classification(result: dict, classification: dict, note: str = "") -> dict:
     """测量失败时，用已经完成的注册流程分类结果兜底输出。"""
     result["method_used"] = "classified_only"
@@ -750,6 +765,8 @@ def test_single_site(site_url: str, method: str = "auto") -> dict:
 
         # ── 测量结果不可信时，回退到已经完成的注册流程分类 ──
         if not _policy_is_usable(result.get("policy")):
+            result["measurement_diagnostic"] = _policy_diagnostic(
+                result.get("policy"))
             _fallback_to_classification(
                 result,
                 classification,

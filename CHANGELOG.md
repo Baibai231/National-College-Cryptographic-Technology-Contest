@@ -7,6 +7,541 @@
 
 ## v4 进行中（2026-08-15）
 
+### 43. B-11统一数据集、统计指标与阶段验收（2026-09-08）
+
+- [x] 固定A/B/C/D/E五层语料清单：125个人工站、25个人工inline站、303站全量、
+      论文正样本和本地合成靶场；路径引用而不复制或改写权威数据。
+- [x] 统一计算入口可达率、阳性率、证据取得率、UNKNOWN率、错误分布、证据等级、
+      Precision/Recall/F1、Wilson区间、两轮一致率/Jaccard/Cohen kappa和有头/无头差异。
+- [x] 审计B-00～B-10的代码、论文、公式、实测证据和未完成授权边界，禁止把
+      “实现完成”“访客阶段完成”“完整安全验证完成”混成同一种状态。
+- [x] 输出机器可读审计与论文型阶段总结，完成全套代码回归和敏感材料扫描；
+      当前冻结代码的两轮303站全量属于实证验收，尚未执行并明确保留为阻断项。
+
+结果：
+
+- 五层语料完整性全部通过：125个人工站、25个人工inline站、303站、8个论文
+  Passkey正样本、5个本地合成场景。
+- 权威结果与人工语料重叠124站：登录76一致/15不一致/91可判定，准确率
+  83.52%、覆盖率73.39%；注册72一致/17不一致/89可判定，准确率80.90%、
+  覆盖率71.77%。另1个人工站尚无权威结果；人工尚无完整节点/边真值，不能
+  把这组数字冒充认证图路径召回率。
+- 25个人工inline站严格完整政策7站（28.0%，95% Wilson区间14.28%～47.58%）。
+  303站历史档案中15站输出inline，其中起点被自洽检查标记inconclusive，严格
+  完整为14站（4.62%）。
+- 新增 `application_security/experiment_metrics.py`、五层语料配置、B系列审计
+  脚本/测试、机器审计 `reports/archive/b_series_audit_20260908.json` 和论文型
+  `B_SERIES_STAGE_REPORT_20260908.md`。281项全套测试与5个真实Chrome本地合成
+  场景全部通过。
+- 统一包导出检查曾发现B07受控分析函数名写错，导致导入期失败；按实际函数名
+  `analyze_safe_interaction`修正后重新执行整库回归，最终281/281通过。
+- 7份正式B07/B11实验产物递归检查0个原始challenge、RP/credential/user ID、
+  认证器响应、canary、请求体或HMAC材料字段；`reports/archive`中随机合成标记
+  明文命中0，前端内联脚本解析、Python全模块编译和`git diff --check`均通过。
+- 阶段门槛：工程实现PASS；访客/安全交互PARTIAL；完整竞赛实证NOT_MET。
+  未使用服务器，未修改正式站点数据或SQLite，版本保持v4。
+
+### 42. B-10表单秘密提交前访问与外传测量（2026-09-08）
+
+- [x] 落实 USENIX Security 2022 *Leaky Forms* 的“合成邮箱/口令填充 +
+      脚本读取监视 + 提交前网络监视”方法；不使用真人信息，不点击提交。
+- [x] 在浏览器内生成一次性合成标记及其URL/Base64/SHA-256派生表示；只返回命中
+      类型、第一/第三方关系和计数，不返回标记、请求体、完整URL或哈希值。
+- [x] 对匹配标记的 `fetch/XHR/sendBeacon/form` 外发尝试先记录再阻断，确保合成
+      标记实际外发数为0；普通业务请求不被本模块记录为秘密泄漏。
+- [x] 实现提交前尝试率 `E_pre=N_detected_pre_submit/N_filled_fields` 和安全守卫
+      `I_leak_guard=I[N_submit=N_forwarded_canary=N_real_data=0]`；未观察到保持UNKNOWN。
+- [x] 完成本地合成页真实Chrome验证、负向测试、异常隔离与可选网页展示。
+
+实测：本地页面对合成邮箱和口令各产生1次第三方fetch尝试，2次均被阻断；
+表单提交0、实际转发0、真人数据0。第三方口令尝试判FAIL，安全守卫PASS。
+真实网站伦理样本尚未运行，未观察到时保持UNKNOWN。
+
+### 41. B-09二维码登录生命周期公开测量（2026-09-08）
+
+- [x] 按 USENIX Security 2025 *Demystifying the (In)Security of QR
+      Code-based Login* 的 `QrId / SessionID / Token` 三类关键变量与生成、扫码、
+      确认三阶段模型实现探针；公开模式只观察生成阶段，不执行论文中的篡改、
+      重放、暴力枚举或扫码确认。
+- [x] 浏览器内生成不可导出HMAC密钥，对二维码图片/canvas/SVG表示做页内相等性
+      比较；Python和报告只接收存在、比较次数与是否变化，不接收二维码内容、URL、
+      QrId、HMAC密钥或标签。
+- [x] 计算刷新率 `R_QR=N_changed/N_compared` 与公开证据覆盖率；Session绑定、
+      QrId随机性/可控性/一次性、Token完整性和确认前隐私全部保持UNKNOWN。
+- [x] 接入现场网页结果，完成真实Chrome本地旋转二维码合成页、异常隔离和全套回归。
+
+实测：本地旋转canvas二维码2次采样、1次比较、1次变化，`R_QR=1.0`；二维码
+原文/HMAC密钥或标签返回0，解码/扫码/登录均为0，守卫PASS；协议安全联合谓词
+保持UNKNOWN。
+
+### 40. B-08账号恢复入口与密码学边界（2026-09-07）
+
+- [x] 落实 USENIX Security 2024 *Secure Account Recovery for a
+      Privacy-Preserving Web Service* 的恢复流程分层：公开入口/恢复因子、一次性
+      Token生命周期、旧会话/凭据撤销和OPRF用户目录隐私分别建模，不把邮箱恢复
+      页面直接推断成后端密码学实现。
+- [x] 新增只读恢复DOM探针：识别同源/跨源恢复入口、邮箱/短信/安全问题/备用码/
+      可信设备/Passkey/客服等因子提示；不填写标识符、不发送恢复请求、不取得Token。
+- [x] 实现公开证据覆盖率 `C_rec=(I_entry+I_factor+I_form)/3` 和授权态联合谓词
+      `V_rec=V_entropy∧V_one_time∧V_expiry∧V_session_revoke∧V_auth_revoke`；
+      访客态后五项必须保持UNKNOWN。
+- [x] 接入现场网页结果，完成合成DOM、异常隔离、前端展示和全套回归。
+
+实测：本地恢复页观察到1个公开入口、邮箱因子和恢复表单，`C_rec=1.0`；未填写
+身份标识或发送请求，Token熵/一次性/过期、旧会话/认证器撤销和OPRF实现均保持
+UNKNOWN。
+
+### 39. B-07 WebAuthn虚拟认证器受控交互（2026-09-07）
+
+- [x] 按 USENIX Security 2026 *The State of Passkeys* 的客户端/认证器仿真
+      研究思路，直接使用WebAuthn Level 3自动化接口和Chrome DevTools
+      `WebAuthn.addVirtualAuthenticator`，不仅做文字引用。
+- [x] 只允许预先白名单、公开页已观察且人工确认的精确Passkey登录控件；
+      每站最多点1次，不填写账号/口令，不点击注册、联合登录或普通提交。
+- [x] 虚拟认证器不预置任何凭据，实测前后均检查凭据数为0；在页面
+      导航前注入注册仪式阻断器，若登录控件意外触发 `create`，只观察请求
+      并立即拒绝，避免创建凭据或把回应发给服务端。
+- [x] 将点击后新增认证调用计入触发率
+      `Y_WA=N_get_after_click/N_explicit_click`，并把页面在点击前自动发起的
+      conditional认证单独定义为 `I_pre=I[N_get_before_click>0]`，避免把预触发
+      错归因成按钮点击收益；同时计算安全守卫
+      `I_guard=I[N_input=0 ∧ N_probe_cred=0 ∧ N_seed=0 ∧ N_after=0 ∧ N_real_auth=0]`；
+      PASS只表示受控触发和守卫成立，不表示站点已通过登录或服务端验证安全。
+- [x] 先在Mac本地合成页验证“精确点击→页面发起get→空虚拟认证器拒绝→
+      请求参数被脱敏观察”，再对GitHub执行两轮白名单实测并人工核对。
+
+实验结果：
+
+- 合成页真实Chrome链路：精确按钮点击1次、页面认证get 1次、注册create 0次；
+  捕获32字节challenge、当前主机RP、`userVerification=required`和discoverable
+  配置，虚拟凭据前后均为0，点击触发与安全守卫均PASS。
+- GitHub两轮均在显式点击前自动发起1次conditional WebAuthn认证，因此程序
+  正确停止点击，显式触发保持UNKNOWN、预触发 `I_pre` 为PASS；两轮均为
+  32字节challenge、当前主机RP、UV required、空allowCredentials、0次注册，
+  空虚拟认证器前后均为0。
+- 新增两轮脱敏配置对比 `A_cfg=sum I[x_i^(1)=x_i^(2)]/N_comparable`；两轮
+  14/14字段一致，`A_cfg=1.0`。页面耗时67.708秒与5.174秒差异不进入配置一致率。
+- 新增完整实验文档 `B07_WEBAUTHN_SAFE_INTERACTION_20260907.md`、两轮对比脚本
+  与单元测试；此前导航/控件诊断轮保留为diagnostic文件，不冒充正式轮次。
+
+验证：
+
+- B-07安全交互及两轮分析定向10项测试通过；两轮记录不含challenge、RP ID、
+  credential ID、认证器响应、控件文本或查询参数值。
+- 本阶段未使用服务器、未登录、未创建账号或凭据、未提交表单；未修改SQLite、
+  `reports/sites`或`misc/manual_review.json`，未提交、推送或部署，版本保持v4。
+
+### 38. B-07 WebAuthn/Passkey真实公开页小样本实验（2026-09-07）
+
+- [x] 使用 USENIX Security 2026 *The State of Passkeys* 官方开源产物
+      `RUB-NDS/state-of-passkeys-artifacts` 的合并目录快照构造正样本，
+      不将人工凭印象挑选的站点当成论文数据。
+- [x] 固定官方产物提交 `0905470c983c46baaecbfa17044d2219e6cdd100`
+      和 `data/merged/2026-04-21-13-50-39.json`，新增8站小样本配置；
+      GitHub、Google、PayPal、eBay、Coinbase、Yahoo、Adobe、Cloudflare
+      的domain均在该快照中，公开认证入口在测量前固定。
+- [x] 新增只读公开页探针：只加载明确配置的公开 HTTPS 认证页，
+      安装现有WebAuthn被动观察器并读取DOM公开信号；不点击、不输入、
+      不调用凭据API、不响应系统认证器提示；每站独立串行Chrome会话，
+      避免Cookie/页面状态串站和并发启动崩溃。
+- [x] 复现论文检测器中 `/.well-known/passkey-endpoints` 与
+      `/.well-known/webauthn` 两个标准入口：全程公网HTTPS、DNS固定、
+      证书验证、大小/重定向有界，只保留字段结构与统计，不跟进管理链接。
+- [x] 新增标准元数据结构判定：`enroll/manage` 只检查HTTPS句法与
+      同/异主机数量；`origins` 只检查origin句法、去重数量和是否包含
+      当前origin。原链接、查询值和related-origin列表均不进入证据。
+- [x] 对同一小样本执行两轮Mac本地无头测量，计算公开页证据漏斗
+      `C_x=N_x/N` 与两轮特征Jaccard一致性
+      `J_2r=|F_1∩F_2|/|F_1∪F_2|`；失败/未观察到保持UNKNOWN，不计为不支持。
+- [x] 新增完整实验文档 `B07_WEBAUTHN_PUBLIC_EXPERIMENT_20260907.md`，
+      记录研究问题、论文工具对应、安全边界、公式、站点级结果、人工核对和下一步。
+
+实验结果：
+
+- 两轮各8条结果齐全；公开页完整加载分别为4/8与5/8，DOM Passkey
+  控件分别为0/8与1/8，页面自动发起WebAuthn API、请求配置、
+  COSE算法表和生命周期signal均为0/8。这说明“目录支持Passkey”与
+  “未登录首屏可观察协议参数”之间存在实证断层，不是把0/8解释成不支持。
+- eBay两轮均发现 `passkey-endpoints`（1/8），`enroll/manage`两字段都是
+  有效HTTPS且均指向外部主机；程序没有保存或访问URL。
+  `/.well-known/webauthn` 两轮均为0/8，未获取仍为UNKNOWN。
+- 两轮完整配对，二值出现一致率 `A_2r=0.9688`，加权特征Jaccard
+  `J_2r=0.7143`。唯一漂移是GitHub第1轮超时、第2轮加载成功并出现
+  Passkey控件；其余6站证据集一致，Coinbase两轮均因本机DNS返回非公网地址而在Chrome前被拒绝。
+- 人工核对GitHub公开登录页确实显示 `Sign in with a passkey`；程序
+  正确标记DOM控件observed，又因未点击且未观察到API而将协议调用
+  保持UNKNOWN，没有把“有入口”误报为“已验证WebAuthn安全”。
+
+验证：
+
+- 首次受限执行环境下7个Chrome会话均因无法连接本地调试端口而失败，
+  结果已改名为 `webauthn_public_diagnostic_sandbox_20260907.jsonl`，不充当有效轮次。
+  在获准的Mac本地环境中同一代码成功连接Chrome 152，两轮均正常退出。
+- Mac项目虚拟环境 `unittest` 全套252项通过（新增7项）；新探针与对比脚本
+  编译通过，`git diff --check` 通过。虚拟环境未安装pytest，项目权威回归入口
+  仍为 `.venv/bin/python -m unittest discover -s tests -p 'test_*.py'`。
+- 本阶段只新增 `application_security`模块、配置、脚本、测试、实验文档与
+  `reports/archive` 实验快照；未修改SQLite、`reports/sites`正式站点结果或
+  `misc/manual_review.json`，未运行303站分类/口令政策回归，未提交、推送或部署服务器。
+  版本保持v4。
+
+### 37. B-07 WebAuthn/Passkey公开参数测量第二阶段（2026-09-07）
+
+- [x] 延续B35的“只包装、绝不主动调用”观察器，新增页面内challenge相等性检查：
+      每个文档生成不可导出的随机HMAC-SHA-256密钥，只在浏览器闭包中保存比较标签；
+      Python、证据和网页只接收 `challenge_equality_checked` 与
+      `challenge_reused_in_document`，不接收challenge、HMAC密钥或标签。
+- [x] 新增重复率 `R_ch=N_reused/N_compared`。同一文档内发现完全相同challenge时
+      可证伪该组调用的新鲜性并判FAIL；零重复仍为UNKNOWN，因为有限页面观察不能
+      证明服务端全局随机、一次性存储或响应匹配。
+- [x] 将 USENIX Security 2026 Distinguished Paper *The State of Passkeys*
+      的真实网站测量维度落实为代码：提取注册请求的COSE算法集合，按IANA
+      2026-08-25注册表快照分为推荐、不推荐、弃用、对称/MAC不兼容及未知/非签名；
+      执行 `V_alg=(A!=empty) AND (A subset R_sig_recommended)`。算法列表全部推荐时的
+      PASS仅针对候选表，不冒充认证器选择或服务端验签通过。
+- [x] 新增RP scope宽度 `B_RP=max_i(host_labels_i-rp_labels_i)`，只输出域名标签差，
+      不保存RP ID原值。默认/当前主机scope可判窄范围PASS；显式父域scope按论文的
+      子域攻击面扩大结论标WEAK；不同域可能使用WebAuthn related-origins，未验证其
+      授权文档时保持UNKNOWN。
+- [x] 按论文的三类Passkey认证启动方式，区分conditional、discoverable
+      （空allowCredentials）与non-discoverable（非空allowCredentials）；统计
+      `userVerification=discouraged`，但在没有认证路径因子和成功断言UV位时保持
+      UNKNOWN，不把“请求不强制UV”直接误报成无口令账号风险。
+- [x] 被动包装WebAuthn Level 3的 `signalAllAcceptedCredentials`、
+      `signalUnknownCredential`、`signalCurrentUserDetails`，只记录signal类型、
+      RP句法关系与数量，不保留RP ID、user ID、credential ID、姓名或显示名。
+      PASS只表示网页实际调用同步API，不表示服务端删除/恢复/授权安全。
+- [x] 网页详情新增IANA算法分组、challenge重复率、RP scope、认证模式/UV边界和
+      Passkey生命周期同步状态；新增相应数学式与“不等于服务端安全”的显式说明。
+      仍使用增量 `application_security` 字段，不修改SQLite、`reports/`或`misc/`
+      顶层schema，版本保持v4。
+
+验证：
+
+- Mac本地隔离无头Chrome合成页先于观察器安装假的 `create/get` 与三种signal API，
+  确保不连接认证器或创建凭据；页面发起2次相同32字节认证challenge和1次注册调用，
+  程序完成3次随机HMAC相等性比较、识别1次重复并判FAIL（`R_ch=1/3`）。
+- 同一实测正确把PS256归为推荐、RS1归为弃用、HMAC 256/256归为公钥凭据不兼容，
+  识别conditional模式、`userVerification=discouraged`和
+  `signalAllAcceptedCredentials`；注册UV从正确的 `authenticatorSelection`读取。
+  结果未包含合成challenge、HMAC密钥/标签、RP ID、user ID或credential ID。
+- Mac项目虚拟环境全套245项测试全部通过，其中B-07/网页定向25项；Python编译、
+  前端内联JavaScript解析和 `git diff --check` 均通过。直接调用系统Python 3.14
+  会因缺少Selenium/FastAPI等项目依赖报错，已确认正确回归入口是 `.venv/bin/python`。
+- 本条尚未执行303站两轮全量回归，未修改正式数据，未提交、推送或部署服务器；
+  本次为增量B层证据字段和网页解释，不改变分类器、SQLite、`reports/`或`misc/`
+  顶层schema。版本保持v4。
+
+### 36. B层OIDC Discovery与JWKS公开信任链（2026-09-07）
+
+- [x] 新增 `application_security/oidc_discovery.py`，以 IEEE S&P 2019 FAPI
+      形式化分析中的发行者、端点、签名密钥绑定为核心论文方法，并直接执行OpenID
+      Connect Discovery 1.0 Errata 2、RFC 8414、RFC 7517/8725和NIST
+      SP 800-131A Rev.2要求，而不是只引用文字。
+- [x] 实现公开信任链谓词
+      `V_chain=V_TLS AND V_issuer AND V_jwks_https AND V_jwks_fetch`；issuer采用
+      Unicode code point精确相等，不做大小写或尾斜杠“容错”。任何明确不一致优先
+      FAIL，网络失败或缺少非必需字段保持UNKNOWN，未知项不能算通过。
+- [x] 安全获取器只允许HTTPS 443，拒绝userinfo、fragment、本机/私网/链路本地/
+      保留地址；每个DNS答案均需为公网地址，实际TCP连接固定到已经校验的IP，TLS
+      SNI和证书验证仍使用原域名，避免“校验DNS后网络库二次解析”的重绑定窗口。
+- [x] 手工跟随最多2次且逐跳重新校验的公开HTTPS重定向；元数据响应限制256KiB、
+      JWKS限制1MiB，拒绝压缩响应、非JSON Content-Type、重复JSON成员、非有限数值
+      和非对象根节点；请求不携带Cookie、Authorization、client_id或令牌。OIDC
+      端点只有明确返回400/404/405才尝试RFC 8414兼容路径，DNS/TLS/超时不重复请求。
+- [x] 扩展 `inspect_jwks`：除密钥数、用途、算法、RSA位数、重复kid和畸形密钥外，
+      新增公开对称密钥或私钥参数计数。完整元数据、公钥模数、指数、曲线坐标、kid
+      和任何私钥材料均不进入结果或证据。
+- [x] JWKS公开卫生采用保守判定：公开 `oct/k` 或RSA/EC/OKP私钥参数为FAIL，
+      RSA低于2048位、重复kid、畸形key或公开宣称 `alg=none` 为WEAK；未发现这些
+      问题仍为UNKNOWN，不把单次干净公钥快照冒充整体安全通过。另按RFC 8725
+      检查 `RS/PS→RSA、ES→EC、EdDSA→OKP、HS→oct` 的算法-密钥类型绑定，以及
+      元数据声明算法与JWKS声明算法是否存在交集。
+- [x] Web现场分类只从当前DOM已经观察到的OAuth/OIDC端点origin提取最多3个候选，
+      不对所有站点盲扫well-known路径；同源与外部身份提供商分开归因。新增
+      `scripts/probe_oidc_metadata.py` 供研究者对明确issuer运行同一安全探针。
+- [x] 网页详情增加OIDC Discovery/JWKS信任链、TLS/issuer/JWKS摘要、数学式与判定边界；
+      “注册+登录”合并任务会在各自入口下展示现场协议证据，不再只显示丢失子模块的
+      合并能力视图；继续使用增量 `application_security` 字段，不修改SQLite、`reports/`、
+      `misc/`顶层schema，版本保持v4。
+
+验证：
+
+- Mac本地对 `https://appleid.apple.com` 执行真实公开链：TLS证书校验通过
+  （协商TLS 1.2），issuer精确一致，JWKS成功取得；当前快照3把RSA签名公钥均为
+  RS256/2048位，无重复kid、畸形key、私有/对称材料或算法-密钥类型错配，
+  `V_chain=true`且 `C_chain=1`。JWKS卫生仍保持UNKNOWN，不把干净快照判整体安全。
+- Mac本地对微软 `common/v2.0` 多租户入口实测：元数据可读取，但返回issuer为
+  租户模板、与输入issuer字符串不精确相等；程序按Discovery标准中止JWKS使用并
+  报issuer绑定FAIL。这只说明“common入口不能作为具体令牌的最终issuer证据”，
+  不推导微软整体不安全。
+- Mac本地对 `https://github.com` 的OIDC与RFC 8414标准well-known路径均得到404，
+  因而输出metadata未观察到、链UNKNOWN，不把“未发布标准元数据”误判成漏洞。
+- Mac本地Google发行者解析到公网IP，但无代理直连超时；优化后只请求一次OIDC
+  路径、不再重复请求同一不可达origin的OAuth兼容路径，结论保持UNKNOWN。
+- Mac项目环境全套238项测试全部通过；Python编译、CLI帮助、前端内联JavaScript
+  解析及 `git diff --check` 均通过。负向测试覆盖私网IP/DNS、issuer不匹配、
+  公开重定向转私网、对称/私钥泄露、弱RSA、`alg=none`、算法-密钥类型错配、
+  候选上限、网络超时与增量模块异常隔离。本条未执行303站两轮全量回归，未修改
+  正式数据，未提交、推送或部署服务器。版本保持v4。
+
+### 35. B层WebAuthn/Passkey公开调用观察第一阶段（2026-09-07）
+
+- [x] 新增 `application_security/webauthn_observer.py`：在首次导航前包装
+      `navigator.credentials.create/get`，只记录网站页面自己发起的调用并把原调用
+      原样转发；观察器自身调用凭据API次数固定为0，不点击Passkey控件、不响应
+      系统认证器提示、不创建凭据。
+- [x] 浏览器内执行双层脱敏：原始challenge、RP ID、user.id、credential ID、
+      API结果和认证器响应均不进入缓存或Python；只保留challenge/user ID字节长度、
+      RP与当前主机的句法关系、用户验证/驻留密钥/attestation/mediation枚举、
+      allow/exclude凭据数量、扩展名及公开COSE算法编号，Python入证据前再次白名单。
+- [x] 将 IEEE S&P 2023 *FIDO2, CTAP 2.1, and WebAuthn 2: Provable
+      Security and Post-Quantum Instantiation* 登记为核心论文，落实其RP绑定、挑战、
+      用户在场/验证和公钥凭据安全属性；同时把WebAuthn Level 3资料从旧的“2025
+      Candidate Recommendation”纠正为“W3C Recommendation, 25 Aug 2026”。
+- [x] 按WebAuthn Level 3执行challenge可观察条件：短于16字节报告WEAK；达到
+      16字节仍保持UNKNOWN，因为访客无法证明服务端随机生成、单次使用和响应匹配，
+      更不能仅凭请求参数证明认证器私钥保护或服务端验签正确。
+- [x] 实现配置证据覆盖率
+      `C_WA=(1/n)sum_i(sum_(j in R_i) I[o_ij observed]/|R_i|)`；注册与认证使用
+      不同参数集合。该值只衡量公开配置完整度，网页明确标成“不是安全分数”。
+- [x] 现场分类结果新增 `webauthn_observer` 增量字段和详情展示；支持首页同target
+      预注入及 `target=_blank` 新标签补注入，不修改SQLite、`reports/`、`misc/`
+      顶层schema；新标签初始加载过早、iframe内调用和站点主动规避仍列为可能漏报
+      边界，版本保持v4。
+
+验证：
+
+- Mac本地隔离Chrome合成页使用假的 `create/get` 原函数，确保不接触真实认证器；
+  页面分别发起32字节认证challenge和8字节注册challenge后，观察器捕获2次调用，
+  正确保留 `required/conditional`、`preferred`、COSE `-7/-257` 等公开配置，8字节
+  被判WEAK；输出没有原始challenge、RP ID、用户/凭据ID或认证器响应。
+- Mac本地无头Chrome只读加载 `https://github.com/login`：DOM观察到公开Passkey
+  控件，但3秒观察窗内WebAuthn API调用为0，因此“可见入口”与“实际协议调用”
+  分别输出observed和unknown；没有点击Passkey、登录、提交表单或唤起认证器。
+- 初次在受限执行环境内启动Chrome复现 `chrome not reachable / _RegisterApplication
+  SIGABRT`；核对Chrome 152.0.7977.76与缓存driver 152.0.7977.82主版本匹配后，
+  在获准的Mac本地环境外启动成功，证明本次失败是macOS应用注册限制而非B35代码
+  或驱动主版本不一致。
+- Mac项目环境全套227项测试全部通过；Python编译、前端内联JavaScript解析及
+  `git diff --check` 均通过。本条未执行303站两轮全量回归，未修改正式数据，
+  未提交、推送或部署服务器。版本保持v4。
+
+### 34. B层JWT/JWS/JWKS密码学验证第一阶段（2026-09-07）
+
+- [x] 新增 `application_security/jose_validation.py`，以 IEEE S&P 2019
+      *An Extensive Formal Security Analysis of the OpenID Financial-Grade API*
+      的FAPI/JARM签名与上下文绑定思想为论文依据，并将 RFC 7515、7517、7519、
+      8725及 NIST SP 800-131A Rev.2 登记为直接执行标准，而不是只做文字引用；
+      2048位RSA门槛来自当前有效的Rev.2最终版，而非仍处草案状态的Rev.3。
+- [x] 实现用途感知的联合安全谓词 `V_P=AND(j in R(P)) V_j`，以及证据覆盖率
+      `C_P=sum(1[V_j != unknown])/|R(P)|`；`R(P)`依据ID Token、JARM、JAR、
+      client assertion或普通JWT选择，避免把nonce/typ等用途相关要求硬套给所有
+      JWT。缺少JWKS、算法白名单或必需上下文时保持unknown，不能靠解码判通过。
+- [x] 按 RFC 7515 Appendix A.2 实现研究用途的 `RS256/RS384/RS512`
+      RSASSA-PKCS1-v1_5验签：执行 `m=s^e mod n`、严格检查EMSA编码和DigestInfo，
+      使用常量时间比较；实现JWK `kty/use/alg/kid`兼容选择、RSA模数位数、重复
+      `kid`和弱于2048位密钥的只读摘要。
+- [x] 紧缩解析器拒绝重复JSON成员、非法UTF-8、非法base64url、超大输入和非三段
+      Compact JWS，并拒绝解码字节相同但填充位非规范的base64url表示；识别
+      `alg=none`、空签名、`jku/x5u`远程密钥头、内嵌`jwk/x5c`
+      等信号，但没有服务器端白名单证据时不把风险信号冒充已证实漏洞。
+- [x] 扩展浏览器被动探针：只解析当前URL、fragment及已渲染DOM的公开
+      `request/response/id_token/assertion/client_assertion` 参数；明确不读Cookie、
+      localStorage或sessionStorage，不跟随密钥URL，Python侧只收到alg、typ、kid
+      是否存在、claim名称和签名字节数等脱敏元数据。
+- [x] 新增 `scripts/verify_jose_evidence.py`：JWT只能从stdin输入，避免出现在进程
+      参数中；预期issuer/audience/nonce/typ只用于内存比较，输出不含令牌、签名、
+      claim值、kid值或JWK材料。
+- [x] Web现场分类结果增加“JWT/JWS/JWKS密码学验证”与联合公式展示；公开页面没
+      观察到JOSE对象时只写未知，不等于网站没有JWT，也不修改SQLite、`reports/`
+      或`misc/`顶层schema。
+- [x] 多JOSE对象按保守优先级聚合：任一完整验证失败优先FAIL，明确未签名/解析
+      异常为WEAK，只有所有已观察对象的七项谓词都完整为真才PASS；通过对象与
+      证据不全对象混合时保持UNKNOWN，避免局部成功掩盖未知面。
+
+验证：
+
+- RFC 7515 Appendix A.2 官方 `RS256`/2048位RSA向量验签通过；实际改变签名字节
+  后验签失败。负向测试过程中另发现：只改Base64URL末字符可能仅改变未使用填充
+  位、解码后字节不变；据此增加规范Base64URL检查并覆盖回归。
+- Mac本地隔离Chrome加载纯本地认证页面：成功从公开 `request` 参数识别
+  `alg=none`、`typ=JWT`、`iss/aud` claim名称和空签名，返回结果没有令牌正文或
+  claim值，证明浏览器脚本到Python证据层的脱敏链路有效。
+- Mac本地直接访问 `https://github.com/login`：当前公开URL/DOM没有JOSE对象，
+  程序输出 `observed_total=0`、`verdict=unknown`，没有把“未观察到”误判成安全；
+  全程未登录、未点击第三方入口、未读Cookie/Web Storage、未提交表单。
+- 同期从GitHub主页运行旧登录分类路线时，导航最终仍停在主页并输出
+  `email_only`；这是既有登录入口导航/分类问题，不是JOSE探针结论，本条只记录、
+  未跨范围修改分类器。
+- Mac项目环境全套221项测试全部通过；Python编译、CLI帮助入口、前端内联
+  JavaScript解析及 `git diff --check` 均通过。本条未执行303站两轮全量网站回归，
+  未推送或部署服务器。版本保持v4。
+
+### 33. B层口令强度计论文方法与站内一致性（2026-09-06）
+
+- [x] 新增 `password_meter_evaluation.py`，把 USENIX Security 2023
+      *No Single Silver Bullet* 的四项方法落实为可运行代码：频率加权
+      Spearman、破解/未破解强度分布KL散度、最低/最高强度分箱 Precision、
+      带风险参数 `beta=0.8` 的 PrecisionSecurity；保留负相关结果，不为展示
+      效果裁剪数据。
+- [x] 新增 `scripts/evaluate_password_meter.py`：读取不含口令正文的标注
+      JSON/JSONL并计算论文指标；KL按brute-force/dictionary/probability/combined
+      攻击策略分开，输入只需强度桶、破解标签和聚合计数，不接受明文口令；缺少
+      口令频率/排名或 cracked/uncracked 真值时输出 `null`。
+- [x] inline 探针证据新增字符类别画像、探针目的和标准化强度计档位；仍不保存
+      候选口令正文，且强度计继续与密码接受/拒绝判定解耦。
+- [x] 真实Gitee烟测发现两项采集偏差并当场修复：字段红框先出现时会提前结束
+      轮询、漏掉 `rejected+strong` 强度证据，现于停止observer前补一次只读快照；
+      “密码强度中等，强度要求”同时含“强/中”，旧中文解析顺序可能误归strong，
+      现按明确的弱/中等/强档位语义归一化。
+- [x] 新增站内一致率
+      `C_site=1-(N_accepted,weak+N_rejected,strong)/N_paired`，只衡量同一网站
+      的强度提示和表单校验是否互相打架，不宣称为强度计准确率；论文准确率在
+      没有真实猜测/破解数据时固定为unknown。只要观察到矛盾即可形成weak证据；
+      未观察到矛盾（包括 `C_site=1`）仍为unknown，避免有限样本被误写为pass。
+- [x] Web API与详情/任务视图以增量字段展示强度计标签数、有效配对数、站内
+      一致率和两类方向性矛盾；不修改SQLite、`reports/`、`misc/`顶层schema。
+- [ ] 待真实数据实验：按论文口径准备伦理处理后的中英文口令排名与破解标签，
+      对网站强度计、Zxcvbn等基线运行WSpearman/KL/Precision/PrecisionSecurity，
+      并对 `beta` 做敏感性分析；在此之前网页不展示“准确率”。
+
+2026-09-08复核：原实现遗漏论文离线场景的KL散度，现补充
+`KL(P||Q)=sum_i P(i)log(P(i)/Q(i))`；不暗中平滑零概率，若破解分布有正质量而
+未破解分布对应桶为0，则显式返回无限散度标志，避免JSON写入非标准Infinity。
+新增2项定向测试，B03论文的四维方法现均有代码；真实真值数据仍未取得。
+
+验证：
+
+- Mac 本地 `.venv/bin/python -m unittest discover -s tests -p 'test_*.py'`
+  共 211 项全部通过；Python 编译检查、前端内联 JavaScript 解析和
+  `git diff --check` 均通过。
+- Mac 本地对 Gitee 注册页完成一次不提交表单的 60 探针烟测：负对照成立，
+  观察到 `medium/strong` 强度档位，其中 28 条形成“强度标签+接受/拒绝”配对；
+  该次采集直接暴露并推动修复中文档位歧义和拒绝侧快照偏差。
+- 修复后又运行 3 探针聚焦复测：接受样本读到 `strong`，不符合数字要求的拒绝
+  样本仍未显示可读取的强度标签，最终只有 1 条有效配对。由此确认“没读到标签”
+  必须保持证据不足，`C_site=1` 也不能判安全通过。
+- 两次现场测量都没有提交注册表单、创建账号或保存候选口令正文。本条没有运行
+  303站两轮全量网站回归，也没有推送或部署服务器。版本保持v4。
+
+### 32. B层访客可见认证安全与协议元数据（2026-09-06）
+
+- [x] 新增 `authentication_surface.py`：从认证图谱生成口令、OTP、联合登录、
+      二维码、Passkey/WebAuthn 的公开能力结论；发现多个方式只报告“替代路线
+      可见”，MFA强制和RBA执行保持 `unknown`，不把能力存在误写成安全通过。
+- [x] 新增 `passive_protocol_probe.py`：在现场分类完成后的当前认证DOM中，只读
+      OAuth/OIDC候选端点、参数名及 `state/nonce/PKCE`公开信号，并识别Passkey
+      控件和MFA/RBA提示；不跟随第三方链接、不调用凭据API、不发送验证码，且不
+      保存 `client_id/state/nonce` 等参数值。
+- [x] 页面状态识别新增Passkey/WebAuthn多语言语义，限定为认证上下文中的可交互
+      控件；仅记录 `passkey/public_key_auth`，不点击控件，避免触发系统认证器。
+- [x] 论文注册表加入NIST SP 800-63B、OAuth Security BCP RFC 9700和WebAuthn
+      Level 3标准，核心模块同时引用USENIX Security登录政策、MFA/RBA、WPSE、
+      QR登录和Passkey实证研究。
+- [x] Web API为数据库结果和现场分类增加 `application_security` 增量字段；详情页
+      和任务结果增加“访客可见认证安全（论文证据层）”，明确“入口存在不代表
+      实现安全，未观察到也不判定为不支持”。不修改SQLite、`reports/`或`misc/`
+      schema。
+- [x] 修复登录页渲染超时后的错误归因：Chrome超时时若 `current_url` 暂为空，
+      保留调用方原始公开URL交给分类器记录 `timeout/infrastructure_error`，不再把
+      `about:blank`/空地址误报为用户输入了非法网址并返回HTTP 400。
+
+验证：
+- Mac本地自动测试200项全部通过；前端内联脚本已通过JavaScript语法解析，
+  Python编译检查与 `git diff --check` 均通过。
+- Mac本地数据库 `36kr.com` 样本成功生成 `authentication-surface-1.0`，观察到
+  knowledge_password 与 possession_otp 两类公开因子；MFA/RBA均保持unknown。
+- Mac本地GitHub `/login` 实测遇到Chrome renderer timeout；修复前接口误抛URL
+  校验400，修复后稳定返回 `flow_type=unknown / stop_reason=timeout`及原始加载错误，
+  未提交表单、未跟随第三方认证链接。该次超时不能用于判断GitHub认证能力。
+- 尚未运行新的两轮303站全量回归；协议层仍在增量开发，稳定后再生成可比较档案。
+
+### 31. B层论文驱动证据模型与认证图谱第一阶段（2026-09-06）
+
+- [x] 新增 `application_security/`：以不可变对象统一
+      `ScanMode / EvidenceLevel / Evidence / Claim / ModuleResult`；核心模块
+      `ModuleManifest` 强制声明密码学要素和至少一篇论文，避免无依据功能进入
+      比赛核心。
+- [x] 新增认证图谱 `auth-graph-1.0`：login/signup 保持两条独立分支，页面状态、
+      认证方法、验证码/扫码/人机门槛分别形成可追溯节点和边；论文依据写入稳定
+      `paper_ref_ids`。图谱在 Web API 读取时动态生成，不回写 `reports/`、
+      `misc/` 或 SQLite schema。
+- [x] 修复登录/注册导航混用：新增 `navigate_to_login`，网页实时分类与批量分类的
+      login 不再先调用 `navigate_to_signup`；注册仍保留原有多层入口发现。登录
+      全视图探索只允许密码/短信/邮箱/扫码等登录内部视图，禁止再点击注册 tab；
+      若站点仍把浏览器带到注册 URL，交叉入口守卫会在记录注册状态前停止。
+- [x] 修复 `--measure-policy` 批量执行标签污染：口令政策只在 signup 侧测量；同批
+      login 侧改为真正的独立登录分类，不再把第二次注册结果标成 login。
+- [x] 新增模型准入、证据不可变、图谱分支/多方法/门槛、网页导航分流及批量政策
+      标签测试。保持版本 v4；正式数据格式和权威档案未改动。
+- [x] 新增只读口令政策漏斗审计：以人工确认的 inline 站为固定分母，将失败拆为
+      入口/口令框未到达、验证或人工门槛、已有口令框但反馈不可信、仅静态提示、
+      inline自洽失败和运行错误，避免只报告“25站成功7站”而无法指导优化。
+- [x] 根据漏斗首个通用根因补全注册URL语义：将独立路径段 `/reg/` 识别为注册
+      路径（58同城证据），但不使用会误伤 `/region/` 的裸子串匹配；增加正反例
+      测试，不加入域名特判。
+- [x] 增加 inline 证据自洽守卫：若页面对至少4个处于其自述长度范围内、覆盖
+      至少3种字符组合的候选返回完全相同的拒绝文案，立即标记为非区分性反馈并
+      回退分类；不再继续遍历到32位，也不把全零结果冒充宽松政策。诊断中只保存
+      长度、字符类别画像和反馈文案，不保存候选口令正文。
+- [x] 回退分类时新增 `measurement_diagnostic`：保留不可信测量的原因、页面提示
+      政策和探针证据，但与正式 `policy` 分开，避免“提示规则”升级成“行为实测”。
+
+验证：
+- 自动测试 191 项全部通过，Python 编译检查通过，`git diff --check` 通过。
+- `aistudy666.com` 无头实测：login 状态只包含首页与 `/login`，最终地址为
+  `/login`；signup 独立到 `/register`。第一次实测暴露登录全视图会点击注册 tab，
+  增加分支守卫后复测确认交叉污染消失。
+- 现有数据库 `36kr.com` 读取时成功生成 `auth-graph-1.0`：登录/注册双入口、
+  20 个节点、28 条边、8 条页面证据；权威 JSONL 和 SQLite schema 均未改动。
+- 以修复后无头第1轮档案运行漏斗审计：25个人工 inline 站中完整政策7站；
+  其余分解为口令框未到达6、人工/访问门槛4、注册上下文未确认3、inline反馈
+  不可信2、仅静态提示1、已到口令框但inline不支持1、验证前置1。
+- `58.com` 无头实测：可稳定进入 `https://passport.58.com/reg/` 并识别
+  phone/code/identifier/password；页面随后对多种8位候选重复返回疑似用户名规则
+  “4-20个字符，支持中文、数字、字母、_”，同时另有真实口令提示“8-16位且不能
+  连续或重复”。自洽守卫将本轮结果保守降级为 `classified_only`，保留提示与探针
+  诊断，不输出虚假的完整政策。
+- 本条尚未执行两轮303站全量回归；待B层本阶段逻辑稳定后统一执行，避免每个
+  小步都重复产生长达数小时且彼此不可比较的中间档案。
+
+### 30. 网页现场测量支持重复测试（2026-09-06）
+
+- [x] 在现场分类区增加“重复测试（忽略数据库，重新打开网站测量）”开关；
+      默认不勾选时保持原有缓存行为，勾选后任务列表和结果详情均显示重复测试标记。
+- [x] 异步任务接口新增向后兼容的 `force_retest` 布尔字段；注册+登录分类会跳过
+      两侧已有数据，口令政策会跳过已有政策，统一重新进入现场测量流程。
+- [x] 重复测试结果仍只保存在任务中，不自动修改 `reports/`、`misc/` 或正式数据库；
+      只有用户主动点击“加入数据库”并通过管理员口令后才会覆盖对应网站数据。
+- [x] 新增后端缓存旁路和前端开关测试；保持 v4，不改分类/口令算法和数据 schema。
+
+### 29. 项目技术全景与数据支撑问题审计文档（2026-09-06）
+
+- [x] 新增 `PROJECT_TECHNICAL_REVIEW_20260906.md`，面向组会/教师汇报完整整理
+      项目目标、安全边界、目录结构、执行链、当前能力、正式/线上/303站数据、
+      与学长原始 `MyAutomaticPolicy` 代码的继承和改造关系、测试入口及未来路线。
+- [x] 用现有数据量化核心瓶颈：线上 login/signup 条件正确率为
+      83.7%/81.1%，但以125个人工站为分母的端到端正确覆盖仅61.6%/58.4%；
+      25个人工标记 signup inline 站中，修复后全量只在7站形成完整政策，
+      恢复率28.0%，303站唯一完整政策覆盖15/303=5.0%。
+- [x] 审计发现批量/网页分类均先调用 `navigate_to_signup`；更严重的是
+      `run_measurement.py --measure-policy` 分支忽略 `kind`，login标签实际写入
+      第二次signup测量。历史303档案中login/signup核心字段相同率约88%～90%，
+      因此政策档案的login侧不得作为独立登录结论，修复前不继续全量政策回归。
+- [x] 本次只新增说明文档并同步CHANGELOG；保持v4，不修改reports/misc数据
+      schema，不续跑第二轮，不提交、不push、不部署。
+
+### 28. Cursor 项目级上下文文档（2026-09-04）
+
+- [x] 新增 `CURSOR_PROJECT_GUIDE.md`，为对项目零上下文的代码审查/修改工具
+      整理项目目标、安全边界、分类器、inline 口令测量、数据 schema、
+      reports/misc 铁律、Web API、三端同步、当前脏工作树、回归进度、
+      已知问题、修改规则和竞赛深化路线。
+- [x] 明确标记部分旧 Web 文档仍有过期 v3 文案，当前实际版本必须
+      保持 v4；本次只增加文档，不改动 reports/misc 数据格式，不干扰
+      正在运行的修复后无头全量第 1 轮。
+
 ### 15. 口令政策测量可信度与安全边界收敛（2026-08-24，进行中）
 
 背景：网页接入口令政策测量后，GitHub 等站点出现互相矛盾的规则；审查确认
@@ -284,7 +819,7 @@ GitHub 本机完整实测（有头+代理）：
 - 服务器端 GitHub 入口受 IP 反爬影响（no_web_signup/worker 崩溃），
   属外部环境限制，非代码问题。
 
-### 26. 有头全量回归（第 1 轮）（2026-08-30）
+### 26. 有头全量回归（第 1 轮）（2026-08-30，已完成）
 
 今日 12 个 commit 修改后，验证老站是否受影响 + 有头全量逐轮优化：
 
@@ -295,8 +830,69 @@ GitHub 本机完整实测（有头+代理）：
   roblox signup 失败但 login 成功）——时序/反爬，非代码问题；
   LinkedIn/Roblox 600s 超时因有头每站 4-10 分钟。
 
-有头全量第 1 轮（303 站 × 2 = 606 条，site_timeout 900s）进行中，
-每轮分析失败模式并优化。
+有头全量第 1 轮（303 站 × 2 = 606 条，site_timeout 900s）已完成：
+- 606/606 条均已落盘，600 条正常、6 条运行失败，耗时 34307 秒（约 9.5 小时）。
+- 30 条完成 inline 政策实测，覆盖 17 个唯一站点；其余结果保守输出分类、
+  hint-only 或阻断原因，没有把无反馈当作接受。
+- 6 条失败：leetcode.cn signup / wired.com signup 浏览器会话失效，
+  xiachufang login / renren login / github login worker 无结果，
+  stackoverflow signup 单站 900 秒超时；留待第 2 轮验证是否为偶发故障。
+- 当前自动测试：156 项全部通过。
+
+数据：`reports/archive/headful_r1_20260830.jsonl`。下一步按完全相同口径执行
+第 2 轮有头全量回归，再逐项比较分类、入口、政策与失败重现情况。
+
+第 2 轮首次启动于 2026-09-04，但 macOS 上 3 个有头 Chrome 并发启动触发
+AppKit 崩溃，前 12 条均为浏览器基础设施错误，已立即停止；该 12 条不作为
+回归结果，也未覆盖权威 `/reports` 数据。修复见第 27 条。
+
+### 27. macOS 批量 Chrome 崩溃保护（2026-09-04）
+
+现象：批量回归时反复弹出 “Google Chrome quit unexpectedly”，Selenium
+连续返回 `session not created / cannot connect to chrome / chrome not reachable`。
+macOS `.ips` 崩溃报告确认 Chrome 152 在 `_RegisterApplication` 阶段
+`SIGABRT`；继续检查发现本机 Chrome 已升级为 152.0.7977.76，而项目按文件
+大小强制选中了缓存的 ChromeDriver 151.0.7922.138，共享路径还硬编码
+`version_main=150`。这不是目标网站异常，也不是口令识别逻辑的结果。
+
+修复：
+- [x] macOS 多并发批量任务未显式指定模式时自动使用无头 Chrome，行为与
+  服务器一致；人工观察可显式传 `--headful`，此时自动限制为单并发。
+- [x] 所有 Chrome 启动增加跨进程文件锁，避免多个 worker 同时注册图形进程；
+  增加 `--noerrdialogs` 与 session-crashed 提示抑制参数。
+- [x] ChromeDriver 缓存改为必须与当前 Chrome 主版本完全匹配；不匹配时不再
+  劫持 manager 到旧驱动，而由 undetected-chromedriver 按检测出的主版本获取；
+  删除共享驱动硬编码的 `version_main=150`，显式配置错版驱动时直接报清楚错误。
+- [x] 并发新驱动启用 undetected-chromedriver 的 `user_multi_procs`，防止多个
+  worker 共用补丁驱动时互相关闭窗口；启动期 `target window already closed`
+  同样纳入熔断统计。
+- [x] 连续 3 次 Chrome 启动失败自动熔断整批，不再继续制造数百条假失败和
+  系统崩溃弹窗；中止或 Ctrl-C 时统一终止并回收已启动 worker。
+- [x] `--resume` 只跳过成功记录，自动重试 session 创建失败、单站超时等
+  错误项，避免把基础设施错误永久当成“已经测完”。
+- [x] 新增批处理浏览器保护单元测试；第二轮须在保护逻辑验证后重新开始，
+  首次启动留下的 12 条错误记录仅作故障证据。
+- [x] 修复测试隔离：待审核接口测试此前未替换 `MANUAL_PATH`，会把虚构的
+  `private.example` 写进真实人工核验文件并刷新时间戳；现已改用临时文件并
+  清除这条 2026-08-16 起遗留的测试污染，其他人工核验数据未改动。
+
+验证：
+- 沙箱内烟测可稳定熔断，但 macOS 仍会拒绝 Codex 沙箱子进程访问
+  LaunchServices；这属于执行环境限制，不能用沙箱内 Chrome 判断项目失败。
+- 沙箱外两并发无头烟测 2/2 正常完成，Chrome 152 会话均成功建立，未新增
+  `.ips` 崩溃报告。
+- 自动测试 162 项全部通过；测试前后 `misc/manual_review.json` 哈希一致。
+- 修复后两轮服务器同口径全量回归将重新计数，首次产生的 12 条启动错误不计入。
+- 修复后第 1 轮已完成：303 站 × signup/login = 606 条，
+  workers=3、无头、site_timeout=900s、启用完整政策测量；606 条 JSON
+  全部有效，6 条运行错误，28 条 inline 政策实测，覆盖 15 个唯一站点。
+  错误为 ly.com/21jingji.com/booking.com worker 无结果，LinkedIn signup
+  与 lichess signup/login 单站 900 秒超时；未再出现 macOS Chrome 系统崩溃。
+  数据：`reports/archive/headless_postfix_round1_20260904.jsonl`。
+- 修复后第 2 轮于 2026-09-05 22:45 按同口径启动，但运行会话结束后
+  停在 12/606，12 条均为有效 JSON 且无运行错误。已按用户要求不再续跑，
+  保留 `reports/archive/headless_postfix_round2_20260905.jsonl` 作为中断记录；
+  当前阶段转为代码梳理与项目总结，不继续测量、提交、推送或部署。
 
 ### 19. 全量验证 3 轮 + 无头批量密码测量修复（2026-08-28）
 

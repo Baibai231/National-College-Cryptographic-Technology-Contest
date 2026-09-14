@@ -1,7 +1,12 @@
 import os
 import re
+import shutil
 import stat
+import subprocess
+import sys
+import tempfile
 import time
+from contextlib import contextmanager
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -173,8 +178,45 @@ def _is_real_chromedriver_binary(path):
     return False
 
 
-def _find_cached_chromedriver():
-    """在 ~/.wdm 缓存中搜索真正的 chromedriver 二进制，自动 chmod +x"""
+def _version_major(text):
+    match = re.search(r"\b(\d+)\.", text or "")
+    return int(match.group(1)) if match else None
+
+
+def _binary_version_major(path):
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        result = subprocess.run(
+            [path, "--version"], capture_output=True, text=True,
+            timeout=5, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return _version_major((result.stdout or "") + " " + (result.stderr or ""))
+
+
+def _detect_installed_chrome_major():
+    """Detect the browser major version without opening a GUI window."""
+    candidates = []
+    configured = os.environ.get("SITES_CHROME_BIN")
+    if configured:
+        candidates.append(configured)
+    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
+        found = shutil.which(name)
+        if found:
+            candidates.append(found)
+    if sys.platform == "darwin":
+        candidates.append(
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+    for candidate in candidates:
+        major = _binary_version_major(candidate)
+        if major:
+            return major
+    return None
+
+
+def _find_cached_chromedriver(browser_major=None):
+    """Find a real cached driver compatible with the installed Chrome major."""
     candidates = []
     wdm_root = os.path.join(os.path.expanduser("~"), ".wdm", "drivers", "chromedriver")
     if os.path.isdir(wdm_root):
@@ -182,9 +224,12 @@ def _find_cached_chromedriver():
             for f in files:
                 if f in ("chromedriver", "chromedriver.exe"):
                     candidates.append(os.path.join(root, f))
-    # 按文件大小降序排列——真正的 21MB 二进制远大于 1.3MB 文本文件
+    # 只认与浏览器主版本完全相同的驱动。旧逻辑按文件大小取第一个，曾在
+    # Chrome 自动升级到 152 后继续强制使用 151，造成 session 创建失败。
     for c in sorted(candidates, key=os.path.getsize, reverse=True):
         if _is_real_chromedriver_binary(c):
+            if browser_major and _binary_version_major(c) != browser_major:
+                continue
             st = os.stat(c)
             if not (st.st_mode & stat.S_IXUSR):
                 os.chmod(c, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -195,7 +240,7 @@ def _find_cached_chromedriver():
 def _patch_chromedriver_manager():
     """Monkey-patch webdriver-manager，让 install() 直接返回本地缓存路径"""
     from webdriver_manager.chrome import ChromeDriverManager as _CDM
-    chromedriver_path = _find_cached_chromedriver()
+    chromedriver_path = _find_cached_chromedriver(_CHROME_MAJOR)
     if chromedriver_path is None:
         return  # 没找到缓存，保持原行为（让它走网络）
     _orig_install = _CDM.install
@@ -207,7 +252,9 @@ def _patch_chromedriver_manager():
     return chromedriver_path
 
 
-# 模块加载时立即执行 patch
+# 模块加载时立即检测；没有同版本缓存时不再把 manager 劫持到旧驱动，
+# undetected-chromedriver 会按 version_main 获取匹配版本。
+_CHROME_MAJOR = _detect_installed_chrome_major()
 _CHROMEDRIVER_BIN = _patch_chromedriver_manager()
 
 
@@ -220,6 +267,34 @@ def _get_proxy_config():
         if val and val.strip():
             return val.strip()
     return None
+
+
+@contextmanager
+def _chrome_startup_guard():
+    """Serialize Chrome process registration across batch workers.
+
+    On macOS, launching several GUI instances at exactly the same time can make
+    Chrome abort inside AppKit's _RegisterApplication before Selenium receives
+    a session.  A small cross-process file lock removes that launch race while
+    still allowing the browsers to run concurrently after startup.
+    """
+    lock_path = os.path.join(tempfile.gettempdir(), "measure-chrome-startup.lock")
+    lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        if os.name == "posix":
+            import fcntl
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        yield
+        if sys.platform == "darwin" and not os.environ.get("SITES_HEADLESS"):
+            time.sleep(1.0)
+    finally:
+        if os.name == "posix":
+            try:
+                import fcntl
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+        os.close(lock_fd)
 
 
 def _inject_form_detection_js(driver):
@@ -276,6 +351,8 @@ def _get_shared_driver():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
+    options.add_argument('--noerrdialogs')
+    options.add_argument('--disable-session-crashed-bubble')
     # undetected-chromedriver 自动处理以下反检测补丁:
     #   --disable-blink-features=AutomationControlled
     #   excludeSwitches: enable-automation
@@ -293,10 +370,13 @@ def _get_shared_driver():
     else:
         options.add_argument("--no-proxy-server")
 
+    launch_kwargs = {}
+    if _CHROME_MAJOR:
+        launch_kwargs["version_main"] = _CHROME_MAJOR
     if _CHROMEDRIVER_BIN:
-        _SHARED_DRIVER = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN, version_main=150)
-    else:
-        _SHARED_DRIVER = uc.Chrome(options=options, version_main=150)
+        launch_kwargs["driver_executable_path"] = _CHROMEDRIVER_BIN
+    with _chrome_startup_guard():
+        _SHARED_DRIVER = uc.Chrome(options=options, **launch_kwargs)
 
     _SHARED_DRIVER.maximize_window()
     _SHARED_DRIVER.set_page_load_timeout(25)
@@ -323,6 +403,8 @@ def _get_new_driver():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
+    options.add_argument('--noerrdialogs')
+    options.add_argument('--disable-session-crashed-bubble')
     # ── 反自动化检测标志 ──
     # 注意: excludeSwitches / useAutomationExtension 与 undetected-chromedriver
     #       不兼容（后者内部已处理），只保留 Chrome flag 级别选项
@@ -351,12 +433,28 @@ def _get_new_driver():
 
     # 服务器自定义 chromedriver：SITES_CHROMEDRIVER 指向驱动路径
     chromedriver_bin = os.environ.get("SITES_CHROMEDRIVER")
-    if chromedriver_bin and os.path.isfile(chromedriver_bin):
-        driver = uc.Chrome(options=options, driver_executable_path=chromedriver_bin)
-    elif _CHROMEDRIVER_BIN:
-        driver = uc.Chrome(options=options, driver_executable_path=_CHROMEDRIVER_BIN)
-    else:
-        driver = uc.Chrome(options=options)
+    launch_kwargs = {}
+    if _CHROME_MAJOR:
+        launch_kwargs["version_main"] = _CHROME_MAJOR
+    # 每个批处理 worker 都有独立 Chrome；告知 uc 其补丁驱动会被多进程
+    # 共用，避免一个 worker 清理/重补驱动时关闭另一个 worker 的窗口。
+    launch_kwargs["user_multi_procs"] = True
+    with _chrome_startup_guard():
+        if chromedriver_bin and os.path.isfile(chromedriver_bin):
+            configured_major = _binary_version_major(chromedriver_bin)
+            if _CHROME_MAJOR and configured_major != _CHROME_MAJOR:
+                raise RuntimeError(
+                    "SITES_CHROMEDRIVER 主版本 {} 与 Chrome {} 不匹配".format(
+                        configured_major or "未知", _CHROME_MAJOR))
+            driver = uc.Chrome(
+                options=options, driver_executable_path=chromedriver_bin,
+                **launch_kwargs)
+        elif _CHROMEDRIVER_BIN:
+            driver = uc.Chrome(
+                options=options, driver_executable_path=_CHROMEDRIVER_BIN,
+                **launch_kwargs)
+        else:
+            driver = uc.Chrome(options=options, **launch_kwargs)
 
     driver.maximize_window()
     driver.set_page_load_timeout(30)
@@ -465,8 +563,13 @@ class TestPassword(object):
         self._last_probe_outcome = ProbeOutcome.INCONCLUSIVE
         self._last_probe_evidence = "not_started"
         self._probe_evidence = []
+        self._current_probe_purpose = ""
         self._negative_control_confirmed = False
         self._had_inconclusive = False
+        # 只保存长度、字符类别画像和反馈文案，不保存候选口令本身。用于识别
+        # “所有候选都收到同一条与自身矛盾的规则提示”这类非区分性反馈。
+        self._rejected_probe_observations = []
+        self._admissible_abort_reason = ""
 
     def _record_probe(self, password: str, outcome: ProbeOutcome,
                       evidence: str) -> None:
@@ -476,8 +579,12 @@ class TestPassword(object):
             self._had_inconclusive = True
         self._probe_evidence.append({
             "password_length": len(password),
+            "character_profile": self._candidate_profile(password),
             "outcome": outcome.value,
             "evidence": evidence[:300],
+            "probe_purpose": self._current_probe_purpose[:120],
+            # 只保存标准化档位，不保存候选口令，也不把强度计作为接受证据。
+            "strength_meter_level": self._last_strength_level or "",
         })
 
     def establish_inline_control(self) -> bool:
@@ -510,6 +617,61 @@ class TestPassword(object):
             build("Aa3!"),     # 四类字符
         ]))
 
+    @staticmethod
+    def _candidate_profile(password: str) -> str:
+        """返回不含口令正文的字符类别画像，供证据自洽检查使用。"""
+        classes = []
+        if any(ch.islower() for ch in password):
+            classes.append("lower")
+        if any(ch.isupper() for ch in password):
+            classes.append("upper")
+        if any(ch.isdigit() for ch in password):
+            classes.append("digit")
+        if any(not ch.isalnum() for ch in password):
+            classes.append("symbol")
+        return "+".join(classes) or "other"
+
+    def _non_discriminating_rejection_reason(self) -> str:
+        """识别与候选长度矛盾、且无法区分字符组合的重复拒绝反馈。
+
+        典型情况是反馈实际属于相邻用户名字段，或是未被清除的常驻提示：
+        页面声称允许 4-20 位，却对多种 8 位字符组合返回完全相同的文案。
+        这种证据不能继续用于推断口令政策，应尽早回退为 inconclusive。
+        """
+        grouped = {}
+        for observation in self._rejected_probe_observations:
+            message = re.sub(r"\s+", " ", observation.get("message", "").strip().lower())
+            if not message:
+                continue
+            grouped.setdefault(message, []).append(observation)
+
+        range_pattern = re.compile(
+            r"(?P<lo>\d{1,2})\s*(?:-|~|～|—|–|至|到)\s*"
+            r"(?P<hi>\d{1,2})(?:\s*(?:个?字符|位|characters?))?",
+            re.IGNORECASE,
+        )
+        for message, observations in grouped.items():
+            match = range_pattern.search(message)
+            if not match:
+                continue
+            lower = int(match.group("lo"))
+            upper = int(match.group("hi"))
+            if lower > upper:
+                lower, upper = upper, lower
+            in_range = [
+                item for item in observations
+                if lower <= int(item.get("password_length", -1)) <= upper
+            ]
+            profiles = {item.get("character_profile") for item in in_range}
+            if len(in_range) >= 4 and len(profiles) >= 3:
+                return (
+                    "non_discriminating_rejection_feedback: 页面对至少4个处于其声明"
+                    f"长度范围({lower}-{upper})内、覆盖至少3种字符组合的候选返回"
+                    "同一拒绝文案；该反馈可能属于相邻字段、常驻提示或未满足的"
+                    "身份门控，不能据此继续推断口令政策"
+                )
+        return ""
+
     @logger.catch
     def find_admissible_password(self):
         """
@@ -541,6 +703,11 @@ class TestPassword(object):
                     flag = True
                     self.admissible_password = pwd
                     break
+                abort_reason = self._non_discriminating_rejection_reason()
+                if abort_reason:
+                    self._admissible_abort_reason = abort_reason
+                    self.my_logger.warning(abort_reason)
+                    return ""
             if ret:
                 break
 
@@ -621,13 +788,15 @@ class TestPassword(object):
             self._last_strength_level = 'medium'
         elif any(w in _msg_lower for w in ['weak', 'low', 'poor', 'bad']):
             self._last_strength_level = 'weak'
-        # 中文匹配
-        elif '强' in strength_text and '弱' not in strength_text:
-            self._last_strength_level = 'strong'
-        elif '中' in strength_text:
-            self._last_strength_level = 'medium'
-        elif '弱' in strength_text:
+        # 中文匹配要先识别具体档位。“密码强度中等，强度要求”同时含“强”和
+        # “中”，旧顺序会把中等误归为strong。
+        elif any(word in strength_text for word in ('很弱', '较弱', '弱', '低')):
             self._last_strength_level = 'weak'
+        elif any(word in strength_text for word in ('中等', '中级', '一般', '普通')):
+            self._last_strength_level = 'medium'
+        elif re.search(r'(?:密码|口令)?强度\s*(?:为|是|[:：])?\s*(?:很强|较强|强|高)',
+                       strength_text):
+            self._last_strength_level = 'strong'
         else:
             self._last_strength_level = None
 
@@ -671,6 +840,9 @@ class TestPassword(object):
                 f"(skipping password '{test_password}')")
         self.my_logger.info(f"Tested password: {test_password} -- {info_name}")
         self.my_logger.debug(f"Begin to simulate testing the password {test_password} for signing up an account.")
+        # 每个探针先清空上一轮强度计状态，避免没有强度计的新页面继承旧标签。
+        self._last_strength_level = None
+        self._current_probe_purpose = str(info_name or "")
         retries = 1
         while retries <= 5:
             # 使用调用方传入的 driver（而非全局单例），
@@ -1061,6 +1233,21 @@ class TestPassword(object):
                         pass
                     time.sleep(0.5)
 
+                # 字段红框常比强度计DOM更早出现，前面会立即确定rejected并退出
+                # 轮询。停止observer前做一次只读快照，避免系统性漏掉
+                # rejected+strong 这一类关键方向性矛盾。
+                if not _strength_note:
+                    try:
+                        _final_feedback = driver.execute_script(
+                            "return getWatchedFeedback()") or []
+                        for _feedback in _final_feedback:
+                            if _feedback.get("type") == "strength-indicator":
+                                _strength_note = _feedback.get("message", "")
+                                if _strength_note:
+                                    break
+                    except Exception:
+                        pass
+
                 # 停止 observer
                 try:
                     driver.execute_script("stopWatchingFeedback()")
@@ -1183,10 +1370,23 @@ class TestPassword(object):
 
                 fb_type = fb_result.get("type", "unknown")
                 fb_msg = fb_result.get("message", "")
+                # 强度计是独立观测维度：无论候选被接受还是拒绝都记录标准化档位，
+                # 但绝不参与 accepted/rejected 决策。
+                _strength_info = ""
+                if _strength_note:
+                    _strength_info = f", strength_meter=\"{_strength_note[:80]}\""
+                    self._parse_strength_level(_strength_note)
+                else:
+                    self._last_strength_level = None
                 if fb_result.get("rejected"):
                     flag = False
                     self._saw_pwd_specific_reject = True
                     self._last_reject_msg = fb_msg
+                    self._rejected_probe_observations.append({
+                        "password_length": len(test_password),
+                        "character_profile": self._candidate_profile(test_password),
+                        "message": fb_msg[:300],
+                    })
                     self._record_probe(
                         test_password, ProbeOutcome.REJECTED,
                         f"{fb_type}: {fb_msg}")
@@ -1197,13 +1397,6 @@ class TestPassword(object):
                     self._record_probe(
                         test_password, ProbeOutcome.ACCEPTED,
                         f"{fb_type}: {fb_msg or 'explicit_non_rejected_state'}")
-                    # 强度计文本（如有）仅作为备注，不参与决策
-                    _strength_info = ""
-                    if _strength_note:
-                        _strength_info = f", strength_meter=\"{_strength_note[:80]}\""
-                        self._parse_strength_level(_strength_note)
-                    else:
-                        self._last_strength_level = None
                     self.my_logger.success(
                         f"The tested password {test_password} is accepted ({fb_type}{_strength_info})")
                 # ── 退出密码框（为下一次测量做准备）──

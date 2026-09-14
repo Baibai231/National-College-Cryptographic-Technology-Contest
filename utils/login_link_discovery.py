@@ -307,6 +307,44 @@ class LoginLinkDiscovery:
         'zarejestruj', 'Создать', 'inscr', 'registr',
     ]
 
+    def navigate_to_login(self, homepage_url: str) -> Optional[str]:
+        """Prepare a clean login exploration without visiting signup routes.
+
+        Login and signup used to share ``navigate_to_signup`` in batch and web
+        entry points.  That could seed a login classification with an already
+        opened registration page.  The classifier already has a dedicated
+        ``entry_kind='login'`` navigation strategy, so this method deliberately
+        loads only the requested homepage and leaves the login click to that
+        strategy.  No fallback to a registration URL is allowed here.
+        """
+        self._entry_clicked = False
+        self.inject()
+        try:
+            self.driver.get(homepage_url)
+            self._wait_for_page_ready(timeout=15)
+            try:
+                self.driver.execute_script("window.scrollTo(0, 0);")
+            except Exception:
+                pass
+            return self.driver.current_url
+        except Exception as exc:
+            logger.warning(
+                "登录入口准备失败: {}: {}".format(
+                    type(exc).__name__, str(exc)[:200]
+                )
+            )
+            try:
+                current_url = self.driver.current_url or ""
+            except Exception:
+                current_url = ""
+            # Renderer timeout 时 Chrome 可能短暂返回空串/about:blank。上层若
+            # 校验这个临时地址，会把基础设施超时误报成“用户网址格式无效”400。
+            # 保留调用方已经校验过的原始公开 URL，让分类器的二次加载把真实
+            # timeout/infrastructure_error 写入结构化结果。
+            if current_url.startswith(("http://", "https://")):
+                return current_url
+            return homepage_url
+
     def navigate_to_signup(self, homepage_url: str) -> Optional[str]:
         """发现注册页面 URL
 
