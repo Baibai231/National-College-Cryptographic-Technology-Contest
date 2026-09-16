@@ -1,0 +1,1 @@
+"""ZipfGuard quantitative research core."""

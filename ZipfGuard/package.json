@@ -1,0 +1,8 @@
+{
+  "name": "zipfguard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "redteam": "node --input-type=module -e \"import('./src/lib/redteam.js').then(({runRedTeamExperiment}) => console.log(JSON.stringify(runRedTeamExperiment(), null, 2)))\""
+  }
+}
