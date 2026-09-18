@@ -6,15 +6,14 @@ comparing policy changes and exercising the UI; it is not a password cracker.
 from __future__ import annotations
 
 import dataclasses
-import math
-import random
 import re
-from collections import Counter
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-ROOT_WORDS = ("cedar", "maple", "cloud", "river", "panda", "tiger", "cobalt", "amber", "coral", "lunar", "forest", "meadow", "delta", "comet", "spruce", "willow", "harbor", "lotus", "otter", "falcon", "orchid", "silk", "pebble", "bamboo")
-PHRASE_WORDS = ("birch", "ocean", "quartz", "mango", "violet", "dune", "raven", "mint", "opal", "brook", "linen", "plum", "snow", "fern", "cove", "reed")
-SUFFIXES = ("123", "2026", "01", "88", "!", "7", "99", "520", "", "42", "2025", "@")
+from core.synthetic import (
+    ROOT_WORDS,
+    generate_synthetic_dataset,
+    validate_synthetic_dataset,
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -67,72 +66,30 @@ def evaluate_policy_rules(password: str, policy: PasswordPolicy, *, context: Seq
     return {"accepted": not reasons, "reasons": reasons, "features": features}
 
 
-def _candidate_space() -> list[str]:
-    values = []
-    for root in ROOT_WORDS:
-        for suffix in SUFFIXES:
-            values.extend((root + suffix, root[0].upper() + root[1:] + suffix))
-    return list(dict.fromkeys(values))
+def evaluate_policy(
+    policy: PasswordPolicy, *, seed: int = 42,
+    budgets: Sequence[int] = (100, 1000, 10000),
+    dataset: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Evaluate a policy through the M3 preserved-user adaptive protocol."""
+    normalized_dataset = validate_synthetic_dataset(
+        dataset or generate_synthetic_dataset(size=10_000, seed=seed)
+    )
+    # Local import avoids a module cycle: the M3 orchestrator consumes the
+    # policy type from this module and is the sole implementation of strategy
+    # attack evaluation.
+    from experiments.policy_attack import run_policy_attack_experiment
 
-
-def _phrase_space() -> list[str]:
-    return [f"{a}-{b}-{c}" for a in PHRASE_WORDS for b in PHRASE_WORDS for c in PHRASE_WORDS]
-
-
-def _samples(size: int, seed: int) -> list[str]:
-    randomizer = random.Random(seed); candidates = _candidate_space()
-    weights = [1 / ((index + 1) ** 1.08) for index in range(len(candidates))]
-    return randomizer.choices(candidates, weights=weights, k=size)
-
-
-def _rank(samples: Sequence[str], candidates: Sequence[str]) -> list[str]:
-    counts = Counter(samples); unique = list(dict.fromkeys(candidates))
-    # Frequency plus a small structural score approximates the hybrid baseline.
-    def score(value: str) -> tuple[float, float, str]:
-        f = counts.get(value, 0) / max(1, len(samples)); features = extract_features(value)
-        structural = 0.001 * (1 if features["year_suffix"] else 0) + 0.0005 * (1 if features["common_word"] else 0)
-        return (f + structural, f, value)
-    return sorted(unique, key=score, reverse=True)
-
-
-def evaluate_policy(policy: PasswordPolicy, *, seed: int = 42, budgets: Sequence[int] = (100, 1000, 10000)) -> dict[str, Any]:
-    train = _samples(6000, seed); test = _samples(2000, seed + 1)
-    candidates = _candidate_space() + (_phrase_space() if policy.allow_passphrase else [])
-    accepted_train = [value for value in train if evaluate_policy_rules(value, policy)["accepted"]]
-    accepted_test = [value for value in test if evaluate_policy_rules(value, policy)["accepted"]]
-    ranking = _rank(accepted_train, [value for value in candidates if evaluate_policy_rules(value, policy)["accepted"]])
-    baseline_ranking = _rank(train, _candidate_space())
-    evaluated_count = len(accepted_test)
-    status = "evaluated" if evaluated_count else "not_evaluable"
-    reason = "" if evaluated_count else "全部测试样本被拒绝，没有可评估样本；不能据此推断安全收益。"
-    attack = []
-    baseline_attack = []
-    for budget in budgets:
-        k = max(1, int(budget)); ranks = {value: index + 1 for index, value in enumerate(ranking)}; base = {value: index + 1 for index, value in enumerate(baseline_ranking)}
-        cracked = sum(ranks.get(value, math.inf) <= k for value in accepted_test)
-        hit = cracked / evaluated_count if evaluated_count else None
-        base_hit = sum(base.get(value, math.inf) <= k for value in test) / max(1, len(test))
-        attack.append({"budget": k, "rate": hit, "cracked": cracked, "evaluated_count": evaluated_count})
-        baseline_attack.append({"budget": k, "rate": base_hit, "cracked": round(base_hit * len(test))})
-    coverage = len(accepted_test) / max(1, len(test))
-    gains = [base["rate"] - row["rate"] for base, row in zip(baseline_attack, attack)
-             if row["rate"] is not None]
-    return {"policy": policy.to_dict(), "attack": attack, "baseline_attack": baseline_attack,
-            "evaluation_status": status, "evaluation_reason": reason,
-            "sample_counts": {"total": len(test), "accepted": evaluated_count,
-                              "rejected": len(test) - evaluated_count, "evaluated": evaluated_count},
-            "attack_coverage": coverage, "accept_rate": coverage, "user_cost": 1 - coverage,
-            "security_gain": max(gains) if gains else None,
-            "candidate_count": len(ranking), "attacker": "local synthetic frequency + structural baseline",
-            "data_scope": "public synthetic grammar; train/test generated with independent seeds"}
+    policies = (policy,) if policy.name == "baseline" else (DEFAULT_POLICIES[0], policy)
+    experiment = run_policy_attack_experiment(
+        normalized_dataset, policies, budgets=budgets, seed=seed,
+    )
+    return next(row for row in experiment["policies"] if row["policy"]["name"] == policy.name)
 
 
 def optimize_policies(*, seed: int = 42, budgets: Sequence[int] = (100, 1000, 10000), max_candidates: int = 12) -> list[PasswordPolicy]:
     candidates = list(DEFAULT_POLICIES)
-    # Pareto candidates are selected from measurable evaluations; this keeps
-    # search deterministic and avoids claiming a black-box optimum.
-    scored = [(policy, evaluate_policy(policy, seed=seed, budgets=budgets)) for policy in candidates[:max_candidates]]
     # Keep the full measured frontier candidates for the What-if UI. A policy
     # can be dominated on this tiny grammar and still be useful as an explicit
     # control; the report exposes its measured cost rather than hiding it.
-    return [policy for policy, _ in scored]
+    return candidates[:max_candidates]

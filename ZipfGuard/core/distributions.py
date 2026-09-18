@@ -177,11 +177,14 @@ def _percentile_interval(values: Sequence[float]) -> list[float]:
 def analyze_counts(
     counts: Sequence[int], *, q: float = 0.8, budget: int = 100,
     bootstrap_repetitions: int = 120, seed: int = 20260916,
+    training_counts: Sequence[int] | None = None,
+    validation_counts: Sequence[int] | None = None,
 ) -> dict:
     """Return a JSON-safe analysis from anonymous counts.
 
-    70/30 account split: learn rank order and parameters on training accounts,
-    compare predictions on held-out accounts with that order frozen. The
+    By default a 70/30 account split learns rank order and parameters on
+    training accounts. Callers with a predefined experiment split may provide
+    aligned training_counts and validation_counts instead. The
     support is known in this synthetic experiment; unseen-support risk is not
     estimated. Percentile bootstrap intervals condition on this support.
     """
@@ -193,8 +196,20 @@ def analyze_counts(
     if not 20 <= bootstrap_repetitions <= 2000:
         raise ValueError("Bootstrap 重复次数须介于 20 与 2000")
     rng = np.random.default_rng(seed)
-    training = rng.binomial(original, 0.7)
-    validation = original - training
+    if (training_counts is None) != (validation_counts is None):
+        raise ValueError("training_counts 与 validation_counts 必须同时提供")
+    if training_counts is None:
+        training = rng.binomial(original, 0.7)
+        validation = original - training
+        split_method = "deterministic seeded 70/30 binomial split"
+    else:
+        training = _validate_counts(training_counts)
+        validation = _validate_counts(validation_counts)
+        if len(training) != len(original) or len(validation) != len(original):
+            raise ValueError("预定义训练/验证频次数组必须与总频次数组等长")
+        if not np.array_equal(training + validation, original):
+            raise ValueError("总频次必须等于训练频次与验证频次之和")
+        split_method = "predefined train/validation user split"
     if training.sum() == 0 or validation.sum() == 0:
         raise ValueError("样本不足以划分训练集和验证集")
     # Stable tie order is selected without looking at validation frequencies.
@@ -274,6 +289,7 @@ def analyze_counts(
         "train_size": train_n,
         "validation_size": validation_n,
         "seed": seed,
+        "split_method": split_method,
         "selected_model": best["id"],
         "selection_method": selection_method,
         "models": summary_models,

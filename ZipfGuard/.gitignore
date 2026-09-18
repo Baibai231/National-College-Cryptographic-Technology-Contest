@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated experiment artifacts
+reports/*.json
+reports/*.md
+!reports/.gitkeep
+demo_data/*.json
+!demo_data/.gitkeep
+
+# Local datasets and model weights must never enter version control
+lab_basic_50_dicts/
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from ai.passllm_adapter import PassLLMConfig, runtime_status
-from core.data import load_count_json, synthetic_counts, write_count_json
+from core.data import load_count_json, write_count_json
 from core.rockyou import aggregate_rockyou
 from experiments.pipeline import run_pipeline
 
@@ -54,24 +54,13 @@ body{margin:0;background:#f5f7fb;color:#172033;font:15px system-ui,-apple-system
 </style></head><body><main><h1>ZipfGuard <span class="pill">DP-HTPG</span></h1><div class="sub">面向 AI 攻击的动态口令策略风险实验 · 仅离线聚合数据</div>
 <div class="toolbar"><button id="demo">加载合成演示</button><button id="rock" class="secondary">加载 Rockyou 聚合</button><span id="status" class="status small"></span></div>
 <section class="grid" id="metrics"></section><section class="panel"><h2>经验 CDF 与模型摘要</h2><canvas id="chart" class="chart"></canvas><div id="models"></div></section>
-<section class="panel"><h2>策略 What-if</h2><div id="policies"></div></section><section class="panel"><h2>运行边界</h2><p class="small">Rockyou 只在服务器端流式读取并聚合；浏览器收到的是频次、模型指标和策略统计，不返回明文候选。PassLLM 权重仅在配置了 Torch/Transformers/PEFT 且基座存在时启用，否则显示 n-gram 回退。</p><pre id="backend" class="small"></pre></section>
+<section class="panel"><h2>M3 用户响应与自适应攻击</h2><div id="policies"></div></section><section class="panel"><h2>M4 Pareto 三档建议</h2><div id="m4"></div></section><section class="panel"><h2>运行边界</h2><p class="small">Rockyou 只在服务器端流式读取并聚合；浏览器收到的是频次、模型指标和策略统计，不返回明文候选。PassLLM 权重仅在配置了 Torch/Transformers/PEFT 且基座存在时启用，否则显示 n-gram 回退。</p><pre id="backend" class="small"></pre></section>
 </main><script>
 const $=id=>document.getElementById(id); let last=null;
 function cell(v){return v==null?'—':typeof v==='number'?v.toLocaleString(undefined,{maximumFractionDigits:4}):v}
 function table(headers,rows){return '<table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+cell(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
 function draw(points){const c=$('chart'),x=c.getContext('2d'),w=c.width=c.clientWidth*devicePixelRatio,h=c.height=c.clientHeight*devicePixelRatio;x.clearRect(0,0,w,h); if(!points.length)return; const ys=points.map(p=>p.empirical_cdf),max=Math.max(...ys,1); x.strokeStyle='#2563eb';x.lineWidth=3*devicePixelRatio;x.beginPath();points.forEach((p,i)=>{const px=i/(points.length-1)*w,py=h-(p.empirical_cdf/max)*(h-18*devicePixelRatio)-8*devicePixelRatio;i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.fillStyle='#526177';x.font=12*devicePixelRatio+'px sans-serif';x.fillText('经验累计质量（横轴为排名）',10,20)}
-function renderPolicies(r){
-  $('policies').innerHTML=table(['策略','状态','安全收益','样本拒绝率','接受率','总数/接受/拒绝/评估','攻击器'],r.policies.map(p=>[
-    p.policy.name,p.evaluation_status==='evaluated'?'可评估':'无法评估',
-    p.security_gain==null?'无法评估':p.security_gain,p.user_cost,p.accept_rate,
-    ['total','accepted','rejected','evaluated'].map(k=>p.sample_counts[k]).join('/'),p.attacker
-  ]));
-  const note=document.createElement('p'); note.className='small';
-  note.textContent='全部被拒绝的策略没有可评估样本，不能计算安全收益，也不参与推荐。样本拒绝率不是实测用户负担。'
-    + (r.recommendations.some(x=>x.tier==='高防护')?'':' 当前没有可推荐的正收益高防护策略。');
-  $('policies').appendChild(note);
-}
-function render(r){last=r; const a=r.analysis,t=a.risk_threshold; $('metrics').innerHTML=[['数据集',r.dataset.dataset_id],['样本',r.dataset.total_count],['选择模型',a.selected_model],['q=1%排名',t.model_rank]].map(([k,v])=>'<div class="card"><div class="small">'+k+'</div><div class="metric">'+cell(v)+'</div></div>').join(''); $('models').innerHTML=table(['模型','验证对数似然','KS','BIC'],a.models.map(m=>[m.id,m.validation_log_likelihood,m.validation_ks,m.bic])); renderPolicies(r); draw(a.curves); $('backend').textContent=JSON.stringify(r.metadata,null,2)+'\n\n推荐：\n'+JSON.stringify(r.recommendations,null,2)}
+function render(r){last=r; const a=r.analysis,t=a.risk_threshold,m4=r.policy_search?.selected_tiers||[]; $('metrics').innerHTML=[['数据集',r.dataset.dataset_id],['样本',r.dataset.total_count],['选择模型',a.selected_model],['q=1%排名',t.model_rank]].map(([k,v])=>'<div class="card"><div class="small">'+k+'</div><div class="metric">'+cell(v)+'</div></div>').join(''); $('models').innerHTML=table(['模型','验证对数似然','KS','BIC'],a.models.map(m=>[m.id,m.validation_log_likelihood,m.validation_ks,m.bic])); $('policies').innerHTML=table(['策略','初始接受率','最终完成率','修改率','冻结风险','自适应风险','适应增益'],r.policies.map(p=>[p.policy.name,p.initial_accept_rate,p.accept_rate,p.modification_rate,p.frozen_risk,p.adaptive_risk,p.adaptation_gain])); $('m4').innerHTML=table(['档位','策略','验证风险','测试风险','测试风险下降','修改率'],m4.map(p=>[p.tier,p.policy.name,p.validation.adaptive_risk,p.test.adaptive_risk,p.test.security_gain,p.test.response.modification_rate])); draw(a.curves); $('backend').textContent=JSON.stringify(r.metadata,null,2)+'\n\n推荐：\n'+JSON.stringify(r.recommendations,null,2)}
 async function load(url){$('status').textContent='计算中…';$('demo').disabled=$('rock').disabled=true;try{const res=await fetch(url);if(!res.ok)throw Error(await res.text());render(await res.json());$('status').textContent='完成'}catch(e){$('status').innerHTML='<span class="error">'+e.message+'</span>'}finally{$('demo').disabled=$('rock').disabled=false}}
 $('demo').onclick=()=>load('/api/demo');$('rock').onclick=()=>load('/api/rockyou');fetch('/api/status').then(r=>r.json()).then(s=>{$('backend').textContent='后端状态：\\n'+JSON.stringify(s,null,2)}).catch(e=>{$('status').textContent=e.message});
 </script></body></html>'''
@@ -88,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/status":
                 config = PassLLMConfig.workspace_default(ROOT.parent)
                 return self._send(_json_safe({"rockyou_present": DEFAULT_ROCKYOU.is_file(), "rockyou_bytes": DEFAULT_ROCKYOU.stat().st_size if DEFAULT_ROCKYOU.exists() else 0, "passllm": runtime_status(config)}))
-            if path == "/api/demo": return self._send(_json_safe(run_pipeline(synthetic_counts(), bootstrap_repetitions=40)))
+            if path == "/api/demo": return self._send(_json_safe(run_pipeline(bootstrap_repetitions=40)))
             if path == "/api/rockyou": return self._send(_json_safe(rockyou_result()))
             return self._send(b"not found", "text/plain; charset=utf-8", 404)
         except Exception as exc:
