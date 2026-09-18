@@ -60,7 +60,18 @@ const $=id=>document.getElementById(id); let last=null;
 function cell(v){return v==null?'—':typeof v==='number'?v.toLocaleString(undefined,{maximumFractionDigits:4}):v}
 function table(headers,rows){return '<table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+cell(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
 function draw(points){const c=$('chart'),x=c.getContext('2d'),w=c.width=c.clientWidth*devicePixelRatio,h=c.height=c.clientHeight*devicePixelRatio;x.clearRect(0,0,w,h); if(!points.length)return; const ys=points.map(p=>p.empirical_cdf),max=Math.max(...ys,1); x.strokeStyle='#2563eb';x.lineWidth=3*devicePixelRatio;x.beginPath();points.forEach((p,i)=>{const px=i/(points.length-1)*w,py=h-(p.empirical_cdf/max)*(h-18*devicePixelRatio)-8*devicePixelRatio;i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.fillStyle='#526177';x.font=12*devicePixelRatio+'px sans-serif';x.fillText('经验累计质量（横轴为排名）',10,20)}
-function render(r){last=r; const a=r.analysis,t=a.risk_threshold; $('metrics').innerHTML=[['数据集',r.dataset.dataset_id],['样本',r.dataset.total_count],['选择模型',a.selected_model],['q=1%排名',t.model_rank]].map(([k,v])=>'<div class="card"><div class="small">'+k+'</div><div class="metric">'+cell(v)+'</div></div>').join(''); $('models').innerHTML=table(['模型','验证对数似然','KS','BIC'],a.models.map(m=>[m.id,m.validation_log_likelihood,m.validation_ks,m.bic])); $('policies').innerHTML=table(['策略','安全收益','用户成本','接受率','攻击器'],r.policies.map(p=>[p.policy.name,p.security_gain,p.user_cost,p.accept_rate,p.attacker])); draw(a.curves); $('backend').textContent=JSON.stringify(r.metadata,null,2)+'\n\n推荐：\n'+JSON.stringify(r.recommendations,null,2)}
+function renderPolicies(r){
+  $('policies').innerHTML=table(['策略','状态','安全收益','样本拒绝率','接受率','总数/接受/拒绝/评估','攻击器'],r.policies.map(p=>[
+    p.policy.name,p.evaluation_status==='evaluated'?'可评估':'无法评估',
+    p.security_gain==null?'无法评估':p.security_gain,p.user_cost,p.accept_rate,
+    ['total','accepted','rejected','evaluated'].map(k=>p.sample_counts[k]).join('/'),p.attacker
+  ]));
+  const note=document.createElement('p'); note.className='small';
+  note.textContent='全部被拒绝的策略没有可评估样本，不能计算安全收益，也不参与推荐。样本拒绝率不是实测用户负担。'
+    + (r.recommendations.some(x=>x.tier==='高防护')?'':' 当前没有可推荐的正收益高防护策略。');
+  $('policies').appendChild(note);
+}
+function render(r){last=r; const a=r.analysis,t=a.risk_threshold; $('metrics').innerHTML=[['数据集',r.dataset.dataset_id],['样本',r.dataset.total_count],['选择模型',a.selected_model],['q=1%排名',t.model_rank]].map(([k,v])=>'<div class="card"><div class="small">'+k+'</div><div class="metric">'+cell(v)+'</div></div>').join(''); $('models').innerHTML=table(['模型','验证对数似然','KS','BIC'],a.models.map(m=>[m.id,m.validation_log_likelihood,m.validation_ks,m.bic])); renderPolicies(r); draw(a.curves); $('backend').textContent=JSON.stringify(r.metadata,null,2)+'\n\n推荐：\n'+JSON.stringify(r.recommendations,null,2)}
 async function load(url){$('status').textContent='计算中…';$('demo').disabled=$('rock').disabled=true;try{const res=await fetch(url);if(!res.ok)throw Error(await res.text());render(await res.json());$('status').textContent='完成'}catch(e){$('status').innerHTML='<span class="error">'+e.message+'</span>'}finally{$('demo').disabled=$('rock').disabled=false}}
 $('demo').onclick=()=>load('/api/demo');$('rock').onclick=()=>load('/api/rockyou');fetch('/api/status').then(r=>r.json()).then(s=>{$('backend').textContent='后端状态：\\n'+JSON.stringify(s,null,2)}).catch(e=>{$('status').textContent=e.message});
 </script></body></html>'''

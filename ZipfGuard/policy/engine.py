@@ -102,18 +102,27 @@ def evaluate_policy(policy: PasswordPolicy, *, seed: int = 42, budgets: Sequence
     accepted_test = [value for value in test if evaluate_policy_rules(value, policy)["accepted"]]
     ranking = _rank(accepted_train, [value for value in candidates if evaluate_policy_rules(value, policy)["accepted"]])
     baseline_ranking = _rank(train, _candidate_space())
+    evaluated_count = len(accepted_test)
+    status = "evaluated" if evaluated_count else "not_evaluable"
+    reason = "" if evaluated_count else "全部测试样本被拒绝，没有可评估样本；不能据此推断安全收益。"
     attack = []
     baseline_attack = []
     for budget in budgets:
         k = max(1, int(budget)); ranks = {value: index + 1 for index, value in enumerate(ranking)}; base = {value: index + 1 for index, value in enumerate(baseline_ranking)}
-        hit = sum(ranks.get(value, math.inf) <= k for value in accepted_test) / max(1, len(accepted_test))
+        cracked = sum(ranks.get(value, math.inf) <= k for value in accepted_test)
+        hit = cracked / evaluated_count if evaluated_count else None
         base_hit = sum(base.get(value, math.inf) <= k for value in test) / max(1, len(test))
-        attack.append({"budget": k, "rate": hit, "cracked": round(hit * len(accepted_test))})
+        attack.append({"budget": k, "rate": hit, "cracked": cracked, "evaluated_count": evaluated_count})
         baseline_attack.append({"budget": k, "rate": base_hit, "cracked": round(base_hit * len(test))})
     coverage = len(accepted_test) / max(1, len(test))
+    gains = [base["rate"] - row["rate"] for base, row in zip(baseline_attack, attack)
+             if row["rate"] is not None]
     return {"policy": policy.to_dict(), "attack": attack, "baseline_attack": baseline_attack,
+            "evaluation_status": status, "evaluation_reason": reason,
+            "sample_counts": {"total": len(test), "accepted": evaluated_count,
+                              "rejected": len(test) - evaluated_count, "evaluated": evaluated_count},
             "attack_coverage": coverage, "accept_rate": coverage, "user_cost": 1 - coverage,
-            "security_gain": max((base["rate"] - row["rate"] for base, row in zip(baseline_attack, attack)), default=0.0),
+            "security_gain": max(gains) if gains else None,
             "candidate_count": len(ranking), "attacker": "local synthetic frequency + structural baseline",
             "data_scope": "public synthetic grammar; train/test generated with independent seeds"}
 

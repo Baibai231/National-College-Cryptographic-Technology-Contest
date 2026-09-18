@@ -40,8 +40,17 @@ def main() -> None:
     if curves:
         st.line_chart({"经验 CDF": {row["rank"]: row["empirical_cdf"] for row in curves}, **{row["id"]: {} for row in []}})
     st.subheader("策略 What-if")
-    strategy_rows = [{"策略": row["policy"]["name"], "安全收益": row["security_gain"], "用户成本": row["user_cost"], "接受率": row["accept_rate"]} for row in result["policies"]]
+    strategy_rows = [{"策略": row["policy"]["name"], "状态": "可评估" if row["evaluation_status"] == "evaluated" else "无法评估",
+                      "安全收益": "无法评估" if row["security_gain"] is None else f"{row['security_gain']:.4f}",
+                      "样本拒绝率": row["user_cost"], "接受率": row["accept_rate"],
+                      "样本总数": row["sample_counts"]["total"], "接受数": row["sample_counts"]["accepted"],
+                      "拒绝数": row["sample_counts"]["rejected"], "评估数": row["sample_counts"]["evaluated"]} for row in result["policies"]]
     st.dataframe(strategy_rows, use_container_width=True, hide_index=True)
+    for row in result["policies"]:
+        if row["evaluation_reason"]:
+            st.warning(f"{row['policy']['name']}：{row['evaluation_reason']}")
+    if not any(item["tier"] == "高防护" for item in result["recommendations"]):
+        st.info("当前没有可推荐的正收益高防护策略。样本拒绝率不是实测用户负担。")
     st.json(result["recommendations"])
     st.download_button("下载 JSON 报告", json.dumps(result, ensure_ascii=False, indent=2), "zipfguard_report.json", "application/json")
 

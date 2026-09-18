@@ -8030,53 +8030,53 @@
         "name": "Stretched-exponential RF（有限支持）",
         "parameters": {
           "alpha": 0.38067981811548895,
-          "t": 0.10208768064683169,
-          "lambda": 0.005653766116547602
+          "t": 0.10208761137864533,
+          "lambda": 0.005653762280373419
         },
         "parameter_count": 2,
-        "log_likelihood": -699643.3855387216,
-        "aic": 1399290.7710774431,
-        "bic": 1399309.813241661,
-        "ks": 0.016494595511226673,
-        "mean_absolute_cdf_error": 0.007802947491417405,
-        "validation_log_likelihood": -301751.22521605383,
-        "validation_cross_entropy_bits": 10.052068814107546,
-        "validation_ks": 0.021186989805337952,
+        "log_likelihood": -699643.3855387215,
+        "aic": 1399290.771077443,
+        "bic": 1399309.8132416608,
+        "ks": 0.016494588663336585,
+        "mean_absolute_cdf_error": 0.007802949915939979,
+        "validation_log_likelihood": -301751.2251936576,
+        "validation_cross_entropy_bits": 10.052068813361474,
+        "validation_ks": 0.02118698278223885,
         "risk_rank": 1
       },
       {
         "id": "cdf_zipf",
         "name": "CDF-Zipf（有限支持）",
         "parameters": {
-          "alpha": 0.37068921508859665,
-          "C": 0.05975080791376534
+          "alpha": 0.3706892226993792,
+          "C": 0.05975080445725195
         },
         "parameter_count": 1,
-        "log_likelihood": -699653.4167069764,
-        "aic": 1399308.8334139527,
-        "bic": 1399318.3544960616,
-        "ks": 0.015899911451176862,
-        "mean_absolute_cdf_error": 0.00976871410091784,
-        "validation_log_likelihood": -301742.8312279711,
-        "validation_cross_entropy_bits": 10.051789189904623,
-        "validation_ks": 0.020506581642460386,
+        "log_likelihood": -699653.4167069762,
+        "aic": 1399308.8334139525,
+        "bic": 1399318.3544960613,
+        "ks": 0.015899904187333502,
+        "mean_absolute_cdf_error": 0.009768716017470026,
+        "validation_log_likelihood": -301742.8312124713,
+        "validation_cross_entropy_bits": 10.051789189388286,
+        "validation_ks": 0.020506574338388428,
         "risk_rank": 1
       },
       {
         "id": "zipf",
         "name": "离散 Zipf",
         "parameters": {
-          "s": 0.6874512621807206
+          "s": 0.6874512405736078
         },
         "parameter_count": 1,
-        "log_likelihood": -701338.050247062,
-        "aic": 1402678.100494124,
-        "bic": 1402687.6215762328,
-        "ks": 0.030731782585366088,
-        "mean_absolute_cdf_error": 0.007993280458396503,
-        "validation_log_likelihood": -302445.7803228599,
-        "validation_cross_entropy_bits": 10.075206137655462,
-        "validation_ks": 0.0344971068392288,
+        "log_likelihood": -701338.0502470619,
+        "aic": 1402678.1004941238,
+        "bic": 1402687.6215762326,
+        "ks": 0.030731786044848185,
+        "mean_absolute_cdf_error": 0.007993274598988576,
+        "validation_log_likelihood": -302445.7802858444,
+        "validation_cross_entropy_bits": 10.075206136422386,
+        "validation_ks": 0.034497088766280326,
         "risk_rank": 1
       }
     ],
@@ -8086,1427 +8086,1427 @@
         "empirical_probability": 0.062200577272141164,
         "empirical_cdf": 0.062200577272141164,
         "validation_cdf": 0.05948092731135125,
-        "stretched_exponential_cdf": 0.058092071666347785,
-        "stretched_exponential_probability": 0.058092071666347785,
-        "cdf_zipf_cdf": 0.05975080791376534,
-        "cdf_zipf_probability": 0.05975080791376534,
-        "zipf_cdf": 0.031468794686775076,
-        "zipf_probability": 0.031468794686775076
+        "stretched_exponential_cdf": 0.058092069799929126,
+        "stretched_exponential_probability": 0.058092069799929126,
+        "cdf_zipf_cdf": 0.059750804457251956,
+        "cdf_zipf_probability": 0.059750804457251956,
+        "zipf_cdf": 0.03146879122729298,
+        "zipf_probability": 0.03146879122729298
       },
       {
         "rank": 2,
         "empirical_probability": 0.016713119550878307,
         "empirical_cdf": 0.07891369682301946,
         "validation_cdf": 0.07575967488685693,
-        "stretched_exponential_cdf": 0.07556881293361534,
-        "stretched_exponential_probability": 0.017476741267267556,
-        "cdf_zipf_cdf": 0.07725602425278845,
-        "cdf_zipf_probability": 0.017505216339023112,
-        "zipf_cdf": 0.05100933906286796,
-        "zipf_probability": 0.019540544376092883
+        "stretched_exponential_cdf": 0.07556881054936568,
+        "stretched_exponential_probability": 0.01747674074943655,
+        "cdf_zipf_cdf": 0.07725602019117488,
+        "cdf_zipf_probability": 0.01750521573392292,
+        "zipf_cdf": 0.05100933374787779,
+        "zipf_probability": 0.01954054252058481
       },
       {
         "rank": 3,
         "empirical_probability": 0.01593945585653498,
         "empirical_cdf": 0.09485315267955444,
         "validation_cdf": 0.09106862473446015,
-        "stretched_exponential_cdf": 0.08812732045110165,
-        "stretched_exponential_probability": 0.012558507517486314,
-        "cdf_zipf_cdf": 0.0897857645915488,
-        "cdf_zipf_probability": 0.01252974033876035,
-        "zipf_cdf": 0.06579642170869004,
-        "zipf_probability": 0.014787082645822082
+        "stretched_exponential_cdf": 0.08812731770725583,
+        "stretched_exponential_probability": 0.01255850715789016,
+        "cdf_zipf_cdf": 0.0897857601482744,
+        "cdf_zipf_probability": 0.012529739957099523,
+        "zipf_cdf": 0.06579641511911402,
+        "zipf_probability": 0.014787081371236237
       },
       {
         "rank": 4,
         "empirical_probability": 0.01275553219135282,
         "empirical_cdf": 0.10760868487090726,
         "validation_cdf": 0.10390689941812137,
-        "stretched_exponential_cdf": 0.09827808319796416,
-        "stretched_exponential_probability": 0.010150762746862508,
-        "cdf_zipf_cdf": 0.09988975031034551,
-        "cdf_zipf_probability": 0.010103985718796712,
-        "zipf_cdf": 0.07793012045103566,
-        "zipf_probability": 0.012133698742345617
+        "stretched_exponential_cdf": 0.09827808017111934,
+        "stretched_exponential_probability": 0.010150762463863507,
+        "cdf_zipf_cdf": 0.09988974558575713,
+        "cdf_zipf_probability": 0.010103985437482726,
+        "zipf_cdf": 0.0779301128910074,
+        "zipf_probability": 0.012133697771893383
       },
       {
         "rank": 5,
         "empirical_probability": 0.010335353455201897,
         "empirical_cdf": 0.11794403832610915,
         "validation_cdf": 0.11471321695760599,
-        "stretched_exponential_cdf": 0.10694590693045518,
-        "stretched_exponential_probability": 0.008667823732491017,
-        "cdf_zipf_cdf": 0.1085036690766627,
-        "cdf_zipf_probability": 0.008613918766317188,
-        "zipf_cdf": 0.08833824060625911,
-        "zipf_probability": 0.010408120155223455
+        "stretched_exponential_cdf": 0.10694590366737715,
+        "stretched_exponential_probability": 0.008667823496257802,
+        "cdf_zipf_cdf": 0.10850366412892438,
+        "cdf_zipf_probability": 0.00861391854316726,
+        "zipf_cdf": 0.08833823226397289,
+        "zipf_probability": 0.010408119372965478
       },
       {
         "rank": 6,
         "empirical_probability": 0.006536466340669914,
         "empirical_cdf": 0.12448050466677907,
         "validation_cdf": 0.12196360949478156,
-        "stretched_exponential_cdf": 0.11458937065448165,
-        "stretched_exponential_probability": 0.007643463724026462,
-        "cdf_zipf_cdf": 0.11609033331985835,
-        "cdf_zipf_probability": 0.007586664243195651,
-        "zipf_cdf": 0.09752027784377272,
-        "zipf_probability": 0.009182037237513615
+        "stretched_exponential_cdf": 0.11458936718723614,
+        "stretched_exponential_probability": 0.007643463519858999,
+        "cdf_zipf_cdf": 0.11609032818725824,
+        "cdf_zipf_probability": 0.0075866640583338585,
+        "zipf_cdf": 0.09752026884755109,
+        "zipf_probability": 0.00918203658357821
       },
       {
         "rank": 7,
         "empirical_probability": 0.00439401303325762,
         "empirical_cdf": 0.1288745177000367,
         "validation_cdf": 0.12660478433545766,
-        "stretched_exponential_cdf": 0.12147394630384341,
-        "stretched_exponential_probability": 0.006884575649361757,
-        "cdf_zipf_cdf": 0.1229171582224408,
-        "cdf_zipf_probability": 0.0068268249025824485,
-        "zipf_cdf": 0.10577906730032645,
-        "zipf_probability": 0.008258789456553726
+        "stretched_exponential_cdf": 0.12147394265603145,
+        "stretched_exponential_probability": 0.0068845754687953085,
+        "cdf_zipf_cdf": 0.12291715293221957,
+        "cdf_zipf_probability": 0.006826824744961324,
+        "zipf_cdf": 0.10577905774343016,
+        "zipf_probability": 0.008258788895879065
       },
       {
         "rank": 8,
         "empirical_probability": 0.0043245816760729625,
         "empirical_cdf": 0.13319909937610966,
         "validation_cdf": 0.13094578368892584,
-        "stretched_exponential_cdf": 0.12776899840221187,
-        "stretched_exponential_probability": 0.006295052098368469,
-        "cdf_zipf_cdf": 0.1291544874793765,
-        "cdf_zipf_probability": 0.006237329256935695,
-        "zipf_cdf": 0.1133134861136593,
-        "zipf_probability": 0.007534418813332848
+        "stretched_exponential_cdf": 0.1277689945920595,
+        "stretched_exponential_probability": 0.006295051936028057,
+        "cdf_zipf_cdf": 0.12915448205196428,
+        "cdf_zipf_probability": 0.006237329119744714,
+        "zipf_cdf": 0.11331347606700311,
+        "zipf_probability": 0.007534418323572947
       },
       {
         "rank": 9,
         "empirical_probability": 0.004225394022952023,
         "empirical_cdf": 0.13742449339906168,
         "validation_cdf": 0.13591022443890274,
-        "stretched_exponential_cdf": 0.1335900885701458,
-        "stretched_exponential_probability": 0.005821090167933925,
-        "cdf_zipf_cdf": 0.13491840202267494,
-        "cdf_zipf_probability": 0.005763914543298443,
-        "zipf_cdf": 0.12026188739025044,
-        "zipf_probability": 0.006948401276591144
+        "stretched_exponential_cdf": 0.13359008461222713,
+        "stretched_exponential_probability": 0.005821090020167613,
+        "cdf_zipf_cdf": 0.1349183964739915,
+        "cdf_zipf_probability": 0.005763914422027228,
+        "zipf_cdf": 0.1202618769096106,
+        "zipf_probability": 0.006948400842607489
       },
       {
         "rank": 10,
         "empirical_probability": 0.0034914053898570706,
         "empirical_cdf": 0.14091589878891875,
         "validation_cdf": 0.13911979310981804,
-        "stretched_exponential_cdf": 0.13902006355126237,
-        "stretched_exponential_probability": 0.005429974981116568,
-        "cdf_zipf_cdf": 0.1402920292191065,
-        "cdf_zipf_probability": 0.005373627196431557,
-        "zipf_cdf": 0.12672480838195663,
-        "zipf_probability": 0.006462920991706181
+        "stretched_exponential_cdf": 0.13902005945754356,
+        "stretched_exponential_probability": 0.005429974845316445,
+        "cdf_zipf_cdf": 0.1402920235619229,
+        "cdf_zipf_probability": 0.005373627087931404,
+        "zipf_cdf": 0.12672479751236834,
+        "zipf_probability": 0.0064629206027577565
       },
       {
         "rank": 11,
         "empirical_probability": 0.003431892797984507,
         "empirical_cdf": 0.14434779158690325,
         "validation_cdf": 0.1429989840214279,
-        "stretched_exponential_cdf": 0.14412061514309027,
-        "stretched_exponential_probability": 0.005100551591827889,
-        "cdf_zipf_cdf": 0.14533721002771363,
-        "cdf_zipf_probability": 0.005045180808607136,
-        "zipf_cdf": 0.13277784628101236,
-        "zipf_probability": 0.006053037899055718
+        "stretched_exponential_cdf": 0.14412061092360257,
+        "stretched_exponential_probability": 0.005100551466059014,
+        "cdf_zipf_cdf": 0.1453372042725119,
+        "cdf_zipf_probability": 0.005045180710588987,
+        "zipf_cdf": 0.13277783505960852,
+        "zipf_probability": 0.006053037547240174
       },
       {
         "rank": 12,
         "empirical_probability": 0.0032731925529910035,
         "empirical_cdf": 0.14762098413989425,
         "validation_cdf": 0.14637018564699364,
-        "stretched_exponential_cdf": 0.14893908652770416,
-        "stretched_exponential_probability": 0.004818471384613878,
-        "cdf_zipf_cdf": 0.1501013612973604,
-        "cdf_zipf_probability": 0.004764151269646771,
-        "zipf_cdf": 0.13847943122852785,
-        "zipf_probability": 0.005701584947515485
+        "stretched_exponential_cdf": 0.14893908219099905,
+        "stretched_exponential_probability": 0.0048184712673964795,
+        "cdf_zipf_cdf": 0.15010135545290407,
+        "cdf_zipf_probability": 0.004764151180392168,
+        "zipf_cdf": 0.138479419686455,
+        "zipf_probability": 0.005701584626846487
       },
       {
         "rank": 13,
         "empirical_probability": 0.0031343298386216885,
         "empirical_cdf": 0.15075531397851594,
         "validation_cdf": 0.1493488500969798,
-        "stretched_exponential_cdf": 0.15351271010699974,
-        "stretched_exponential_probability": 0.004573623579295585,
-        "cdf_zipf_cdf": 0.15462174450327867,
-        "cdf_zipf_probability": 0.004520383205918271,
-        "zipf_cdf": 0.14387575930662594,
-        "zipf_probability": 0.005396328078098076
+        "stretched_exponential_cdf": 0.1535127056604686,
+        "stretched_exponential_probability": 0.0045736234694695515,
+        "cdf_zipf_cdf": 0.15462173857700706,
+        "cdf_zipf_probability": 0.004520383124102995,
+        "zipf_cdf": 0.14387574747038526,
+        "zipf_probability": 0.0053963277839302656
       },
       {
         "rank": 14,
         "empirical_probability": 0.0030946547773733125,
         "empirical_cdf": 0.15384996875588924,
         "validation_cdf": 0.15225824328068718,
-        "stretched_exponential_cdf": 0.15787136755489747,
-        "stretched_exponential_probability": 0.004358657447897741,
-        "cdf_zipf_cdf": 0.15892824362177405,
-        "cdf_zipf_probability": 0.004306499118495372,
-        "zipf_cdf": 0.14900405365265684,
-        "zipf_probability": 0.0051282943460309064
+        "stretched_exponential_cdf": 0.1578713630050035,
+        "stretched_exponential_probability": 0.00435865734453491,
+        "cdf_zipf_cdf": 0.15892823762008354,
+        "cdf_zipf_probability": 0.004306499043076478,
+        "zipf_cdf": 0.1490040415450713,
+        "zipf_probability": 0.005128294074686036
       },
       {
         "rank": 15,
         "empirical_probability": 0.0030748172467491247,
         "empirical_cdf": 0.15692478600263837,
         "validation_cdf": 0.15516763646439458,
-        "stretched_exponential_cdf": 0.16203945526563077,
-        "stretched_exponential_probability": 0.0041680877107332925,
-        "cdf_zipf_cdf": 0.16304524121408873,
-        "cdf_zipf_probability": 0.004116997592314681,
-        "zipf_cdf": 0.1538947949236473,
-        "zipf_probability": 0.004890741270990447
+        "stretched_exponential_cdf": 0.16203945061808162,
+        "stretched_exponential_probability": 0.004168087613078092,
+        "cdf_zipf_cdf": 0.1630452351425393,
+        "cdf_zipf_probability": 0.0041169975224557565,
+        "zipf_cdf": 0.15389478256457692,
+        "zipf_probability": 0.004890741019505632
       },
       {
         "rank": 16,
         "empirical_probability": 0.003054979716124937,
         "empirical_cdf": 0.15997976571876332,
         "validation_cdf": 0.15858501893414612,
-        "stretched_exponential_cdf": 0.16603718495340875,
-        "stretched_exponential_probability": 0.003997729687777992,
-        "cdf_zipf_cdf": 0.16699292554276005,
-        "cdf_zipf_probability": 0.003947684328671319,
-        "zipf_cdf": 0.15857329140358628,
-        "zipf_probability": 0.004678496479938977
+        "stretched_exponential_cdf": 0.16603718021328773,
+        "stretched_exponential_probability": 0.003997729595206112,
+        "cdf_zipf_cdf": 0.16699291940623004,
+        "cdf_zipf_probability": 0.003947684263690743,
+        "zipf_cdf": 0.15857327881046895,
+        "zipf_probability": 0.004678496245892037
       },
       {
         "rank": 17,
         "empirical_probability": 0.003045060950812843,
         "empirical_cdf": 0.16302482666957616,
         "validation_cdf": 0.1615867738062252,
-        "stretched_exponential_cdf": 0.1698815147384546,
-        "stretched_exponential_probability": 0.0038443297850458517,
-        "cdf_zipf_cdf": 0.17078822573085184,
-        "cdf_zipf_probability": 0.0037953001880917936,
-        "zipf_cdf": 0.16306081189688454,
-        "zipf_probability": 0.004487520493298246
+        "stretched_exponential_cdf": 0.1698815099103227,
+        "stretched_exponential_probability": 0.0038443296970349593,
+        "cdf_zipf_cdf": 0.17078821953365683,
+        "cdf_zipf_probability": 0.003795300127426793,
+        "zipf_cdf": 0.16306079908515236,
+        "zipf_probability": 0.004487520274683398
       },
       {
         "rank": 18,
         "empirical_probability": 0.003005385889564467,
         "empirical_cdf": 0.16603021255914063,
         "validation_cdf": 0.1643576244573751,
-        "stretched_exponential_cdf": 0.1735868310694159,
-        "stretched_exponential_probability": 0.003705316330961287,
-        "cdf_zipf_cdf": 0.17444549626600003,
-        "cdf_zipf_probability": 0.0036572705351481938,
-        "zipf_cdf": 0.16737542085600016,
-        "zipf_probability": 0.004314608959115618
+        "stretched_exponential_cdf": 0.1735868261573921,
+        "stretched_exponential_probability": 0.0037053162470694107,
+        "cdf_zipf_cdf": 0.1744454900119852,
+        "cdf_zipf_probability": 0.003657270478328367,
+        "zipf_cdf": 0.16737540783940538,
+        "zipf_probability": 0.004314608754253021
       },
       {
         "rank": 19,
         "empirical_probability": 0.0029161170017556214,
         "empirical_cdf": 0.16894632956089625,
         "validation_cdf": 0.16701302299806042,
-        "stretched_exponential_cdf": 0.17716545817481652,
-        "stretched_exponential_probability": 0.0035786271054006244,
-        "cdf_zipf_cdf": 0.1779770281012922,
-        "cdf_zipf_probability": 0.003531531835292173,
-        "zipf_cdf": 0.17153260566803094,
-        "zipf_probability": 0.004157184812030796
+        "stretched_exponential_cdf": 0.17716545318264215,
+        "stretched_exponential_probability": 0.003578627025250043,
+        "cdf_zipf_cdf": 0.1779770217939055,
+        "cdf_zipf_probability": 0.0035315317819203107,
+        "zipf_cdf": 0.17153259245890484,
+        "zipf_probability": 0.004157184619499455
       },
       {
         "rank": 20,
         "empirical_probability": 0.0028863607058193397,
         "empirical_cdf": 0.1718326902667156,
         "validation_cdf": 0.17010713955851114,
-        "stretched_exponential_cdf": 0.18062804536608273,
-        "stretched_exponential_probability": 0.003462587191266222,
-        "cdf_zipf_cdf": 0.18139343701371533,
-        "cdf_zipf_probability": 0.003416408912423119,
-        "zipf_cdf": 0.1755457557010918,
-        "zipf_probability": 0.004013150033060861
+        "stretched_exponential_cdf": 0.18062804029717353,
+        "stretched_exponential_probability": 0.0034625871145313796,
+        "cdf_zipf_cdf": 0.1813934306560661,
+        "cdf_zipf_probability": 0.0034164088621606026,
+        "zipf_cdf": 0.1755457423105528,
+        "zipf_probability": 0.0040131498516479645
       },
       {
         "rank": 21,
         "empirical_probability": 0.0028665231751951515,
         "empirical_cdf": 0.17469921344191075,
         "validation_cdf": 0.17315507527477603,
-        "stretched_exponential_cdf": 0.18398386606865827,
-        "stretched_exponential_probability": 0.0033558207025755414,
-        "cdf_zipf_cdf": 0.18470396330623867,
-        "cdf_zipf_probability": 0.003310526292523347,
-        "zipf_cdf": 0.17942653357847987,
-        "zipf_probability": 0.003880777877388069
+        "stretched_exponential_cdf": 0.18398386092614707,
+        "stretched_exponential_probability": 0.00335582062897354,
+        "cdf_zipf_cdf": 0.18470395690114536,
+        "cdf_zipf_probability": 0.0033105262450792428,
+        "zipf_cdf": 0.17942652001660298,
+        "zipf_probability": 0.003880777706050177
       },
       {
         "rank": 22,
         "empirical_probability": 0.0028665231751951515,
         "empirical_cdf": 0.1775657366171059,
         "validation_cdf": 0.17606446845848342,
-        "stretched_exponential_cdf": 0.18724105190871748,
-        "stretched_exponential_probability": 0.003257185840059213,
-        "cdf_zipf_cdf": 0.18791670631363822,
-        "cdf_zipf_probability": 0.0032127430073995433,
-        "zipf_cdf": 0.18318516675315236,
-        "zipf_probability": 0.0037586331746724926
+        "stretched_exponential_cdf": 0.18724104669548974,
+        "stretched_exponential_probability": 0.0032571857693426726,
+        "cdf_zipf_cdf": 0.18791669986366727,
+        "cdf_zipf_probability": 0.003212742962521914,
+        "zipf_cdf": 0.18318515302910834,
+        "zipf_probability": 0.0037586330125053764
       },
       {
         "rank": 23,
         "empirical_probability": 0.0028466856445709637,
         "empirical_cdf": 0.18041242226167686,
         "validation_cdf": 0.17902004248637665,
-        "stretched_exponential_cdf": 0.19040677824601757,
-        "stretched_exponential_probability": 0.0031657263373000796,
-        "cdf_zipf_cdf": 0.19103881018802996,
-        "cdf_zipf_probability": 0.0031221038743917406,
-        "zipf_cdf": 0.18683067923313898,
-        "zipf_probability": 0.0036455124799866304
+        "stretched_exponential_cdf": 0.1904067729647408,
+        "stretched_exponential_probability": 0.003165726269251036,
+        "cdf_zipf_cdf": 0.19103880369552811,
+        "cdf_zipf_probability": 0.003122103831860845,
+        "zipf_cdf": 0.1868306653553099,
+        "zipf_probability": 0.0036455123262015545
       },
       {
         "rank": 24,
         "empirical_probability": 0.002767335522074212,
         "empirical_cdf": 0.18317975778375106,
         "validation_cdf": 0.18190634524799112,
-        "stretched_exponential_cdf": 0.19348741287930885,
-        "stretched_exponential_probability": 0.0030806346332912697,
-        "cdf_zipf_cdf": 0.19407661274641788,
-        "cdf_zipf_probability": 0.0030378025583879253,
-        "zipf_cdf": 0.19037107773870396,
-        "zipf_probability": 0.003540398505564975
+        "stretched_exponential_cdf": 0.1934874075324576,
+        "stretched_exponential_probability": 0.0030806345677168085,
+        "cdf_zipf_cdf": 0.19407660621353928,
+        "cdf_zipf_probability": 0.003037802518011168,
+        "zipf_cdf": 0.19037106371477971,
+        "zipf_probability": 0.0035403983594698243
       },
       {
         "rank": 25,
         "empirical_probability": 0.0027276604608258365,
         "empirical_cdf": 0.1859074182445769,
         "validation_cdf": 0.18430774914565437,
-        "stretched_exponential_cdf": 0.19648863645161657,
-        "stretched_exponential_probability": 0.003001223572307719,
-        "cdf_zipf_cdf": 0.19703576594460856,
-        "cdf_zipf_probability": 0.0029591531981906782,
-        "zipf_cdf": 0.19381350272649972,
-        "zipf_probability": 0.0034424249877957514
+        "stretched_exponential_cdf": 0.19648863104149372,
+        "stretched_exponential_probability": 0.0030012235090361144,
+        "cdf_zipf_cdf": 0.19703575937333742,
+        "cdf_zipf_probability": 0.002959153159798139,
+        "zipf_cdf": 0.1938134885635596,
+        "zipf_probability": 0.0034424248487798692
       },
       {
         "rank": 26,
         "empirical_probability": 0.0026879853995774605,
         "empirical_cdf": 0.18859540364415436,
         "validation_cdf": 0.18647824882238845,
-        "stretched_exponential_cdf": 0.19941554084858915,
-        "stretched_exponential_probability": 0.0029269043969725873,
-        "cdf_zipf_cdf": 0.19992133429549447,
-        "cdf_zipf_probability": 0.0028855683508859087,
-        "zipf_cdf": 0.19716435201474228,
-        "zipf_probability": 0.003350849288242558
+        "stretched_exponential_cdf": 0.19941553537734383,
+        "stretched_exponential_probability": 0.0029269043358501152,
+        "cdf_zipf_cdf": 0.19992132768766432,
+        "cdf_zipf_probability": 0.002885568314326903,
+        "zipf_cdf": 0.19716433771932404,
+        "zipf_probability": 0.0033508491557644538
       },
       {
         "rank": 27,
         "empirical_probability": 0.0024400162667751117,
         "empirical_cdf": 0.19103541991092948,
         "validation_cdf": 0.18869492934330837,
-        "stretched_exponential_cdf": 0.202272710297181,
-        "stretched_exponential_probability": 0.0028571694485918435,
-        "cdf_zipf_cdf": 0.2027378759557338,
-        "cdf_zipf_probability": 0.002816541660239341,
-        "zipf_cdf": 0.20042938281607986,
-        "zipf_probability": 0.003265030801337576
+        "stretched_exponential_cdf": 0.20227270476682432,
+        "stretched_exponential_probability": 0.0028571693894804987,
+        "cdf_zipf_cdf": 0.202737869313044,
+        "cdf_zipf_probability": 0.0028165416253796705,
+        "zipf_cdf": 0.20042936839423892,
+        "zipf_probability": 0.0032650306749148652
       },
       {
         "rank": 28,
         "empirical_probability": 0.0023805036749025483,
         "empirical_cdf": 0.19341592358583204,
         "validation_cdf": 0.19105015239678577,
-        "stretched_exponential_cdf": 0.20506428872924126,
-        "stretched_exponential_probability": 0.002791578432060259,
-        "cdf_zipf_cdf": 0.20548951005678726,
-        "cdf_zipf_probability": 0.002751634101053446,
-        "zipf_cdf": 0.2036137965897792,
-        "zipf_probability": 0.003184413773699339
+        "stretched_exponential_cdf": 0.20506428314165986,
+        "stretched_exponential_probability": 0.002791578374835535,
+        "cdf_zipf_cdf": 0.20548950338081703,
+        "cdf_zipf_probability": 0.00275163406777304,
+        "zipf_cdf": 0.20361378204713937,
+        "zipf_probability": 0.003184413652900449
       },
       {
         "rank": 29,
         "empirical_probability": 0.0023110723177178906,
         "empirical_cdf": 0.19572699590354992,
         "validation_cdf": 0.19324374249561277,
-        "stretched_exponential_cdf": 0.20779403613991698,
-        "stretched_exponential_probability": 0.0027297474106757207,
-        "cdf_zipf_cdf": 0.2081799730179933,
-        "cdf_zipf_probability": 0.002690462961206036,
-        "zipf_cdf": 0.20672231010173392,
-        "zipf_probability": 0.0031085135119547115
+        "stretched_exponential_cdf": 0.20779403049688464,
+        "stretched_exponential_probability": 0.0027297473552247674,
+        "cdf_zipf_cdf": 0.2081799663102141,
+        "cdf_zipf_probability": 0.002690462929397064,
+        "zipf_cdf": 0.20672229544353135,
+        "zipf_probability": 0.0031085133963919954
       },
       {
         "rank": 30,
         "empirical_probability": 0.0022813160217816084,
         "empirical_cdf": 0.19800831192533153,
         "validation_cdf": 0.1954604230165327,
-        "stretched_exponential_cdf": 0.210465376053422,
-        "stretched_exponential_probability": 0.0026713399135050147,
-        "cdf_zipf_cdf": 0.21081266595954218,
-        "cdf_zipf_probability": 0.0026326929415488864,
-        "zipf_cdf": 0.20975921532130182,
-        "zipf_probability": 0.0030369052195678967
+        "stretched_exponential_cdf": 0.21046537035660998,
+        "stretched_exponential_probability": 0.0026713398597253478,
+        "cdf_zipf_cdf": 0.21081265922132816,
+        "cdf_zipf_probability": 0.002632692911114065,
+        "zipf_cdf": 0.20975920055242323,
+        "zipf_probability": 0.0030369051088918833
       },
       {
         "rank": 31,
         "empirical_probability": 0.0022813160217816084,
         "empirical_cdf": 0.20028962794711314,
         "validation_cdf": 0.19760783227117387,
-        "stretched_exponential_cdf": 0.21308143574677452,
-        "stretched_exponential_probability": 0.0026160596933525043,
-        "cdf_zipf_cdf": 0.2133906948695711,
-        "cdf_zipf_probability": 0.0025780289100289233,
-        "zipf_cdf": 0.212728430213829,
-        "zipf_probability": 0.002969214892527184
+        "stretched_exponential_cdf": 0.21308142999776064,
+        "stretched_exponential_probability": 0.002616059641150653,
+        "cdf_zipf_cdf": 0.2133906881022084,
+        "cdf_zipf_probability": 0.00257802888088024,
+        "zipf_cdf": 0.21272841533884496,
+        "zipf_probability": 0.0029692147864217255
       },
       {
         "rank": 32,
         "empirical_probability": 0.002211884664596951,
         "empirical_cdf": 0.2025015126117101,
         "validation_cdf": 0.20017086912348753,
-        "stretched_exponential_cdf": 0.21564508053272327,
-        "stretched_exponential_probability": 0.0025636447859487487,
-        "cdf_zipf_cdf": 0.21591690482905412,
-        "cdf_zipf_probability": 0.0025262099594830223,
-        "zipf_cdf": 0.2156335420552451,
-        "zipf_probability": 0.002905111841416086
+        "stretched_exponential_cdf": 0.2156450747329999,
+        "stretched_exponential_probability": 0.002563644735239255,
+        "cdf_zipf_cdf": 0.21591689803374903,
+        "cdf_zipf_probability": 0.002526209931540624,
+        "zipf_cdf": 0.21563352707843922,
+        "zipf_probability": 0.002905111739594261
       },
       {
         "rank": 34,
         "empirical_probability": 0.0021523720727243873,
         "empirical_cdf": 0.20684593181840724,
         "validation_cdf": 0.20425787383393365,
-        "stretched_exponential_cdf": 0.22062544899283051,
-        "stretched_exponential_probability": 0.0024665058566351846,
-        "cdf_zipf_cdf": 0.22082411551984518,
-        "cdf_zipf_probability": 0.0024302061893821114,
-        "zipf_cdf": 0.2212643698887629,
-        "zipf_probability": 0.0027865253248727756
+        "stretched_exponential_cdf": 0.2206254430958579,
+        "stretched_exponential_probability": 0.002466505808681453,
+        "cdf_zipf_cdf": 0.2208241086719895,
+        "cdf_zipf_probability": 0.002430206163640397,
+        "zipf_cdf": 0.22126435472014236,
+        "zipf_probability": 0.0027865252308574458
       },
       {
         "rank": 36,
         "empirical_probability": 0.0021424533074122934,
         "empirical_cdf": 0.21114075719854394,
         "validation_cdf": 0.20792925094670728,
-        "stretched_exponential_cdf": 0.22542518423043226,
-        "stretched_exponential_probability": 0.0023783460922850758,
-        "cdf_zipf_cdf": 0.22555285795911395,
-        "cdf_zipf_probability": 0.002343111927563646,
-        "zipf_cdf": 0.22667507222186328,
-        "zipf_probability": 0.002679155927968169
+        "stretched_exponential_cdf": 0.22542517824131691,
+        "stretched_exponential_probability": 0.002378346046820674,
+        "cdf_zipf_cdf": 0.2255528510627379,
+        "cdf_zipf_probability": 0.0023431119037786996,
+        "zipf_cdf": 0.2266750568757093,
+        "zipf_probability": 0.0026791558408842363
       },
       {
         "rank": 37,
         "empirical_probability": 0.0021325345421001995,
         "empirical_cdf": 0.21327329174064413,
         "validation_cdf": 0.21033065484437052,
-        "stretched_exponential_cdf": 0.22776241115134507,
-        "stretched_exponential_probability": 0.0023372269209128273,
-        "cdf_zipf_cdf": 0.22785535940651205,
-        "cdf_zipf_probability": 0.002302501447398103,
-        "zipf_cdf": 0.22930423729545762,
-        "zipf_probability": 0.002629165073594351
+        "stretched_exponential_cdf": 0.22776240511792237,
+        "stretched_exponential_probability": 0.002337226876605451,
+        "cdf_zipf_cdf": 0.22785535248725017,
+        "cdf_zipf_probability": 0.002302501424512271,
+        "zipf_cdf": 0.22930422186540114,
+        "zipf_probability": 0.0026291649896918335
       },
       {
         "rank": 39,
         "empirical_probability": 0.0020730219502276357,
         "empirical_cdf": 0.21744909193703568,
         "validation_cdf": 0.21414057448970164,
-        "stretched_exponential_cdf": 0.23232053962821853,
-        "stretched_exponential_probability": 0.002260232078833986,
-        "cdf_zipf_cdf": 0.23234550355774639,
-        "cdf_zipf_probability": 0.002226479572717127,
-        "zipf_cdf": 0.23442135745136836,
-        "zipf_probability": 0.002535716733642205
+        "stretched_exponential_cdf": 0.23232053350944454,
+        "stretched_exponential_probability": 0.0022602320366858944,
+        "cdf_zipf_cdf": 0.23234549659522424,
+        "cdf_zipf_probability": 0.0022264795514909674,
+        "zipf_cdf": 0.23442134186238495,
+        "zipf_probability": 0.0025357166556061574
       },
       {
         "rank": 41,
         "empirical_probability": 0.002043265654291354,
         "empirical_cdf": 0.22155546077624258,
         "validation_cdf": 0.21769649949201067,
-        "stretched_exponential_cdf": 0.23673412983037137,
-        "stretched_exponential_probability": 0.0021894673993903156,
-        "cdf_zipf_cdf": 0.23669297256443123,
-        "cdf_zipf_probability": 0.0021566330817349155,
-        "zipf_cdf": 0.2393633435179005,
-        "zipf_probability": 0.0024500210234000477
+        "stretched_exponential_cdf": 0.23673412363028642,
+        "stretched_exponential_probability": 0.0021894673592181262,
+        "cdf_zipf_cdf": 0.23669296556172148,
+        "cdf_zipf_probability": 0.0021566330620060303,
+        "zipf_cdf": 0.23936332778083935,
+        "zipf_probability": 0.0024500209506487084
       },
       {
         "rank": 43,
         "empirical_probability": 0.00198375306241879,
         "empirical_cdf": 0.22557256072764065,
         "validation_cdf": 0.22164496166989928,
-        "stretched_exponential_cdf": 0.24101446032077514,
-        "stretched_exponential_probability": 0.0021241569200331828,
-        "cdf_zipf_cdf": 0.2409089426982952,
-        "cdf_zipf_probability": 0.002092190808225286,
-        "zipf_cdf": 0.24414421365285352,
-        "zipf_probability": 0.002371101566386565
+        "stretched_exponential_cdf": 0.24101445404308827,
+        "stretched_exponential_probability": 0.0021241568816768364,
+        "cdf_zipf_cdf": 0.2409089356581796,
+        "cdf_zipf_probability": 0.0020921907898535097,
+        "zipf_cdf": 0.24414419777752322,
+        "zipf_probability": 0.0023711014984187854
       },
       {
         "rank": 45,
         "empirical_probability": 0.0019242404705462264,
         "empirical_cdf": 0.2294309604340452,
         "validation_cdf": 0.22557033342569496,
-        "stretched_exponential_cdf": 0.24517145256454928,
-        "stretched_exponential_probability": 0.0020636521319284994,
-        "cdf_zipf_cdf": 0.2450032419067577,
-        "cdf_zipf_probability": 0.002032508499720642,
-        "zipf_cdf": 0.24877627964608554,
-        "zipf_probability": 0.00229814316351498
+        "stretched_exponential_cdf": 0.24517144621267908,
+        "stretched_exponential_probability": 0.0020636520952474068,
+        "cdf_zipf_cdf": 0.24500323483176603,
+        "cdf_zipf_probability": 0.0020325084825843776,
+        "zipf_cdf": 0.2487762636413936,
+        "zipf_probability": 0.002298143099896049
       },
       {
         "rank": 48,
         "empirical_probability": 0.0019044029399220386,
         "empirical_cdf": 0.23516400678443553,
         "validation_cdf": 0.2312736676826452,
-        "stretched_exponential_cdf": 0.2511946194844671,
-        "stretched_exponential_probability": 0.001980732853445696,
-        "cdf_zipf_cdf": 0.25093530991038,
-        "cdf_zipf_probability": 0.0019507453707336975,
-        "zipf_cdf": 0.25546882964980133,
-        "zipf_probability": 0.0021984100374876805
+        "stretched_exponential_cdf": 0.251194613027179,
+        "stretched_exponential_probability": 0.001980732819048919,
+        "cdf_zipf_cdf": 0.2509353027873438,
+        "cdf_zipf_probability": 0.0019507453552554677,
+        "zipf_cdf": 0.2554688134660776,
+        "zipf_probability": 0.0021984099796953
       },
       {
         "rank": 50,
         "empirical_probability": 0.0018944841746099447,
         "empirical_cdf": 0.2389628938989675,
         "validation_cdf": 0.23469105015239677,
-        "stretched_exponential_cdf": 0.2550796016537374,
-        "stretched_exponential_probability": 0.0019300266763308963,
-        "cdf_zipf_cdf": 0.2547614073177502,
-        "cdf_zipf_probability": 0.0019007630351507432,
-        "zipf_cdf": 0.259773870973167,
-        "zipf_probability": 0.0021375733931005337
+        "stretched_exponential_cdf": 0.2550795951297531,
+        "stretched_exponential_probability": 0.001930026643324158,
+        "cdf_zipf_cdf": 0.2547614001652577,
+        "cdf_zipf_probability": 0.0019007630206657744,
+        "zipf_cdf": 0.2597738546791223,
+        "zipf_probability": 0.00213757333879288
       },
       {
         "rank": 52,
         "empirical_probability": 0.0018746466439857566,
         "empirical_cdf": 0.2427320247175632,
         "validation_cdf": 0.2383624272651704,
-        "stretched_exponential_cdf": 0.25886804469163804,
-        "stretched_exponential_probability": 0.0018825408669440246,
-        "cdf_zipf_cdf": 0.25849236169782924,
-        "cdf_zipf_probability": 0.0018539669064201458,
-        "zipf_cdf": 0.2639632514987303,
-        "zipf_probability": 0.002080709473185517
+        "stretched_exponential_cdf": 0.25886803810359627,
+        "stretched_exponential_probability": 0.0018825408352340007,
+        "cdf_zipf_cdf": 0.25849235451774927,
+        "cdf_zipf_probability": 0.001853966892850667,
+        "zipf_cdf": 0.26396323510091474,
+        "zipf_probability": 0.002080709422085849
       },
       {
         "rank": 55,
         "empirical_probability": 0.0017457026949285353,
         "empirical_cdf": 0.2481079955167181,
         "validation_cdf": 0.2440426711000277,
-        "stretched_exponential_cdf": 0.26438257291502765,
-        "stretched_exponential_probability": 0.0018166663113050711,
-        "cdf_zipf_cdf": 0.2639231349663386,
-        "cdf_zipf_probability": 0.0017890683542180486,
-        "zipf_cdf": 0.2700463197551866,
-        "zipf_probability": 0.0020020069527470537
+        "stretched_exponential_cdf": 0.26438256623547535,
+        "stretched_exponential_probability": 0.0018166662813854134,
+        "cdf_zipf_cdf": 0.26392312774807414,
+        "cdf_zipf_probability": 0.001789068341894573,
+        "zipf_cdf": 0.2700463032129032,
+        "zipf_probability": 0.0020020069060065183
       },
       {
         "rank": 58,
         "empirical_probability": 0.0017159463989922534,
         "empirical_cdf": 0.25328559100963116,
         "validation_cdf": 0.24900711185000463,
-        "stretched_exponential_cdf": 0.2697109304378898,
-        "stretched_exponential_probability": 0.0017564277566765383,
-        "cdf_zipf_cdf": 0.26917053686763137,
-        "cdf_zipf_probability": 0.0017297422449250588,
-        "zipf_cdf": 0.27590735962360635,
-        "zipf_probability": 0.0019302311012745121
+        "stretched_exponential_cdf": 0.2697109236718687,
+        "stretched_exponential_probability": 0.0017564277283852391,
+        "cdf_zipf_cdf": 0.2691705296146518,
+        "cdf_zipf_probability": 0.0017297422337157475,
+        "zipf_cdf": 0.2759073429489787,
+        "zipf_probability": 0.0019302310584247528
       },
       {
         "rank": 61,
         "empirical_probability": 0.0016961088683680656,
         "empirical_cdf": 0.2583739176147354,
         "validation_cdf": 0.2538791909116099,
-        "stretched_exponential_cdf": 0.27486851312596206,
-        "stretched_exponential_probability": 0.0017010851225637128,
-        "cdf_zipf_cdf": 0.2742497858582213,
-        "cdf_zipf_probability": 0.0016752550222407514,
-        "zipf_cdf": 0.28156526524144526,
-        "zipf_probability": 0.0018644590984011823
+        "stretched_exponential_cdf": 0.27486850627807197,
+        "stretched_exponential_probability": 0.0017010850957603532,
+        "cdf_zipf_cdf": 0.2742497785736401,
+        "cdf_zipf_probability": 0.0016752550120330278,
+        "zipf_cdf": 0.2815652484453337,
+        "zipf_probability": 0.0018644590590431507
       },
       {
         "rank": 64,
         "empirical_probability": 0.0016465150418075959,
         "empirical_cdf": 0.26338289409734283,
         "validation_cdf": 0.25895908377205135,
-        "stretched_exponential_cdf": 0.2798687591544108,
-        "stretched_exponential_probability": 0.001650026167270785,
-        "cdf_zipf_cdf": 0.2791741604587993,
-        "cdf_zipf_probability": 0.0016250000779995388,
-        "zipf_cdf": 0.2870364924409941,
-        "zipf_probability": 0.001803928857769719
+        "stretched_exponential_cdf": 0.2798687522288673,
+        "stretched_exponential_probability": 0.0016500261418330837,
+        "cdf_zipf_cdf": 0.2791741531454244,
+        "cdf_zipf_probability": 0.0016250000686965915,
+        "zipf_cdf": 0.28703647553317724,
+        "zipf_probability": 0.0018039288215607465
       },
       {
         "rank": 67,
         "empirical_probability": 0.0016365962764955018,
         "empirical_cdf": 0.2682926829268293,
         "validation_cdf": 0.2638311628336566,
-        "stretched_exponential_cdf": 0.2847234770122548,
-        "stretched_exponential_probability": 0.0016027395903727812,
-        "cdf_zipf_cdf": 0.28395532488957353,
-        "cdf_zipf_probability": 0.0015784710025732451,
-        "zipf_cdf": 0.29233547080547156,
-        "zipf_probability": 0.001748005042006208
+        "stretched_exponential_cdf": 0.2847234700129373,
+        "stretched_exponential_probability": 0.0016027395661934282,
+        "cdf_zipf_cdf": 0.28395531754994907,
+        "cdf_zipf_probability": 0.0015784709940913078,
+        "zipf_cdf": 0.2923354537947945,
+        "zipf_probability": 0.001748005008649951
       },
       {
         "rank": 70,
         "empirical_probability": 0.001596921215247126,
         "empirical_cdf": 0.27311320286850693,
         "validation_cdf": 0.2688417844278193,
-        "stretched_exponential_cdf": 0.2894431064666012,
-        "stretched_exponential_probability": 0.0015587947195855106,
-        "cdf_zipf_cdf": 0.2886035880512249,
-        "cdf_zipf_probability": 0.0015352413914228036,
-        "zipf_cdf": 0.2974749310691509,
-        "zipf_probability": 0.0016961534204319
+        "stretched_exponential_cdf": 0.28944309939709245,
+        "stretched_exponential_probability": 0.0015587946965696924,
+        "cdf_zipf_cdf": 0.2886035806876654,
+        "cdf_zipf_probability": 0.0015352413836887124,
+        "zipf_cdf": 0.29747491396364817,
+        "zipf_probability": 0.0016961533896704207
       },
       {
         "rank": 73,
         "empirical_probability": 0.001587002449935032,
         "empirical_cdf": 0.27787421021831205,
         "validation_cdf": 0.27332132631384504,
-        "stretched_exponential_cdf": 0.2940369284506555,
-        "stretched_exponential_probability": 0.001517825962601712,
-        "cdf_zipf_cdf": 0.2931281117429082,
-        "cdf_zipf_probability": 0.0014949493943096637,
-        "zipf_cdf": 0.302466168081773,
-        "zipf_probability": 0.0016479212609592816
+        "stretched_exponential_cdf": 0.294036921314276,
+        "stretched_exponential_probability": 0.0015178259406653848,
+        "cdf_zipf_cdf": 0.29312810435752734,
+        "cdf_zipf_probability": 0.0014949493872593589,
+        "zipf_cdf": 0.30246615088877066,
+        "zipf_probability": 0.001647921232566754
       },
       {
         "rank": 77,
         "empirical_probability": 0.0015076523274382804,
         "empirical_cdf": 0.2840635197730587,
         "validation_cdf": 0.27955574027893226,
-        "stretched_exponential_cdf": 0.2999805322117715,
-        "stretched_exponential_probability": 0.0014672966687281944,
-        "cdf_zipf_cdf": 0.2989823479268636,
-        "cdf_zipf_probability": 0.0014452681994491234,
-        "zipf_cdf": 0.30890783625855545,
-        "zipf_probability": 0.0015885821518880842
+        "stretched_exponential_cdf": 0.2999805249909956,
+        "stretched_exponential_probability": 0.0014672966481159625,
+        "cdf_zipf_cdf": 0.2989823405153732,
+        "cdf_zipf_probability": 0.0014452681932239364,
+        "zipf_cdf": 0.30890781895921826,
+        "zipf_probability": 0.0015885821263490112
       },
       {
         "rank": 81,
         "empirical_probability": 0.0014679772661899046,
         "empirical_cdf": 0.2899751038990667,
         "validation_cdf": 0.2851436224254179,
-        "stretched_exponential_cdf": 0.3057324863800945,
-        "stretched_exponential_probability": 0.0014208837823431152,
-        "cdf_zipf_cdf": 0.30464818535380095,
-        "cdf_zipf_probability": 0.0013996475702458544,
-        "zipf_cdf": 0.3151248259822481,
-        "zipf_probability": 0.0015342271854099155
+        "stretched_exponential_cdf": 0.30573247907992485,
+        "stretched_exponential_probability": 0.0014208837629396008,
+        "cdf_zipf_cdf": 0.30464817791928284,
+        "cdf_zipf_probability": 0.001399647564760076,
+        "zipf_cdf": 0.3151248085872232,
+        "zipf_probability": 0.0015342271624235392
       },
       {
         "rank": 85,
         "empirical_probability": 0.0014283022049415288,
         "empirical_cdf": 0.29575774407601757,
         "validation_cdf": 0.2912394938579477,
-        "stretched_exponential_cdf": 0.3113079371896125,
-        "stretched_exponential_probability": 0.0013780714684415482,
-        "cdf_zipf_cdf": 0.3101405616746737,
-        "cdf_zipf_probability": 0.0013575774743730395,
-        "zipf_cdf": 0.32113544881656564,
-        "zipf_probability": 0.0014842212089204829
+        "stretched_exponential_cdf": 0.31130792981462835,
+        "stretched_exponential_probability": 0.001378071450146172,
+        "cdf_zipf_cdf": 0.31014055421989856,
+        "cdf_zipf_probability": 0.0013575774695532283,
+        "zipf_cdf": 0.32113543133540745,
+        "zipf_probability": 0.0014842211882291432
       },
       {
         "rank": 89,
         "empirical_probability": 0.001388627143693153,
         "empirical_cdf": 0.30135192771203856,
         "validation_cdf": 0.29673501431606164,
-        "stretched_exponential_cdf": 0.3167201866967086,
-        "stretched_exponential_probability": 0.0013384291032121445,
-        "cdf_zipf_cdf": 0.3154725915041573,
-        "cdf_zipf_probability": 0.001318632282337029,
-        "zipf_cdf": 0.32695574849875636,
-        "zipf_probability": 0.0014380351060534274
+        "stretched_exponential_cdf": 0.3167201792511188,
+        "stretched_exponential_probability": 0.001338429085936843,
+        "cdf_zipf_cdf": 0.31547258403162737,
+        "cdf_zipf_probability": 0.0013186322781196247,
+        "zipf_cdf": 0.3269557309400792,
+        "zipf_probability": 0.001438035087434802
       },
       {
         "rank": 93,
         "empirical_probability": 0.0013291145518205894,
         "empirical_cdf": 0.30672789851119353,
         "validation_cdf": 0.3016994550660385,
-        "stretched_exponential_cdf": 0.32198098920777335,
-        "stretched_exponential_probability": 0.0013015940951144557,
-        "cdf_zipf_cdf": 0.3206558599716004,
-        "cdf_zipf_probability": 0.0012824537273055658,
-        "zipf_cdf": 0.3325998694088606,
-        "zipf_probability": 0.0013952242672788777
+        "stretched_exponential_cdf": 0.32198098169546097,
+        "stretched_exponential_probability": 0.0013015940787814526,
+        "cdf_zipf_cdf": 0.320655852483585,
+        "cdf_zipf_probability": 0.0012824537236353906,
+        "zipf_cdf": 0.3325998517804643,
+        "zipf_probability": 0.0013952242505398818
       },
       {
         "rank": 98,
         "empirical_probability": 0.0012993582558843075,
         "empirical_cdf": 0.31329412114779975,
         "validation_cdf": 0.30816477325205494,
-        "stretched_exponential_cdf": 0.32835982327653174,
-        "stretched_exponential_probability": 0.0012590337957760413,
-        "cdf_zipf_cdf": 0.32694132095194245,
-        "cdf_zipf_probability": 0.0012406624230338892,
-        "zipf_cdf": 0.3394262410914995,
-        "zipf_probability": 0.0013458889575107685
+        "stretched_exponential_cdf": 0.32835981568584033,
+        "stretched_exponential_probability": 0.0012590337805250234,
+        "cdf_zipf_cdf": 0.326941313447454,
+        "cdf_zipf_probability": 0.0012406624199804428,
+        "zipf_cdf": 0.3394262233858496,
+        "zipf_probability": 0.0013458889428865667
       },
       {
         "rank": 103,
         "empirical_probability": 0.0012497644293238378,
         "empirical_cdf": 0.319661968478164,
         "validation_cdf": 0.3140297404636556,
-        "stretched_exponential_cdf": 0.3345362511940297,
-        "stretched_exponential_probability": 0.0012198775075109105,
-        "cdf_zipf_cdf": 0.33302806412622893,
-        "cdf_zipf_probability": 0.0012022236988210033,
-        "zipf_cdf": 0.3460183785263534,
-        "zipf_probability": 0.001300626559404235
+        "stretched_exponential_cdf": 0.33453624353008354,
+        "stretched_exponential_probability": 0.0012198774932483782,
+        "cdf_zipf_cdf": 0.3330280566081533,
+        "cdf_zipf_probability": 0.0012022236963197264,
+        "zipf_cdf": 0.3460183607533362,
+        "zipf_probability": 0.0013006265466702844
       },
       {
         "rank": 108,
         "empirical_probability": 0.00122992689869965,
         "empirical_cdf": 0.3258512780329107,
         "validation_cdf": 0.3205412394938579,
-        "stretched_exponential_cdf": 0.3405260053090311,
-        "stretched_exponential_probability": 0.0011837061342656336,
-        "cdf_zipf_cdf": 0.33893158125820994,
-        "cdf_zipf_probability": 0.0011667238698592763,
-        "zipf_cdf": 0.35239507707593126,
-        "zipf_probability": 0.001258926518229777
+        "stretched_exponential_cdf": 0.340525997576524,
+        "stretched_exponential_probability": 0.0011837061209101585,
+        "cdf_zipf_cdf": 0.33893157372913874,
+        "cdf_zipf_probability": 0.0011667238678547687,
+        "zipf_cdf": 0.35239505924440884,
+        "zipf_probability": 0.0012589265071935203
       },
       {
         "rank": 113,
         "empirical_probability": 0.0011902518374512742,
         "empirical_cdf": 0.331891806107976,
         "validation_cdf": 0.3267063821926664,
-        "stretched_exponential_cdf": 0.34634293285732765,
-        "stretched_exponential_probability": 0.001150168649921342,
-        "cdf_zipf_cdf": 0.3446655037037041,
-        "cdf_zipf_probability": 0.0011338165574474313,
-        "zipf_cdf": 0.35857283870387546,
-        "zipf_probability": 0.001220362184420184
+        "stretched_exponential_cdf": 0.3463429250605764,
+        "stretched_exponential_probability": 0.0011501686374013123,
+        "cdf_zipf_cdf": 0.3446654961659747,
+        "cdf_zipf_probability": 0.0011338165558917312,
+        "zipf_cdf": 0.35857282082182784,
+        "zipf_probability": 0.0012203621749153465
       },
       {
         "rank": 119,
         "empirical_probability": 0.0011604955415149922,
         "empirical_cdf": 0.3389341294795626,
         "validation_cdf": 0.33400295557402776,
-        "stretched_exponential_cdf": 0.3531122805477776,
-        "stretched_exponential_probability": 0.0011129861963861027,
-        "cdf_zipf_cdf": 0.3513392387093187,
-        "cdf_zipf_probability": 0.001097341316328937,
-        "zipf_cdf": 0.3657439611842278,
-        "zipf_probability": 0.0011777218449264472
+        "stretched_exponential_cdf": 0.35311227267916623,
+        "stretched_exponential_probability": 0.0011129861847857547,
+        "cdf_zipf_cdf": 0.35133923116397625,
+        "cdf_zipf_probability": 0.0010973413152572942,
+        "zipf_cdf": 0.36574394325101456,
+        "zipf_probability": 0.0011777218370702422
       },
       {
         "rank": 124,
         "empirical_probability": 0.0011307392455787103,
         "empirical_cdf": 0.3446572570646408,
         "validation_cdf": 0.33970628983097795,
-        "stretched_exponential_cdf": 0.35859026557689444,
-        "stretched_exponential_probability": 0.0010842613610027292,
-        "cdf_zipf_cdf": 0.3567406696799146,
-        "cdf_zipf_probability": 0.0010691690398704767,
-        "zipf_cdf": 0.37153309072598323,
-        "zipf_probability": 0.001144866187784171
+        "stretched_exponential_cdf": 0.3585902576524187,
+        "stretched_exponential_probability": 0.0010842613501078249,
+        "cdf_zipf_cdf": 0.3567406621303185,
+        "cdf_zipf_probability": 0.0010691690391625985,
+        "zipf_cdf": 0.37153307275724695,
+        "zipf_probability": 0.0011448661811652733
       },
       {
         "rank": 131,
         "empirical_probability": 0.0011109017149545225,
         "empirical_cdf": 0.3524732441305709,
         "validation_cdf": 0.3470721344786181,
-        "stretched_exponential_cdf": 0.3660294617110564,
-        "stretched_exponential_probability": 0.0010470787874210627,
-        "cdf_zipf_cdf": 0.36407714479410247,
-        "cdf_zipf_probability": 0.0010327098289685255,
-        "zipf_cdf": 0.37937524735211003,
-        "zipf_probability": 0.001102450971152095
+        "stretched_exponential_cdf": 0.36602945371399415,
+        "stretched_exponential_probability": 0.0010470787774328522,
+        "cdf_zipf_cdf": 0.36407713724141355,
+        "cdf_zipf_probability": 0.0010327098287181702,
+        "zipf_cdf": 0.37937522934336587,
+        "zipf_probability": 0.0011024509660865515
       },
       {
         "rank": 137,
         "empirical_probability": 0.0010811454190182406,
         "empirical_cdf": 0.3590196292365529,
         "validation_cdf": 0.3532372771774267,
-        "stretched_exponential_cdf": 0.3722080517117938,
-        "stretched_exponential_probability": 0.0010176960646724176,
-        "cdf_zipf_cdf": 0.37017156225286263,
-        "cdf_zipf_probability": 0.0010039052461945364,
-        "zipf_cdf": 0.38587174310746275,
-        "zipf_probability": 0.0010690274528560154
+        "stretched_exponential_cdf": 0.3722080436573173,
+        "stretched_exponential_probability": 0.001017696055394874,
+        "cdf_zipf_cdf": 0.3701715546999152,
+        "cdf_zipf_probability": 0.0010039052462946785,
+        "zipf_cdf": 0.38587172507254275,
+        "zipf_probability": 0.0010690274489784848
       },
       {
         "rank": 144,
         "empirical_probability": 0.0010513891230819587,
         "empirical_cdf": 0.3664190281593749,
         "validation_cdf": 0.3601644038053014,
-        "stretched_exponential_cdf": 0.37920351411479664,
-        "stretched_exponential_probability": 0.000985961940975332,
-        "cdf_zipf_cdf": 0.37707303800540215,
-        "cdf_zipf_probability": 0.0009728020360849632,
-        "zipf_cdf": 0.39320919810321237,
-        "zipf_probability": 0.001033025612747629
+        "stretched_exponential_cdf": 0.3792035059984632,
+        "stretched_exponential_probability": 0.0009859619324594626,
+        "cdf_zipf_cdf": 0.3770730304546476,
+        "cdf_zipf_probability": 0.0009728020365522005,
+        "zipf_cdf": 0.393209180046203,
+        "zipf_probability": 0.001033025610112976
       },
       {
         "rank": 151,
         "empirical_probability": 0.0010117140618335829,
         "empirical_cdf": 0.3736299705412672,
         "validation_cdf": 0.3667913549459683,
-        "stretched_exponential_cdf": 0.38598669518496337,
-        "stretched_exponential_probability": 0.0009566479192055017,
-        "cdf_zipf_cdf": 0.38376647780237866,
-        "cdf_zipf_probability": 0.0009440768491436602,
-        "zipf_cdf": 0.40030620134838035,
-        "zipf_probability": 0.0009998610630747031
+        "stretched_exponential_cdf": 0.38598668701184485,
+        "stretched_exponential_probability": 0.0009566479113875607,
+        "cdf_zipf_cdf": 0.3837664702562288,
+        "cdf_zipf_probability": 0.0009440768499393015,
+        "zipf_cdf": 0.4003061832774387,
+        "zipf_probability": 0.0009998610615501063
       },
       {
         "rank": 158,
         "empirical_probability": 0.000991876531209395,
         "empirical_cdf": 0.3806227000862935,
         "validation_cdf": 0.37371848157384313,
-        "stretched_exponential_cdf": 0.39257336890687894,
-        "stretched_exponential_probability": 0.0009294693443716665,
-        "cdf_zipf_cdf": 0.39026737899923664,
-        "cdf_zipf_probability": 0.0009174494147050627,
-        "zipf_cdf": 0.4071812188187647,
-        "zipf_probability": 0.0009691935593287044
+        "stretched_exponential_cdf": 0.3925733606816326,
+        "stretched_exponential_probability": 0.0009294693371956194,
+        "cdf_zipf_cdf": 0.390267371459854,
+        "cdf_zipf_probability": 0.0009174494157956903,
+        "zipf_cdf": 0.40718120074119446,
+        "zipf_probability": 0.0009691935587998369
       },
       {
         "rank": 166,
         "empirical_probability": 0.0009621202352731132,
         "empirical_cdf": 0.3884386871522237,
         "validation_cdf": 0.3806686986238108,
-        "stretched_exponential_cdf": 0.3998782154099028,
-        "stretched_exponential_probability": 0.0009007162603602899,
-        "cdf_zipf_cdf": 0.3974787418723454,
-        "cdf_zipf_probability": 0.0008892848636468109,
-        "zipf_cdf": 0.4147873927609249,
-        "zipf_probability": 0.0009368369287232789
+        "stretched_exponential_cdf": 0.3998782071303186,
+        "stretched_exponential_probability": 0.0009007162538577324,
+        "cdf_zipf_cdf": 0.3974787343430693,
+        "cdf_zipf_probability": 0.0008892848650393637,
+        "zipf_cdf": 0.41478737468378074,
+        "zipf_probability": 0.0009368369292118927
       },
       {
         "rank": 174,
         "empirical_probability": 0.0009422827046489253,
         "empirical_cdf": 0.3960463801465996,
         "validation_cdf": 0.3881730858040084,
-        "stretched_exponential_cdf": 0.40696300155810083,
-        "stretched_exponential_probability": 0.0008741372259331653,
-        "cdf_zipf_cdf": 0.40447457201010045,
-        "cdf_zipf_probability": 0.0008632548682491192,
-        "zipf_cdf": 0.4221463088975649,
-        "zipf_probability": 0.0009070092167234325
+        "stretched_exponential_cdf": 0.40696299322930757,
+        "stretched_exponential_probability": 0.0008741372200477208,
+        "cdf_zipf_cdf": 0.40447456449319635,
+        "cdf_zipf_probability": 0.0008632548699110121,
+        "zipf_cdf": 0.42214629082847777,
+        "zipf_probability": 0.0009070092181189113
       },
       {
         "rank": 183,
         "empirical_probability": 0.0009125264087126435,
         "empirical_cdf": 0.40438806177407055,
         "validation_cdf": 0.3964625473353652,
-        "stretched_exponential_cdf": 0.41469047031534484,
-        "stretched_exponential_probability": 0.0008465202905084624,
-        "cdf_zipf_cdf": 0.41210700862634086,
-        "cdf_zipf_probability": 0.0008362135082803368,
-        "zipf_cdf": 0.43015291352899393,
-        "zipf_probability": 0.0008761031698935579
+        "stretched_exponential_cdf": 0.4146904619368025,
+        "stretched_exponential_probability": 0.0008465202852584073,
+        "cdf_zipf_cdf": 0.4121070011257669,
+        "cdf_zipf_probability": 0.0008362135102120694,
+        "zipf_cdf": 0.4301528954770838,
+        "zipf_probability": 0.0008761031721961455
       },
       {
         "rank": 192,
         "empirical_probability": 0.0008926888780884556,
         "empirical_cdf": 0.4125313680952997,
         "validation_cdf": 0.4053754502632307,
-        "stretched_exponential_cdf": 0.42218023599877313,
-        "stretched_exponential_probability": 0.0008210323759512987,
-        "cdf_zipf_cdf": 0.41950672009612067,
-        "cdf_zipf_probability": 0.0008112614015178821,
-        "zipf_cdf": 0.4378939205061656,
-        "zipf_probability": 0.0008476602098215886
+        "stretched_exponential_cdf": 0.4221802275759219,
+        "stretched_exponential_probability": 0.0008210323712820898,
+        "cdf_zipf_cdf": 0.4195067126141505,
+        "cdf_zipf_probability": 0.0008112614036891452,
+        "zipf_cdf": 0.43789390247907173,
+        "zipf_probability": 0.0008476602129287341
       },
       {
         "rank": 201,
         "empirical_probability": 0.0008530138168400797,
         "empirical_cdf": 0.42035727392654193,
         "validation_cdf": 0.41391890643760965,
-        "stretched_exponential_cdf": 0.42945016218410526,
-        "stretched_exponential_probability": 0.0007974205064835915,
-        "cdf_zipf_cdf": 0.42669123389674635,
-        "cdf_zipf_probability": 0.0007881498345205795,
-        "zipf_cdf": 0.44538996568814904,
-        "zipf_probability": 0.0008213817935747695
+        "stretched_exponential_cdf": 0.4294501537219293,
+        "stretched_exponential_probability": 0.0007974205023473831,
+        "cdf_zipf_cdf": 0.42669122643540364,
+        "cdf_zipf_probability": 0.0007881498369055606,
+        "zipf_cdf": 0.4453899476926632,
+        "zipf_probability": 0.0008213817973986035
       },
       {
         "rank": 211,
         "empirical_probability": 0.0008232575209037979,
         "empirical_cdf": 0.42871879308463695,
         "validation_cdf": 0.42209291585850195,
-        "stretched_exponential_cdf": 0.43728916776095833,
-        "stretched_exponential_probability": 0.0007731271294410589,
-        "cdf_zipf_cdf": 0.4344404160379414,
-        "cdf_zipf_probability": 0.0007643751308207825,
-        "zipf_cdf": 0.45345366157973677,
-        "zipf_probability": 0.0007944182295722983
+        "stretched_exponential_cdf": 0.4372891592604489,
+        "stretched_exponential_probability": 0.0007731271258482189,
+        "cdf_zipf_cdf": 0.43444040860163036,
+        "cdf_zipf_probability": 0.000764375133416817,
+        "zipf_cdf": 0.45345364362645385,
+        "zipf_probability": 0.0007944182341040273
       },
       {
         "rank": 221,
         "empirical_probability": 0.0008133387555917039,
         "empirical_cdf": 0.4368521806405539,
         "validation_cdf": 0.4299898402142792,
-        "stretched_exponential_cdf": 0.4448953641434588,
-        "stretched_exponential_probability": 0.0007506407672188272,
-        "cdf_zipf_cdf": 0.4419617796839916,
-        "cdf_zipf_probability": 0.0007423723923011827,
-        "zipf_cdf": 0.4612593457206961,
-        "zipf_probability": 0.0007695284512820195
+        "stretched_exponential_cdf": 0.44489535560979376,
+        "stretched_exponential_probability": 0.0007506407641238354,
+        "cdf_zipf_cdf": 0.441961772274691,
+        "cdf_zipf_probability": 0.0007423723950848449,
+        "zipf_cdf": 0.4612593278162451,
+        "zipf_probability": 0.0007695284564416849
       },
       {
         "rank": 232,
         "empirical_probability": 0.0007835824596554221,
         "empirical_cdf": 0.4456104504111329,
         "validation_cdf": 0.4386025676549369,
-        "stretched_exponential_cdf": 0.4530133977436156,
-        "stretched_exponential_probability": 0.0007277462200985789,
-        "cdf_zipf_cdf": 0.4499918688532923,
-        "cdf_zipf_probability": 0.0007199737061550082,
-        "zipf_cdf": 0.46957064155673417,
-        "zipf_probability": 0.0007442561089196615
+        "stretched_exponential_cdf": 0.45301338917895634,
+        "stretched_exponential_probability": 0.0007277462175052487,
+        "cdf_zipf_cdf": 0.4499918614757287,
+        "cdf_zipf_probability": 0.0007199737091214131,
+        "zipf_cdf": 0.4695706237127794,
+        "zipf_probability": 0.0007442561146910168
       },
       {
         "rank": 244,
         "empirical_probability": 0.0007637449290312342,
         "empirical_cdf": 0.4548646584473167,
         "validation_cdf": 0.4484390874665191,
-        "stretched_exponential_cdf": 0.46159471230241533,
-        "stretched_exponential_probability": 0.0007047062558079071,
-        "cdf_zipf_cdf": 0.45848321702328443,
-        "cdf_zipf_probability": 0.0006974362369241982,
-        "zipf_cdf": 0.4783347299741892,
-        "zipf_probability": 0.0007188958218006554
+        "stretched_exponential_cdf": 0.4615947037099284,
+        "stretched_exponential_probability": 0.0007047062537139326,
+        "cdf_zipf_cdf": 0.4584832096824804,
+        "cdf_zipf_probability": 0.0006974362400659628,
+        "zipf_cdf": 0.4783347122033812,
+        "zipf_probability": 0.0007188958281587095
       },
       {
         "rank": 256,
         "empirical_probability": 0.0007439073984070463,
         "empirical_cdf": 0.46391057241194666,
         "validation_cdf": 0.45762907545949966,
-        "stretched_exponential_cdf": 0.46991131823252996,
-        "stretched_exponential_probability": 0.0006834420865735526,
-        "cdf_zipf_cdf": 0.4667156504657956,
-        "cdf_zipf_probability": 0.0006766388929028699,
-        "zipf_cdf": 0.4868078976585757,
-        "zipf_probability": 0.0006955566468518121
+        "stretched_exponential_cdf": 0.4699113096179177,
+        "stretched_exponential_probability": 0.0006834420849353108,
+        "cdf_zipf_cdf": 0.4667156431637138,
+        "cdf_zipf_probability": 0.0006766388961987335,
+        "zipf_cdf": 0.4868078799674781,
+        "zipf_probability": 0.000695556653724979
       },
       {
         "rank": 268,
         "empirical_probability": 0.0007141511024707644,
         "empirical_cdf": 0.4726589234172133,
         "validation_cdf": 0.46707305809550226,
-        "stretched_exponential_cdf": 0.4779831175645776,
-        "stretched_exponential_probability": 0.0006637427980874021,
-        "cdf_zipf_cdf": 0.4747086691019958,
-        "cdf_zipf_probability": 0.0006573746532619884,
-        "zipf_cdf": 0.49501276250351556,
-        "zipf_probability": 0.0006739936114781678
+        "stretched_exponential_cdf": 0.4779831089330549,
+        "stretched_exponential_probability": 0.0006637427968665829,
+        "cdf_zipf_cdf": 0.47470866184036326,
+        "cdf_zipf_probability": 0.0006573746566936323,
+        "zipf_cdf": 0.4950127448979033,
+        "zipf_probability": 0.000673993618805386
       },
       {
         "rank": 281,
         "empirical_probability": 0.0007042323371586705,
         "empirical_cdf": 0.4818635376268363,
         "validation_cdf": 0.47600905144546074,
-        "stretched_exponential_cdf": 0.4864716658726455,
-        "stretched_exponential_probability": 0.0006439622557258196,
-        "cdf_zipf_cdf": 0.48311754046954186,
-        "cdf_zipf_probability": 0.0006380334022377809,
-        "zipf_cdf": 0.5036216645205217,
-        "zipf_probability": 0.000652399859168782
+        "stretched_exponential_cdf": 0.48647165722819286,
+        "stretched_exponential_probability": 0.0006439622549193608,
+        "cdf_zipf_cdf": 0.483117533253445,
+        "cdf_zipf_probability": 0.0006380334057988768,
+        "zipf_cdf": 0.5036216470132551,
+        "zipf_probability": 0.0006523998669289645
       },
       {
         "rank": 295,
         "empirical_probability": 0.0006744760412223886,
         "empirical_cdf": 0.49147482121425534,
         "validation_cdf": 0.486353560543087,
-        "stretched_exponential_cdf": 0.49533758000003564,
-        "stretched_exponential_probability": 0.0006242628118446343,
-        "cdf_zipf_cdf": 0.49190378742716323,
-        "cdf_zipf_probability": 0.0006187738319176628,
-        "zipf_cdf": 0.5125923780616479,
-        "zipf_probability": 0.0006309542161047221
+        "stretched_exponential_cdf": 0.4953375713473952,
+        "stretched_exponential_probability": 0.0006242628114460271,
+        "cdf_zipf_cdf": 0.49190378026185516,
+        "cdf_zipf_probability": 0.0006187738356007166,
+        "zipf_cdf": 0.5125923606661469,
+        "zipf_probability": 0.0006309542242726627
       },
       {
         "rank": 309,
         "empirical_probability": 0.0006546385105982007,
         "empirical_cdf": 0.5007587855463754,
         "validation_cdf": 0.49558972938025336,
-        "stretched_exponential_cdf": 0.5039389176395124,
-        "stretched_exponential_probability": 0.0006060304442258345,
-        "cdf_zipf_cdf": 0.5004313818010853,
-        "cdf_zipf_probability": 0.0006009506424309863,
-        "zipf_cdf": 0.5212754838936999,
-        "zipf_probability": 0.0006111601228039467
+        "stretched_exponential_cdf": 0.5039389089841249,
+        "stretched_exponential_probability": 0.0006060304441999634,
+        "cdf_zipf_cdf": 0.5004313746881528,
+        "cdf_zipf_probability": 0.000600950646220344,
+        "zipf_cdf": 0.5212754666152755,
+        "zipf_probability": 0.0006111601313279264
       },
       {
         "rank": 325,
         "empirical_probability": 0.0006348009799740129,
         "empirical_cdf": 0.5110346264097051,
         "validation_cdf": 0.5051953449709062,
-        "stretched_exponential_cdf": 0.5134696279934973,
-        "stretched_exponential_probability": 0.0005867748137635422,
-        "cdf_zipf_cdf": 0.5098845509146053,
-        "cdf_zipf_probability": 0.0005821292400639555,
-        "zipf_cdf": 0.5308744911697247,
-        "zipf_probability": 0.0005903135090901809
+        "stretched_exponential_cdf": 0.5134696193410483,
+        "stretched_exponential_probability": 0.000586774814126264,
+        "cdf_zipf_cdf": 0.509884543863218,
+        "cdf_zipf_probability": 0.0005821292439585068,
+        "zipf_cdf": 0.5308744740307559,
+        "zipf_probability": 0.0005903135179673293
       },
       {
         "rank": 341,
         "empirical_probability": 0.000614963449349825,
         "empirical_cdf": 0.5209732292524237,
         "validation_cdf": 0.5148471414057448,
-        "stretched_exponential_cdf": 0.5227051313936762,
-        "stretched_exponential_probability": 0.0005690047756491271,
-        "cdf_zipf_cdf": 0.5190491864642005,
-        "cdf_zipf_probability": 0.0005647617597714927,
-        "zipf_cdf": 0.5401543808125407,
-        "zipf_probability": 0.0005711299226360531
+        "stretched_exponential_cdf": 0.5227051227500803,
+        "stretched_exponential_probability": 0.0005690047763654999,
+        "cdf_zipf_cdf": 0.5190491794759161,
+        "cdf_zipf_probability": 0.0005647617637566382,
+        "zipf_cdf": 0.5401543638182542,
+        "zipf_probability": 0.000571129931817768
       },
       {
         "rank": 357,
         "empirical_probability": 0.0005951259187256371,
         "empirical_cdf": 0.530644025431716,
         "validation_cdf": 0.5245682091068622,
-        "stretched_exponential_cdf": 0.5316676555068921,
-        "stretched_exponential_probability": 0.0005525437601960896,
-        "cdf_zipf_cdf": 0.5279470400476626,
-        "cdf_zipf_probability": 0.000548675148765887,
-        "zipf_cdf": 0.5491399987433877,
-        "zipf_probability": 0.0005534076035659608
+        "stretched_exponential_cdf": 0.531667646877545,
+        "stretched_exponential_probability": 0.0005525437612358611,
+        "cdf_zipf_cdf": 0.5279470331238236,
+        "cdf_zipf_probability": 0.0005486751528294143,
+        "zipf_cdf": 0.5491399818982978,
+        "zipf_probability": 0.0005534076130110573
       },
       {
         "rank": 375,
         "empirical_probability": 0.0005752883881014492,
         "empirical_cdf": 0.541227348019721,
         "validation_cdf": 0.5346818139835592,
-        "stretched_exponential_cdf": 0.5414485740508141,
-        "stretched_exponential_probability": 0.0005354053758956848,
-        "cdf_zipf_cdf": 0.5376620853831221,
-        "cdf_zipf_probability": 0.0005319280334328269,
-        "zipf_cdf": 0.5589242413047502,
-        "zipf_probability": 0.0005350065081195142
+        "stretched_exponential_cdf": 0.5414485654433814,
+        "stretched_exponential_probability": 0.0005354053772672741,
+        "cdf_zipf_cdf": 0.5376620785331617,
+        "cdf_zipf_probability": 0.0005319280375718494,
+        "zipf_cdf": 0.5589242246321515,
+        "zipf_probability": 0.000535006517819193
       },
       {
         "rank": 393,
         "empirical_probability": 0.0005554508574772613,
         "empirical_cdf": 0.5514337575258654,
         "validation_cdf": 0.5451417751916497,
-        "stretched_exponential_cdf": 0.5509335053043637,
-        "stretched_exponential_probability": 0.0005195575083318006,
-        "cdf_zipf_cdf": 0.5470879132349885,
-        "cdf_zipf_probability": 0.0005164432197634072,
-        "zipf_cdf": 0.568391150946078,
-        "zipf_probability": 0.0005180380686853526
+        "stretched_exponential_cdf": 0.5509334967245324,
+        "stretched_exponential_probability": 0.0005195575100056407,
+        "cdf_zipf_cdf": 0.5470879064601528,
+        "cdf_zipf_probability": 0.0005164432239663785,
+        "zipf_cdf": 0.5683911344501877,
+        "zipf_probability": 0.000518038078602175
       },
       {
         "rank": 412,
         "empirical_probability": 0.0005356133268530734,
         "empirical_cdf": 0.5618484611035632,
         "validation_cdf": 0.5546088482497448,
-        "stretched_exponential_cdf": 0.5606482809040695,
-        "stretched_exponential_probability": 0.000504064047557345,
-        "cdf_zipf_cdf": 0.5567471191338139,
-        "cdf_zipf_probability": 0.0005013057736155124,
-        "zipf_cdf": 0.5780663522190412,
-        "zipf_probability": 0.0005014939722091324
+        "stretched_exponential_cdf": 0.5606482723589965,
+        "stretched_exponential_probability": 0.0005040640495223753,
+        "cdf_zipf_cdf": 0.5567471124394218,
+        "cdf_zipf_probability": 0.0005013057778756602,
+        "zipf_cdf": 0.5780663359135708,
+        "zipf_probability": 0.0005014939823208512
       },
       {
         "rank": 433,
         "empirical_probability": 0.0005157757962288855,
         "empirical_cdf": 0.5729178031918594,
         "validation_cdf": 0.5658538838089944,
-        "stretched_exponential_cdf": 0.5710573277074331,
-        "stretched_exponential_probability": 0.0004882404566490544,
-        "cdf_zipf_cdf": 0.5671023028114774,
-        "cdf_zipf_probability": 0.00048584679576713086,
-        "zipf_cdf": 0.5884099121675028,
-        "zipf_probability": 0.0004846443754340721
+        "stretched_exponential_cdf": 0.5710573192068964,
+        "stretched_exponential_probability": 0.00048824045890678,
+        "cdf_zipf_cdf": 0.5671022962071453,
+        "cdf_zipf_probability": 0.0004858468000799032,
+        "zipf_cdf": 0.5884098960764258,
+        "zipf_probability": 0.00048464438572664654
       },
       {
         "rank": 454,
         "empirical_probability": 0.0005058570309167914,
         "empirical_cdf": 0.5836697447901686,
         "validation_cdf": 0.5759213078415053,
-        "stretched_exponential_cdf": 0.5811475865407233,
-        "stretched_exponential_probability": 0.00047362043738640277,
-        "cdf_zipf_cdf": 0.5771460536962688,
-        "cdf_zipf_probability": 0.0004715644772855798,
-        "zipf_cdf": 0.5984145069332487,
-        "zipf_probability": 0.00046911974139317894
+        "stretched_exponential_cdf": 0.5811475780905687,
+        "stretched_exponential_probability": 0.0004736204399101814,
+        "cdf_zipf_cdf": 0.5771460471829977,
+        "cdf_zipf_probability": 0.0004715644816417619,
+        "zipf_cdf": 0.5984144910600184,
+        "zipf_probability": 0.00046911975183610183
       },
       {
         "rank": 476,
         "empirical_probability": 0.0004860195002926036,
         "empirical_cdf": 0.5944811989803507,
         "validation_cdf": 0.5866814445368035,
-        "stretched_exponential_cdf": 0.5914021798280134,
-        "stretched_exponential_probability": 0.0004594417070852423,
-        "cdf_zipf_cdf": 0.5873592350341347,
-        "cdf_zipf_probability": 0.0004577139183953305,
-        "zipf_cdf": 0.6085602727827142,
-        "zipf_probability": 0.0004541045251606821
+        "stretched_exponential_cdf": 0.5914021714363409,
+        "stretched_exponential_probability": 0.0004594417098625888,
+        "cdf_zipf_cdf": 0.5873592286171404,
+        "cdf_zipf_probability": 0.00045771392278870504,
+        "zipf_cdf": 0.6085602571407708,
+        "zipf_probability": 0.00045410453573366076
       },
       {
         "rank": 499,
         "empirical_probability": 0.0004661819696684157,
         "empirical_cdf": 0.605411678354278,
         "validation_cdf": 0.598711554447212,
-        "stretched_exponential_cdf": 0.6018026289210376,
-        "stretched_exponential_probability": 0.00044571749581027813,
-        "cdf_zipf_cdf": 0.5977238091054103,
-        "cdf_zipf_probability": 0.00044430789093985457,
-        "zipf_cdf": 0.6188285337292013,
-        "zipf_probability": 0.0004396099194445834
+        "stretched_exponential_cdf": 0.6018026205961827,
+        "stretched_exponential_probability": 0.00044571749882888335,
+        "cdf_zipf_cdf": 0.5977238027898476,
+        "cdf_zipf_probability": 0.00044430789536420434,
+        "zipf_cdf": 0.6188285183318107,
+        "zipf_probability": 0.00043960993012830943
       },
       {
         "rank": 524,
         "empirical_probability": 0.00045626320435632173,
         "empirical_cdf": 0.6169868774734916,
         "validation_cdf": 0.609610233675068,
-        "stretched_exponential_cdf": 0.6127639592682133,
-        "stretched_exponential_probability": 0.000431923612207533,
-        "cdf_zipf_cdf": 0.6086541145966342,
-        "cdf_zipf_probability": 0.0004308342356377226,
-        "zipf_cdf": 0.6296274218815737,
-        "zipf_probability": 0.0004250816752059319
+        "stretched_exponential_cdf": 0.6127639510219669,
+        "stretched_exponential_probability": 0.0004319236154641312,
+        "cdf_zipf_cdf": 0.608654108392036,
+        "cdf_zipf_probability": 0.00043083424008838467,
+        "zipf_cdf": 0.6296274067525713,
+        "zipf_probability": 0.0004250816859855853
       },
       {
         "rank": 550,
         "empirical_probability": 0.0004463444390442278,
         "empirical_cdf": 0.6286811017764504,
         "validation_cdf": 0.6207167267017601,
-        "stretched_exponential_cdf": 0.6238128129789782,
-        "stretched_exponential_probability": 0.000418672005461747,
-        "cdf_zipf_cdf": 0.6196788538112081,
-        "cdf_zipf_probability": 0.00041789057111640826,
-        "zipf_cdf": 0.640489186538905,
-        "zipf_probability": 0.00041116327743840356
+        "stretched_exponential_cdf": 0.6238128048204817,
+        "stretched_exponential_probability": 0.0004186720089427225,
+        "cdf_zipf_cdf": 0.6196788477226156,
+        "cdf_zipf_probability": 0.0004178905755874984,
+        "zipf_cdf": 0.6404891716912614,
+        "zipf_probability": 0.0004111632882953247
       },
       {
         "rank": 577,
         "empirical_probability": 0.0004265069084200399,
         "empirical_cdf": 0.6404050823753458,
         "validation_cdf": 0.6323081185924037,
-        "stretched_exponential_cdf": 0.6349366195311832,
-        "stretched_exponential_probability": 0.00040595028891090976,
-        "cdf_zipf_cdf": 0.6307857545708118,
-        "cdf_zipf_probability": 0.00040546465935686893,
-        "zipf_cdf": 0.65140162061859,
-        "zipf_probability": 0.0003978380440933147
+        "stretched_exponential_cdf": 0.6349366114696761,
+        "stretched_exponential_probability": 0.0004059502926030862,
+        "cdf_zipf_cdf": 0.6307857486031616,
+        "cdf_zipf_probability": 0.0004054646638429471,
+        "zipf_cdf": 0.6514016060649666,
+        "zipf_probability": 0.0003978380550103388
       },
       {
         "rank": 605,
         "empirical_probability": 0.0004165881431079459,
         "empirical_cdf": 0.6521389817395534,
         "validation_cdf": 0.6424679043132866,
-        "stretched_exponential_cdf": 0.6461240348252849,
-        "stretched_exponential_probability": 0.0003937437462557789,
-        "cdf_zipf_cdf": 0.641963739689259,
-        "cdf_zipf_probability": 0.0003935420027951775,
-        "zipf_cdf": 0.6623538199219214,
-        "zipf_probability": 0.00038508700697849444
+        "stretched_exponential_cdf": 0.6461240268700794,
+        "stretched_exponential_probability": 0.00039374375014620535,
+        "cdf_zipf_cdf": 0.6419637338473795,
+        "cdf_zipf_probability": 0.0003935420072913587,
+        "zipf_cdf": 0.662353805674657,
+        "zipf_probability": 0.00038508701793990135
       },
       {
         "rank": 634,
         "empirical_probability": 0.000396750612483758,
         "empirical_cdf": 0.6638034497465767,
         "validation_cdf": 0.655144546042297,
-        "stretched_exponential_cdf": 0.6573648294828186,
-        "stretched_exponential_probability": 0.00038203599375627207,
-        "cdf_zipf_cdf": 0.6532028177976943,
-        "cdf_zipf_probability": 0.00038210649061198865,
-        "zipf_cdf": 0.6733360565453589,
-        "zipf_probability": 0.000372889635154393
+        "stretched_exponential_cdf": 0.657364821643278,
+        "stretched_exponential_probability": 0.00038203599783322606,
+        "cdf_zipf_cdf": 0.6532028120863017,
+        "cdf_zipf_probability": 0.000382106495113832,
+        "zipf_cdf": 0.6733360426164612,
+        "zipf_probability": 0.0003728896461458407
       },
       {
         "rank": 666,
         "empirical_probability": 0.00038683184717166406,
         "empirical_cdf": 0.6764201192235612,
         "validation_cdf": 0.6666897570887553,
-        "stretched_exponential_cdf": 0.6693903251995036,
-        "stretched_exponential_probability": 0.000370090507958945,
-        "cdf_zipf_cdf": 0.6652352099724431,
-        "cdf_zipf_probability": 0.00037043861614749485,
-        "zipf_cdf": 0.685060991460334,
-        "zipf_probability": 0.00036047834988390425
+        "stretched_exponential_cdf": 0.6693903174935424,
+        "stretched_exponential_probability": 0.00037009051222179525,
+        "cdf_zipf_cdf": 0.6652352044051469,
+        "cdf_zipf_probability": 0.0003704386206507815,
+        "zipf_cdf": 0.6850609778834933,
+        "zipf_probability": 0.00036047836089304273
       },
       {
         "rank": 698,
         "empirical_probability": 0.0003769130818595701,
         "empirical_cdf": 0.6885805254961895,
         "validation_cdf": 0.6793202179735796,
-        "stretched_exponential_cdf": 0.6810487352865231,
-        "stretched_exponential_probability": 0.0003590460199603236,
-        "cdf_zipf_cdf": 0.6769090435839042,
-        "cdf_zipf_probability": 0.00035965055172293425,
-        "zipf_cdf": 0.6964050576329202,
-        "zipf_probability": 0.0003490343012324871
+        "stretched_exponential_cdf": 0.6810487277197861,
+        "stretched_exponential_probability": 0.00035904602439101093,
+        "cdf_zipf_cdf": 0.6769090381606823,
+        "cdf_zipf_probability": 0.00035965055622366737,
+        "zipf_cdf": 0.6964050444084767,
+        "zipf_probability": 0.0003490343122460442
       },
       {
         "rank": 732,
         "empirical_probability": 0.00036699431654747616,
         "empirical_cdf": 0.7011079260853657,
         "validation_cdf": 0.690796157753759,
-        "stretched_exponential_cdf": 0.6930637872729665,
-        "stretched_exponential_probability": 0.00034818163922028053,
-        "cdf_zipf_cdf": 0.6889491143323098,
-        "cdf_zipf_probability": 0.0003490380702702023,
-        "zipf_cdf": 0.7080731913522745,
-        "zipf_probability": 0.00033780677132734104
+        "stretched_exponential_cdf": 0.6930637798597407,
+        "stretched_exponential_probability": 0.00034818164381216095,
+        "cdf_zipf_cdf": 0.6889491090620113,
+        "cdf_zipf_probability": 0.00034903807476471815,
+        "zipf_cdf": 0.7080731785021983,
+        "zipf_probability": 0.0003378067823337728
       },
       {
         "rank": 768,
         "empirical_probability": 0.00034715678592328825,
         "empirical_cdf": 0.7139626459298412,
         "validation_cdf": 0.7030109910409116,
-        "stretched_exponential_cdf": 0.7053989736485916,
-        "stretched_exponential_probability": 0.0003375408565516829,
-        "cdf_zipf_cdf": 0.7013197475821845,
-        "cdf_zipf_probability": 0.0003386435605422511,
-        "zipf_cdf": 0.7200286823899251,
-        "zipf_probability": 0.0003268397701349221
+        "stretched_exponential_cdf": 0.7053989664035702,
+        "stretched_exponential_probability": 0.0003375408612975271,
+        "cdf_zipf_cdf": 0.7013197424735071,
+        "cdf_zipf_probability": 0.0003386435650265529,
+        "zipf_cdf": 0.7200286699357713,
+        "zipf_probability": 0.00032683978112307084
       },
       {
         "rank": 806,
         "empirical_probability": 0.0003372380206111943,
         "empirical_cdf": 0.7270355786111817,
         "validation_cdf": 0.7157799944582937,
-        "stretched_exponential_cdf": 0.7180204622386273,
-        "stretched_exponential_probability": 0.0003271575188108257,
-        "cdf_zipf_cdf": 0.713987876216467,
-        "cdf_zipf_probability": 0.00032849999879491776,
-        "zipf_cdf": 0.7322377206906704,
-        "zipf_probability": 0.0003161669110080409
+        "stretched_exponential_cdf": 0.7180204551768473,
+        "stretched_exponential_probability": 0.00032715752370280433,
+        "cdf_zipf_cdf": 0.7139878712779402,
+        "cdf_zipf_probability": 0.0003285000032657859,
+        "zipf_cdf": 0.7322377086535306,
+        "zipf_probability": 0.0003161669219672929
       },
       {
         "rank": 845,
         "empirical_probability": 0.00032731925529910034,
         "empirical_cdf": 0.7400589174659591,
         "validation_cdf": 0.7282257319663759,
-        "stretched_exponential_cdf": 0.7305799873417586,
-        "stretched_exponential_probability": 0.0003173000328453045,
-        "cdf_zipf_cdf": 0.7266043575170128,
-        "cdf_zipf_probability": 0.0003188695386147078,
-        "zipf_cdf": 0.7443635060658841,
-        "zipf_probability": 0.0003060615477604039
+        "stretched_exponential_cdf": 0.7305799804735135,
+        "stretched_exponential_probability": 0.0003173000378722154,
+        "cdf_zipf_cdf": 0.7266043527525299,
+        "cdf_zipf_probability": 0.00031886954306925563,
+        "zipf_cdf": 0.7443634944554235,
+        "zipf_probability": 0.0003060615586818637
       },
       {
         "rank": 887,
         "empirical_probability": 0.00031740048998700644,
         "empirical_cdf": 0.7534889256985324,
         "validation_cdf": 0.7413641821372456,
-        "stretched_exponential_cdf": 0.743692786133587,
-        "stretched_exponential_probability": 0.0003074821675041996,
-        "cdf_zipf_cdf": 0.7397879868748811,
-        "cdf_zipf_probability": 0.0003092770788784005,
-        "zipf_cdf": 0.7569994005814301,
-        "zipf_probability": 0.00029602357261342995
+        "stretched_exponential_cdf": 0.7436927794793323,
+        "stretched_exponential_probability": 0.0003074821726615992,
+        "cdf_zipf_cdf": 0.7397879822970704,
+        "cdf_zipf_probability": 0.0003092770833132974,
+        "zipf_cdf": 0.7569993894286637,
+        "zipf_probability": 0.0002960235834869657
       },
       {
         "rank": 930,
         "empirical_probability": 0.0003074817246749125,
         "empirical_cdf": 0.7667701524514245,
         "validation_cdf": 0.7544795418860226,
-        "stretched_exponential_cdf": 0.7567074474065123,
-        "stretched_exponential_probability": 0.00029818671554284116,
-        "cdf_zipf_cdf": 0.7528845692151683,
-        "cdf_zipf_probability": 0.0003001942698666049,
-        "zipf_cdf": 0.7695171728864351,
-        "zipf_probability": 0.00028654495016054986
+        "stretched_exponential_cdf": 0.7567074409767126,
+        "stretched_exponential_probability": 0.00029818672082009836,
+        "cdf_zipf_cdf": 0.7528845648275737,
+        "cdf_zipf_probability": 0.00030019427427929735,
+        "zipf_cdf": 0.7695171622000383,
+        "zipf_probability": 0.00028654496097901583
       },
       {
         "rank": 976,
         "empirical_probability": 0.00029756295936281854,
         "empirical_cdf": 0.7805175611739852,
         "validation_cdf": 0.7674563591022423,
-        "stretched_exponential_cdf": 0.770205118210983,
-        "stretched_exponential_probability": 0.00028898921751313014,
-        "cdf_zipf_cdf": 0.7664795785864007,
-        "cdf_zipf_probability": 0.00029120631604873104,
-        "zipf_cdf": 0.782475502161264,
-        "zipf_probability": 0.000277190957444772
+        "stretched_exponential_cdf": 0.7702051120266855,
+        "stretched_exponential_probability": 0.0002889892229052072,
+        "cdf_zipf_cdf": 0.7664795744012085,
+        "cdf_zipf_probability": 0.00029120632043644346,
+        "zipf_cdf": 0.7824754919710297,
+        "zipf_probability": 0.00027719096819923034
       },
       {
         "rank": 1024,
         "empirical_probability": 0.0002876441940507246,
         "empirical_cdf": 0.7943542387843548,
         "validation_cdf": 0.7810335272928779,
-        "stretched_exponential_cdf": 0.783856456029646,
-        "stretched_exponential_probability": 0.00028011719165196006,
-        "cdf_zipf_cdf": 0.7802423334299136,
-        "cdf_zipf_probability": 0.0002825354876130337,
-        "zipf_cdf": 0.7955572756620466,
-        "zipf_probability": 0.0002681918673765658
+        "stretched_exponential_cdf": 0.7838564501068339,
+        "stretched_exponential_probability": 0.0002801171971510245,
+        "cdf_zipf_cdf": 0.7802423294546639,
+        "cdf_zipf_probability": 0.00028253549197343464,
+        "zipf_cdf": 0.7955572659863025,
+        "zipf_probability": 0.0002681918780600838
       },
       {
         "rank": 1074,
         "empirical_probability": 0.0002678066634265367,
         "empirical_cdf": 0.8082405102212852,
         "validation_cdf": 0.7941950678858409,
-        "stretched_exponential_cdf": 0.7976415874371906,
-        "stretched_exponential_probability": 0.0002715698427775323,
-        "cdf_zipf_cdf": 0.7941533640367536,
-        "cdf_zipf_probability": 0.00027418098515796796,
-        "zipf_cdf": 0.8087434725791135,
-        "zipf_probability": 0.00025954483458452953
+        "stretched_exponential_cdf": 0.7976415817919043,
+        "stretched_exponential_probability": 0.00027156984837567455,
+        "cdf_zipf_cdf": 0.7941533602787733,
+        "cdf_zipf_probability": 0.00027418098948883696,
+        "zipf_cdf": 0.8087434634355902,
+        "zipf_probability": 0.00025954484519094344
       },
       {
         "rank": 1126,
         "empirical_probability": 0.0002678066634265367,
         "empirical_cdf": 0.8221664567194641,
         "validation_cdf": 0.8083033157846131,
-        "stretched_exponential_cdf": 0.8115424744215729,
-        "stretched_exponential_probability": 0.00026334365904821176,
-        "cdf_zipf_cdf": 0.8081949877526792,
-        "cdf_zipf_probability": 0.00026613936485997414,
-        "zipf_cdf": 0.8220169708172673,
-        "zipf_probability": 0.00025124428445469073
+        "stretched_exponential_cdf": 0.8115424690698783,
+        "stretched_exponential_probability": 0.0002633436647383755,
+        "cdf_zipf_cdf": 0.8081949842190815,
+        "cdf_zipf_probability": 0.0002661393691597569,
+        "zipf_cdf": 0.8220169622230981,
+        "zipf_probability": 0.00025124429497857436
       },
       {
         "rank": 1182,
         "empirical_probability": 0.00024796913280234877,
         "empirical_cdf": 0.8366280165444963,
         "validation_cdf": 0.8223192019950138,
-        "stretched_exponential_cdf": 0.8260532102169101,
-        "stretched_exponential_probability": 0.00025515138236533916,
-        "cdf_zipf_cdf": 0.8228675621785639,
-        "cdf_zipf_probability": 0.00025812975327343946,
-        "zipf_cdf": 0.8358485237719415,
-        "zipf_probability": 0.00024299948126166388
+        "stretched_exponential_cdf": 0.8260532051864224,
+        "stretched_exponential_probability": 0.00025515138814349603,
+        "cdf_zipf_cdf": 0.822867558884782,
+        "cdf_zipf_probability": 0.0002581297575392494,
+        "zipf_cdf": 0.8358485157645361,
+        "zipf_probability": 0.0002429994916950383
       },
       {
         "rank": 1239,
         "empirical_probability": 0.00024796913280234877,
         "empirical_cdf": 0.8507622571142296,
         "validation_cdf": 0.8369585296019237,
-        "stretched_exponential_cdf": 0.8403703690545716,
-        "stretched_exponential_probability": 0.0002474392097377737,
-        "cdf_zipf_cdf": 0.8373595093724651,
-        "cdf_zipf_probability": 0.00025058837998837014,
-        "zipf_cdf": 0.849472068870295,
-        "zipf_probability": 0.00023525796464552527
+        "stretched_exponential_cdf": 0.8403703643557788,
+        "stretched_exponential_probability": 0.0002474392155951001,
+        "cdf_zipf_cdf": 0.8373595063208199,
+        "cdf_zipf_probability": 0.00025058838421920804,
+        "zipf_cdf": 0.8494720614548976,
+        "zipf_probability": 0.00023525797498591557
       },
       {
         "rank": 1300,
         "empirical_probability": 0.00023805036749025482,
         "empirical_cdf": 0.8653428421230074,
         "validation_cdf": 0.852521474092551,
-        "stretched_exponential_cdf": 0.8552243912538281,
-        "stretched_exponential_probability": 0.0002398029814976303,
-        "cdf_zipf_cdf": 0.852410908844445,
-        "cdf_zipf_probability": 0.00024312003323867515,
-        "zipf_cdf": 0.8635826397545019,
-        "zipf_probability": 0.00022761234912652413
+        "stretched_exponential_cdf": 0.8552243869147018,
+        "stretched_exponential_probability": 0.00023980298742975478,
+        "cdf_zipf_cdf": 0.8524109060497348,
+        "cdf_zipf_probability": 0.0002431200374324316,
+        "zipf_cdf": 0.8635826329667778,
+        "zipf_probability": 0.00022761235936722318
       },
       {
         "rank": 1364,
         "empirical_probability": 0.00022813160217816087,
         "empirical_cdf": 0.880201152560524,
         "validation_cdf": 0.8671146208552754,
-        "stretched_exponential_cdf": 0.8703279598246325,
-        "stretched_exponential_probability": 0.00023239616469829035,
-        "cdf_zipf_cdf": 0.8677320934224946,
-        "cdf_zipf_probability": 0.00023587475096431554,
-        "zipf_cdf": 0.8779062364677934,
-        "zipf_probability": 0.0002202155657050749
+        "stretched_exponential_cdf": 0.8703279558674618,
+        "stretched_exponential_probability": 0.0002323961706994952,
+        "cdf_zipf_cdf": 0.8677320908949286,
+        "cdf_zipf_probability": 0.00023587475511954725,
+        "zipf_cdf": 0.8779062303320853,
+        "zipf_probability": 0.00022021557584164632
       },
       {
         "rank": 1431,
         "empirical_probability": 0.0002182128368660669,
         "empirical_cdf": 0.895178488181786,
         "validation_cdf": 0.881984852683115,
-        "stretched_exponential_cdf": 0.8856516192930447,
-        "stretched_exponential_probability": 0.0002252271038974086,
-        "cdf_zipf_cdf": 0.8832941636718187,
-        "cdf_zipf_probability": 0.00022886068761251988,
-        "zipf_cdf": 0.8924146608885047,
-        "zipf_probability": 0.0002130745891607743
+        "stretched_exponential_cdf": 0.8856516157401626,
+        "stretched_exponential_probability": 0.00022522710996206418,
+        "cdf_zipf_cdf": 0.8832941614212826,
+        "cdf_zipf_probability": 0.00022886069172767254,
+        "zipf_cdf": 0.8924146554282695,
+        "zipf_probability": 0.00021307459918941217
       },
       {
         "rank": 1501,
         "empirical_probability": 0.00020829407155397296,
         "empirical_cdf": 0.9103442803439781,
         "validation_cdf": 0.8946153135679418,
-        "stretched_exponential_cdf": 0.901168468086583,
-        "stretched_exponential_probability": 0.00021830046695726782,
-        "cdf_zipf_cdf": 0.8990707061483012,
-        "cdf_zipf_probability": 0.00022208241468324452,
-        "zipf_cdf": 0.9070823391149644,
-        "zipf_probability": 0.00020619265600854155
+        "stretched_exponential_cdf": 0.9011684649603249,
+        "stretched_exponential_probability": 0.00021830047307963628,
+        "cdf_zipf_cdf": 0.899070704184359,
+        "cdf_zipf_probability": 0.0002220824187572079,
+        "zipf_cdf": 0.9070823343527776,
+        "zipf_probability": 0.00020619266592604503
       },
       {
         "rank": 1574,
         "empirical_probability": 0.000198375306241879,
         "empirical_cdf": 0.9255001537408584,
         "validation_cdf": 0.9090006465318301,
-        "stretched_exponential_cdf": 0.9168539923660509,
-        "stretched_exponential_probability": 0.00021161789884293158,
-        "cdf_zipf_cdf": 0.9150376317538068,
-        "cdf_zipf_probability": 0.00021554155822856025,
-        "zipf_cdf": 0.9218861356190389,
-        "zipf_probability": 0.0001995699614670273
+        "stretched_exponential_cdf": 0.9168539896887131,
+        "stretched_exponential_probability": 0.00021161790501776227,
+        "cdf_zipf_cdf": 0.915037630085704,
+        "cdf_zipf_probability": 0.00021554156226044618,
+        "zipf_cdf": 0.9218861315766063,
+        "zipf_probability": 0.000199569971270768
       },
       {
         "rank": 1651,
         "empirical_probability": 0.000198375306241879,
         "empirical_cdf": 0.9407750523214842,
         "validation_cdf": 0.9241479634247853,
-        "stretched_exponential_cdf": 0.9328909933530892,
-        "stretched_exponential_probability": 0.00020509710622453167,
-        "cdf_zipf_cdf": 0.9313821681659005,
-        "cdf_zipf_probability": 0.0002091575690680303,
-        "zipf_cdf": 0.9369982899074533,
-        "zipf_probability": 0.0001931238105936075
+        "stretched_exponential_cdf": 0.9328909911531171,
+        "stretched_exponential_probability": 0.000205097112447053,
+        "cdf_zipf_cdf": 0.9313821668065579,
+        "cdf_zipf_probability": 0.0002091575730565065,
+        "zipf_cdf": 0.9369982866153135,
+        "zipf_probability": 0.0001931238202799849
       },
       {
         "rank": 1732,
         "empirical_probability": 0.00018845654092978505,
         "empirical_cdf": 0.9561491385552313,
         "validation_cdf": 0.9405190726886649,
-        "stretched_exponential_cdf": 0.9492404198598136,
-        "stretched_exponential_probability": 0.00019875353418143186,
-        "cdf_zipf_cdf": 0.9480659660705606,
-        "cdf_zipf_probability": 0.00020294555147348792,
-        "zipf_cdf": 0.952381442140258,
-        "zipf_probability": 0.00018686857590896546
+        "stretched_exponential_cdf": 0.9492404181656765,
+        "stretched_exponential_probability": 0.0001987535404469492,
+        "cdf_zipf_cdf": 0.9480659650324605,
+        "cdf_zipf_probability": 0.00020294555541766623,
+        "zipf_cdf": 0.952381439627759,
+        "zipf_probability": 0.00018686858547499108
       },
       {
         "rank": 1817,
         "empirical_probability": 0.00016861901030559715,
         "empirical_cdf": 0.971424037135858,
         "validation_cdf": 0.9575136233490532,
-        "stretched_exponential_cdf": 0.965866377397073,
-        "stretched_exponential_probability": 0.00019259824513076477,
-        "cdf_zipf_cdf": 0.9650537477214809,
-        "cdf_zipf_probability": 0.000196916337281694,
-        "zipf_cdf": 0.9680014649977096,
-        "zipf_probability": 0.00018081416505356937
+        "stretched_exponential_cdf": 0.9658663762372094,
+        "stretched_exponential_probability": 0.00019259825143467727,
+        "cdf_zipf_cdf": 0.9650537470166697,
+        "cdf_zipf_probability": 0.0001969163411804642,
+        "zipf_cdf": 0.9680014632930183,
+        "zipf_probability": 0.00018081417449684073
       },
       {
         "rank": 1906,
         "empirical_probability": 0.00015870024499350322,
         "empirical_cdf": 0.9862029974508807,
         "validation_cdf": 0.9775330193036142,
-        "stretched_exponential_cdf": 0.9827359800028722,
-        "stretched_exponential_probability": 0.0001866385883329108,
-        "cdf_zipf_cdf": 0.9823131632588088,
-        "cdf_zipf_probability": 0.00019107713857280384,
-        "zipf_cdf": 0.9838272923315055,
-        "zipf_probability": 0.0001749667334344251
+        "stretched_exponential_cdf": 0.9827359794056395,
+        "stretched_exponential_probability": 0.00018663859467087473,
+        "cdf_zipf_cdf": 0.982313162898903,
+        "cdf_zipf_probability": 0.00019107714242538876,
+        "zipf_cdf": 0.9838272914616283,
+        "zipf_probability": 0.00017496674275309086
       },
       {
         "rank": 2000,
         "empirical_probability": 9.91876531209395e-05,
         "empirical_cdf": 1.0000000000000069,
         "validation_cdf": 1.0000000000000244,
-        "stretched_exponential_cdf": 0.9999999999999988,
-        "stretched_exponential_probability": 0.00018081926521755398,
+        "stretched_exponential_cdf": 1.0000000000000009,
+        "stretched_exponential_probability": 0.00018081927158547406,
         "cdf_zipf_cdf": 1.0,
-        "cdf_zipf_probability": 0.00018537377530536414,
-        "zipf_cdf": 1.0000000000000018,
-        "zipf_probability": 0.00016927112162241093
+        "cdf_zipf_probability": 0.00018537377911098663,
+        "zipf_cdf": 0.9999999999999982,
+        "zipf_probability": 0.00016927113081380206
       }
     ],
     "llr_comparisons": [
       {
         "model": "stretched_exponential",
         "baseline": "cdf_zipf",
-        "log_likelihood_ratio": -8.393988082709257,
-        "mean_log_ratio": -0.00019382072787188726,
+        "log_likelihood_ratio": -8.3939811863238,
+        "mean_log_ratio": -0.0001938205686311061,
         "mean_log_ratio_ci95": [
-          -0.00031236388037799443,
-          -3.0276977183869737e-05
+          -0.00031236364107539114,
+          -3.981959951221685e-05
         ],
         "method": "held-out account-weighted LLR with paired multinomial percentile bootstrap",
         "p_value": null
@@ -9514,11 +9514,11 @@
       {
         "model": "zipf",
         "baseline": "cdf_zipf",
-        "log_likelihood_ratio": -702.9490948887542,
-        "mean_log_ratio": -0.01623139131081482,
+        "log_likelihood_ratio": -702.9490733731072,
+        "mean_log_ratio": -0.016231390814008633,
         "mean_log_ratio_ci95": [
-          -0.017869852391289857,
-          -0.014723850483854453
+          -0.01786985189916649,
+          -0.014723849970409906
         ],
         "method": "held-out account-weighted LLR with paired multinomial percentile bootstrap",
         "p_value": null
@@ -9536,8 +9536,8 @@
       "effective_budget": 100,
       "oracle_top_b_mass": 0.3146252957461128,
       "oracle_top_b_ci95": [
-        0.3134341587627578,
-        0.3175569116126749
+        0.31274362194453503,
+        0.3172301164944806
       ],
       "heldout_fixed_order_top_b_mass": 0.3104045441950679,
       "heldout_top_b_ci95": [
@@ -9559,42 +9559,42 @@
       {
         "n": 100,
         "dkw_epsilon95": 0.13581015157406195,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 500,
         "dkw_epsilon95": 0.060736146190830516,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 1000,
         "dkw_epsilon95": 0.04294694083467376,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 5000,
         "dkw_epsilon95": 0.019206455826398416,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 10000,
         "dkw_epsilon95": 0.013581015157406196,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 50000,
         "dkw_epsilon95": 0.006073614619083051,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 100000,
         "dkw_epsilon95": 0.004294694083467375,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       },
       {
         "n": 1000000,
         "dkw_epsilon95": 0.0013581015157406195,
-        "observed_model_ks": 0.020506581642460386
+        "observed_model_ks": 0.020506574338388428
       }
     ],
     "limitations": [
@@ -9622,17 +9622,20 @@
         {
           "budget": 100,
           "rate": 0.8005,
-          "cracked": 1601
+          "cracked": 1601,
+          "evaluated_count": 2000
         },
         {
           "budget": 1000,
           "rate": 1.0,
-          "cracked": 2000
+          "cracked": 2000,
+          "evaluated_count": 2000
         },
         {
           "budget": 10000,
           "rate": 1.0,
-          "cracked": 2000
+          "cracked": 2000,
+          "evaluated_count": 2000
         }
       ],
       "baseline_attack": [
@@ -9652,6 +9655,14 @@
           "cracked": 2000
         }
       ],
+      "evaluation_status": "evaluated",
+      "evaluation_reason": "",
+      "sample_counts": {
+        "total": 2000,
+        "accepted": 2000,
+        "rejected": 0,
+        "evaluated": 2000
+      },
       "attack_coverage": 1.0,
       "accept_rate": 1.0,
       "user_cost": 0.0,
@@ -9695,17 +9706,20 @@
         {
           "budget": 100,
           "rate": 0.9009990917347865,
-          "cracked": 992
+          "cracked": 992,
+          "evaluated_count": 1101
         },
         {
           "budget": 1000,
           "rate": 1.0,
-          "cracked": 1101
+          "cracked": 1101,
+          "evaluated_count": 1101
         },
         {
           "budget": 10000,
           "rate": 1.0,
-          "cracked": 1101
+          "cracked": 1101,
+          "evaluated_count": 1101
         }
       ],
       "baseline_attack": [
@@ -9725,6 +9739,14 @@
           "cracked": 2000
         }
       ],
+      "evaluation_status": "evaluated",
+      "evaluation_reason": "",
+      "sample_counts": {
+        "total": 2000,
+        "accepted": 1101,
+        "rejected": 899,
+        "evaluated": 1101
+      },
       "attack_coverage": 0.5505,
       "accept_rate": 0.5505,
       "user_cost": 0.4495,
@@ -9771,17 +9793,20 @@
         {
           "budget": 100,
           "rate": 0.9353023909985936,
-          "cracked": 665
+          "cracked": 665,
+          "evaluated_count": 711
         },
         {
           "budget": 1000,
           "rate": 1.0,
-          "cracked": 711
+          "cracked": 711,
+          "evaluated_count": 711
         },
         {
           "budget": 10000,
           "rate": 1.0,
-          "cracked": 711
+          "cracked": 711,
+          "evaluated_count": 711
         }
       ],
       "baseline_attack": [
@@ -9801,6 +9826,14 @@
           "cracked": 2000
         }
       ],
+      "evaluation_status": "evaluated",
+      "evaluation_reason": "",
+      "sample_counts": {
+        "total": 2000,
+        "accepted": 711,
+        "rejected": 1289,
+        "evaluated": 711
+      },
       "attack_coverage": 0.3555,
       "accept_rate": 0.3555,
       "user_cost": 0.6445000000000001,
@@ -9847,18 +9880,21 @@
       "attack": [
         {
           "budget": 100,
-          "rate": 0.0,
-          "cracked": 0
+          "rate": null,
+          "cracked": 0,
+          "evaluated_count": 0
         },
         {
           "budget": 1000,
-          "rate": 0.0,
-          "cracked": 0
+          "rate": null,
+          "cracked": 0,
+          "evaluated_count": 0
         },
         {
           "budget": 10000,
-          "rate": 0.0,
-          "cracked": 0
+          "rate": null,
+          "cracked": 0,
+          "evaluated_count": 0
         }
       ],
       "baseline_attack": [
@@ -9878,10 +9914,18 @@
           "cracked": 2000
         }
       ],
+      "evaluation_status": "not_evaluable",
+      "evaluation_reason": "全部测试样本被拒绝，没有可评估样本；不能据此推断安全收益。",
+      "sample_counts": {
+        "total": 2000,
+        "accepted": 0,
+        "rejected": 2000,
+        "evaluated": 0
+      },
       "attack_coverage": 0.0,
       "accept_rate": 0.0,
       "user_cost": 1.0,
-      "security_gain": 1.0,
+      "security_gain": null,
       "candidate_count": 4096,
       "attacker": "local synthetic frequency + structural baseline",
       "data_scope": "public synthetic grammar; train/test generated with independent seeds",
@@ -9889,20 +9933,20 @@
         {
           "budget": 100,
           "before": 0.8005,
-          "after": 0.0,
-          "delta": 0.8005
+          "after": null,
+          "delta": null
         },
         {
           "budget": 1000,
           "before": 1.0,
-          "after": 0.0,
-          "delta": 1.0
+          "after": null,
+          "delta": null
         },
         {
           "budget": 10000,
           "before": 1.0,
-          "after": 0.0,
-          "delta": 1.0
+          "after": null,
+          "delta": null
         }
       ]
     }
@@ -9920,7 +9964,7 @@
         "risk_budget": 1000,
         "version": "dp-htpg-2026.1"
       },
-      "reason": "用户成本最低的可行候选"
+      "reason": "可评估候选中样本拒绝率最低"
     },
     {
       "tier": "均衡",
@@ -9934,25 +9978,7 @@
         "risk_budget": 1000,
         "version": "dp-htpg-2026.1"
       },
-      "reason": "风险收益与用户成本的折中"
-    },
-    {
-      "tier": "高防护",
-      "policy": {
-        "name": "diversified-phrase",
-        "min_length": 8,
-        "required_classes": 0,
-        "deny_features": [
-          "year_suffix",
-          "keyboard_walk",
-          "common_word"
-        ],
-        "deny_context_overlap": false,
-        "allow_passphrase": true,
-        "risk_budget": 1000,
-        "version": "dp-htpg-2026.1"
-      },
-      "reason": "离线红队风险下降最大"
+      "reason": "当前合成实验中的风险收益与样本拒绝率折中"
     }
   ],
   "metadata": {
@@ -9964,6 +9990,6 @@
     ],
     "source": "authorized local Rockyou-style line corpus",
     "privacy": "aggregate counts only; synthetic policy benchmark; no authentication calls",
-    "runtime_ms": 1038.17
+    "runtime_ms": 574.63
   }
 }

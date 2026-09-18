@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import time
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -42,15 +43,23 @@ def run_pipeline(payload: Mapping[str, Any] | None = None, *, seed: int = 42,
 
 
 def _recommendations(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-    ranked = sorted(rows, key=lambda row: (row.get("user_cost", 1), -row.get("security_gain", 0)))
+    # Fail closed: empty or legacy rows without evaluation evidence cannot win.
+    eligible = [row for row in rows
+                if row.get("evaluation_status") == "evaluated"
+                and row.get("sample_counts", {}).get("evaluated", 0) > 0
+                and isinstance(row.get("security_gain"), (int, float))
+                and math.isfinite(row["security_gain"])]
+    ranked = sorted(eligible, key=lambda row: (row.get("user_cost", 1), -row["security_gain"]))
     if not ranked:
         return []
     low = ranked[0]
-    high = max(rows, key=lambda row: row.get("security_gain", 0))
-    balanced = min(rows, key=lambda row: abs(row.get("user_cost", 0.5) - 0.2) + abs(row.get("security_gain", 0) - high.get("security_gain", 0)) * 0.25)
-    return [{"tier": "低摩擦", "policy": low["policy"], "reason": "用户成本最低的可行候选"},
-            {"tier": "均衡", "policy": balanced["policy"], "reason": "风险收益与用户成本的折中"},
-            {"tier": "高防护", "policy": high["policy"], "reason": "离线红队风险下降最大"}]
+    high = max(eligible, key=lambda row: row["security_gain"])
+    balanced = min(eligible, key=lambda row: abs(row.get("user_cost", 0.5) - 0.2) + abs(row["security_gain"] - high["security_gain"]) * 0.25)
+    recommendations = [{"tier": "低摩擦", "policy": low["policy"], "reason": "可评估候选中样本拒绝率最低"},
+                       {"tier": "均衡", "policy": balanced["policy"], "reason": "当前合成实验中的风险收益与样本拒绝率折中"}]
+    if high["security_gain"] > 0:
+        recommendations.append({"tier": "高防护", "policy": high["policy"], "reason": "可评估候选中离线红队风险下降最大；仅限当前实验"})
+    return recommendations
 
 
 def write_report(result: Mapping[str, Any], path: str | Path) -> Path:
@@ -80,8 +89,16 @@ def render_markdown(result: Mapping[str, Any]) -> str:
     for model in analysis["models"]:
         lines.append(f"| {model['id']} | {model['validation_log_likelihood']:.3f} | {model['validation_ks']:.4f} | {model['bic']:.3f} |")
     threshold = analysis["risk_threshold"]
-    lines += ["", "## 风险预算", "", f"q={threshold['q']} 时模型头部排名：{threshold['model_rank']}；预算 B={threshold['budget']} 的实测留出 Top-B 质量：{threshold['heldout_fixed_order_top_b_mass']:.4f}。", "", "## 策略对比", "", "| 策略 | 安全收益 | 用户成本 | 攻击覆盖率 |", "|---|---:|---:|---:|"]
+    lines += ["", "## 风险预算", "", f"q={threshold['q']} 时模型头部排名：{threshold['model_rank']}；预算 B={threshold['budget']} 的实测留出 Top-B 质量：{threshold['heldout_fixed_order_top_b_mass']:.4f}。", "", "## 策略对比", "", "| 策略 | 状态 | 安全收益 | 样本拒绝率 | 接受率 | 总数/接受/拒绝/评估 |", "|---|---|---:|---:|---:|---|"]
     for row in result["policies"]:
-        lines.append(f"| {row['policy']['name']} | {row['security_gain']:.4f} | {row['user_cost']:.4f} | {row['attack_coverage']:.4f} |")
+        gain = "无法评估" if row["security_gain"] is None else f"{row['security_gain']:.4f}"
+        status = "可评估" if row["evaluation_status"] == "evaluated" else "无法评估"
+        counts = row["sample_counts"]
+        sample_summary = "/".join(str(counts[key]) for key in ("total", "accepted", "rejected", "evaluated"))
+        lines.append(f"| {row['policy']['name']} | {status} | {gain} | {row['user_cost']:.4f} | {row['accept_rate']:.4f} | {sample_summary} |")
+    for row in result["policies"]:
+        if row["evaluation_reason"]:
+            lines.append(f"\n说明（{row['policy']['name']}）：{row['evaluation_reason']}\n")
+    lines += ["", "全部被拒绝的策略保留拒绝率，但命中率、风险差值和安全收益为未知，不参与推荐。没有正收益的可评估候选时，不提供高防护推荐。"]
     lines += ["", "## 边界", "", "结果来自有限支持的合成候选空间和离线攻击排序，不能解释为真实口令熵或真实世界破解率。"]
     return "\n".join(lines) + "\n"

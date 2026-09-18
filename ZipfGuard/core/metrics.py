@@ -8,16 +8,19 @@ from typing import Iterable, Mapping, Sequence
 def cracked_at_k(ranking: Sequence[str], samples: Iterable[str], budgets=(100, 1_000, 10_000)) -> list[dict]:
     ranks = {value: index + 1 for index, value in enumerate(ranking)}
     values = [ranks.get(str(sample), math.inf) for sample in samples]
-    total = max(1, len(values))
+    total = len(values)
     return [{"budget": int(k), "cracked": sum(rank <= k for rank in values),
-             "rate": sum(rank <= k for rank in values) / total} for k in budgets if k > 0]
+             "rate": sum(rank <= k for rank in values) / total if total else None,
+             "evaluated_count": total} for k in budgets if k > 0]
 
 
 def risk_delta(before: Sequence[Mapping], after: Sequence[Mapping]) -> list[dict]:
     right = {row["budget"]: row for row in after}
     return [{"budget": row["budget"], "before": row["rate"],
-             "after": right.get(row["budget"], {}).get("rate", 0.0),
-             "delta": row["rate"] - right.get(row["budget"], {}).get("rate", 0.0)} for row in before]
+             "after": right.get(row["budget"], {}).get("rate"),
+             "delta": (row["rate"] - right[row["budget"]]["rate"]
+                       if row["rate"] is not None and right.get(row["budget"], {}).get("rate") is not None
+                       else None)} for row in before]
 
 
 def percentile(values: Sequence[float], probability: float) -> float:
