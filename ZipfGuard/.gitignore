@@ -20,6 +20,10 @@ lab_basic_50_dicts/
 *.pt
 *.pth
 
+# Sensitive per-record features and local extraction runs (not anonymous data)
+local_artifacts/
+**/features.jsonl.gz
+
 # Editor and operating-system files
 .idea/
 .vscode/
