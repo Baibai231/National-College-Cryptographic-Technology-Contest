@@ -30,6 +30,9 @@ class PolicySearchConfig:
     min_security_gain: float = 0.005
     response_cost_weight: float = 0.85
     rule_cost_weight: float = 0.15
+    modification_weight: float = 0.65
+    attempt_weight: float = 0.25
+    length_weight: float = 0.10
     version: str = "m4-2026.1"
 
 
@@ -42,9 +45,9 @@ def _canonical_name(policy: PasswordPolicy) -> str:
     return "search-" + "-".join(parts)
 
 
-def enumerate_candidate_policies() -> list[PasswordPolicy]:
+def enumerate_candidate_policies(actions=None, max_action_count=2) -> list[PasswordPolicy]:
     """Enumerate baseline plus all unique one- and two-action policies."""
-    actions = (
+    actions = actions or (
         ("length-8", "min_length", 8),
         ("length-10", "min_length", 10),
         ("length-12", "min_length", 12),
@@ -56,7 +59,7 @@ def enumerate_candidate_policies() -> list[PasswordPolicy]:
     configurations: dict[tuple[int, int, tuple[str, ...]], PasswordPolicy] = {}
     baseline = PasswordPolicy(version="m4-2026.1")
     configurations[(0, 0, ())] = baseline
-    for action_count in (1, 2):
+    for action_count in range(1, max_action_count + 1):
         for selected in itertools.combinations(actions, action_count):
             min_length = 0
             required_classes = 0
@@ -108,9 +111,9 @@ def _costs(
         0.0, distribution["after"]["mean_length"] - distribution["before"]["mean_length"]
     )
     response_cost = (
-        0.65 * validation["modification_rate"]
-        + 0.25 * min(1.0, validation["mean_attempts_per_user"] / 3.0)
-        + 0.10 * min(1.0, length_increase / 10.0)
+        config.modification_weight * validation["modification_rate"]
+        + config.attempt_weight * min(1.0, validation["mean_attempts_per_user"] / 3.0)
+        + config.length_weight * min(1.0, length_increase / 10.0)
     )
     rule_cost = _rule_complexity(policy)["normalized_cost"]
     total_cost = (
@@ -258,7 +261,7 @@ def _select_tiers(
         )
         eligible.extend(additions[:3 - len(eligible)])
     if not eligible:
-        raise ValueError("约束下没有达到最低安全收益的候选策略")
+        return []
     low = min(eligible, key=lambda row: (row["costs"]["total_cost"], -row["security_gain"]))
     high = min(eligible, key=lambda row: (row["adaptive_risk"], row["costs"]["total_cost"]))
     remaining = [row for row in eligible if row is not low and row is not high]
@@ -370,10 +373,10 @@ def run_policy_search(
         "dataset_id": normalized["dataset_id"],
         "config": dataclasses.asdict(config),
         "protocol": {
-            "candidate_generation": "baseline plus unique one- and two-action rule combinations",
+            "candidate_generation": "configured rule combinations; full configuration in reproducibility manifest",
             "selection_split": "validation",
             "selection_attackers": [attacker.attacker_id for attacker in development_attackers],
-            "selection_ngram": "fixed order=3, smoothing=0.3",
+            "selection_ngram": "fixed configured search parameters; see ranking metadata",
             "objectives": ["minimize worst adaptive risk", "minimize total cost"],
             "constraints": [
                 "completion rate", "modification rate", "mean attempts", "total cost",

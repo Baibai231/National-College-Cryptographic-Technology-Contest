@@ -11,6 +11,7 @@ from typing import Any, Mapping, Sequence
 
 from core.synthetic import (
     ROOT_WORDS,
+    grammar_words,
     generate_synthetic_dataset,
     validate_synthetic_dataset,
 )
@@ -50,7 +51,7 @@ def extract_features(password: str) -> dict[str, Any]:
     sequential_digits = bool(re.search(r"(?:0123|1234|2345|3456|4567|5678|6789|9876|8765|7654|6543|5432|4321|3210)", value))
     date_suffix = bool(re.search(r"(?:19|20)\d{2}(?:0[1-9]|1[0-2])?(?:0[1-9]|[12]\d|3[01])?$", value))
     leetspeak = bool(re.search(r"[4@]", value) and re.search(r"[3eE]", value))
-    common_word = lower.rstrip("0123456789!@#$%^&*_").lower() in ROOT_WORDS
+    common_word = lower.rstrip("0123456789!@#$%^&*_").lower() in grammar_words("root_words", ROOT_WORDS)
     classes = sum(bool(pattern.search(value)) for pattern in (re.compile(r"[a-z]"), re.compile(r"[A-Z]"), re.compile(r"\d"), re.compile(r"[^A-Za-z0-9]")))
     return {"length": len(value), "lowercase_only": value.islower() and value.isalpha(), "digit_ratio": sum(c.isdigit() for c in value) / max(1, len(value)), "class_count": classes, "year_suffix": year_suffix, "date_suffix": date_suffix, "keyboard_walk": keyboard, "repeated": repeated, "repeated_chars": repeated, "sequential_digits": sequential_digits, "leetspeak": leetspeak, "common_word": common_word, "word_plus_digits": bool(re.match(r"^[A-Za-z]+\d{2,}$", value)), "phrase": value.count("-") >= 2}
 

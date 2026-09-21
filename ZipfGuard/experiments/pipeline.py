@@ -2,10 +2,20 @@
 from __future__ import annotations
 
 import json
+import dataclasses
+import tempfile
+import hashlib
 import time
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from ai.pcfg_adapter import PCFGAttacker, PCFGConfig, runtime_status as pcfg_runtime_status
+from core.attackers import (
+    CharacterNgramAttacker,
+    FrequencyAttacker,
+    SyntheticDictionaryAttacker,
+    default_attackers,
+)
 from core.data import counts_from_payload, validate_count_payload
 from core.distributions import analyze_counts
 from core.synthetic import (
@@ -15,23 +25,38 @@ from core.synthetic import (
     validate_synthetic_dataset,
 )
 from experiments.policy_attack import run_policy_attack_experiment
-from experiments.policy_search import run_policy_search
+from experiments.policy_search import run_policy_search, PolicySearchConfig, enumerate_candidate_policies
+from experiments.config import load_config, validate_config, experiment_context
+from experiments.provenance import manifest
+from ai.registry import build_attackers, OptionalAttackerFailed
+from ai.passllm_adapter import PassLLMConfig, runtime_status as passllm_status
+from policy.engine import PasswordPolicy
 from policy.engine import optimize_policies
 
 
-def run_pipeline(
+def _run_pipeline(
     payload: Mapping[str, Any] | None = None, *, seed: int = 42,
     budgets: Sequence[int] = (100, 1_000, 10_000),
     bootstrap_repetitions: int = 120,
     synthetic_dataset: Mapping[str, Any] | None = None,
     synthetic_size: int = 20_000,
     synthetic_exponent: float = 1.08,
+    include_pcfg: bool = False,
+    pcfg_config: PCFGConfig | None = None,
+    config=None, attack_models=None, search_attackers=None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     if payload is not None and synthetic_dataset is not None:
         raise ValueError("payload 与 synthetic_dataset 不能同时提供")
+    if include_pcfg and payload is not None:
+        raise ValueError(
+            "PCFG 需要带固定 train/validation/test 划分的合成用户数据；"
+            "聚合频次输入不包含可训练的明文划分"
+        )
 
     simulation = None
+    resolved_pcfg_config = pcfg_config or PCFGConfig.workspace_default()
+    pcfg_status = pcfg_runtime_status(resolved_pcfg_config)
     if payload is None:
         simulation = validate_synthetic_dataset(
             synthetic_dataset or generate_synthetic_dataset(
@@ -41,25 +66,30 @@ def run_pipeline(
         normalized = validate_count_payload(aggregate_synthetic_counts(simulation))
         analysis_counts, training_counts, validation_counts = aligned_train_validation_counts(simulation)
         analysis = analyze_counts(
-            analysis_counts, q=0.01, budget=int(budgets[0]),
+            analysis_counts, q=config["q"], budget=int(budgets[0]),
             bootstrap_repetitions=bootstrap_repetitions, seed=seed,
             training_counts=training_counts, validation_counts=validation_counts,
         )
-        candidate_rows = optimize_policies(seed=seed, budgets=budgets)
+        candidate_rows = [PasswordPolicy(**{**p, "risk_budget": config["search"]["risk_budget"]}) for p in config["comparison_policies"]]
         policy_experiment = run_policy_attack_experiment(
             simulation, candidate_rows, budgets=budgets, seed=seed,
+            attackers=attack_models,
         )
         attack_baselines = _m2_view_from_policy_experiment(policy_experiment)
         evaluated = policy_experiment["policies"]
         policy_search = run_policy_search(
             simulation, budgets=budgets, seed=seed,
+            search_attackers=search_attackers,
+            final_attackers=attack_models,
+            config=PolicySearchConfig(**config["search"]),
+            candidate_policies=[dataclasses.replace(p, risk_budget=config["search"]["risk_budget"]) for p in enumerate_candidate_policies(config["search_actions"], config["max_action_count"])],
         )
         policy_evaluation = "M3 preserved-user response with frozen/adaptive attacks"
     else:
         normalized = validate_count_payload(payload)
         counts = counts_from_payload(normalized)
         analysis = analyze_counts(
-            counts, q=0.01, budget=int(budgets[0]),
+            counts, q=config["q"], budget=int(budgets[0]),
             bootstrap_repetitions=bootstrap_repetitions, seed=seed,
         )
         evaluated = []
@@ -69,6 +99,7 @@ def run_pipeline(
         policy_search = None
 
     return {
+        "reproducibility": manifest(config, simulation or normalized, attack_models or ()),
         "dataset": normalized,
         "analysis": analysis,
         "policies": evaluated,
@@ -97,9 +128,74 @@ def run_pipeline(
                 if policy_search is not None else
                 "not run: aggregate counts do not contain user-level policy features"
             ),
+            "pcfg": {
+                **pcfg_status,
+                "requested": bool(include_pcfg),
+                "enabled": bool(any(a.attacker_id == "pcfg" for a in (attack_models or ())) and simulation is not None),
+                "evaluation_mode": (
+                    "pure PCFG; upstream OMEN fallback disabled"
+                    if any(a.attacker_id == "pcfg" for a in (attack_models or ())) and simulation is not None else
+                    "not participating"
+                ),
+            },
             "runtime_ms": round((time.perf_counter() - started) * 1000, 2),
         },
     }
+
+
+def run_pipeline(payload=None, *, config=None, seed=None, budgets=None,
+                 bootstrap_repetitions=None, synthetic_dataset=None,
+                 synthetic_size=None, synthetic_exponent=None,
+                 include_pcfg=None, pcfg_config=None):
+    """Resolve one config; restart comparisons after an optional model fails.
+
+    A failed optional model is removed from the ENTIRE experiment, including
+    validation selection. This prevents policies being compared using different
+    worst-attacker sets after a late adaptive or final-test failure.
+    """
+    cfg = load_config(preset="quick") if config is None else validate_config(config)
+    if config is None:
+        cfg["synthetic"]["size"] = 20_000
+        cfg["bootstrap_repetitions"] = 120
+    for key, value in (("seed", seed), ("budgets", budgets), ("bootstrap_repetitions", bootstrap_repetitions)):
+        if value is not None:
+            cfg[key] = list(value) if key == "budgets" else value
+    if synthetic_size is not None: cfg["synthetic"]["size"] = synthetic_size
+    if synthetic_exponent is not None: cfg["synthetic"]["exponent"] = synthetic_exponent
+    if include_pcfg is True: cfg["attackers"].setdefault("pcfg", "optional")
+    if include_pcfg is False: cfg["attackers"].pop("pcfg", None)
+    if pcfg_config:
+        cfg["pcfg"].update(generation_limit=pcfg_config.generation_limit, timeout_seconds=pcfg_config.timeout_seconds)
+    cfg = validate_config(cfg)
+    failures = []
+    started = time.perf_counter()
+    with tempfile.TemporaryDirectory(prefix="zipfguard_run_") as temporary, experiment_context(cfg):
+        resolved = pcfg_config or dataclasses.replace(PCFGConfig.workspace_default(**cfg["pcfg"]), runtime_root=Path(temporary) / "pcfg")
+        while True:
+            excluded = {row["attacker_id"] for row in failures}
+            attacks = build_attackers(cfg, resolved, excluded=excluded)
+            search = build_attackers(cfg, resolved, excluded=excluded, search=True)
+            try:
+                result = _run_pipeline(payload, seed=cfg["seed"], budgets=cfg["budgets"],
+                    bootstrap_repetitions=cfg["bootstrap_repetitions"], synthetic_dataset=synthetic_dataset,
+                    synthetic_size=cfg["synthetic"]["size"], synthetic_exponent=cfg["synthetic"]["exponent"],
+                    include_pcfg="pcfg" in cfg["attackers"], pcfg_config=resolved,
+                    config=cfg, attack_models=attacks, search_attackers=search)
+                break
+            except OptionalAttackerFailed as exc:
+                if exc.attacker_id in excluded: raise
+                failures.append({"attacker_id": exc.attacker_id, "reason": exc.reason,
+                    "participated": False, "excluded_from_worst_case": True})
+    result["metadata"].update(
+        attacker_failures=failures,
+        participating_attackers=[a.attacker_id for a in attacks] if result["simulation"] else [],
+        comparison_complete=not failures,
+        passllm=passllm_status(PassLLMConfig.workspace_default(Path(__file__).resolve().parents[2])),
+        runtime_ms=round((time.perf_counter() - started) * 1000, 2),
+        evaluation_scope="封闭合成候选排序；PCFG 生成后匹配候选，排名按匹配顺序计数；不是开放生成预算评测",
+    )
+    result["metadata"]["pcfg"]["failure"] = next((r["reason"] for r in failures if r["attacker_id"] == "pcfg"), None)
+    return result
 
 
 def _m2_view_from_policy_experiment(experiment: Mapping[str, Any]) -> dict[str, Any]:
@@ -138,7 +234,9 @@ def write_report(result: Mapping[str, Any], path: str | Path) -> Path:
 
 def write_json(result: Mapping[str, Any], path: str | Path) -> Path:
     output = Path(path); output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    content = (json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
+    output.write_bytes(content)
+    output.with_suffix(output.suffix + ".sha256").write_text(hashlib.sha256(content).hexdigest() + "  " + output.name + "\n", encoding="utf-8")
     return output
 
 
@@ -280,4 +378,14 @@ def render_markdown(result: Mapping[str, Any]) -> str:
     else:
         lines.append("未运行 M4：聚合频次不包含用户响应和策略搜索所需信息。")
     lines += ["", "## 边界", "", "结果来自有限支持的合成候选空间、规则化用户响应和离线攻击排序，不能解释为真实口令熵、真实用户行为或真实世界破解率。M3 已避免删除被拒用户；M4 建议仅是当前候选集、成本权重和合成响应模型下的 Pareto 选择，真实部署前仍须通过授权用户研究校准。"]
+    lines += ["", "## 实验参与与复现清单", "",
+              "- 实际参与：" + ", ".join(result["metadata"].get("participating_attackers", [])),
+              "- PassLLM：环境可检测；尚未接入主评估；当前实验未使用。",
+              "- 评测范围：" + result["metadata"].get("evaluation_scope", ""),
+              "- 可选模型失败后从整次比较排除，不使用替代模型冒充。"]
+    for failure in result["metadata"].get("attacker_failures", []):
+        lines.append(f"- 未参与最坏攻击者比较：{failure['attacker_id']}；{failure['reason']}")
+    lines += ["", "完整配置、环境和源码哈希：", "", "```json",
+              json.dumps(result.get("reproducibility", {}), ensure_ascii=False, indent=2), "```", "",
+              "结果 JSON 的精确文件 SHA-256 见同名 .json.sha256 文件（网页下载同时提供校验文件）。"]
     return "\n".join(lines) + "\n"

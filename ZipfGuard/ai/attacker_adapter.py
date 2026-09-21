@@ -1,92 +1,58 @@
-"""A safe, offline interface for classical and PassLLM/PassGPT attackers.
-
-The command adapter never contacts authentication endpoints.  It exchanges
-JSONL with a local process so either PassLLM or PassGPT can be plugged in
-without changing the policy-evaluation pipeline.
-"""
+"""Local command bridge into the authoritative fit_select_rank contract."""
 from __future__ import annotations
-
 import json
 import subprocess
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Iterable, Mapping, Sequence
-
+from typing import Mapping, Sequence
+from core.attackers import BaselineAttacker, CharacterNgramAttacker, RankingResult
 
 @dataclass
 class AttackerConfig:
-    name: str = "local-ngram"
+    name: str = "local-command"
     command: Sequence[str] | None = None
     timeout_seconds: int = 120
+    max_guesses: int = 20_000
+    seed: int = 42
     extra: Mapping[str, object] = field(default_factory=dict)
 
+class NgramAttacker(CharacterNgramAttacker):
+    """Compatibility name for the sole Python n-gram implementation."""
 
-class NgramAttacker:
-    """Adapter around the existing deterministic synthetic ranker."""
-
-    name = "local-ngram"
-
-    def __init__(self, ranker):
-        self.ranker = ranker
-        self._train = []
-
-    def fit(self, train_samples: Iterable[object], metadata=None):
-        self._train = list(train_samples)
-        return self
-
-    def generate(self, policy: Mapping[str, object], max_guesses: int, seed: int = 42):
-        candidates = policy.get("candidates", [])
-        if not candidates:
-            raise ValueError("NgramAttacker 需要 policy['candidates']")
-        rows = self.ranker(self._train, candidates, attack="hybrid")
-        return rows[: max(0, int(max_guesses))]
-
-
-class CommandAttacker:
-    """Run a local PassLLM/PassGPT JSONL command and parse its guesses."""
-
-    def __init__(self, config: AttackerConfig):
-        if not config.command:
-            raise ValueError("command adapter 需要本地命令")
+class CommandAttacker(BaselineAttacker):
+    version = "command-jsonl-v2"
+    def __init__(self, config):
+        if not config.command or not 1 <= config.max_guesses <= 1_000_000 or not 1 <= config.timeout_seconds <= 3600:
+            raise ValueError("command、max_guesses 或 timeout_seconds 无效")
         self.config = config
-        self.name = config.name
-        self._train = []
+        self.attacker_id = config.name
+        self.label = config.name
 
-    def fit(self, train_samples: Iterable[object], metadata=None):
-        self._train = list(train_samples)
-        return self
-
-    def generate(self, policy: Mapping[str, object], max_guesses: int, seed: int = 42):
-        payload = {
-            "policy": dict(policy),
-            "max_guesses": int(max_guesses),
-            "seed": int(seed),
-            "train_size": len(self._train),
-            "metadata": dict(self.config.extra),
-        }
-        completed = subprocess.run(
-            list(self.config.command),
-            input=json.dumps(payload, ensure_ascii=False) + "\n",
-            text=True,
-            capture_output=True,
-            timeout=self.config.timeout_seconds,
-            check=True,
-        )
-        rows = []
+    def fit_select_rank(self, train, validation, candidates):
+        payload = {"protocol": self.version, "train": list(train),
+                   "candidates": list(candidates), "max_guesses": self.config.max_guesses,
+                   "seed": self.config.seed, "metadata": dict(self.config.extra)}
+        completed = subprocess.run(list(self.config.command),
+            input=json.dumps(payload, ensure_ascii=False) + "\n", text=True,
+            encoding="utf-8", capture_output=True, timeout=self.config.timeout_seconds,
+            check=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        allowed = set(candidates)
+        guesses = []
+        generated = 0
         for line in completed.stdout.splitlines():
-            if not line.strip():
-                continue
+            if not line.strip(): continue
+            generated += 1
+            if generated > self.config.max_guesses:
+                raise ValueError("攻击器超过生成上限")
             item = json.loads(line)
-            if "guess" not in item:
-                raise ValueError("攻击器输出缺少 guess 字段")
-            rows.append(item)
-        return rows[: max(0, int(max_guesses))]
+            if not isinstance(item.get("guess"), str):
+                raise ValueError("攻击器输出缺少字符串 guess 字段")
+            if item["guess"] in allowed: guesses.append(item["guess"])
+        guesses = tuple(dict.fromkeys(guesses))
+        return RankingResult(self.attacker_id, self.label, self.version, guesses,
+            parameters={"generated_count": generated, "matched_candidates": len(guesses),
+                        "generation_limit": self.config.max_guesses, "evaluation_mode": "closed candidate ranking"},
+            selection={"method": "command order", "test_used_for_parameters": False},
+            training_size=len(train), validation_size=len(validation))
 
-
-def build_attacker(config: AttackerConfig, ranker=None):
-    """Build a configured adapter; command failures remain visible to caller."""
-    if config.command:
-        return CommandAttacker(config)
-    if ranker is None:
-        raise ValueError("无 command 时必须提供本地 ranker")
-    return NgramAttacker(ranker)
+def build_attacker(config):
+    return CommandAttacker(config) if config.command else NgramAttacker()

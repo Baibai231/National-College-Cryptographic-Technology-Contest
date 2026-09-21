@@ -53,6 +53,11 @@ class MvpTests(unittest.TestCase):
         self.assertIsNone(result["policy_experiment"])
         self.assertIsNone(result["policy_search"])
         self.assertIn("not run", result["metadata"]["policy_evaluation"])
+        with self.assertRaisesRegex(ValueError, "train/validation/test"):
+            run_pipeline(
+                synthetic_counts(size=1_000, categories=40, seed=4),
+                seed=4, bootstrap_repetitions=20, include_pcfg=True,
+            )
 
     def test_rockyou_stream_aggregation_and_passllm_status(self):
         source = Path(__file__).resolve().parents[2] / "lab_basic_50_dicts" / "Rockyou.txt"
@@ -69,7 +74,8 @@ class MvpTests(unittest.TestCase):
         )
         self.assertEqual(status["available"], expected_available)
         if not expected_available:
-            self.assertEqual(status["fallback"], "local-ngram")
+            self.assertIsNone(status["fallback"])
+        self.assertFalse(status["participated"])
 
 
 if __name__ == "__main__":

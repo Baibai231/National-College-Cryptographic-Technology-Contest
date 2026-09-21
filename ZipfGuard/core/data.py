@@ -48,7 +48,12 @@ def validate_count_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def load_count_json(path: str | Path) -> dict[str, Any]:
+def load_count_json(path) -> dict[str, Any]:
+    if hasattr(path, "read"):
+        try:
+            return validate_count_payload(json.load(path))
+        except (json.JSONDecodeError, UnicodeDecodeError, TypeError) as exc:
+            raise ValueError("上传内容必须是合法的聚合频次 JSON") from exc
     with Path(path).open("r", encoding="utf-8") as handle:
         return validate_count_payload(json.load(handle))
 

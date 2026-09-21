@@ -1,0 +1,3 @@
+# Versions verified in the project Python 3.13.9 environment.
+numpy==2.5.3
+streamlit==1.64.0

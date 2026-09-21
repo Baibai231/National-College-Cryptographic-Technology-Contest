@@ -27,17 +27,24 @@ SUFFIXES = ("123", "2026", "01", "88", "!", "7", "99", "520", "", "42", "2025", 
 SPLITS = ("train", "validation", "test")
 
 
+def grammar_words(name, fallback):
+    from experiments.config import active_section
+    cfg = active_section("synthetic")
+    return tuple(cfg[name]) if cfg else fallback
+
+
 def candidate_space() -> list[str]:
     values: list[str] = []
-    for root in ROOT_WORDS:
-        for suffix in SUFFIXES:
+    for root in grammar_words("root_words", ROOT_WORDS):
+        for suffix in grammar_words("suffixes", SUFFIXES):
             values.extend((root + suffix, root[0].upper() + root[1:] + suffix))
     return list(dict.fromkeys(values))
 
 
 def phrase_space() -> list[str]:
-    return [f"{first}-{second}-{third}" for first in PHRASE_WORDS
-            for second in PHRASE_WORDS for third in PHRASE_WORDS]
+    words = grammar_words("phrase_words", PHRASE_WORDS)
+    return [f"{first}-{second}-{third}" for first in words
+            for second in words for third in words]
 
 
 def generate_synthetic_dataset(

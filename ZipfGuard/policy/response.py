@@ -14,6 +14,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 from core.synthetic import (
     PHRASE_WORDS,
+    grammar_words,
     candidate_space,
     phrase_space,
     validate_synthetic_dataset,
@@ -31,44 +32,56 @@ def _stable_random(seed: int, user_id: str) -> random.Random:
 
 
 def _random_phrase(randomizer: random.Random) -> str:
-    return "-".join(randomizer.choice(PHRASE_WORDS) for _ in range(3))
+    return "-".join(randomizer.choice(grammar_words("phrase_words", PHRASE_WORDS)) for _ in range(3))
 
 
 def _response_proposals(
     password: str, randomizer: random.Random, max_attempts: int,
 ) -> Iterable[tuple[str, str]]:
-    if max_attempts >= 1:
-        yield password + "!", "append-symbol"
-    if max_attempts >= 2:
-        yield password + "@7", "append-symbol-digit"
-    for _ in range(max(0, max_attempts - 2)):
+    from experiments.config import active_section
+    cfg = active_section("response")
+    order = cfg["order"] if cfg else ["append-symbol", "append-symbol-digit", "random-phrase"]
+    for kind in order:
+        value = (_random_phrase(randomizer) if kind == "random-phrase" else
+                 password + ("!" if kind == "append-symbol" else "@7"))
+        yield value, kind
+    for _ in range(max(0, max_attempts - 3)):
         yield _random_phrase(randomizer), "random-phrase"
 
 
 def response_candidate_space(policy: PasswordPolicy) -> list[str]:
     """Enumerate every public response family reachable under ``policy``."""
-    candidates: list[str] = []
-    needs_phrase_fallback = False
+    from experiments.config import active_section
+    cfg = active_section("response")
+    order = cfg["order"] if cfg else ["append-symbol", "append-symbol-digit", "random-phrase"]
+    candidates = []
+    accepted_phrases = None
+    all_phrases_accepted = False
+    phrases_reachable = False
     for password in candidate_space():
         if evaluate_policy_rules(password, policy)["accepted"]:
             candidates.append(password)
             continue
-        repairs = (password + "!", password + "@7")
-        accepted_repair = next(
-            (value for value in repairs if evaluate_policy_rules(value, policy)["accepted"]),
-            None,
-        )
-        if accepted_repair is not None:
-            candidates.append(accepted_repair)
-        else:
-            needs_phrase_fallback = True
-    if needs_phrase_fallback:
-        accepted_phrases = [
-            value for value in phrase_space()
-            if evaluate_policy_rules(value, policy)["accepted"]
-        ]
-        if not accepted_phrases:
-            raise ValueError(f"策略 {policy.name!r} 的短语回退没有可用候选")
+        reachable = False
+        for kind in order:
+            if kind == "random-phrase":
+                if accepted_phrases is None:
+                    phrases = phrase_space()
+                    accepted_phrases = [v for v in phrases if evaluate_policy_rules(v, policy)["accepted"]]
+                    all_phrases_accepted = len(accepted_phrases) == len(phrases)
+                if accepted_phrases:
+                    reachable = phrases_reachable = True
+                if all_phrases_accepted:
+                    break
+            else:
+                value = password + ("!" if kind == "append-symbol" else "@7")
+                if evaluate_policy_rules(value, policy)["accepted"]:
+                    candidates.append(value)
+                    reachable = True
+                    break
+        if not reachable:
+            raise ValueError(f"策略 {policy.name!r} 没有可用的公开合成响应候选")
+    if phrases_reachable:
         candidates.extend(accepted_phrases)
     unique = list(dict.fromkeys(candidates))
     if not unique:
@@ -121,6 +134,9 @@ def simulate_policy_response(
     max_attempts: int = 8,
 ) -> dict[str, Any]:
     """Apply one policy without deleting rejected users."""
+    from experiments.config import active_section
+    cfg = active_section("response")
+    max_attempts = cfg["max_attempts"] if cfg else max_attempts
     if max_attempts < 3:
         raise ValueError("max_attempts 至少为 3，须包含短语回退")
     normalized = validate_synthetic_dataset(dataset)
@@ -186,7 +202,7 @@ def simulate_policy_response(
                 "base_dataset_id": normalized["dataset_id"],
                 "policy": policy.to_dict(),
                 "response_seed": int(seed),
-                "response_model": "predictable repairs then public random phrase",
+                "response_model": list(cfg["order"]) if cfg else ["append-symbol", "append-symbol-digit", "random-phrase"],
                 "user_count_preserved": len(transformed_records) == len(normalized["records"]),
             },
         },

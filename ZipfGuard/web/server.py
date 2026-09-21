@@ -37,33 +37,45 @@ def _json_safe(result):
 
 
 def rockyou_result(max_lines=1_000_000, top_k=2_000, bootstrap=40):
-    cache_current = CACHE.exists() and (not DEFAULT_ROCKYOU.exists() or CACHE.stat().st_mtime >= DEFAULT_ROCKYOU.stat().st_mtime)
-    if cache_current and max_lines == 1_000_000 and top_k == 2_000:
-        payload = load_count_json(CACHE)
-    else:
-        payload = aggregate_rockyou(DEFAULT_ROCKYOU, max_lines=max_lines, top_k=top_k)
-        if max_lines == 1_000_000 and top_k == 2_000:
-            write_count_json(payload, CACHE)
+    payload = aggregate_rockyou(DEFAULT_ROCKYOU, max_lines=max_lines, top_k=top_k)
     return run_pipeline(payload, bootstrap_repetitions=bootstrap)
 
 
-INDEX = r'''<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ZipfGuard DP-HTPG</title><style>
-body{margin:0;background:#f5f7fb;color:#172033;font:15px system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1180px;margin:auto;padding:28px}h1{margin:0 0 6px;font-size:30px}h2{margin-top:28px}.sub{color:#61708a}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card,.panel{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 2px 8px #1720330a}.metric{font-size:25px;font-weight:700;margin-top:8px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}button{background:#2563eb;color:white;border:0;border-radius:8px;padding:10px 14px;cursor:pointer}button.secondary{background:#475569}button:disabled{opacity:.55}table{border-collapse:collapse;width:100%;background:white}th,td{text-align:left;border-bottom:1px solid #e8edf4;padding:9px}th{color:#526177;font-weight:600}.pill{display:inline-block;border-radius:999px;background:#e8f1ff;color:#1557bd;padding:4px 9px;font-size:12px}.warn{background:#fff4d6;color:#8a5b00}.chart{height:240px;width:100%;background:linear-gradient(180deg,#fff,#f8fafc);border-radius:8px}.small{font-size:12px;color:#64748b}.error{color:#b42318}.status{margin-left:auto}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}
-</style></head><body><main><h1>ZipfGuard <span class="pill">DP-HTPG</span></h1><div class="sub">面向 AI 攻击的动态口令策略风险实验 · 仅离线聚合数据</div>
-<div class="toolbar"><button id="demo">加载合成演示</button><button id="rock" class="secondary">加载 Rockyou 聚合</button><span id="status" class="status small"></span></div>
-<section class="grid" id="metrics"></section><section class="panel"><h2>经验 CDF 与模型摘要</h2><canvas id="chart" class="chart"></canvas><div id="models"></div></section>
-<section class="panel"><h2>M3 用户响应与自适应攻击</h2><div id="policies"></div></section><section class="panel"><h2>M4 Pareto 三档建议</h2><div id="m4"></div></section><section class="panel"><h2>运行边界</h2><p class="small">Rockyou 只在服务器端流式读取并聚合；浏览器收到的是频次、模型指标和策略统计，不返回明文候选。PassLLM 权重仅在配置了 Torch/Transformers/PEFT 且基座存在时启用，否则显示 n-gram 回退。</p><pre id="backend" class="small"></pre></section>
-</main><script>
-const $=id=>document.getElementById(id); let last=null;
-function cell(v){return v==null?'—':typeof v==='number'?v.toLocaleString(undefined,{maximumFractionDigits:4}):v}
-function table(headers,rows){return '<table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+cell(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
-function draw(points){const c=$('chart'),x=c.getContext('2d'),w=c.width=c.clientWidth*devicePixelRatio,h=c.height=c.clientHeight*devicePixelRatio;x.clearRect(0,0,w,h); if(!points.length)return; const ys=points.map(p=>p.empirical_cdf),max=Math.max(...ys,1); x.strokeStyle='#2563eb';x.lineWidth=3*devicePixelRatio;x.beginPath();points.forEach((p,i)=>{const px=i/(points.length-1)*w,py=h-(p.empirical_cdf/max)*(h-18*devicePixelRatio)-8*devicePixelRatio;i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.fillStyle='#526177';x.font=12*devicePixelRatio+'px sans-serif';x.fillText('经验累计质量（横轴为排名）',10,20)}
-function render(r){last=r; const a=r.analysis,t=a.risk_threshold,m4=r.policy_search?.selected_tiers||[]; $('metrics').innerHTML=[['数据集',r.dataset.dataset_id],['样本',r.dataset.total_count],['选择模型',a.selected_model],['q=1%排名',t.model_rank]].map(([k,v])=>'<div class="card"><div class="small">'+k+'</div><div class="metric">'+cell(v)+'</div></div>').join(''); $('models').innerHTML=table(['模型','验证对数似然','KS','BIC'],a.models.map(m=>[m.id,m.validation_log_likelihood,m.validation_ks,m.bic])); $('policies').innerHTML=table(['策略','初始接受率','最终完成率','修改率','冻结风险','自适应风险','适应增益'],r.policies.map(p=>[p.policy.name,p.initial_accept_rate,p.accept_rate,p.modification_rate,p.frozen_risk,p.adaptive_risk,p.adaptation_gain])); $('m4').innerHTML=table(['档位','策略','验证风险','测试风险','测试风险下降','修改率'],m4.map(p=>[p.tier,p.policy.name,p.validation.adaptive_risk,p.test.adaptive_risk,p.test.security_gain,p.test.response.modification_rate])); draw(a.curves); $('backend').textContent=JSON.stringify(r.metadata,null,2)+'\n\n推荐：\n'+JSON.stringify(r.recommendations,null,2)}
-async function load(url){$('status').textContent='计算中…';$('demo').disabled=$('rock').disabled=true;try{const res=await fetch(url);if(!res.ok)throw Error(await res.text());render(await res.json());$('status').textContent='完成'}catch(e){$('status').innerHTML='<span class="error">'+e.message+'</span>'}finally{$('demo').disabled=$('rock').disabled=false}}
-$('demo').onclick=()=>load('/api/demo');$('rock').onclick=()=>load('/api/rockyou');fetch('/api/status').then(r=>r.json()).then(s=>{$('backend').textContent='后端状态：\\n'+JSON.stringify(s,null,2)}).catch(e=>{$('status').textContent=e.message});
+
+from web.presentation import report_html, STYLE
+from experiments.config import load_config, validate_config
+from core.data import validate_count_payload
+from hashlib import sha256
+
+INDEX = "<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>ZipfGuard 实验台</title><style>" + STYLE + "</style>" + r'''<body><main><h1>ZipfGuard · 离线实验台</h1><p>统一 Python 实验核心 · 合成机制演示与聚合分布分析</p>
+<section><h2>实验设置</h2><div class="grid">
+<label>预设<select id="preset"><option value="quick">快速演示 · 1,000 用户</option><option value="full">完整实验 · 20,000 用户 + 可选 PCFG</option></select></label>
+<label>数据来源<select id="source"><option value="synthetic">合成用户</option><option value="rockyou">RockYou 聚合（仅分布分析）</option><option value="upload">上传聚合 JSON（仅分布分析）</option></select></label>
+<label>随机种子<input id="seed" type="number" min="0"></label><label>样本规模<input id="size" type="number" min="100"></label>
+<label>Zipf 指数<input id="exponent" type="number" step="0.01"></label><label>攻击预算（逗号分隔）<input id="budgets"></label>
+<label>Bootstrap 次数<input id="bootstrap" type="number" min="20"></label><label>风险阈值 q<input id="q" type="number" step="0.01"></label>
+</div><div class="grid" id="attackers"></div><div class="grid">
+<label>PCFG 生成上限<input id="limit" type="number"></label><label>PCFG 超时秒数<input id="timeout" type="number"></label>
+<label>用户响应<select id="response"><option value="repair">修补优先，再尝试短语</option><option value="phrase">短语优先，再尝试修补</option></select></label>
+<label>响应成本权重（其余为规则成本）<input id="weight" type="number" min="0" max="1" step="0.05"></label><label>策略选择预算<input id="riskbudget" type="number"></label>
+<label>来源类型<select id="semantics"><option value="unknown">未确认</option><option value="frequency">原始重复行频次</option><option value="unique_dictionary">去重字典</option></select></label>
+<label>RockYou 读取行数<input id="maxlines" type="number" value="1000000"></label><label>保留 top-k<input id="topk" type="number" value="2000"></label>
+<label>聚合文件<input id="upload" type="file" accept=".json"></label></div>
+<details><summary>待比较策略（可编辑 JSON；保留 baseline）</summary><textarea id="policies"></textarea></details>
+<details><summary>完整配置（可修改词表、搜索动作、响应顺序和约束；点击应用后再运行）</summary><textarea id="config"></textarea><button id="apply">应用完整配置</button><button id="export">下载当前配置</button></details>
+<p><button id="run">运行实验</button> <button id="download" disabled>下载结果与 SHA-256</button> <span id="status" role="status"></span></p>
+<p class="muted">PassLLM 尚未接入主评估。可选模型失败会明确排除；不会冒充其他模型。</p></section></main><div id="result"></div>
+<script>
+const $=id=>document.getElementById(id);let cfg=null,last=null;
+function put(c){cfg=c;$('seed').value=c.seed;$('size').value=c.synthetic.size;$('exponent').value=c.synthetic.exponent;$('budgets').value=c.budgets.join(',');$('bootstrap').value=c.bootstrap_repetitions;$('q').value=c.q;$('limit').value=c.pcfg.generation_limit;$('timeout').value=c.pcfg.timeout_seconds;$('weight').value=c.search.response_cost_weight;$('riskbudget').value=c.search.risk_budget;$('response').value=c.response.order[0]==='random-phrase'?'phrase':'repair';$('policies').value=JSON.stringify(c.comparison_policies,null,2);$('config').value=JSON.stringify(c,null,2);$('attackers').replaceChildren();for(const [id,label] of [['frequency','频次'],['synthetic-dictionary','合成字典'],['character-ngram','字符 n-gram'],['pcfg','PCFG']]){const l=document.createElement('label');l.textContent=label;const s=document.createElement('select');s.id='att-'+id;for(const [v,t] of [['off','不参与'],['required','必选'],['optional','可选']]){const o=new Option(t,v);s.add(o)}s.value=c.attackers[id]||'off';l.append(s);$('attackers').append(l)}}
+function get(){const c=structuredClone(cfg);c.seed=+$('seed').value;c.synthetic.size=+$('size').value;c.synthetic.exponent=+$('exponent').value;c.budgets=$('budgets').value.split(',').map(Number);c.bootstrap_repetitions=+$('bootstrap').value;c.q=+$('q').value;c.pcfg.generation_limit=+$('limit').value;c.pcfg.timeout_seconds=+$('timeout').value;c.search.response_cost_weight=+$('weight').value;c.search.rule_cost_weight=1-c.search.response_cost_weight;c.search.risk_budget=+$('riskbudget').value;const expected=$('response').value==='phrase'?'random-phrase':'append-symbol';if(c.response.order[0]!==expected)c.response.order=$('response').value==='phrase'?['random-phrase','append-symbol','append-symbol-digit']:['append-symbol','append-symbol-digit','random-phrase'];c.comparison_policies=JSON.parse($('policies').value);c.attackers={};for(const id of ['frequency','synthetic-dictionary','character-ngram','pcfg']){const mode=$('att-'+id).value;if(mode!=='off')c.attackers[id]=mode}return c}
+async function preset(){try{const r=await fetch('/api/config/'+$('preset').value);put(await r.json())}catch(e){$('status').textContent=e.message}}
+function download(name,text){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([text],{type:'application/octet-stream'}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('preset').onchange=preset;$('apply').onclick=()=>{try{put(JSON.parse($('config').value));$('status').textContent='配置已应用'}catch(e){$('status').textContent=e.message}};$('export').onclick=()=>{try{download('experiment.json',JSON.stringify(get(),null,2))}catch(e){$('status').textContent=e.message}};
+$('run').onclick=async()=>{$('run').disabled=true;$('download').disabled=true;$('status').textContent='正在计算…';$('result').replaceChildren();last=null;try{const c=get();$('config').value=JSON.stringify(c,null,2);let payload=null;if($('source').value==='upload'){const f=$('upload').files[0];if(!f)throw Error('请选择聚合 JSON 文件');payload=JSON.parse(await f.text())}const res=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({config:c,source:$('source').value,payload,max_lines:+$('maxlines').value,top_k:+$('topk').value,source_semantics:$('semantics').value})});const data=await res.json();if(!res.ok)throw Error(data.error);last=data;$('result').innerHTML=data.html;$('download').disabled=false;$('status').textContent='实验完成'}catch(e){$('status').textContent='未完成：'+e.message}finally{$('run').disabled=false}};
+$('download').onclick=()=>{download('zipfguard_report.json',last.json);download('zipfguard_report.json.sha256',last.sha256+'  zipfguard_report.json\n')};preset();
 </script></body></html>'''
+
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -77,14 +89,60 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/status":
                 config = PassLLMConfig.workspace_default(ROOT.parent)
                 return self._send(_json_safe({"rockyou_present": DEFAULT_ROCKYOU.is_file(), "rockyou_bytes": DEFAULT_ROCKYOU.stat().st_size if DEFAULT_ROCKYOU.exists() else 0, "passllm": runtime_status(config)}))
+            if path.startswith("/api/config/"):
+                preset = path.rsplit("/", 1)[-1]
+                if preset not in ("quick", "full"): raise ValueError("未知预设")
+                return self._send(_json_safe(load_config(preset=preset)))
             if path == "/api/demo": return self._send(_json_safe(run_pipeline(bootstrap_repetitions=40)))
             if path == "/api/rockyou": return self._send(_json_safe(rockyou_result()))
             return self._send(b"not found", "text/plain; charset=utf-8", 404)
         except Exception as exc:
             return self._send(_json_safe({"error": str(exc)}), status=500)
 
+    def do_POST(self):
+        if urlparse(self.path).path != "/api/run":
+            return self._send(b"not found", "text/plain", 404)
+        # Local UI accepts JSON only; reject cross-site browser writes.
+        if self.headers.get("Sec-Fetch-Site") == "cross-site":
+            return self._send(b"forbidden", "text/plain", 403)
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= 8_000_000:
+                raise ValueError("请求大小无效")
+            request = json.loads(self.rfile.read(length))
+            with _cache_lock:
+                result = execute_request(request)
+            content = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+            return self._send(_json_safe({"result": result, "html": report_html(result, document=False),
+                "json": content, "sha256": sha256(content.encode("utf-8")).hexdigest()}))
+        except (ValueError, TypeError, KeyError) as exc:
+            return self._send(_json_safe({"error": str(exc)}), status=400)
+        except Exception as exc:
+            return self._send(_json_safe({"error": str(exc)}), status=500)
+
     def log_message(self, format, *args):
         return
+
+
+def execute_request(request):
+    config = validate_config(request["config"])
+    source = request.get("source", "synthetic")
+    payload = None
+    if source == "rockyou":
+        max_lines, top_k = request.get("max_lines", 1_000_000), request.get("top_k", 2000)
+        if type(max_lines) is not int or not 20 <= max_lines <= 10_000_000:
+            raise ValueError("读取行数须在 20 到 10000000 之间")
+        payload = aggregate_rockyou(DEFAULT_ROCKYOU, max_lines=max_lines, top_k=top_k,
+                                  source_semantics=request.get("source_semantics", "unknown"))
+    elif source == "upload":
+        payload = validate_count_payload(request.get("payload"))
+    elif source != "synthetic":
+        raise ValueError("未知数据来源")
+    if payload is not None:
+        config["attackers"].pop("pcfg", None)
+        if not config["attackers"]:
+            config["attackers"] = {"frequency": "required"}
+    return run_pipeline(payload, config=config)
 
 
 def main():

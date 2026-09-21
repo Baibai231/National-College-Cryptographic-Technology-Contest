@@ -1,3 +1,5 @@
+/* HISTORICAL PROTOTYPE — 非主实验代码。CLI 与网页仅使用 Python experiments.pipeline。
+ * 禁止将本文件输出用作当前实验报告；保留仅为历史参考。 */
 /**
  * Reproducible, entirely synthetic password-policy laboratory.
  * No network, storage, real credential collection, or authentication endpoints.

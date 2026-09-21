@@ -14,7 +14,9 @@ from typing import Any
 
 
 def aggregate_rockyou(path: str | Path, *, max_lines: int | None = 1_000_000,
-                      top_k: int = 2_000, encoding: str = "utf-8") -> dict[str, Any]:
+                      top_k: int = 2_000, encoding: str = "utf-8", source_semantics: str = "unknown") -> dict[str, Any]:
+    if source_semantics not in ("unknown", "frequency", "unique_dictionary"):
+        raise ValueError("无效来源类型")
     source = Path(path)
     if not source.is_file():
         raise FileNotFoundError(source)
@@ -50,5 +52,12 @@ def aggregate_rockyou(path: str | Path, *, max_lines: int | None = 1_000_000,
             "source_lines_read": lines, "observed_valid_lines": observed,
             "top_k": top_k, "truncated_mass": 1 - aggregate_total / max(1, observed),
             "plaintext_retained": False,
+            "source_semantics": source_semantics,
+            "input_deduplicated": True if source_semantics == "unique_dictionary" else False if source_semantics == "frequency" else None,
+            "observed_unique_categories": len(counts), "retained_categories": len(ranked),
+            "all_observed_counts_one": all(v == 1 for v in counts.values()),
+            "frequency_interpretation": "真实频率未确认；重复行频次不等于已验证用户频率" if source_semantics != "frequency" else "用户声明原始频次；按重复行计数",
+            "analysis_scope": "条件于读取范围内 top-k 的分布；不代表完整口令分布",
+            "aggregation_version": "rockyou-counts-v2",
         },
     }

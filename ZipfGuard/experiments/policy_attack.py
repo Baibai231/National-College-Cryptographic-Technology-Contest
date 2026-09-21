@@ -6,6 +6,7 @@ from typing import Any, Mapping, Sequence
 from core.attackers import BaselineAttacker, RankingResult, default_attackers
 from core.metrics import evaluate_ranking
 from core.synthetic import candidate_space, passwords_for_split, validate_synthetic_dataset
+from experiments.config import active_section
 from policy.engine import PasswordPolicy
 from policy.response import response_candidate_space, simulate_policy_response
 
@@ -151,7 +152,7 @@ def run_policy_attack_experiment(
         "dataset_id": normalized["dataset_id"],
         "budgets": normalized_budgets,
         "protocol": {
-            "user_response": "keep accepted; predictable repairs; public random phrase fallback",
+            "user_response": active_section("response") or {"order": ["append-symbol", "append-symbol-digit", "random-phrase"], "max_attempts": 8},
             "user_count_preserved": True,
             "frozen_attack": "ranking trained on original train and evaluated on transformed test",
             "adaptive_attack": "ranking retrained on transformed train; parameters selected on transformed validation",
