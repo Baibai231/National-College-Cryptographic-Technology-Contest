@@ -77,13 +77,19 @@ def budget_plot(series, *, ylabel="攻击成功率"):
 def report_html(result, *, document=True):
     a, metadata = result['analysis'], result['metadata']
     parts = ['<main><section><h1>ZipfGuard · 实验结果</h1><div class="metrics">']
-    for label, value in (("数据集", result['dataset']['dataset_id']), ("样本数", result['dataset']['total_count']), ("选择模型", a['selected_model']), (f"q={a['risk_threshold']['q']:.1%} 风险排名", a['risk_threshold']['model_rank'])):
-        parts.append(f'<div class="metric">{escape(label)}<strong>{escape(value)}</strong></div>')
-    parts += ['</div><p class="muted">' + escape(metadata.get('evaluation_scope', '')) + '</p>', '<p class="muted">合成有限空间和预设用户行为下的机制演示，不代表真实世界防御效果；Wilson 区间为逐点区间。</p></section>']
     source = result['dataset'].get('metadata', {})
+    total_label = "保留频次数" if source.get('source_semantics') == 'frequency_counts' else "样本数"
+    for label, value in (("数据集", result['dataset']['dataset_id']), (total_label, result['dataset']['total_count']), ("选择模型", a['selected_model']), (f"q={a['risk_threshold']['q']:.1%} 风险排名", a['risk_threshold']['model_rank'])):
+        parts.append(f'<div class="metric">{escape(label)}<strong>{escape(value)}</strong></div>')
+    boundary = (
+        "公开泄露语料仅用于聚合频率分布分析；不代表独立攻击验证或用户改密效果。"
+        if source.get('source_semantics') == 'frequency_counts' else
+        "合成有限空间和预设用户行为下的机制演示，不代表真实世界防御效果；Wilson 区间为逐点区间。"
+    )
+    parts += ['</div><p class="muted">' + escape(metadata.get('evaluation_scope', '')) + '</p>', '<p class="muted">' + boundary + '</p></section>']
     if not result.get('simulation'):
         parts.append('<section><h2>聚合数据 · 仅运行分布分析</h2><div class="notice">M2 攻击、M3 用户响应和 M4 策略搜索均未运行：输入只有聚合频次，没有固定划分的用户口令及行为数据。</div>')
-        parts.append(table(['来源属性', '记录'], [(name, source.get(key, '未提供 / 未确认')) for name, key in [('数据来源','source_type'), ('原始频次 / 去重字典','source_semantics'), ('是否去重','input_deduplicated'), ('读取行数','source_lines_read'), ('有效行数','observed_valid_lines'), ('保留类别数','retained_categories'), ('top-k','top_k'), ('截断概率质量','truncated_mass'), ('频次解释','frequency_interpretation'), ('分析范围','analysis_scope')]]))
+        parts.append(table(['来源属性', '记录'], [(name, source.get(key, '未提供 / 未确认')) for name, key in [('数据来源','source_type'), ('原始频次 / 去重字典','source_semantics'), ('是否去重','input_deduplicated'), ('读取行数','source_lines_read'), ('有效行数','observed_valid_lines'), ('空行数','blank_lines'), ('异常行数','invalid_lines'), ('空白口令字段行','empty_or_whitespace_password_lines'), ('含控制字节口令行','password_control_byte_lines'), ('原始总频次','observed_frequency_total'), ('保留总频次','retained_frequency_total'), ('保留类别数','retained_categories'), ('top-k','top_k'), ('截断概率质量','truncated_mass'), ('频次顺序异常','frequency_order_increases'), ('文件哈希','source_sha256'), ('频次解释','frequency_interpretation'), ('分析范围','analysis_scope')]]))
         if source.get('all_observed_counts_one') or source.get('source_semantics') == 'unique_dictionary':
             parts.append('<div class="notice">观测为每项一次或用户声明去重字典：下面仅描述条目计数，不可用于推断真实用户口令频率。</div>')
         parts.append('</section>')

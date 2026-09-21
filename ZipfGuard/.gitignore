@@ -16,6 +16,7 @@ demo_data/*.json
 
 # Local datasets and model weights must never enter version control
 lab_basic_50_dicts/
+rockyou-withcount.txt
 *.ckpt
 *.safetensors
 *.pt

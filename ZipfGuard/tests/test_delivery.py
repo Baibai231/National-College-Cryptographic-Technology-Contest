@@ -13,7 +13,7 @@ from ai.attacker_adapter import AttackerConfig, CommandAttacker
 from ai.pcfg_adapter import PCFGAttacker
 from core.attackers import FrequencyAttacker
 from core.data import load_count_json, synthetic_counts
-from core.rockyou import aggregate_rockyou
+from core.rockyou import aggregate_rockyou, aggregate_rockyou_withcount
 from core.synthetic import candidate_space, generate_synthetic_dataset
 from experiments.config import experiment_context, fingerprint, load_config, validate_config
 from experiments.pipeline import run_pipeline, write_json
@@ -133,6 +133,40 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(m['retained_categories'],2)
         self.assertAlmostEqual(m['truncated_mass'],0.25)
         self.assertFalse(m['input_deduplicated'])
+
+    def test_weighted_rockyou_is_streamed_without_plaintext(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp)/'rockyou-withcount.txt'
+            path.write_bytes(
+                b'20 alpha\n10 beta with space\n\ninvalid\n6 gamma\n8 out\tcontrol\n'
+            )
+            payload = aggregate_rockyou_withcount(path,top_k=2)
+            with patch('web.server.DEFAULT_FREQUENCY_CORPUS',path):
+                result = execute_request({
+                    'config':small_config(),'source':'rockyou-frequency','top_k':2,
+                })
+        metadata = payload['metadata']
+        self.assertEqual([row['count'] for row in payload['items']],[20,10])
+        self.assertEqual(metadata['observed_frequency_total'],44)
+        self.assertEqual(metadata['retained_frequency_total'],30)
+        self.assertEqual(metadata['observed_valid_lines'],4)
+        self.assertEqual(metadata['blank_lines'],1)
+        self.assertEqual(metadata['invalid_lines'],1)
+        self.assertEqual(metadata['frequency_order_increases'],1)
+        self.assertEqual(metadata['password_control_byte_lines'],1)
+        self.assertAlmostEqual(metadata['truncated_mass'],14/44)
+        self.assertFalse(metadata['plaintext_retained'])
+        serialized = json.dumps(payload)
+        self.assertNotIn('alpha',serialized)
+        self.assertIsNone(result['attack_baselines'])
+        self.assertIn('原始总频次',report_html(result))
+
+    def test_weighted_rockyou_rejects_non_frequency_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp)/'dictionary.txt'
+            path.write_text('alpha\nbeta\n',encoding='utf-8')
+            with self.assertRaisesRegex(ValueError,'频次 口令'):
+                aggregate_rockyou_withcount(path)
 
     def test_command_bridge_receives_train_without_test_and_returns_common_result(self):
         command = [sys.executable,'-c',"import sys,json; p=json.loads(sys.stdin.readline()); assert p['train']==['rose']; assert 'test' not in p; print(json.dumps({'guess':'rose'}))"]

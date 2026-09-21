@@ -13,7 +13,7 @@ from pathlib import Path
 from ai.pcfg_adapter import PCFGConfig
 from experiments.config import load_config
 from core.data import load_count_json, write_count_json
-from core.rockyou import aggregate_rockyou
+from core.rockyou import aggregate_rockyou, aggregate_rockyou_withcount
 from experiments.pipeline import render_markdown, run_pipeline, write_json, write_report
 
 
@@ -25,7 +25,14 @@ def main() -> int:
     parser.add_argument("--source-semantics", choices=["unknown", "frequency", "unique_dictionary"], default="unknown")
     parser.add_argument("--input", type=Path, help="aggregate count JSON")
     parser.add_argument("--rockyou", type=Path, help="Rockyou-style line file; only aggregate counts are retained")
-    parser.add_argument("--max-lines", type=int, default=1_000_000)
+    parser.add_argument(
+        "--rockyou-withcount", type=Path,
+        help="每行为‘频次 口令’的 RockYou 文件；完整扫描但只输出聚合统计",
+    )
+    parser.add_argument(
+        "--max-lines", type=int,
+        help="读取行数上限；普通字典默认 1000000，带频率文件默认完整扫描",
+    )
     parser.add_argument("--top-k", type=int, default=2_000)
     parser.add_argument("--json-out", type=Path, default=Path("reports/demo.json"))
     parser.add_argument("--report-out", type=Path, default=Path("reports/demo.md"))
@@ -47,11 +54,26 @@ def main() -> int:
     )
     config["pcfg"].update(generation_limit=pcfg_config.generation_limit, timeout_seconds=pcfg_config.timeout_seconds)
     if args.budgets: config["budgets"] = [int(v) for v in args.budgets.split(",")]
-    if args.input or args.rockyou: config["attackers"].pop("pcfg", None)
-    if args.input and args.rockyou:
-        parser.error("--input 与 --rockyou 只能选择一个")
-    if args.rockyou:
-        payload = aggregate_rockyou(args.rockyou, max_lines=args.max_lines, top_k=args.top_k, source_semantics=args.source_semantics)
+    aggregate_sources = [args.input, args.rockyou, args.rockyou_withcount]
+    if any(aggregate_sources):
+        config["attackers"].pop("pcfg", None)
+    if sum(value is not None for value in aggregate_sources) > 1:
+        parser.error("--input、--rockyou 与 --rockyou-withcount 只能选择一个")
+    if args.rockyou_withcount:
+        payload = aggregate_rockyou_withcount(
+            args.rockyou_withcount, top_k=args.top_k,
+            max_lines=args.max_lines,
+        )
+        result = run_pipeline(
+            payload, config=config, seed=args.seed,
+            bootstrap_repetitions=args.bootstrap, include_pcfg=False,
+        )
+    elif args.rockyou:
+        payload = aggregate_rockyou(
+            args.rockyou,
+            max_lines=args.max_lines if args.max_lines is not None else 1_000_000,
+            top_k=args.top_k, source_semantics=args.source_semantics,
+        )
         result = run_pipeline(
             payload, config=config, seed=args.seed, bootstrap_repetitions=args.bootstrap,
             include_pcfg=args.pcfg,
@@ -71,8 +93,10 @@ def main() -> int:
             include_pcfg=args.pcfg,
         )
         payload = result["dataset"]
-    if not args.input and not args.rockyou:
+    if not any(aggregate_sources):
         write_count_json(payload, Path("demo_data/synthetic_counts.json"))
+    elif args.rockyou_withcount:
+        write_count_json(payload, Path("demo_data/rockyou_frequency_counts.json"))
     elif args.rockyou:
         write_count_json(payload, Path("demo_data/rockyou_counts.json"))
     write_json(result, args.json_out)

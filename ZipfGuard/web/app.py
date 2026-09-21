@@ -20,7 +20,15 @@ def main():
     st.caption("统一 Python 实验核心；PassLLM 尚未接入主评估，当前实验未使用。")
     preset = st.sidebar.selectbox("预设", ["quick", "full"], format_func=lambda v: "快速演示 · 1,000 用户" if v == "quick" else "完整实验 · 20,000 用户 + 可选 PCFG")
     cfg = load_config(preset=preset)
-    source = st.sidebar.selectbox("数据来源", ["synthetic", "upload", "rockyou"], format_func=lambda v: {"synthetic":"合成用户", "upload":"聚合 JSON 上传（仅分布分析）", "rockyou":"RockYou 聚合（仅分布分析）"}[v])
+    source = st.sidebar.selectbox(
+        "数据来源", ["synthetic", "rockyou-frequency", "rockyou", "upload"],
+        format_func=lambda v: {
+            "synthetic":"合成用户",
+            "rockyou-frequency":"RockYou 带频率语料（仅分布分析）",
+            "rockyou":"RockYou 去重字典（仅条目分析）",
+            "upload":"聚合 JSON 上传（仅分布分析）",
+        }[v],
+    )
     with st.sidebar.form("experiment_" + preset):
         cfg["seed"] = st.number_input("随机种子", min_value=0, max_value=2**32-1, value=cfg["seed"])
         cfg["synthetic"]["size"] = st.number_input("样本规模", min_value=100, max_value=1_000_000, value=cfg["synthetic"]["size"])
@@ -44,9 +52,21 @@ def main():
         policies = st.text_area("待比较策略 JSON（保留 baseline）",json.dumps(cfg["comparison_policies"],ensure_ascii=False,indent=2))
         advanced = st.text_area("完整配置覆盖 JSON（可选；优先于上面控件）", "")
         uploaded = st.file_uploader("聚合频次 JSON",type=["json"])
-        semantics = st.selectbox("RockYou 来源类型",["unknown","frequency","unique_dictionary"])
-        max_lines = st.number_input("读取行数",min_value=20,max_value=10_000_000,value=1_000_000)
-        top_k = st.number_input("保留 top-k",min_value=2,max_value=100_000,value=2000)
+        frequency_source = source == "rockyou-frequency"
+        semantics = st.selectbox(
+            "普通 RockYou 来源类型",["unknown","frequency","unique_dictionary"],
+            disabled=frequency_source,
+        )
+        max_lines = st.number_input(
+            "普通 RockYou 读取行数",min_value=20,max_value=10_000_000,
+            value=1_000_000,disabled=frequency_source,
+        )
+        top_k = st.number_input(
+            "保留 top-k",min_value=2,max_value=100_000,
+            value=10_000 if frequency_source else 2_000,
+        )
+        if frequency_source:
+            st.caption("带频率文件默认完整扫描，以完整频次总和计算截断质量。")
         submitted = st.form_submit_button("运行实验")
     if submitted:
         st.session_state.pop("result",None)

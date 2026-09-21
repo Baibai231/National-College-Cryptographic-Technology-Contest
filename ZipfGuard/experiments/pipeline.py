@@ -192,7 +192,11 @@ def run_pipeline(payload=None, *, config=None, seed=None, budgets=None,
         comparison_complete=not failures,
         passllm=passllm_status(PassLLMConfig.workspace_default(Path(__file__).resolve().parents[2])),
         runtime_ms=round((time.perf_counter() - started) * 1000, 2),
-        evaluation_scope="封闭合成候选排序；PCFG 生成后匹配候选，排名按匹配顺序计数；不是开放生成预算评测",
+        evaluation_scope=(
+            "封闭合成候选排序；PCFG 生成后匹配候选，排名按匹配顺序计数；不是开放生成预算评测"
+            if result["simulation"] else
+            "公开聚合频次的分布拟合；未运行攻击、用户响应或策略搜索"
+        ),
     )
     result["metadata"]["pcfg"]["failure"] = next((r["reason"] for r in failures if r["attacker_id"] == "pcfg"), None)
     return result
@@ -242,9 +246,14 @@ def write_json(result: Mapping[str, Any], path: str | Path) -> Path:
 
 def render_markdown(result: Mapping[str, Any]) -> str:
     analysis = result["analysis"]
+    source_metadata = result["dataset"].get("metadata", {})
+    total_label = (
+        "Top-K 保留频次" if source_metadata.get("source_semantics") == "frequency_counts"
+        else "总样本"
+    )
     lines = ["# ZipfGuard 离线风险评估报告", "", "## 数据与复现", "",
              f"- 数据集：`{result['dataset']['dataset_id']}`",
-             f"- 总样本：{result['dataset']['total_count']}",
+             f"- {total_label}：{result['dataset']['total_count']}",
              f"- 数据来源：{result['dataset'].get('metadata', {}).get('source_type', result['dataset'].get('metadata', {}).get('source', '未注明'))}",
              f"- 原始行数上限：{result['dataset'].get('metadata', {}).get('source_lines_read', '未注明')}",
              f"- 头部聚合质量：{1 - result['dataset'].get('metadata', {}).get('truncated_mass', 0):.4f}",
@@ -252,6 +261,14 @@ def render_markdown(result: Mapping[str, Any]) -> str:
              f"- 运行时间：{result['metadata']['runtime_ms']} ms", "",
              "## 模型选择", "", f"选择模型：`{analysis['selected_model']}`（{analysis['selection_method']}）", "",
              "| 模型 | 验证对数似然 | KS | BIC |", "|---|---:|---:|---:|"]
+    if source_metadata.get("source_semantics") == "frequency_counts":
+        lines[9:9] = [
+            f"- 完整扫描总频次：{source_metadata.get('observed_frequency_total', '未注明')}",
+            f"- 有效/空白/异常行：{source_metadata.get('observed_valid_lines', '未注明')}/"
+            f"{source_metadata.get('blank_lines', '未注明')}/"
+            f"{source_metadata.get('invalid_lines', '未注明')}",
+            "- 用途：公开泄露语料的聚合分布外部验证；不运行攻击、用户响应或策略搜索。",
+        ]
     if result.get("simulation"):
         split_counts = result["simulation"].get("metadata", {}).get("split_counts", {})
         lines[8:8] = [
@@ -377,7 +394,12 @@ def render_markdown(result: Mapping[str, Any]) -> str:
             )
     else:
         lines.append("未运行 M4：聚合频次不包含用户响应和策略搜索所需信息。")
-    lines += ["", "## 边界", "", "结果来自有限支持的合成候选空间、规则化用户响应和离线攻击排序，不能解释为真实口令熵、真实用户行为或真实世界破解率。M3 已避免删除被拒用户；M4 建议仅是当前候选集、成本权重和合成响应模型下的 Pareto 选择，真实部署前仍须通过授权用户研究校准。"]
+    boundary = (
+        "结果来自有限支持的合成候选空间、规则化用户响应和离线攻击排序，不能解释为真实口令熵、真实用户行为或真实世界破解率。M3 已避免删除被拒用户；M4 建议仅是当前候选集、成本权重和合成响应模型下的 Pareto 选择，真实部署前仍须通过授权用户研究校准。"
+        if result.get("simulation") else
+        "结果只描述公开聚合语料中保留 Top-K 类别的条件频率分布；没有独立攻击训练/测试划分，也没有用户响应信息，不能解释为策略实施后的真实破解率。"
+    )
+    lines += ["", "## 边界", "", boundary]
     lines += ["", "## 实验参与与复现清单", "",
               "- 实际参与：" + ", ".join(result["metadata"].get("participating_attackers", [])),
               "- PassLLM：环境可检测；尚未接入主评估；当前实验未使用。",

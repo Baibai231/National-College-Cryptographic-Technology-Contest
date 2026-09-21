@@ -52,7 +52,10 @@ PassLLM 只提供环境能力检测，尚未接入主评估，当前实验未使
 ```powershell
 .\.venv\Scripts\python.exe run_demo.py --input demo_data/synthetic_counts.json
 .\.venv\Scripts\python.exe run_demo.py --rockyou ..\lab_basic_50_dicts\Rockyou.txt --max-lines 10000 --top-k 50 --source-semantics unknown
+.\.venv\Scripts\python.exe run_demo.py --rockyou-withcount ..\rockyou-withcount.txt --top-k 100000
 ```
+
+`rockyou-withcount.txt` 每行须为“正整数频次 + 空白 + 口令”。该模式默认完整扫描文件，按真实频次保留 Top-K，并用完整频次总和计算截断质量；可以用 `--max-lines` 明确限制为前缀诊断。解析器按字节处理，原始口令不会进入 JSON、Markdown 或浏览器。建议把文件放在仓库根目录或通过命令行传入路径，文件名已加入忽略规则，不得提交到 GitHub。
 
 聚合 JSON 最小示例：
 
@@ -65,7 +68,7 @@ PassLLM 只提供环境能力检测，尚未接入主评估，当前实验未使
 }
 ```
 
-聚合模式只运行分布分析，明确说明 M2/M3/M4 未运行及原因。RockYou 页面显示来源类型、是否去重、实际读取行数、保留类别、top-k 和截断质量；来源默认为未确认，重复行只代表文件内重复次数。去重字典或全唯一条目不能用来推断真实用户频率。分析仅描述读取范围内 top-k 条件分布。
+聚合模式只运行分布分析，明确说明 M2/M3/M4 未运行及原因。RockYou 页面显示来源类型、是否去重、实际读取行数、有效/异常行、完整频次总和、保留类别、top-k、截断质量和文件哈希。普通去重字典不能用来推断真实用户频率；带频率文件可用于外部分布验证，但当前仍不是独立攻击或用户响应证据。模型拟合描述的是条件于保留 top-k 的分布。
 
 ## 验证与环境
 
